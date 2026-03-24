@@ -26,6 +26,11 @@ function initRouter() {
       navLinks.forEach(l => l.classList.remove('active'));
       link.classList.add('active');
 
+      // Mostra/oculta notice-bar segons la vista
+      const noticeBar = document.getElementById('notice-bar');
+      if (noticeBar) noticeBar.style.display = target === 'overview' ? '' : 'none';
+
+
       views.forEach(v => v.classList.remove('view--active'));
       const activeView = document.querySelector(`.view[data-view="${target}"]`);
       if (activeView) activeView.classList.add('view--active');
@@ -33,6 +38,9 @@ function initRouter() {
       // Re-pinta gràfics quan tornem a overview (canvas pot haver perdut mides)
       if (target === 'overview' && window._chartData) {
         setTimeout(() => initCharts(window._chartData.sessions, window._chartData.planning), 50);
+      }
+      if (target === 'setmanal' && window._chartData) {
+        renderSetmanalView(window._chartData.sessions, window._chartData.planning);
       }
     });
   });
@@ -158,6 +166,7 @@ function renderDashboard() {
   renderSummary(activeWeek, weeklySessions);
   renderSessionsTable(sessions);
   renderPlanningTable(planning);
+  renderSetmanalView(sessions, planning);
 
   // Gràfics: setTimeout garanteix que els <canvas> tenen mides reals
   setTimeout(() => initCharts(sessions, planning), 0);
@@ -337,15 +346,11 @@ function setNotice(message, type = 'info') {
   if (type === 'error')   bar.classList.add('is-error');
   if (type === 'warning') bar.classList.add('is-warning');
   setText('notice-text', message);
+  // Només visible a Overview
+  const activeView = document.querySelector('.view--active')?.dataset.view;
+  bar.style.display = activeView === 'overview' || activeView == null ? '' : 'none';
 }
-function setBadge(text)     { setText('load-badge', text); }
-function setText(id, value) { const el = document.getElementById(id); if (el) el.textContent = value; }
-function esc(v) {
-  return String(v)
-    .replaceAll('&', '&amp;').replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;').replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
-}
+
 
 // ── Helpers de dades ──────────────────────────────────────────────────────────
 function parseDate(value) {
@@ -390,4 +395,13 @@ function formatNumber(value) {
 function formatMetric(value, unit) {
   if (!isFinite(value)) return unit ? `-- ${unit}` : '--';
   return unit ? `${formatNumber(value)} ${unit}` : formatNumber(value);
+}
+
+function setBadge(text)     { setText('load-badge', text); }
+function setText(id, value) { const el = document.getElementById(id); if (el) el.textContent = value; }
+function esc(v) {
+  return String(v)
+    .replaceAll('&', '&amp;').replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;').replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
 }
