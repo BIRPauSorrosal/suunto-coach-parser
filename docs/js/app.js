@@ -134,6 +134,10 @@ function renderDashboard() {
   renderSummary(activeWeek, weeklySessions);
   renderSessionsTable(sessions);
   renderPlanningTable(planning);
+
+  // Fase 3: gràfics — setTimeout(0) garanteix que el DOM té
+  // els <canvas> amb dimensions reals abans de pintar
+  setTimeout(() => initCharts(sessions, planning), 0);
 }
 
 // ── Enriquiment de files ───────────────────────────────────────────────────

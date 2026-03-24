@@ -393,3 +393,25 @@ code {
   .hero-card,
   .page-header { padding: 20px; }
 }
+
+/* ── Gràfics ─────────────────────────────────────────────────────────────── */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.chart-wrap {
+  position: relative;
+  height: 220px;
+}
+
+.chart-wrap--tall {
+  height: 260px;
+}
+
+@media (max-width: 1180px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}

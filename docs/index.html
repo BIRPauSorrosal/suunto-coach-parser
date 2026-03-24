@@ -116,13 +116,41 @@
         <article class="panel">
           <div class="panel-header">
             <div>
-              <p class="eyebrow">Fase 3</p>
-              <h3>Zona de gràfic</h3>
+              <p class="eyebrow">Zones cardíaques</p>
+              <h3>Distribució Z1–Z5</h3>
             </div>
-            <span class="badge badge-muted">Chart.js</span>
+            <span class="badge badge-muted">Totes les sessions</span>
           </div>
-          <div class="chart-placeholder">
-            <span>Les dades ja queden preparades a JavaScript perquè a la Fase 3 només haguem de pintar els gràfics.</span>
+          <div class="chart-wrap">
+            <canvas id="chart-zones"></canvas>
+          </div>
+        </article>
+      </section>
+
+      <section class="charts-grid">
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Volum setmanal</p>
+              <h3>Km planificats vs reals</h3>
+            </div>
+            <span class="badge badge-muted">Planning + Sessions</span>
+          </div>
+          <div class="chart-wrap chart-wrap--tall">
+            <canvas id="chart-km"></canvas>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Estrès d'entrenament</p>
+              <h3>Càrrega setmanal</h3>
+            </div>
+            <span class="badge badge-muted">Sessions reals</span>
+          </div>
+          <div class="chart-wrap chart-wrap--tall">
+            <canvas id="chart-load"></canvas>
           </div>
         </article>
       </section>
@@ -188,6 +216,9 @@
     </main>
   </div>
 
+  <script src="./js/vendor/chart.umd.min.js"></script>
+  <script src="./js/charts.js"></script>
   <script src="./js/app.js"></script>
+
 </body>
 </html>
