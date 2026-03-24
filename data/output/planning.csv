@@ -1,0 +1,11 @@
+Setmana,Data_Inici,Data_Fi,Cicle,Fase,Q_Series,Q_Durada_Serie_min,Q_Ritme_min_km,Q_Rec_min,Q_FC_min,Q_FC_max,Q_Km_Plan,Z2_Durada_min,Z2_Ritme_min_km_min,Z2_Ritme_min_km_max,Z2_FC_min,Z2_FC_max,Z2_Km_Plan,LL_Tipus,LL_Durada_min,LL_Km_Plan,Forca_Plan,Padel_Plan,Km_Total_Plan
+S12,23/03/2026,29/03/2026,Construcció,Acumulació,3,6,5.67,2.0,160,168,6.5,45,7.75,8.0,135,145,5.7,Z2 continu o Trail suau,70,8.5,S1,S,20.7
+S13,30/03/2026,05/04/2026,Construcció,Acumulació,2,10,5.67,2.5,160,168,7.0,50,7.75,8.0,135,145,6.3,Z2 continu o Trail suau,75,9.0,S2,S,22.3
+S14,06/04/2026,12/04/2026,Construcció,Acumulació,3,8,5.58,2.0,160,168,7.5,50,7.75,8.0,135,145,6.3,Z2 continu o Trail suau,80,9.5,S3,S,23.3
+S15,13/04/2026,19/04/2026,Construcció,Descàrrega,2,8,5.75,2.0,158,164,6.0,40,7.75,8.0,135,145,5.0,Z2 pla i molt fàcil,60,7.5,S5,S,18.5
+S16,20/04/2026,26/04/2026,Construcció,Extensió,2,12,5.67,3.0,160,168,7.5,50,7.75,8.0,135,145,6.3,Z2 continu o Trail suau,85,10.0,S1,S,23.8
+S17,27/04/2026,03/05/2026,Construcció,Extensió,3,10,5.58,2.5,160,168,8.0,55,7.75,8.0,135,145,7.0,Z2 continu o Trail suau,90,11.0,S2,S,26.0
+S18,04/05/2026,10/05/2026,Construcció,Extensió,2,15,5.67,3.0,160,168,8.5,55,7.75,8.0,135,145,7.0,Z2 continu o Trail suau,95,11.5,S3,S,27.0
+S19,11/05/2026,17/05/2026,Construcció,Descàrrega,2,10,5.75,2.0,158,164,6.5,40,7.75,8.0,135,145,5.0,Z2 pla i molt fàcil,65,8.0,S5,S,19.5
+S20,18/05/2026,24/05/2026,Construcció,Consolidació,1,20,5.58,0.0,160,168,8.0,60,7.75,8.0,135,145,7.6,Z2 continu o Trail suau,100,12.0,S1 o S2,S,27.6
+S21,25/05/2026,31/05/2026,Construcció,Consolidació,2,15,5.58,3.0,160,168,8.5,60,7.75,8.0,135,145,7.6,Z2 continu o Trail suau,105,13.5,S3,S,29.6
