@@ -129,7 +129,7 @@ function renderQualityBlock(week, weekSessions) {
   const tbody = document.getElementById('sw-q-sessions-list');
   if (tbody) {
     tbody.innerHTML = sessions.length
-      ? sessions.map(s => sessionRow(s)).join('')
+      ? sessions.map(s => sessionRowQuality(s)).join('')
       : `<tr><td colspan="4" class="empty-row muted-msg">Sense sessions de qualitat aquesta setmana</td></tr>`;
   }
 
@@ -155,7 +155,7 @@ function renderZ2Block(week, weekSessions) {
   const tbody = document.getElementById('sw-z2-sessions-list');
   if (tbody) {
     tbody.innerHTML = sessions.length
-      ? sessions.map(s => sessionRow(s)).join('')
+      ? sessions.map(s => sessionRowZ2(s)).join('')
       : `<tr><td colspan="4" class="empty-row muted-msg">Sense sessions Z2 aquesta setmana</td></tr>`;
   }
 
@@ -178,7 +178,7 @@ function renderLongBlock(week, weekSessions) {
   const tbody = document.getElementById('sw-ll-sessions-list');
   if (tbody) {
     tbody.innerHTML = sessions.length
-      ? sessions.map(s => sessionRow(s)).join('')
+      ? sessions.map(s => sessionRowLong(s)).join('')
       : `<tr><td colspan="4" class="empty-row muted-msg">Sense tirada llarga aquesta setmana</td></tr>`;
   }
 
@@ -203,7 +203,7 @@ function renderExtraBlock(week, weekSessions) {
   const tbody = document.getElementById('sw-extra-sessions-list');
   if (tbody) {
     tbody.innerHTML = [...forca, ...extra].length
-      ? [...forca, ...extra].map(s => sessionRow(s)).join('')
+      ? [...forca, ...extra].map(s => sessionRowExtra(s)).join('')
       : `<tr><td colspan="4" class="empty-row muted-msg">Sense sessions complementàries</td></tr>`;
   }
 
@@ -211,14 +211,60 @@ function renderExtraBlock(week, weekSessions) {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function sessionRow(s) {
+function sessionRowQuality(s) {
+  const ritme = s.raw['Ritme_Mitja_Series'] || s.raw['Ritme(min/km)'];
+  const fc    = s.raw['FC_Mitja_Series']    || s.fcMitja;
+  return `
+    <tr>
+      <td>${escV(s.displayDate)}</td>
+      <td>${ritme ? escV(ritme) + ' min/km' : '—'}</td>
+      <td>${isFinite(fc) && fc > 0 ? Math.round(fc) + ' bpm' : '—'}</td>
+      <td>${fmtNum(s.carrega)}</td>
+    </tr>`;
+}
+
+function sessionRowZ2(s) {
+  const ritme    = s.ritme    > 0 ? fmtNum(s.ritme) + ' min/km' : '—';
+  const cadencia = toNumberV(s.raw['Cadencia(spm)']) > 0
+    ? Math.round(toNumberV(s.raw['Cadencia(spm)'])) + ' spm' : '—';
+  return `
+    <tr>
+      <td>${escV(s.displayDate)}</td>
+      <td>${ritme}</td>
+      <td>${cadencia}</td>
+      <td>${fmtNum(s.carrega)}</td>
+    </tr>`;
+}
+
+function sessionRowLong(s) {
+  const ritme    = s.ritme > 0 ? fmtNum(s.ritme) + ' min/km' : '—';
+  const z2min    = s.z2min > 0 ? fmtNum(s.z2min) + ' min' : '—';
+  const desnivell = toNumberV(s.raw['Desnivell(m)']) > 0
+    ? Math.round(toNumberV(s.raw['Desnivell(m)'])) + ' m' : '—';
+  return `
+    <tr>
+      <td>${escV(s.displayDate)}</td>
+      <td>${ritme}</td>
+      <td>${z2min}</td>
+      <td>${desnivell}</td>
+    </tr>`;
+}
+
+function sessionRowExtra(s) {
   return `
     <tr>
       <td>${escV(s.displayDate)}</td>
       <td>${escV(s.tipus)}</td>
-      <td>${s.distancia > 0 ? fmtNum(s.distancia) + ' km' : '—'}</td>
+      <td>${s.durada > 0 ? fmtNum(s.durada) + ' min' : '—'}</td>
       <td>${fmtNum(s.carrega)}</td>
     </tr>`;
+}
+
+// Helper local per no dependre de toNumber d'app.js
+function toNumberV(value) {
+  if (value == null || value === '') return null;
+  const n = Number(String(value).trim().replace(/,/g, '.'));
+  return isFinite(n) ? n : null;
 }
 
 function setBlockStatus(id, done) {

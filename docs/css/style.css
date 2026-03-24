@@ -473,7 +473,7 @@ code {
 
 .sw-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;  /* era repeat(2, 1fr) */
   gap: 24px;
 }
 
@@ -491,8 +491,9 @@ code {
 
 .sw-cols {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  grid-template-columns: 240px 1fr;
+  gap: 24px;
+  align-items: start;
 }
 
 .sw-col-title {
@@ -502,6 +503,12 @@ code {
   text-transform: uppercase;
   color: var(--secondary);
   margin-bottom: 12px;
+}
+
+/* Separador vertical entre pla i real */
+.sw-col:last-child {
+  border-left: 1px solid rgba(148, 163, 184, 0.12);
+  padding-left: 20px;
 }
 
 .sw-plan-list {
