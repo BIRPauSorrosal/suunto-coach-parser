@@ -11,6 +11,7 @@ from src.parsers.z2_parser import Z2Parser
 from src.parsers.quality_parser import QualityParser
 from src.parsers.long_run_parser import LongRunParser
 from src.parsers.strength_parser import StrengthParser
+from src.parsers.generic_parser import GenericParser
 
 
 # ─────────────────────────────────────────────────────────────
@@ -19,7 +20,7 @@ from src.parsers.strength_parser import StrengthParser
 # Per afegir un nou tipus, només cal afegir una línia aquí.
 # ─────────────────────────────────────────────────────────────
 PARSER_REGISTRY = {
-    # Sessions suaus
+    # Sessions de running suau
     "z2":        Z2Parser,
 
     # Sessions de qualitat (mateix parser, tipus diferent per nom d'arxiu)
@@ -36,6 +37,13 @@ PARSER_REGISTRY = {
 
     # Força / gimnasio
     "força":    StrengthParser,
+
+    # Activitats simples genèriques
+    "padel":     GenericParser,
+    "tennis":    GenericParser,
+    "hiking":    GenericParser,
+    "natacio":   GenericParser,
+    "swim":      GenericParser,
 }
 
 
@@ -46,6 +54,7 @@ def detect_parser(filepath: Path):
              '260311_running_tempo.json'         -> QualityParser
              '260315_running_tirada_llarga.json' -> LongRunParser
              '260317_força_S2.json'             -> StrengthParser
+             '260321_padel.json'                 -> GenericParser
     Retorna la classe del parser o None si no en troba cap.
     """
     filename_lower = filepath.stem.lower()
