@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from src.config import RAW_DIR, ARCHIVE_DIR, CSV_PATH
 from src.parsers.z2_parser import Z2Parser
 from src.parsers.quality_parser import QualityParser
+from src.parsers.long_run_parser import LongRunParser
 
 
 # ─────────────────────────────────────────────────────────────
@@ -24,14 +25,22 @@ PARSER_REGISTRY = {
     "tempo":     QualityParser,
     "test":      QualityParser,
     "intervals": QualityParser,
+
+    # Tirades llargues i curses (mateix parser, tipus diferent per nom d'arxiu)
+    "llarga":    LongRunParser,
+    "longrun":   LongRunParser,
+    "marat":     LongRunParser,   # cobreix 'marató' i 'maraton'
+    "trail":     LongRunParser,
+    "mitja":     LongRunParser,
 }
 
 
 def detect_parser(filepath: Path):
     """
     Detecta el parser adequat a partir del nom de l'arxiu.
-    Exemple: '260323_running_z2.json'    -> Z2Parser
-             '260311_running_tempo.json' -> QualityParser
+    Exemple: '260323_running_z2.json'          -> Z2Parser
+             '260311_running_tempo.json'        -> QualityParser
+             '260315_running_tirada_llarga.json'-> LongRunParser
     Retorna la classe del parser o None si no en troba cap.
     """
     filename_lower = filepath.stem.lower()
