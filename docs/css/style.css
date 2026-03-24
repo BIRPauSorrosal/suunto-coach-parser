@@ -549,3 +549,185 @@ code {
 @media (max-width: 760px) {
   .sw-cols { grid-template-columns: 1fr; }
 }
+
+/* ── Vista Planning ──────────────────────────────────────────────────────── */
+#planning-view-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.plan-year-nav,
+.plan-month-nav,
+.plan-week-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.plan-year-label,
+.plan-month-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  flex: 1;
+  text-align: center;
+}
+
+.btn-sm { padding: 8px 14px; font-size: 0.9rem; }
+
+.plan-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 12px 0;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
+/* Anual */
+.plan-year-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.plan-month-col { display: flex; flex-direction: column; gap: 6px; }
+.plan-month-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+.plan-month-name:hover { color: var(--text); }
+
+.plan-month-weeks { display: flex; flex-direction: column; gap: 4px; }
+
+.plan-week-bar {
+  display: flex;
+  align-items: center;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid;
+  background: rgba(2,6,23,0.3);
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  transition: opacity 0.15s;
+}
+.plan-week-bar:hover { opacity: 0.8; }
+.plan-week-fill {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  opacity: 0.25;
+  transition: width 0.3s ease;
+}
+.plan-week-name {
+  position: relative;
+  font-size: 0.78rem;
+  padding: 0 8px;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.plan-no-data { color: var(--muted); font-size: 0.85rem; padding: 8px 0; }
+
+/* Mensual */
+.plan-month-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.plan-week-card {
+  border-radius: var(--radius-sm);
+  padding: 18px;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.15s;
+  border: 1px solid var(--panel-border);
+}
+.plan-week-card:hover { transform: translateY(-2px); opacity: 0.9; }
+
+.pwc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+.pwc-setmana { font-size: 1.1rem; font-weight: 700; }
+.pwc-dates   { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
+.pwc-badges  { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.pwc-cicle   { font-size: 0.8rem; font-weight: 700; }
+.pwc-fase    { font-size: 0.78rem; color: var(--muted); }
+
+.pwc-bar-wrap {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(148,163,184,0.15);
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+.pwc-bar-fill { height: 100%; border-radius: 999px; transition: width 0.3s ease; }
+
+.pwc-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.pwc-km    { font-size: 0.95rem; font-weight: 600; }
+.pwc-icons { font-size: 1rem; letter-spacing: 2px; }
+
+.pwc-time {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* Setmanal pla */
+.plan-week-nav-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.plan-week-nav-label { font-size: 1.2rem; font-weight: 700; }
+.plan-week-counter {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(56,189,248,0.12);
+  color: #bae6fd;
+  font-size: 0.85rem;
+}
+
+.pwv-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+.pwv-km-total { text-align: right; }
+
+.pwv-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.pwv-block { border-left: 3px solid rgba(148,163,184,0.2); }
+
+@media (max-width: 1180px) {
+  .plan-year-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .pwv-grid       { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .plan-year-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
