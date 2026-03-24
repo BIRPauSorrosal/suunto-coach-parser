@@ -171,14 +171,147 @@
 
       <!-- ── Vista: Setmana actual ─────────────────────────────────────── -->
       <section class="view" data-view="setmanal">
+
+        <!-- Capçalera amb navegació -->
         <header class="page-header">
           <div>
             <p class="eyebrow">Fase 4</p>
-            <h2>Setmana actual</h2>
+            <h2 id="sw-week-label">--</h2>
+            <p class="page-subtitle">
+              <span id="sw-week-range">--</span> ·
+              <span id="sw-week-fase">--</span>
+            </p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-ghost" id="week-nav-prev">◄ Anterior</button>
+            <span class="badge badge-muted" id="sw-week-counter">-- / --</span>
+            <button class="btn btn-ghost" id="week-nav-next">Següent ►</button>
           </div>
         </header>
-        <div class="panel">
-          <p class="muted-msg">Vista en construcció — Fase 4.</p>
+
+        <!-- Barra de progrés global -->
+        <article class="panel progress-panel">
+          <div class="progress-header">
+            <span>Km totals setmanals</span>
+            <span><strong id="sw-progress-real">--</strong> de <strong id="sw-progress-planned">--</strong> · <span id="sw-progress-pct">-- %</span></span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="sw-progress-bar" style="width:0%"></div>
+          </div>
+        </article>
+
+        <!-- Grid de blocs -->
+        <div class="sw-grid">
+
+          <!-- Qualitat -->
+          <article class="panel sw-block" id="sw-q-block">
+            <div class="sw-block-header">
+              <h3>🎯 Qualitat</h3>
+              <span class="sw-status-dot" id="sw-q-dot"></span>
+            </div>
+            <div class="sw-cols">
+              <div class="sw-col">
+                <p class="sw-col-title">Planificat</p>
+                <ul class="sw-plan-list">
+                  <li><span>Sèries</span><strong id="sw-q-series">--</strong></li>
+                  <li><span>Ritme</span><strong id="sw-q-ritme">--</strong></li>
+                  <li><span>Rec.</span><strong id="sw-q-rec">--</strong></li>
+                  <li><span>FC</span><strong id="sw-q-fc">--</strong></li>
+                  <li><span>Km pla</span><strong id="sw-q-km-plan">--</strong></li>
+                </ul>
+              </div>
+              <div class="sw-col">
+                <p class="sw-col-title">Real</p>
+                <p class="sw-real-summary"><span id="sw-q-sessions-real">—</span> · <span id="sw-q-km-real">—</span></p>
+                <table class="sw-mini-table">
+                  <thead><tr><th>Data</th><th>Tipus</th><th>Km</th><th>Càrrega</th></tr></thead>
+                  <tbody id="sw-q-sessions-list"></tbody>
+                </table>
+              </div>
+            </div>
+          </article>
+
+          <!-- Z2 -->
+          <article class="panel sw-block" id="sw-z2-block">
+            <div class="sw-block-header">
+              <h3>🫁 Z2</h3>
+              <span class="sw-status-dot"></span>
+            </div>
+            <div class="sw-cols">
+              <div class="sw-col">
+                <p class="sw-col-title">Planificat</p>
+                <ul class="sw-plan-list">
+                  <li><span>Durada</span><strong id="sw-z2-durada-plan">--</strong></li>
+                  <li><span>Ritme</span><strong id="sw-z2-ritme-plan">--</strong></li>
+                  <li><span>FC</span><strong id="sw-z2-fc-plan">--</strong></li>
+                  <li><span>Km pla</span><strong id="sw-z2-km-plan">--</strong></li>
+                </ul>
+              </div>
+              <div class="sw-col">
+                <p class="sw-col-title">Real</p>
+                <p class="sw-real-summary"><span id="sw-z2-min-real">—</span> · <span id="sw-z2-km-real">—</span></p>
+                <table class="sw-mini-table">
+                  <thead><tr><th>Data</th><th>Tipus</th><th>Km</th><th>Càrrega</th></tr></thead>
+                  <tbody id="sw-z2-sessions-list"></tbody>
+                </table>
+              </div>
+            </div>
+          </article>
+
+          <!-- Tirada llarga -->
+          <article class="panel sw-block" id="sw-ll-block">
+            <div class="sw-block-header">
+              <h3>🏃 Tirada llarga</h3>
+              <span class="sw-status-dot"></span>
+            </div>
+            <div class="sw-cols">
+              <div class="sw-col">
+                <p class="sw-col-title">Planificat</p>
+                <ul class="sw-plan-list">
+                  <li><span>Tipus</span><strong id="sw-ll-tipus-plan">--</strong></li>
+                  <li><span>Durada</span><strong id="sw-ll-durada-plan">--</strong></li>
+                  <li><span>Km pla</span><strong id="sw-ll-km-plan">--</strong></li>
+                </ul>
+              </div>
+              <div class="sw-col">
+                <p class="sw-col-title">Real</p>
+                <p class="sw-real-summary"><span id="sw-ll-km-real">—</span></p>
+                <table class="sw-mini-table">
+                  <thead><tr><th>Data</th><th>Tipus</th><th>Km</th><th>Càrrega</th></tr></thead>
+                  <tbody id="sw-ll-sessions-list"></tbody>
+                </table>
+              </div>
+            </div>
+          </article>
+
+          <!-- Extra -->
+          <article class="panel sw-block" id="sw-extra-block">
+            <div class="sw-block-header">
+              <h3>💪 Força / Pàdel</h3>
+              <span class="sw-status-dot"></span>
+            </div>
+            <div class="sw-cols">
+              <div class="sw-col">
+                <p class="sw-col-title">Planificat</p>
+                <ul class="sw-plan-list">
+                  <li><span>Força</span><strong id="sw-extra-forca-plan">--</strong></li>
+                  <li><span>Pàdel</span><strong id="sw-extra-padel-plan">--</strong></li>
+                </ul>
+              </div>
+              <div class="sw-col">
+                <p class="sw-col-title">Real</p>
+                <p class="sw-real-summary">
+                  Força: <span id="sw-extra-forca-real">—</span> ·
+                  Pàdel: <span id="sw-extra-padel-real">—</span>
+                </p>
+                <table class="sw-mini-table">
+                  <thead><tr><th>Data</th><th>Tipus</th><th>Km</th><th>Càrrega</th></tr></thead>
+                  <tbody id="sw-extra-sessions-list"></tbody>
+                </table>
+              </div>
+            </div>
+          </article>
+
         </div>
       </section>
       <!-- /vista setmanal -->
@@ -261,6 +394,7 @@
 
   <script src="./js/vendor/chart.umd.min.js"></script>
   <script src="./js/charts.js"></script>
+  <script src="./js/views/setmanal.js"></script>
   <script src="./js/app.js"></script>
 </body>
 </html>

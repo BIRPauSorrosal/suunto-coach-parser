@@ -438,3 +438,107 @@ code {
   padding: 40px;
   text-align: center;
 }
+
+/* ── Vista Setmanal ──────────────────────────────────────────────────────── */
+.btn-ghost {
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: var(--text);
+  padding: 10px 16px;
+  border-radius: 12px;
+}
+.btn-ghost:hover  { background: rgba(148, 163, 184, 0.16); }
+.btn-ghost:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.progress-panel { padding: 20px 24px; }
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  color: var(--muted);
+}
+.progress-header strong { color: var(--text); }
+.progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.15);
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+  transition: width 0.4s ease;
+}
+
+.sw-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.sw-block { border-left: 3px solid rgba(148, 163, 184, 0.2); }
+.sw-block.block--done    { border-left-color: var(--primary); }
+.sw-block.block--pending { border-left-color: rgba(245, 158, 11, 0.6); }
+
+.sw-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.sw-block-header h3 { font-size: 1.1rem; }
+
+.sw-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.sw-col-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--secondary);
+  margin-bottom: 12px;
+}
+
+.sw-plan-list {
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+.sw-plan-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.92rem;
+}
+.sw-plan-list span { color: var(--muted); }
+
+.sw-real-summary {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+.sw-mini-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.sw-mini-table th {
+  text-align: left;
+  color: var(--muted);
+  font-size: 0.8rem;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+.sw-mini-table td {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.06);
+}
+
+@media (max-width: 1180px) {
+  .sw-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .sw-cols { grid-template-columns: 1fr; }
+}
