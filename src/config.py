@@ -9,7 +9,7 @@ ARCHIVE_DIR = DATA_DIR / "archive"
 OUTPUT_DIR = DATA_DIR / "output"
 
 # Nom de l'arxiu CSV on anirem afegint les files de cada entrenament
-CSV_FILENAME = "resum_entrenaments.csv"
+CSV_FILENAME = "sessions.csv"
 CSV_PATH = OUTPUT_DIR / CSV_FILENAME
 
 # Crear directoris locals automàticament si no existeixen
