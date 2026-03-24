@@ -16,9 +16,10 @@ QUALITY_TYPES = {
 # Llindar de durada curta: intervals <= 3.5 min sempre són recuperació
 RECUPERACIO_MAX_DURADA = 210
 
-# Llindar de FC: si la FC d'un interval llarg és <= FC_global * aquest factor,
-# es classifica com a recuperació (no com a sèrie d'esforç)
-RECUPERACIO_FC_FACTOR = 0.88
+# Factor sobre la FC màxima de les sèries d'esforç:
+# si FC_mitja_interval <= FC_max_series * aquest factor → és recuperació
+# Exemple: FC_max_series=189 * 0.82 = 154 bpm → intervals per sota són recuperació
+RECUPERACIO_FC_MAX_FACTOR = 0.82
 
 
 class QualityParser(BaseParser):
@@ -27,10 +28,11 @@ class QualityParser(BaseParser):
     Extreu dades globals de la sessió + anàlisi detallat de cada sèrie
     a partir dels Windows de tipus 'Interval' del JSON de Suunto.
 
-    Lògica de classificació sèrie vs recuperació:
-      - És RECUPERACIÓ si dura <= 3.5 min (recuperació curta típica), O
-      - És RECUPERACIÓ si la seva FC mitjana <= FC_global_sessió * 0.88
-        (clarament per sota de l'esforç mig, tot i ser un interval llarg)
+    Lògica de classificació sèrie vs recuperació (2 passades):
+      1a passada: troba la FC màxima dels intervals llargs (candidates a sèrie)
+      2a passada: classifica cada interval:
+        - RECUPERACIÓ si dura <= 3.5 min, O
+        - RECUPERACIÓ si FC_mitja <= FC_max_series * 0.82
     """
 
     def __init__(self, filepath: Path):
@@ -46,50 +48,55 @@ class QualityParser(BaseParser):
             "QUALITAT"  # fallback genèric
         )
 
-    def _es_recuperacio(self, dur_s: float, fc_mitja_bpm: int, fc_global_bpm: int) -> bool:
-        """
-        Determina si un interval és una recuperació o una sèrie d'esforç.
-        Combina criteri de durada curta i criteri de FC relativa.
-        """
-        if dur_s <= RECUPERACIO_MAX_DURADA:
-            return True
-        if fc_global_bpm > 0 and fc_mitja_bpm <= fc_global_bpm * RECUPERACIO_FC_FACTOR:
-            return True
-        return False
-
-    def _extract_intervals(self, fc_global_bpm: int) -> tuple[list, list]:
-        """
-        Separa els Windows de tipus 'Interval' en sèries i recuperacions.
-        Necessita la FC global de la sessió per aplicar el criteri de FC relativa.
-        Retorna (series, recuperacions) com a llistes de diccionaris.
-        """
-        series = []
-        recuperacions = []
-
+    def _get_raw_intervals(self) -> list:
+        """Extreu tots els Windows de tipus Interval com a llista de diccionaris bruts."""
+        intervals = []
         for w in self.windows:
             ww = w.get("Window", {})
             if ww.get("Type") != "Interval":
                 continue
-
-            dur = ww.get("Duration", 0) or 0
-            dist = ww.get("Distance", 0) or 0
-            speed_avg = (ww.get("Speed") or [{}])[0].get("Avg") or 0
-            hr_avg = (ww.get("HR") or [{}])[0].get("Avg") or 0
-            hr_max = (ww.get("HR") or [{}])[0].get("Max") or 0
-            cad_avg = (ww.get("Cadence") or [{}])[0].get("Avg") or 0
-
-            fc_mitja_bpm = int(round(hr_avg * 60))
-
-            entry = {
+            dur      = ww.get("Duration", 0) or 0
+            dist     = ww.get("Distance", 0) or 0
+            speed    = (ww.get("Speed")   or [{}])[0].get("Avg") or 0
+            hr_avg   = (ww.get("HR")      or [{}])[0].get("Avg") or 0
+            hr_max   = (ww.get("HR")      or [{}])[0].get("Max") or 0
+            cadence  = (ww.get("Cadence") or [{}])[0].get("Avg") or 0
+            intervals.append({
+                "dur_s":    dur,
                 "dist_m":   round(dist),
                 "dur_min":  round(dur / 60, 1),
-                "ritme":    ms_to_minkm(speed_avg),
-                "fc_mitja": fc_mitja_bpm,
+                "ritme":    ms_to_minkm(speed),
+                "fc_mitja": int(round(hr_avg * 60)),
                 "fc_max":   int(round(hr_max * 60)),
-                "cadencia": hz_to_spm(cad_avg),
-            }
+                "cadencia": hz_to_spm(cadence),
+            })
+        return intervals
 
-            if self._es_recuperacio(dur, fc_mitja_bpm, fc_global_bpm):
+    def _extract_intervals(self) -> tuple[list, list]:
+        """
+        Classifica els intervals en sèries i recuperacions.
+        1a passada: calcula FC max dels intervals llargs per establir el llindar.
+        2a passada: aplica els criteris de durada i FC relativa.
+        """
+        raw = self._get_raw_intervals()
+
+        # 1a passada: FC màxima dels intervals candidats a sèrie (llargs)
+        fc_max_series = max(
+            (iv["fc_max"] for iv in raw if iv["dur_s"] > RECUPERACIO_MAX_DURADA),
+            default=0
+        )
+        llindar_fc = int(fc_max_series * RECUPERACIO_FC_MAX_FACTOR)
+
+        # 2a passada: classificació final
+        series = []
+        recuperacions = []
+        for iv in raw:
+            es_recup = (
+                iv["dur_s"] <= RECUPERACIO_MAX_DURADA or
+                iv["fc_mitja"] <= llindar_fc
+            )
+            entry = {k: v for k, v in iv.items() if k != "dur_s"}  # traiem dur_s intern
+            if es_recup:
                 recuperacions.append(entry)
             else:
                 series.append(entry)
@@ -111,12 +118,9 @@ class QualityParser(BaseParser):
     def parse(self) -> dict:
         """Retorna les dades globals + resum de sèries per al CSV."""
         base = super().parse()
+        series, recuperacions = self._extract_intervals()
 
-        # Necessitem la FC global per al criteri de classificació
-        fc_global = self.get_hr_avg()
-        series, recuperacions = self._extract_intervals(fc_global)
-
-        # Afegim número de sèrie a cada entrada per facilitar lectura de la IA
+        # Afegim número de sèrie per facilitar lectura de la IA
         for i, s in enumerate(series, 1):
             s["serie"] = i
 
