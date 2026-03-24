@@ -134,7 +134,7 @@ def main():
         process_file(filepath)
 
     print("\n─" * 45)
-    print(f"✔️   Procés completat. Revisa el CSV a: data/output/resum_entrenaments.csv\n")
+    print(f"✔️   Procés completat. Revisa el CSV a: data/output/sessions.csv\n")
 
 
 if __name__ == "__main__":

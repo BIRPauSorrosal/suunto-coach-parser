@@ -16,7 +16,7 @@
       <div class="brand-block">
         <p class="eyebrow">Suunto Coach</p>
         <h1>Parser & Dashboard</h1>
-        <p class="sidebar-text">Fase 1 del dashboard: estructura visual preparada per connectar <code>sessions.csv</code> i <code>planning.csv</code> a la Fase 2.</p>
+        <p class="sidebar-text">Fase 2: càrrega real de <code>sessions.csv</code> i <code>planning.csv</code> amb JavaScript vanilla i render dinàmic del dashboard.</p>
       </div>
 
       <nav class="sidebar-nav" aria-label="Navegació principal">
@@ -29,10 +29,10 @@
       <section class="sidebar-panel">
         <h2>Estat dades</h2>
         <ul class="status-list">
-          <li><span class="dot dot-live"></span> sessions.csv preparat</li>
-          <li><span class="dot dot-live"></span> planning.csv preparat</li>
-          <li><span class="dot"></span> Fetch CSV pendent</li>
-          <li><span class="dot"></span> Gràfics pendents</li>
+          <li><span class="dot dot-live"></span> <span id="status-sessions">sessions.csv pendent de lectura</span></li>
+          <li><span class="dot dot-live"></span> <span id="status-planning">planning.csv pendent de lectura</span></li>
+          <li><span class="dot"></span> <span id="status-source">Origen de dades encara no resolt</span></li>
+          <li><span class="dot"></span> <span id="status-last-update">Sense actualització</span></li>
         </ul>
       </section>
     </aside>
@@ -42,37 +42,41 @@
         <div>
           <p class="eyebrow">Dashboard web</p>
           <h2>Seguiment d'entrenament</h2>
-          <p class="page-subtitle">Base visual responsive per mostrar el resum setmanal, el detall de sessions i la comparativa entre planificació i execució.</p>
+          <p class="page-subtitle">El dashboard carrega els CSVs, detecta la setmana activa, calcula el resum setmanal i omple les taules automàticament.</p>
         </div>
         <div class="header-actions">
-          <button type="button" class="btn btn-primary" disabled>Carregar CSVs</button>
-          <button type="button" class="btn btn-secondary" disabled>Actualitzar dades</button>
+          <button type="button" class="btn btn-primary" id="reload-data-btn">Recarregar dades</button>
+          <span class="badge badge-muted" id="load-badge">Inicialitzant dades...</span>
         </div>
       </header>
+
+      <section class="notice-bar" id="notice-bar">
+        <p id="notice-text">Llegint fitxers CSV...</p>
+      </section>
 
       <section class="hero-grid">
         <article class="hero-card card-highlight">
           <p class="card-label">Setmana activa</p>
-          <h3>W12 · Base específica</h3>
-          <p class="card-note">Aquesta targeta mostrarà la setmana detectada segons la data actual o la setmana seleccionada.</p>
+          <h3 id="active-week-label">--</h3>
+          <p class="card-note" id="active-week-range">Esperant dades del planning per detectar la finestra setmanal.</p>
         </article>
 
         <article class="hero-card">
           <p class="card-label">Objectiu setmanal</p>
           <h3>Km totals planificats</h3>
-          <p class="hero-value">-- km</p>
+          <p class="hero-value" id="planned-km-value">-- km</p>
         </article>
 
         <article class="hero-card">
           <p class="card-label">Càrrega real</p>
           <h3>Carrega acumulada</h3>
-          <p class="hero-value">--</p>
+          <p class="hero-value" id="real-load-value">--</p>
         </article>
 
         <article class="hero-card">
           <p class="card-label">Compliment</p>
           <h3>Pla vs real</h3>
-          <p class="hero-value">-- %</p>
+          <p class="hero-value" id="compliance-value">-- %</p>
         </article>
       </section>
 
@@ -83,28 +87,28 @@
               <p class="eyebrow">Bloc principal</p>
               <h3>Resum setmanal</h3>
             </div>
-            <span class="badge">JOIN planning + sessions</span>
+            <span class="badge" id="join-badge">Calculat a partir dels dos CSVs</span>
           </div>
           <div class="metrics-grid">
             <div class="metric-box">
               <span>Qualitat</span>
-              <strong>--</strong>
-              <small>Sèries, tempo, test o intervals</small>
+              <strong id="quality-summary">--</strong>
+              <small id="quality-detail">Sèries, tempo, test o intervals</small>
             </div>
             <div class="metric-box">
               <span>Z2</span>
-              <strong>--</strong>
-              <small>Durada, ritme i FC objectiu</small>
+              <strong id="z2-summary">--</strong>
+              <small id="z2-detail">Durada i ritme objectiu</small>
             </div>
             <div class="metric-box">
               <span>Tirada llarga</span>
-              <strong>--</strong>
-              <small>Tipus i volum setmanal</small>
+              <strong id="long-summary">--</strong>
+              <small id="long-detail">Tipus i volum setmanal</small>
             </div>
             <div class="metric-box">
               <span>Força / Pàdel</span>
-              <strong>--</strong>
-              <small>Sessions complementàries</small>
+              <strong id="extra-summary">--</strong>
+              <small id="extra-detail">Treball complementari</small>
             </div>
           </div>
         </article>
@@ -118,7 +122,7 @@
             <span class="badge badge-muted">Chart.js</span>
           </div>
           <div class="chart-placeholder">
-            <span>Espai reservat per a gràfics de km, ritme Z2 i càrrega setmanal</span>
+            <span>Les dades ja queden preparades a JavaScript perquè a la Fase 3 només haguem de pintar els gràfics.</span>
           </div>
         </article>
       </section>
@@ -130,7 +134,7 @@
               <p class="eyebrow">Sessions</p>
               <h3>Últimes activitats</h3>
             </div>
-            <span class="badge">sessions.csv</span>
+            <span class="badge" id="sessions-count-badge">0 files</span>
           </div>
           <div class="table-shell">
             <table>
@@ -143,27 +147,9 @@
                   <th>Carrega</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody id="sessions-table-body">
                 <tr>
-                  <td>--</td>
-                  <td>--</td>
-                  <td>--</td>
-                  <td>--</td>
-                  <td>--</td>
-                </tr>
-                <tr>
-                  <td>--</td>
-                  <td>--</td>
-                  <td>--</td>
-                  <td>--</td>
-                  <td>--</td>
-                </tr>
-                <tr>
-                  <td>--</td>
-                  <td>--</td>
-                  <td>--</td>
-                  <td>--</td>
-                  <td>--</td>
+                  <td colspan="5" class="empty-row">Carregant sessions...</td>
                 </tr>
               </tbody>
             </table>
@@ -176,7 +162,7 @@
               <p class="eyebrow">Planning</p>
               <h3>Setmanes planificades</h3>
             </div>
-            <span class="badge">planning.csv</span>
+            <span class="badge" id="planning-count-badge">0 files</span>
           </div>
           <div class="table-shell">
             <table>
@@ -190,30 +176,9 @@
                   <th>LL Km</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody id="planning-table-body">
                 <tr>
-                  <td>--</td>
-                  <td>--</td>
-                  <td>--</td>
-                  <td>--</td>
-                  <td>--</td>
-                  <td>--</td>
-                </tr>
-                <tr>
-                  <td>--</td>
-                  <td>--</td>
-                  <td>--</td>
-                  <td>--</td>
-                  <td>--</td>
-                  <td>--</td>
-                </tr>
-                <tr>
-                  <td>--</td>
-                  <td>--</td>
-                  <td>--</td>
-                  <td>--</td>
-                  <td>--</td>
-                  <td>--</td>
+                  <td colspan="6" class="empty-row">Carregant planning...</td>
                 </tr>
               </tbody>
             </table>
