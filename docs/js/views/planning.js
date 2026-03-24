@@ -31,7 +31,8 @@ let planningYear      = new Date().getFullYear();
 let planningMonth     = new Date().getMonth();
 let planningWeekIndex = 0;
 
-function renderPlanningView(planning) {
+// ── Punt d'entrada ────────────────────────────────────────────────────────────
+function renderPlanningView(planning, sessions) {
   if (!planning.length) return;
   const today  = new Date();
   const active = planning.find(w => today >= w.startDate && today <= w.endDate)
@@ -41,11 +42,12 @@ function renderPlanningView(planning) {
     planningYear      = active.startDate.getFullYear();
     planningWeekIndex = planning.indexOf(active);
   }
-  initPlanningNav(planning);
-  renderPlanningLevel(planning);
+  initPlanningNav(planning, sessions);
+  renderPlanningLevel(planning, sessions);
 }
 
-function initPlanningNav(planning) {
+// ── Navegació de nivells ──────────────────────────────────────────────────────
+function initPlanningNav(planning, sessions) {
   ['btn-plan-yearly', 'btn-plan-monthly'].forEach(id => {
     const btn = document.getElementById(id);
     if (!btn) return;
@@ -53,20 +55,20 @@ function initPlanningNav(planning) {
     btn.replaceWith(clone);
   });
   document.getElementById('btn-plan-yearly')?.addEventListener('click', () => {
-    planningViewLevel = 'yearly'; renderPlanningLevel(planning);
+    planningViewLevel = 'yearly'; renderPlanningLevel(planning, sessions);
   });
   document.getElementById('btn-plan-monthly')?.addEventListener('click', () => {
-    planningViewLevel = 'monthly'; renderPlanningLevel(planning);
+    planningViewLevel = 'monthly'; renderPlanningLevel(planning, sessions);
   });
 }
 
-function renderPlanningLevel(planning) {
+function renderPlanningLevel(planning, sessions) {
   updateLevelButtons();
   const container = document.getElementById('planning-view-container');
   if (!container) return;
-  if (planningViewLevel === 'yearly')  renderYearlyView(container, planning);
-  if (planningViewLevel === 'monthly') renderMonthlyView(container, planning);
-  if (planningViewLevel === 'weekly')  renderWeeklyPlanView(container, planning);
+  if (planningViewLevel === 'yearly')  renderYearlyView(container, planning, sessions);
+  if (planningViewLevel === 'monthly') renderMonthlyView(container, planning, sessions);
+  if (planningViewLevel === 'weekly')  renderWeeklyPlanView(container, planning, sessions);
 }
 
 function updateLevelButtons() {
@@ -75,7 +77,7 @@ function updateLevelButtons() {
 }
 
 // ── Vista ANUAL ───────────────────────────────────────────────────────────────
-function renderYearlyView(container, planning) {
+function renderYearlyView(container, planning, sessions) {
   const yearPlanning = planning.filter(w =>
     w.startDate.getFullYear() === planningYear ||
     w.endDate.getFullYear()   === planningYear
@@ -92,11 +94,11 @@ function renderYearlyView(container, planning) {
   const maxKm = Math.max(...planning.map(w => w.kmTotal || 0), 1);
 
   const legendCycles = [
-    ['BASE',         CYCLE_COLORS['BASE'].color],
-    ['CONSTRUCCIÓ',  CYCLE_COLORS['CONSTRUCCIÓ'].color],
-    ['RECUPERACIÓ',  CYCLE_COLORS['RECUPERACIÓ'].color],
-    ['PIC',          CYCLE_COLORS['PIC'].color],
-    ['COMPETICIÓ',   CYCLE_COLORS['COMPETICIÓ'].color],
+    ['BASE',        CYCLE_COLORS['BASE'].color],
+    ['CONSTRUCCIÓ', CYCLE_COLORS['CONSTRUCCIÓ'].color],
+    ['RECUPERACIÓ', CYCLE_COLORS['RECUPERACIÓ'].color],
+    ['PIC',         CYCLE_COLORS['PIC'].color],
+    ['COMPETICIÓ',  CYCLE_COLORS['COMPETICIÓ'].color],
   ];
   const legendPhases = [
     ['Acumulació',   PHASE_COLORS['ACUMULACIÓ']],
@@ -105,21 +107,29 @@ function renderYearlyView(container, planning) {
     ['Consolidació', PHASE_COLORS['CONSOLIDACIÓ']],
   ];
 
-  // Construïm el HTML de les barres mes a mes
   let weeksHTML = '';
   monthNames.forEach((name, m) => {
     const weeks = byMonth[m] || [];
     let barsHTML = '';
     weeks.forEach(w => {
-      const c   = getCycleStyle(w.cicle);
-      const pct = Math.round(((w.kmTotal || 0) / maxKm) * 100);
-      const ph  = getPhaseColor(w.fase);
-      const idx = planning.indexOf(w);
-      barsHTML += '<div class="plan-week-bar" style="border-color:' + c.color + '"'
+      const c      = getCycleStyle(w.cicle);
+      const pct    = Math.round(((w.kmTotal || 0) / maxKm) * 100);
+      const ph     = getPhaseColor(w.fase);
+      const idx    = planning.indexOf(w);
+      const stats  = getWeekStats(w, sessions);
+      const donePct = Math.min(stats.pctTotal, 100);
+      const statusCls = stats.status === 'active' ? 'bar--active' : '';
+
+      barsHTML += '<div class="plan-week-bar ' + statusCls + '" style="border-color:' + c.color + '"'
                +  ' data-week="' + idx + '"'
-               +  ' title="' + w.setmana + ' · ' + w.cicle + ' · ' + w.fase + ' · ' + fmtNumP(w.kmTotal) + ' km">'
+               +  ' title="' + w.setmana + ' · ' + w.cicle + ' · ' + w.fase
+               +  ' · ' + fmtNumP(stats.kmTotal) + '/' + fmtNumP(w.kmTotal) + ' km (' + stats.pctTotal + '%)">'
                +  '<div class="plan-week-fill" style="width:' + pct + '%;background:' + c.color + '"></div>'
+               +  '<div class="plan-week-done" style="width:' + donePct + '%"></div>'
                +  '<span class="plan-week-name">' + w.setmana + '</span>'
+               +  (stats.status !== 'future'
+                 ? '<span class="plan-week-pct">' + stats.pctTotal + '%</span>'
+                 : '')
                +  '<span class="plan-week-phase-sq" style="background:' + ph + '" title="' + w.fase + '"></span>'
                +  '</div>';
     });
@@ -131,7 +141,6 @@ function renderYearlyView(container, planning) {
               +  '</div></div>';
   });
 
-  // Llegenda en dues files
   let legendCyclesHTML = '';
   legendCycles.forEach(function(item) {
     legendCyclesHTML += '<span class="legend-dot" style="background:' + item[1] + '"></span>'
@@ -156,29 +165,29 @@ function renderYearlyView(container, planning) {
     + '<div class="plan-year-grid">' + weeksHTML + '</div>';
 
   document.getElementById('btn-year-prev')?.addEventListener('click', () => {
-    planningYear--; renderPlanningLevel(planning);
+    planningYear--; renderPlanningLevel(planning, sessions);
   });
   document.getElementById('btn-year-next')?.addEventListener('click', () => {
-    planningYear++; renderPlanningLevel(planning);
+    planningYear++; renderPlanningLevel(planning, sessions);
   });
   container.querySelectorAll('.plan-week-bar[data-week]').forEach(el => {
     el.addEventListener('click', () => {
       planningWeekIndex = parseInt(el.dataset.week);
       planningViewLevel = 'weekly';
-      renderPlanningLevel(planning);
+      renderPlanningLevel(planning, sessions);
     });
   });
   container.querySelectorAll('.plan-month-col[data-month]').forEach(el => {
     el.querySelector('.plan-month-name')?.addEventListener('click', () => {
       planningMonth     = parseInt(el.dataset.month);
       planningViewLevel = 'monthly';
-      renderPlanningLevel(planning);
+      renderPlanningLevel(planning, sessions);
     });
   });
 }
 
 // ── Vista MENSUAL ─────────────────────────────────────────────────────────────
-function renderMonthlyView(container, planning) {
+function renderMonthlyView(container, planning, sessions) {
   const monthNames = ['Gener','Febrer','Març','Abril','Maig','Juny',
                       'Juliol','Agost','Setembre','Octubre','Novembre','Desembre'];
 
@@ -192,11 +201,26 @@ function renderMonthlyView(container, planning) {
   let cardsHTML = '';
   if (monthWeeks.length) {
     monthWeeks.forEach(w => {
-      const c    = getCycleStyle(w.cicle);
-      const pct  = Math.round(((w.kmTotal || 0) / maxKm) * 100);
-      const mins = estimatedMinutes(w);
-      const ph   = getPhaseColor(w.fase);
-      const idx  = planning.indexOf(w);
+      const c      = getCycleStyle(w.cicle);
+      const pct    = Math.round(((w.kmTotal || 0) / maxKm) * 100);
+      const mins   = estimatedMinutes(w);
+      const ph     = getPhaseColor(w.fase);
+      const idx    = planning.indexOf(w);
+      const stats  = getWeekStats(w, sessions);
+      const donePct = Math.min(stats.pctTotal, 100);
+
+      const badgeHTML = stats.status === 'future'
+        ? '<span class="pwc-badge pwc-badge--future">⏳ Pendent</span>'
+        : stats.status === 'active'
+        ? '<span class="pwc-badge pwc-badge--active">🔄 ' + stats.pctTotal + '%</span>'
+        : stats.pctTotal >= 90
+        ? '<span class="pwc-badge pwc-badge--done">✅ ' + stats.pctTotal + '%</span>'
+        : '<span class="pwc-badge pwc-badge--partial">⚠️ ' + stats.pctTotal + '%</span>';
+
+      const kmLabel = stats.status !== 'future'
+        ? fmtNumP(stats.kmTotal) + ' / ' + fmtNumP(w.kmTotal) + ' km'
+        : fmtNumP(w.kmTotal) + ' km pla';
+
       cardsHTML +=
         '<article class="plan-week-card" data-week="' + idx + '"'
         + ' style="border-top:3px solid ' + c.color + ';background:' + c.bg + '">'
@@ -207,13 +231,15 @@ function renderMonthlyView(container, planning) {
         +   '</div>'
         +   '<div class="pwc-badges">'
         +     '<span class="pwc-cicle" style="color:' + c.color + '">' + w.cicle + '</span>'
+        +     badgeHTML
         +   '</div>'
         + '</div>'
         + '<div class="pwc-bar-wrap">'
-        +   '<div class="pwc-bar-fill" style="width:' + pct + '%;background:' + c.color + '"></div>'
+        +   '<div class="pwc-bar-fill" style="width:' + pct + '%;background:' + c.color + ';opacity:0.3"></div>'
+        +   '<div class="pwc-bar-done" style="width:' + donePct + '%"></div>'
         + '</div>'
         + '<div class="pwc-footer">'
-        +   '<span class="pwc-km">' + fmtNumP(w.kmTotal) + ' km</span>'
+        +   '<span class="pwc-km">' + kmLabel + '</span>'
         +   '<span class="pwc-time">~' + fmtMinutes(mins) + '</span>'
         + '</div>'
         + '<div class="pwc-phase-bar" style="background:' + ph + '">'
@@ -236,27 +262,46 @@ function renderMonthlyView(container, planning) {
   document.getElementById('btn-month-prev')?.addEventListener('click', () => {
     planningMonth--;
     if (planningMonth < 0) { planningMonth = 11; planningYear--; }
-    renderPlanningLevel(planning);
+    renderPlanningLevel(planning, sessions);
   });
   document.getElementById('btn-month-next')?.addEventListener('click', () => {
     planningMonth++;
     if (planningMonth > 11) { planningMonth = 0; planningYear++; }
-    renderPlanningLevel(planning);
+    renderPlanningLevel(planning, sessions);
   });
   container.querySelectorAll('.plan-week-card[data-week]').forEach(el => {
     el.addEventListener('click', () => {
       planningWeekIndex = parseInt(el.dataset.week);
       planningViewLevel = 'weekly';
-      renderPlanningLevel(planning);
+      renderPlanningLevel(planning, sessions);
     });
   });
 }
 
-// ── Vista SETMANAL (només pla) ────────────────────────────────────────────────
-function renderWeeklyPlanView(container, planning) {
+// ── Vista SETMANAL (pla + real) ───────────────────────────────────────────────
+function renderWeeklyPlanView(container, planning, sessions) {
   const week = planning[planningWeekIndex];
   if (!week) return;
-  const c = getCycleStyle(week.cicle);
+  const c     = getCycleStyle(week.cicle);
+  const stats = getWeekStats(week, sessions);
+
+  const kmBadge = stats.status !== 'future'
+    ? ' <span class="pwv-real-val">' + fmtNumP(stats.kmTotal) + ' km fets (' + stats.pctTotal + '%)</span>'
+    : '';
+
+  const qReal = week.qKm > 0 && stats.status !== 'future'
+    ? '<li class="sw-plan-real"><span>Real</span><strong>' + fmtNumP(stats.kmQuality) + ' km (' + (stats.pctQuality || 0) + '%)</strong></li>'
+    : '';
+  const z2Real = parseFloat(week.raw['Z2_Km_Plan']) > 0 && stats.status !== 'future'
+    ? '<li class="sw-plan-real"><span>Real</span><strong>' + fmtNumP(stats.kmZ2) + ' km (' + (stats.pctZ2 || 0) + '%)</strong></li>'
+    : '';
+  const llReal = week.llKm > 0 && stats.status !== 'future'
+    ? '<li class="sw-plan-real"><span>Real</span><strong>' + fmtNumP(stats.kmLong) + ' km (' + (stats.pctLong || 0) + '%)</strong></li>'
+    : '';
+  const extraReal = stats.status !== 'future'
+    ? '<li class="sw-plan-real"><span>Força</span><strong>' + (stats.hasStrength ? '✅' : '—') + '</strong></li>'
+    + '<li class="sw-plan-real"><span>Pàdel</span><strong>' + (stats.hasPadel ? '✅' : '—') + '</strong></li>'
+    : '';
 
   container.innerHTML =
     '<div class="plan-week-nav">'
@@ -276,8 +321,9 @@ function renderWeeklyPlanView(container, planning) {
     +       '<p class="card-note">' + fmtDateP(week.startDate) + ' → ' + fmtDateP(week.endDate) + '</p>'
     +     '</div>'
     +     '<div class="pwv-km-total">'
-    +       '<p class="card-label">Km totals</p>'
+    +       '<p class="card-label">Km totals pla</p>'
     +       '<p class="hero-value">' + fmtNumP(week.kmTotal) + ' km</p>'
+    +       kmBadge
     +     '</div>'
     +   '</div>'
     + '</div>'
@@ -292,6 +338,7 @@ function renderWeeklyPlanView(container, planning) {
     +     '<li><span>Recuperació</span><strong>' + (week.raw['Q_Rec_min'] || '--') + ' min</strong></li>'
     +     '<li><span>FC</span><strong>' + formatFCRangeP(week.raw['Q_FC_min'], week.raw['Q_FC_max']) + '</strong></li>'
     +     '<li><span>Km pla</span><strong>' + fmtNumP(week.qKm) + ' km</strong></li>'
+    +     qReal
     +   '</ul>'
     + '</article>'
 
@@ -302,6 +349,7 @@ function renderWeeklyPlanView(container, planning) {
     +     '<li><span>Ritme</span><strong>' + week.z2PaceMin + '–' + week.z2PaceMax + ' min/km</strong></li>'
     +     '<li><span>FC</span><strong>' + formatFCRangeP(week.raw['Z2_FC_min'], week.raw['Z2_FC_max']) + '</strong></li>'
     +     '<li><span>Km pla</span><strong>' + fmtNumP(week.raw['Z2_Km_Plan']) + ' km</strong></li>'
+    +     z2Real
     +   '</ul>'
     + '</article>'
 
@@ -311,6 +359,7 @@ function renderWeeklyPlanView(container, planning) {
     +     '<li><span>Tipus</span><strong>' + (week.llTipus || '--') + '</strong></li>'
     +     '<li><span>Durada</span><strong>' + (week.raw['LL_Durada_min'] ? fmtNumP(week.raw['LL_Durada_min']) + ' min' : '--') + '</strong></li>'
     +     '<li><span>Km pla</span><strong>' + fmtNumP(week.llKm) + ' km</strong></li>'
+    +     llReal
     +   '</ul>'
     + '</article>'
 
@@ -319,17 +368,48 @@ function renderWeeklyPlanView(container, planning) {
     +   '<ul class="sw-plan-list" style="margin-top:12px">'
     +     '<li><span>Força</span><strong>' + (week.forcaPlan || '--') + '</strong></li>'
     +     '<li><span>Pàdel</span><strong>' + (week.padelPlan || '--') + '</strong></li>'
+    +     extraReal
     +   '</ul>'
     + '</article>'
 
     + '</div>';
 
   document.getElementById('btn-wplan-prev')?.addEventListener('click', () => {
-    if (planningWeekIndex > 0) { planningWeekIndex--; renderPlanningLevel(planning); }
+    if (planningWeekIndex > 0) { planningWeekIndex--; renderPlanningLevel(planning, sessions); }
   });
   document.getElementById('btn-wplan-next')?.addEventListener('click', () => {
-    if (planningWeekIndex < planning.length - 1) { planningWeekIndex++; renderPlanningLevel(planning); }
+    if (planningWeekIndex < planning.length - 1) { planningWeekIndex++; renderPlanningLevel(planning, sessions); }
   });
+}
+
+// ── Stats per setmana (JOIN planning ↔ sessions) ──────────────────────────────
+function getWeekStats(week, sessions) {
+  const ws = sessions.filter(s => s.date >= week.startDate && s.date <= week.endDate);
+
+  const kmTotal    = ws.reduce((acc, s) => acc + (s.distancia || 0), 0);
+  const kmQuality  = ws.filter(s => ['TEMPO','TEST','INTERVALS'].includes(s.tipusKey))
+                       .reduce((acc, s) => acc + (s.distancia || 0), 0);
+  const kmZ2       = ws.filter(s => s.tipusKey === 'Z2')
+                       .reduce((acc, s) => acc + (s.distancia || 0), 0);
+  const kmLong     = ws.filter(s => ['LLARGA','MARATÓ','TRAIL','MITJA','MARATO'].includes(s.tipusKey))
+                       .reduce((acc, s) => acc + (s.distancia || 0), 0);
+  const hasStrength = ws.some(s => s.tipusKey.startsWith('FORÇA') || s.tipusKey.startsWith('FORCA'));
+  const hasPadel    = ws.some(s => ['PADEL','TENIS','TENNIS'].includes(s.tipusKey));
+
+  const pctTotal   = week.kmTotal > 0 ? Math.round((kmTotal   / week.kmTotal)                          * 100) : 0;
+  const pctQuality = week.qKm     > 0 ? Math.round((kmQuality / week.qKm)                              * 100) : null;
+  const pctZ2      = parseFloat(week.raw['Z2_Km_Plan']) > 0
+                   ? Math.round((kmZ2  / parseFloat(week.raw['Z2_Km_Plan']))                            * 100) : null;
+  const pctLong    = week.llKm    > 0 ? Math.round((kmLong    / week.llKm)                             * 100) : null;
+
+  const today  = new Date(); today.setHours(0,0,0,0);
+  const start  = new Date(week.startDate); start.setHours(0,0,0,0);
+  const end    = new Date(week.endDate);   end.setHours(23,59,59,999);
+  const status = today < start ? 'future' : today > end ? 'done' : 'active';
+
+  return { ws, kmTotal, kmQuality, kmZ2, kmLong,
+           hasStrength, hasPadel,
+           pctTotal, pctQuality, pctZ2, pctLong, status };
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

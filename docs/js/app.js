@@ -43,7 +43,7 @@ function initRouter() {
         renderSetmanalView(window._chartData.sessions, window._chartData.planning);
       }
       if (target === 'planning' && window._chartData) {
-        renderPlanningView(window._chartData.planning);
+        renderPlanningView(window._chartData.planning, window._chartData.sessions);
       }
     });
   });
@@ -170,7 +170,7 @@ function renderDashboard() {
   renderSessionsTable(sessions);
   renderPlanningTable(planning);
   renderSetmanalView(sessions, planning);
-  renderPlanningView(planning);
+  renderPlanningView(planning, sessions);
 
   // Gràfics: setTimeout garanteix que els <canvas> tenen mides reals
   setTimeout(() => initCharts(sessions, planning), 0);
