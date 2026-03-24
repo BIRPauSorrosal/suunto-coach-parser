@@ -11,6 +11,11 @@ class BaseRunningParser(BaseParser):
       - Ritme mitjà global (min/km)
       - Cadència mitjana global (spm)
 
+    Ordre de columnes al CSV:
+      Data | Tipus | Durada | Dist | Desnivell | FCMitja | FCMax |
+      Z1-Z5 | PTE | Recup(h) | Ritme(min/km) | Cadencia(spm) |
+      [columnes específiques del parser fill]
+
     Jerarquia d'herència:
       BaseParser
       └── BaseRunningParser
@@ -43,13 +48,11 @@ class BaseRunningParser(BaseParser):
         return hz_to_spm(sum(cadence_list) / len(cadence_list))
 
     def parse(self) -> dict:
-        """Amplia la base genèrica amb ritme i cadència globals del running."""
+        """
+        Amplia la base genèrica afegint Ritme i Cadència globals just després
+        de Recup(h) i abans de qualsevol columna específica del parser fill.
+        """
         base = super().parse()
-        # Inserim Ritme i Cadencia just després de Desnivell
-        result = {}
-        for k, v in base.items():
-            result[k] = v
-            if k == "Desnivell(m)":
-                result["Ritme(min/km)"] = self.get_pace()
-                result["Cadencia(spm)"] = self.get_cadence_spm()
-        return result
+        base["Ritme(min/km)"] = self.get_pace()
+        base["Cadencia(spm)"] = self.get_cadence_spm()
+        return base
