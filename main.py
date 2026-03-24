@@ -8,24 +8,30 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from src.config import RAW_DIR, ARCHIVE_DIR, CSV_PATH
 from src.parsers.z2_parser import Z2Parser
+from src.parsers.quality_parser import QualityParser
 
 
-# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
 # REGISTRE DE PARSERS
-# Per afegir un nou tipus, nomes cal afegir una linia aqui
-# clau: paraula clau al nom de l'arxiu | valor: classe parser
-# ─────────────────────────────────────────────
+# Clau: paraula clau al nom de l'arxiu | Valor: classe parser
+# Per afegir un nou tipus, només cal afegir una línia aquí.
+# ─────────────────────────────────────────────────────────────
 PARSER_REGISTRY = {
-    "z2": Z2Parser,
-    # "series": SeriesParser,   # Descomentar quan estigui implementat
-    # "llarga":  LlargaParser,  # Idem
+    # Sessions suaus
+    "z2":        Z2Parser,
+
+    # Sessions de qualitat (mateix parser, tipus diferent per nom d'arxiu)
+    "tempo":     QualityParser,
+    "test":      QualityParser,
+    "intervals": QualityParser,
 }
 
 
 def detect_parser(filepath: Path):
     """
     Detecta el parser adequat a partir del nom de l'arxiu.
-    Exemple: '260323_running_z2.json' -> Z2Parser
+    Exemple: '260323_running_z2.json'    -> Z2Parser
+             '260311_running_tempo.json' -> QualityParser
     Retorna la classe del parser o None si no en troba cap.
     """
     filename_lower = filepath.stem.lower()
@@ -38,7 +44,7 @@ def detect_parser(filepath: Path):
 def append_to_csv(row: dict):
     """
     Afegeix una nova fila al CSV de resum.
-    Si el CSV no existeix, el crea amb capcalera.
+    Si el CSV no existeix, el crea amb capçalera.
     Si la data ja existeix, avisa i no duplica la fila.
     """
     new_df = pd.DataFrame([row])
@@ -46,7 +52,7 @@ def append_to_csv(row: dict):
     if CSV_PATH.exists():
         existing_df = pd.read_csv(CSV_PATH)
         if row["Data"] in existing_df["Data"].values:
-            print(f"  ⚠️  Ja existeix una entrada per la data {row['Data']}. Saltant...")
+            print(f"  ⚠️   Ja existeix una entrada per la data {row['Data']}. Saltant...")
             return
         updated_df = pd.concat([existing_df, new_df], ignore_index=True)
     else:
@@ -57,13 +63,13 @@ def append_to_csv(row: dict):
 
 
 def process_file(filepath: Path):
-    """Processa un unic arxiu JSON: detecta el tipus, parseja i guarda al CSV."""
+    """Processa un únic arxiu JSON: detecta el tipus, parseja i guarda al CSV."""
     print(f"\n📂 Processant: {filepath.name}")
 
     parser_class = detect_parser(filepath)
     if parser_class is None:
         print(f"  ❌  No s'ha trobat cap parser per a '{filepath.name}'.")
-        print(f"      Noms esperats: han de contenir una d'aquestes paraules: {list(PARSER_REGISTRY.keys())}")
+        print(f"      Paraules clau esperades al nom: {list(PARSER_REGISTRY.keys())}")
         return
 
     print(f"  🔍  Parser detectat: {parser_class.__name__}")
@@ -72,7 +78,8 @@ def process_file(filepath: Path):
 
     print(f"  📊  Resum extret:")
     for k, v in row.items():
-        print(f"       {k}: {v}")
+        if k != "Series_Detall":  # Evitem imprimir el JSON llarg per pantalla
+            print(f"       {k}: {v}")
 
     append_to_csv(row)
 
@@ -89,7 +96,7 @@ def main():
     json_files = list(RAW_DIR.glob("*.json"))
 
     if not json_files:
-        print("\n📭 No s'han trobat arxius JSON a data/raw/")
+        print("\n🔴 No s'han trobat arxius JSON a data/raw/")
         print("   Copia els arxius exportats de Suunto a aquesta carpeta i torna a executar.")
         return
 
@@ -101,7 +108,7 @@ def main():
         process_file(filepath)
 
     print("\n─" * 45)
-    print(f"✔️  Proces completat. Revisa el CSV a: data/output/resum_entrenaments.csv\n")
+    print(f"✔️   Procés completat. Revisa el CSV a: data/output/resum_entrenaments.csv\n")
 
 
 if __name__ == "__main__":
