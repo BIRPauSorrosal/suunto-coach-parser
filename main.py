@@ -21,30 +21,30 @@ from src.parsers.generic_parser import GenericParser
 # ─────────────────────────────────────────────────────────────
 PARSER_REGISTRY = {
     # Sessions de running suau
-    "z2":           Z2Parser,
+    "z2":            Z2Parser,
 
     # Sessions de qualitat (mateix parser, tipus diferent per nom d'arxiu)
-    "tempo":        QualityParser,
-    "test":         QualityParser,
-    "intervals":    QualityParser,
+    "tempo":         QualityParser,
+    "test":          QualityParser,
+    "intervals":     QualityParser,
 
     # Tirades llargues i curses (mateix parser, tipus diferent per nom d'arxiu)
-    "llarga":       LongRunParser,
-    "longrun":      LongRunParser,
-    "marat":        LongRunParser,   # cobreix 'marató' i 'maraton'
-    "trail":        LongRunParser,
-    "mitja":        LongRunParser,
+    "llarga":        LongRunParser,
+    "longrun":       LongRunParser,
+    "marat":         LongRunParser,   # cobreix 'marató' i 'maraton'
+    "trail":         LongRunParser,
+    "mitja":         LongRunParser,
 
     # Força / gimnasio
-    "força":       StrengthParser,
+    "força":        StrengthParser,
 
     # Activitats simples genèriques
     "bici_estatica": GenericParser,
-    "padel":        GenericParser,
-    "tennis":       GenericParser,
-    "hiking":       GenericParser,
-    "natacio":      GenericParser,
-    "swim":         GenericParser,
+    "padel":         GenericParser,
+    "tennis":        GenericParser,
+    "hiking":        GenericParser,
+    "natacio":       GenericParser,
+    "swim":          GenericParser,
 }
 
 
@@ -66,18 +66,20 @@ def detect_parser(filepath: Path):
     return None
 
 
-def append_to_csv(row: dict):
+def append_to_csv(row: dict, source_filename: str):
     """
     Afegeix una nova fila al CSV de resum.
     Si el CSV no existeix, el crea amb capçalera.
-    Si la data ja existeix, avisa i no duplica la fila.
+    El control de duplicats es fa pel nom de l'arxiu font (columna 'Arxiu'),
+    permetent així múltiples activitats en el mateix dia.
     """
+    row["Arxiu"] = source_filename  # clau única per detectar duplicats
     new_df = pd.DataFrame([row])
 
     if CSV_PATH.exists():
         existing_df = pd.read_csv(CSV_PATH)
-        if row["Data"] in existing_df["Data"].values:
-            print(f"  ⚠️   Ja existeix una entrada per la data {row['Data']}. Saltant...")
+        if source_filename in existing_df["Arxiu"].values:
+            print(f"  ⚠️   L'arxiu '{source_filename}' ja existeix al CSV. Saltant...")
             return
         updated_df = pd.concat([existing_df, new_df], ignore_index=True)
     else:
@@ -106,7 +108,7 @@ def process_file(filepath: Path):
         if k != "Series_Detall":
             print(f"       {k}: {v}")
 
-    append_to_csv(row)
+    append_to_csv(row, filepath.stem)
 
     dest = ARCHIVE_DIR / filepath.name
     shutil.move(str(filepath), str(dest))
