@@ -7,11 +7,12 @@ from src.parsers.base_parser import BaseParser
 # Per afegir una nova activitat simple, afegir una línia aquí
 # i registrar la paraula clau al PARSER_REGISTRY de main.py.
 GENERIC_TYPES = {
-    "padel":   "PADEL",
-    "tennis":  "TENNIS",
-    "hiking":  "HIKING",
-    "natacio": "NATACIÓ",
-    "swim":    "NATACIÓ",
+    "padel":        "PADEL",
+    "tennis":       "TENNIS",
+    "hiking":       "HIKING",
+    "natacio":      "NATACIÓ",
+    "swim":         "NATACIÓ",
+    "bici_estatica": "BICI ESTÀTICA",
 }
 
 
@@ -25,11 +26,12 @@ class GenericParser(BaseParser):
     només detecta el tipus d'activitat pel nom de l'arxiu.
 
     Activitats suportades (GENERIC_TYPES):
-      _padel_   → PADEL
-      _tennis_  → TENNIS
-      _hiking_  → HIKING
-      _natacio_ → NATACIÓ
-      _swim_    → NATACIÓ
+      _padel_         → PADEL
+      _tennis_        → TENNIS
+      _hiking_        → HIKING
+      _natacio_       → NATACIÓ
+      _swim_          → NATACIÓ
+      _bici_estatica_ → BICI ESTÀTICA
 
     Per afegir una nova activitat simple:
       1. Afegir una línia a GENERIC_TYPES

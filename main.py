@@ -21,29 +21,30 @@ from src.parsers.generic_parser import GenericParser
 # ─────────────────────────────────────────────────────────────
 PARSER_REGISTRY = {
     # Sessions de running suau
-    "z2":        Z2Parser,
+    "z2":           Z2Parser,
 
     # Sessions de qualitat (mateix parser, tipus diferent per nom d'arxiu)
-    "tempo":     QualityParser,
-    "test":      QualityParser,
-    "intervals": QualityParser,
+    "tempo":        QualityParser,
+    "test":         QualityParser,
+    "intervals":    QualityParser,
 
     # Tirades llargues i curses (mateix parser, tipus diferent per nom d'arxiu)
-    "llarga":    LongRunParser,
-    "longrun":   LongRunParser,
-    "marat":     LongRunParser,   # cobreix 'marató' i 'maraton'
-    "trail":     LongRunParser,
-    "mitja":     LongRunParser,
+    "llarga":       LongRunParser,
+    "longrun":      LongRunParser,
+    "marat":        LongRunParser,   # cobreix 'marató' i 'maraton'
+    "trail":        LongRunParser,
+    "mitja":        LongRunParser,
 
     # Força / gimnasio
-    "força":    StrengthParser,
+    "força":       StrengthParser,
 
     # Activitats simples genèriques
-    "padel":     GenericParser,
-    "tennis":    GenericParser,
-    "hiking":    GenericParser,
-    "natacio":   GenericParser,
-    "swim":      GenericParser,
+    "bici_estatica": GenericParser,
+    "padel":        GenericParser,
+    "tennis":       GenericParser,
+    "hiking":       GenericParser,
+    "natacio":      GenericParser,
+    "swim":         GenericParser,
 }
 
 
@@ -54,6 +55,7 @@ def detect_parser(filepath: Path):
              '260311_running_tempo.json'         -> QualityParser
              '260315_running_tirada_llarga.json' -> LongRunParser
              '260317_força_S2.json'             -> StrengthParser
+             '260308_bici_estatica_z2.json'      -> GenericParser
              '260321_padel.json'                 -> GenericParser
     Retorna la classe del parser o None si no en troba cap.
     """
