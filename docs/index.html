@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Dashboard estàtic de Suunto Coach per visualitzar planificació i sessions d'entrenament.">
   <title>Suunto Coach Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,150 +11,223 @@
 </head>
 <body>
   <div class="app-shell">
+
+    <!-- ── Sidebar ─────────────────────────────────────────────────────── -->
     <aside class="sidebar">
       <div class="brand-block">
         <p class="eyebrow">Suunto Coach</p>
-        <h1>Parser & Dashboard</h1>
-        <p class="sidebar-text">Fase 2: càrrega real de <code>sessions.csv</code> i <code>planning.csv</code> amb JavaScript vanilla i render dinàmic del dashboard.</p>
+        <h1>Parser &amp; Dashboard</h1>
       </div>
 
       <nav class="sidebar-nav" aria-label="Navegació principal">
-        <a href="#overview" class="nav-link active">Overview</a>
-        <a href="#plan-real" class="nav-link">Pla vs Real</a>
-        <a href="#sessions" class="nav-link">Sessions</a>
-        <a href="#planning" class="nav-link">Planning</a>
+        <a href="#" class="nav-link active" data-target="overview">
+          <span class="nav-icon">◎</span> Overview
+        </a>
+        <a href="#" class="nav-link" data-target="setmanal">
+          <span class="nav-icon">◈</span> Setmana actual
+        </a>
+        <a href="#" class="nav-link" data-target="planning">
+          <span class="nav-icon">◫</span> Planning
+        </a>
+        <a href="#" class="nav-link" data-target="sessions">
+          <span class="nav-icon">◇</span> Sessions
+        </a>
       </nav>
 
       <section class="sidebar-panel">
         <h2>Estat dades</h2>
         <ul class="status-list">
-          <li><span class="dot dot-live"></span> <span id="status-sessions">sessions.csv pendent de lectura</span></li>
-          <li><span class="dot dot-live"></span> <span id="status-planning">planning.csv pendent de lectura</span></li>
-          <li><span class="dot"></span> <span id="status-source">Origen de dades encara no resolt</span></li>
+          <li><span class="dot dot-live"></span> <span id="status-sessions">sessions.csv pendent</span></li>
+          <li><span class="dot dot-live"></span> <span id="status-planning">planning.csv pendent</span></li>
+          <li><span class="dot"></span> <span id="status-source">Origen no resolt</span></li>
           <li><span class="dot"></span> <span id="status-last-update">Sense actualització</span></li>
         </ul>
       </section>
+
+      <button type="button" class="btn btn-primary btn-sidebar" id="reload-data-btn">
+        Recarregar dades
+      </button>
     </aside>
 
+    <!-- ── Main ───────────────────────────────────────────────────────── -->
     <main class="main-content">
-      <header class="page-header" id="overview">
-        <div>
-          <p class="eyebrow">Dashboard web</p>
-          <h2>Seguiment d'entrenament</h2>
-          <p class="page-subtitle">El dashboard carrega els CSVs, detecta la setmana activa, calcula el resum setmanal i omple les taules automàticament.</p>
-        </div>
-        <div class="header-actions">
-          <button type="button" class="btn btn-primary" id="reload-data-btn">Recarregar dades</button>
-          <span class="badge badge-muted" id="load-badge">Inicialitzant dades...</span>
-        </div>
-      </header>
 
+      <!-- Barra d'estat global (sempre visible) -->
       <section class="notice-bar" id="notice-bar">
         <p id="notice-text">Llegint fitxers CSV...</p>
       </section>
 
-      <section class="hero-grid">
-        <article class="hero-card card-highlight">
-          <p class="card-label">Setmana activa</p>
-          <h3 id="active-week-label">--</h3>
-          <p class="card-note" id="active-week-range">Esperant dades del planning per detectar la finestra setmanal.</p>
-        </article>
+      <!-- ── Vista: Overview ──────────────────────────────────────────── -->
+      <section class="view view--active" data-view="overview">
 
-        <article class="hero-card">
-          <p class="card-label">Objectiu setmanal</p>
-          <h3>Km totals planificats</h3>
-          <p class="hero-value" id="planned-km-value">-- km</p>
-        </article>
+        <header class="page-header">
+          <div>
+            <p class="eyebrow">Dashboard web</p>
+            <h2>Seguiment d'entrenament</h2>
+          </div>
+          <span class="badge badge-muted" id="load-badge">Inicialitzant...</span>
+        </header>
 
-        <article class="hero-card">
-          <p class="card-label">Càrrega real</p>
-          <h3>Carrega acumulada</h3>
-          <p class="hero-value" id="real-load-value">--</p>
-        </article>
+        <div class="hero-grid">
+          <article class="hero-card card-highlight">
+            <p class="card-label">Setmana activa</p>
+            <h3 id="active-week-label">--</h3>
+            <p class="card-note" id="active-week-range">Esperant dades del planning.</p>
+          </article>
+          <article class="hero-card">
+            <p class="card-label">Objectiu setmanal</p>
+            <h3>Km totals planificats</h3>
+            <p class="hero-value" id="planned-km-value">-- km</p>
+          </article>
+          <article class="hero-card">
+            <p class="card-label">Càrrega real</p>
+            <h3>Carrega acumulada</h3>
+            <p class="hero-value" id="real-load-value">--</p>
+          </article>
+          <article class="hero-card">
+            <p class="card-label">Compliment</p>
+            <h3>Pla vs real</h3>
+            <p class="hero-value" id="compliance-value">-- %</p>
+          </article>
+        </div>
 
-        <article class="hero-card">
-          <p class="card-label">Compliment</p>
-          <h3>Pla vs real</h3>
-          <p class="hero-value" id="compliance-value">-- %</p>
-        </article>
+        <div class="content-grid">
+          <article class="panel panel-large">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Bloc principal</p>
+                <h3>Resum setmanal</h3>
+              </div>
+              <span class="badge">Calculat a partir dels dos CSVs</span>
+            </div>
+            <div class="metrics-grid">
+              <div class="metric-box">
+                <span>Qualitat</span>
+                <strong id="quality-summary">--</strong>
+                <small id="quality-detail">Sèries, tempo, test o intervals</small>
+              </div>
+              <div class="metric-box">
+                <span>Z2</span>
+                <strong id="z2-summary">--</strong>
+                <small id="z2-detail">Durada i ritme objectiu</small>
+              </div>
+              <div class="metric-box">
+                <span>Tirada llarga</span>
+                <strong id="long-summary">--</strong>
+                <small id="long-detail">Tipus i volum setmanal</small>
+              </div>
+              <div class="metric-box">
+                <span>Força / Pàdel</span>
+                <strong id="extra-summary">--</strong>
+                <small id="extra-detail">Treball complementari</small>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Zones cardíaques</p>
+                <h3>Distribució Z1–Z5</h3>
+              </div>
+              <span class="badge badge-muted">Totes les sessions</span>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="chart-zones"></canvas>
+            </div>
+          </article>
+        </div>
+
+        <div class="charts-grid">
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Volum setmanal</p>
+                <h3>Km planificats vs reals</h3>
+              </div>
+              <span class="badge badge-muted">Planning + Sessions</span>
+            </div>
+            <div class="chart-wrap chart-wrap--tall">
+              <canvas id="chart-km"></canvas>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Estrès d'entrenament</p>
+                <h3>Càrrega setmanal</h3>
+              </div>
+              <span class="badge badge-muted">Sessions reals</span>
+            </div>
+            <div class="chart-wrap chart-wrap--tall">
+              <canvas id="chart-load"></canvas>
+            </div>
+          </article>
+        </div>
+
       </section>
+      <!-- /vista overview -->
 
-      <section class="content-grid" id="plan-real">
-        <article class="panel panel-large">
-          <div class="panel-header">
-            <div>
-              <p class="eyebrow">Bloc principal</p>
-              <h3>Resum setmanal</h3>
-            </div>
-            <span class="badge" id="join-badge">Calculat a partir dels dos CSVs</span>
+      <!-- ── Vista: Setmana actual ─────────────────────────────────────── -->
+      <section class="view" data-view="setmanal">
+        <header class="page-header">
+          <div>
+            <p class="eyebrow">Fase 4</p>
+            <h2>Setmana actual</h2>
           </div>
-          <div class="metrics-grid">
-            <div class="metric-box">
-              <span>Qualitat</span>
-              <strong id="quality-summary">--</strong>
-              <small id="quality-detail">Sèries, tempo, test o intervals</small>
-            </div>
-            <div class="metric-box">
-              <span>Z2</span>
-              <strong id="z2-summary">--</strong>
-              <small id="z2-detail">Durada i ritme objectiu</small>
-            </div>
-            <div class="metric-box">
-              <span>Tirada llarga</span>
-              <strong id="long-summary">--</strong>
-              <small id="long-detail">Tipus i volum setmanal</small>
-            </div>
-            <div class="metric-box">
-              <span>Força / Pàdel</span>
-              <strong id="extra-summary">--</strong>
-              <small id="extra-detail">Treball complementari</small>
-            </div>
+        </header>
+        <div class="panel">
+          <p class="muted-msg">Vista en construcció — Fase 4.</p>
+        </div>
+      </section>
+      <!-- /vista setmanal -->
+
+            <!-- ── Vista: Planning ──────────────────────────────────────────── -->
+      <section class="view" data-view="planning">
+        <header class="page-header">
+          <div>
+            <p class="eyebrow">Planificació</p>
+            <h2>Setmanes planificades</h2>
           </div>
-        </article>
+          <span class="badge" id="planning-count-badge">0 files</span>
+        </header>
 
         <article class="panel">
-          <div class="panel-header">
-            <div>
-              <p class="eyebrow">Zones cardíaques</p>
-              <h3>Distribució Z1–Z5</h3>
-            </div>
-            <span class="badge badge-muted">Totes les sessions</span>
-          </div>
-          <div class="chart-wrap">
-            <canvas id="chart-zones"></canvas>
-          </div>
-        </article>
-      </section>
-
-      <section class="charts-grid">
-        <article class="panel">
-          <div class="panel-header">
-            <div>
-              <p class="eyebrow">Volum setmanal</p>
-              <h3>Km planificats vs reals</h3>
-            </div>
-            <span class="badge badge-muted">Planning + Sessions</span>
-          </div>
-          <div class="chart-wrap chart-wrap--tall">
-            <canvas id="chart-km"></canvas>
-          </div>
-        </article>
-
-        <article class="panel">
-          <div class="panel-header">
-            <div>
-              <p class="eyebrow">Estrès d'entrenament</p>
-              <h3>Càrrega setmanal</h3>
-            </div>
-            <span class="badge badge-muted">Sessions reals</span>
-          </div>
-          <div class="chart-wrap chart-wrap--tall">
-            <canvas id="chart-load"></canvas>
+          <div class="table-shell">
+            <table>
+              <thead>
+                <tr>
+                  <th>Setmana</th>
+                  <th>Cicle</th>
+                  <th>Fase</th>
+                  <th>Q Km</th>
+                  <th>Z2 min</th>
+                  <th>Z2 Ritme</th>
+                  <th>LL Tipus</th>
+                  <th>LL Km</th>
+                  <th>Força</th>
+                  <th>Pàdel</th>
+                  <th>Km Total</th>
+                </tr>
+              </thead>
+              <tbody id="planning-table-body">
+                <tr><td colspan="11" class="empty-row">Carregant planning...</td></tr>
+              </tbody>
+            </table>
           </div>
         </article>
       </section>
+      <!-- /vista planning -->
 
-      <section class="table-grid" id="sessions">
+      <!-- ── Vista: Sessions ──────────────────────────────────────────── -->
+      <section class="view" data-view="sessions">
+        <header class="page-header">
+          <div>
+            <p class="eyebrow">Historial</p>
+            <h2>Totes les sessions</h2>
+          </div>
+        </header>
         <article class="panel">
           <div class="panel-header">
             <div>
@@ -176,49 +248,19 @@
                 </tr>
               </thead>
               <tbody id="sessions-table-body">
-                <tr>
-                  <td colspan="5" class="empty-row">Carregant sessions...</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </article>
-
-        <article class="panel" id="planning">
-          <div class="panel-header">
-            <div>
-              <p class="eyebrow">Planning</p>
-              <h3>Setmanes planificades</h3>
-            </div>
-            <span class="badge" id="planning-count-badge">0 files</span>
-          </div>
-          <div class="table-shell">
-            <table>
-              <thead>
-                <tr>
-                  <th>Setmana</th>
-                  <th>Cicle</th>
-                  <th>Fase</th>
-                  <th>Q Km</th>
-                  <th>Z2 min</th>
-                  <th>LL Km</th>
-                </tr>
-              </thead>
-              <tbody id="planning-table-body">
-                <tr>
-                  <td colspan="6" class="empty-row">Carregant planning...</td>
-                </tr>
+                <tr><td colspan="5" class="empty-row">Carregant sessions...</td></tr>
               </tbody>
             </table>
           </div>
         </article>
       </section>
+      <!-- /vista sessions -->
+
     </main>
   </div>
 
   <script src="./js/vendor/chart.umd.min.js"></script>
   <script src="./js/charts.js"></script>
   <script src="./js/app.js"></script>
-
 </body>
 </html>

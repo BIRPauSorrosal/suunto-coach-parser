@@ -415,3 +415,26 @@ code {
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Sistema de vistes ───────────────────────────────────────────────────── */
+.view {
+  display: none;
+  gap: 24px;
+  flex-direction: column;
+}
+
+.view--active {
+  display: flex;
+}
+
+.btn-sidebar {
+  width: 100%;
+  margin-top: auto;
+  text-align: center;
+}
+
+.muted-msg {
+  color: var(--muted);
+  padding: 40px;
+  text-align: center;
+}

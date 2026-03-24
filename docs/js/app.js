@@ -1,12 +1,7 @@
 const DATA_SOURCES = {
-  sessions: [
-    '../data/output/sessions.csv'
-  ],
-  planning: [
-    '../data/output/planning.csv'
-  ]
+  sessions: ['../data/output/sessions.csv'],
+  planning: ['../data/output/planning.csv']
 };
-
 
 const QUALITY_TYPES = new Set(['TEMPO', 'TEST', 'INTERVALS']);
 const LONG_TYPES    = new Set(['LLARGA', 'MARATÓ', 'TRAIL', 'MITJA', 'MARATO']);
@@ -15,15 +10,42 @@ const EXTRA_TYPES   = new Set(['PADEL', 'TENIS', 'TENNIS']);
 const state = {
   sessions: [],
   planning: [],
-  sources: {}
+  sources:  {}
 };
 
-// ── Punt d'entrada ──────────────────────────────────────────────────────────
+// ── Router de vistes ─────────────────────────────────────────────────────────
+function initRouter() {
+  const navLinks = document.querySelectorAll('.nav-link[data-target]');
+  const views    = document.querySelectorAll('.view[data-view]');
+
+  navLinks.forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const target = link.dataset.target;
+
+      navLinks.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+
+      views.forEach(v => v.classList.remove('view--active'));
+      const activeView = document.querySelector(`.view[data-view="${target}"]`);
+      if (activeView) activeView.classList.add('view--active');
+
+      // Re-pinta gràfics quan tornem a overview (canvas pot haver perdut mides)
+      if (target === 'overview' && window._chartData) {
+        setTimeout(() => initCharts(window._chartData.sessions, window._chartData.planning), 50);
+      }
+    });
+  });
+}
+
+// ── Punt d'entrada ───────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  initRouter();
   document.getElementById('reload-data-btn').addEventListener('click', loadDashboardData);
   loadDashboardData();
 });
 
+// ── Càrrega de dades ─────────────────────────────────────────────────────────
 async function loadDashboardData() {
   setNotice('Llegint fitxers CSV...', 'info');
   setBadge('Carregant dades...');
@@ -52,10 +74,9 @@ async function loadDashboardData() {
     console.error(error);
     setBadge('Error de càrrega');
     setNotice(
-      "No s'han pogut llegir els CSVs. Comprova que data/sessions.csv i data/planning.csv existeixen al repositori.",
+      "No s'han pogut llegir els CSVs. Comprova que els fitxers existeixen.",
       'error'
     );
-    renderErrorTables(error.message);
     updateStatus(error.message);
   }
 }
@@ -77,7 +98,7 @@ async function fetchFirstAvailable(paths) {
   throw lastError || new Error('Cap ruta vàlida per al CSV');
 }
 
-// ── Parser CSV robust (suporta cometes, comes i salts de línia) ──────────────
+// ── Parser CSV ────────────────────────────────────────────────────────────────
 function parseCSV(text) {
   const rows = [];
   let row = [], value = '', insideQuotes = false;
@@ -125,6 +146,9 @@ function renderDashboard() {
     .filter(Boolean)
     .sort((a, b) => b.date - a.date);
 
+  // Guardem globalment per al router i futures vistes
+  window._chartData = { sessions, planning };
+
   const activeWeek = detectActiveWeek(planning, sessions);
   const weeklySessions = activeWeek
     ? sessions.filter(s => s.date >= activeWeek.startDate && s.date <= activeWeek.endDate)
@@ -135,19 +159,18 @@ function renderDashboard() {
   renderSessionsTable(sessions);
   renderPlanningTable(planning);
 
-  // Fase 3: gràfics — setTimeout(0) garanteix que el DOM té
-  // els <canvas> amb dimensions reals abans de pintar
+  // Gràfics: setTimeout garanteix que els <canvas> tenen mides reals
   setTimeout(() => initCharts(sessions, planning), 0);
 }
 
-// ── Enriquiment de files ───────────────────────────────────────────────────
+// ── Enriquiment de files ──────────────────────────────────────────────────────
 function enrichPlanningRow(row) {
   const startDate = parseDate(row['Data_Inici']);
   const endDate   = parseDate(row['Data_Fi']);
   if (!startDate || !endDate) return null;
 
   return {
-    raw: row,
+    raw:        row,
     setmana:    row['Setmana']   || '--',
     cicle:      row['Cicle']     || '--',
     fase:       row['Fase']      || '--',
@@ -174,38 +197,38 @@ function enrichSessionRow(row) {
   if (!date) return null;
   const tipus = String(row['Tipus'] || '').trim().toUpperCase();
   return {
-    raw: row,
+    raw:         row,
     date,
     displayDate: formatDate(date),
     tipus:       row['Tipus'] || '--',
     tipusKey:    tipus,
     durada:      toNumber(row['Durada(min)']),
     distancia:   toNumber(row['Dist(km)']),
-    carrega:     toNumber(row['Carrega'])
+    carrega:     toNumber(row['Carrega']),
+    z2min:       toNumber(row['Z2(min)']),
+    fcMitja:     toNumber(row['FCMitja']),
+    ritme:       toNumber(row['Ritme(min/km)'])
   };
 }
 
-// ── Detecció setmana activa ───────────────────────────────────────────────
+// ── Detecció setmana activa ───────────────────────────────────────────────────
 function detectActiveWeek(planning, sessions) {
   if (!planning.length) return null;
 
-  // 1. Setmana que conté la sessió més recent
   const latest = sessions[0];
   if (latest) {
     const match = planning.find(w => latest.date >= w.startDate && latest.date <= w.endDate);
     if (match) return match;
   }
 
-  // 2. Setmana actual
   const today = new Date();
   const todayWeek = planning.find(w => today >= w.startDate && today <= w.endDate);
   if (todayWeek) return todayWeek;
 
-  // 3. Última setmana del planning
   return planning[planning.length - 1];
 }
 
-// ── Renders ───────────────────────────────────────────────────────────────
+// ── Renders ───────────────────────────────────────────────────────────────────
 function renderOverview(activeWeek, weeklySessions) {
   const plannedKm  = activeWeek?.kmTotal ?? null;
   const realLoad   = sumNumbers(weeklySessions.map(s => s.carrega));
@@ -230,7 +253,7 @@ function renderSummary(activeWeek, weeklySessions) {
   );
 
   const qualityKm  = sumNumbers(quality.map(s => s.distancia));
-  const z2Minutes  = sumNumbers(z2.map(s => s.durada));
+  const z2Minutes  = sumNumbers(weeklySessions.map(s => s.z2min));
   const longKm     = sumNumbers(llong.map(s => s.distancia));
 
   setText('quality-summary', `${quality.length} sessions`);
@@ -255,11 +278,12 @@ function renderSummary(activeWeek, weeklySessions) {
 }
 
 function renderSessionsTable(sessions) {
-  const rows = sessions.slice(0, 12);
+  const tbody = document.getElementById('sessions-table-body');
+  if (!tbody) return;
   setText('sessions-count-badge', `${sessions.length} files`);
 
-  document.getElementById('sessions-table-body').innerHTML = rows.length
-    ? rows.map(s => `
+  tbody.innerHTML = sessions.length
+    ? sessions.map(s => `
         <tr>
           <td>${esc(s.displayDate)}</td>
           <td>${esc(s.tipus)}</td>
@@ -271,27 +295,26 @@ function renderSessionsTable(sessions) {
 }
 
 function renderPlanningTable(planning) {
-  const rows = [...planning].reverse().slice(0, 12);
+  const tbody = document.getElementById('planning-table-body');
+  if (!tbody) return;
   setText('planning-count-badge', `${planning.length} files`);
 
-  document.getElementById('planning-table-body').innerHTML = rows.length
-    ? rows.map(w => `
+  tbody.innerHTML = planning.length
+    ? [...planning].reverse().map(w => `
         <tr>
           <td>${esc(w.setmana)}</td>
           <td>${esc(w.cicle)}</td>
           <td>${esc(w.fase)}</td>
           <td>${formatMetric(w.qKm, 'km')}</td>
           <td>${formatMetric(w.z2Durada, 'min')}</td>
+          <td>${esc(w.z2PaceMin)}–${esc(w.z2PaceMax)}</td>
+          <td>${esc(w.llTipus)}</td>
           <td>${formatMetric(w.llKm, 'km')}</td>
+          <td>${esc(w.forcaPlan)}</td>
+          <td>${esc(w.padelPlan)}</td>
+          <td>${formatMetric(w.kmTotal, 'km')}</td>
         </tr>`).join('')
-    : '<tr><td colspan="6" class="empty-row">No hi ha setmanes planificades.</td></tr>';
-}
-
-function renderErrorTables(message) {
-  document.getElementById('sessions-table-body').innerHTML =
-    `<tr><td colspan="5" class="empty-row">Error: ${esc(message)}</td></tr>`;
-  document.getElementById('planning-table-body').innerHTML =
-    `<tr><td colspan="6" class="empty-row">Error: ${esc(message)}</td></tr>`;
+    : '<tr><td colspan="11" class="empty-row">No hi ha setmanes planificades.</td></tr>';
 }
 
 function updateStatus(errorMessage = null) {
@@ -307,7 +330,7 @@ function updateStatus(errorMessage = null) {
   setText('status-last-update', `Actualitzat: ${new Date().toLocaleString('ca-ES')}`);
 }
 
-// ── Helpers UI ────────────────────────────────────────────────────────────
+// ── Helpers UI ────────────────────────────────────────────────────────────────
 function setNotice(message, type = 'info') {
   const bar = document.getElementById('notice-bar');
   bar.classList.remove('is-error', 'is-warning');
@@ -315,18 +338,16 @@ function setNotice(message, type = 'info') {
   if (type === 'warning') bar.classList.add('is-warning');
   setText('notice-text', message);
 }
-function setBadge(text)         { setText('load-badge', text); }
-function setText(id, value)     { const el = document.getElementById(id); if (el) el.textContent = value; }
+function setBadge(text)     { setText('load-badge', text); }
+function setText(id, value) { const el = document.getElementById(id); if (el) el.textContent = value; }
 function esc(v) {
   return String(v)
-    .replaceAll('&',  '&amp;')
-    .replaceAll('<',  '&lt;')
-    .replaceAll('>',  '&gt;')
-    .replaceAll('"',  '&quot;')
-    .replaceAll("'",  '&#039;');
+    .replaceAll('&', '&amp;').replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;').replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
 }
 
-// ── Helpers de dades ──────────────────────────────────────────────────────
+// ── Helpers de dades ──────────────────────────────────────────────────────────
 function parseDate(value) {
   if (!value) return null;
   const s = String(value).trim();
@@ -348,14 +369,10 @@ function formatDate(date) {
 
 function toNumber(value) {
   if (value == null || value === '') return null;
-  // Els CSVs usen punt decimal i coma com a separador de milers (o cap separador)
-  // Format esperat: '20.7', '6.5', '1047.0', '2614'
-  const cleaned = String(value).trim()
-    .replace(/,/g, '.');   // si algun camp usa coma decimal, normalitza a punt
+  const cleaned = String(value).trim().replace(/,/g, '.');
   const n = Number(cleaned);
   return isFinite(n) ? n : null;
 }
-
 
 function sumNumbers(values) {
   return values.filter(v => isFinite(v)).reduce((acc, v) => acc + v, 0);
