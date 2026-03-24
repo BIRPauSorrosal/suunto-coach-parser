@@ -1,12 +1,5 @@
-# Dades personals de salut (MOLT IMPORTANT)
-data/
+# Arxius bruts de Suunto (JSONs originals d'exportació)
 *.json
-*.csv
-
-# Entorn virtual
-venv/
-env/
-.venv/
 
 # Arxius binaris i temporals de Python
 __pycache__/
@@ -14,11 +7,20 @@ __pycache__/
 *$py.class
 *.so
 
+# Entorn virtual
+venv/
+env/
+.venv/
+
 # Arxius del sistema operatiu
 .DS_Store
 Thumbs.db
 
-# Arxius de configuració de l'editor (VSCode, etc.)
+# Arxius de configuració de l'editor
 .vscode/
 .idea/
 *.swp
+
+# Arxius Suunto originals (FIT, GPX)
+*.fit
+*.gpx
