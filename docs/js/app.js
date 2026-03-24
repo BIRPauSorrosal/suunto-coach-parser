@@ -344,9 +344,14 @@ function formatDate(date) {
 
 function toNumber(value) {
   if (value == null || value === '') return null;
-  const n = Number(String(value).trim().replace(/\./g, '').replace(',', '.'));
+  // Els CSVs usen punt decimal i coma com a separador de milers (o cap separador)
+  // Format esperat: '20.7', '6.5', '1047.0', '2614'
+  const cleaned = String(value).trim()
+    .replace(/,/g, '.');   // si algun camp usa coma decimal, normalitza a punt
+  const n = Number(cleaned);
   return isFinite(n) ? n : null;
 }
+
 
 function sumNumbers(values) {
   return values.filter(v => isFinite(v)).reduce((acc, v) => acc + v, 0);
