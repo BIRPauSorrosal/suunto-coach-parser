@@ -72,15 +72,18 @@ def append_to_csv(row: dict, source_filename: str):
     Si el CSV no existeix, el crea amb capçalera.
     El control de duplicats es fa pel nom de l'arxiu font (columna 'Arxiu'),
     permetent així múltiples activitats en el mateix dia.
+    'Arxiu' és sempre la primera columna del CSV.
     """
-    row["Arxiu"] = source_filename  # clau única per detectar duplicats
+    if source_filename in (pd.read_csv(CSV_PATH)["Arxiu"].values if CSV_PATH.exists() else []):
+        print(f"  ⚠️   L'arxiu '{source_filename}' ja existeix al CSV. Saltant...")
+        return
+
+    # Arxiu sempre al principi
+    row = {"Arxiu": source_filename, **row}
     new_df = pd.DataFrame([row])
 
     if CSV_PATH.exists():
         existing_df = pd.read_csv(CSV_PATH)
-        if source_filename in existing_df["Arxiu"].values:
-            print(f"  ⚠️   L'arxiu '{source_filename}' ja existeix al CSV. Saltant...")
-            return
         updated_df = pd.concat([existing_df, new_df], ignore_index=True)
     else:
         updated_df = new_df
