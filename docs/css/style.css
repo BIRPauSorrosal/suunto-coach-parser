@@ -578,13 +578,60 @@ code {
 
 .plan-legend {
   display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 0 4px;
+}
+
+.plan-legend-row {
+  display: flex;
   align-items: center;
-  padding: 12px 0;
+  gap: 12px;
+  flex-wrap: wrap;
   font-size: 0.88rem;
   color: var(--muted);
 }
+
+.plan-legend-section {
+  font-weight: 700;
+  color: var(--text);
+  font-size: 0.85rem;
+  min-width: 48px;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.legend-dot--phase {
+  border-radius: 3px; /* quadrat */
+}
+
+/* Quadrat de fase dins la barra anual */
+.plan-week-phase-sq {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+/* Dates curtes a la targeta mensual */
+.pwc-dates {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
 .legend-dot {
   display: inline-block;
   width: 10px;
@@ -730,4 +777,33 @@ code {
 }
 @media (max-width: 760px) {
   .plan-year-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* Barra de fase (vista mensual) */
+.pwc-phase-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #0f172a;
+  opacity: 0.85;
+}
+.pwc-phase-bar span { letter-spacing: 0.04em; }
+
+/* Llegenda millorada */
+.plan-legend-section {
+  font-weight: 700;
+  color: var(--text);
+  font-size: 0.85rem;
+}
+.plan-legend-sep {
+  color: var(--muted);
+  margin: 0 4px;
+}
+.legend-dot--phase {
+  border-radius: 3px; /* quadrat per diferenciar de cicles */
 }
