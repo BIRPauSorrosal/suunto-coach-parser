@@ -6,8 +6,9 @@ from pathlib import Path
 class BaseParser:
     """
     Classe pare genèrica per a QUALSEVOL activitat de Suunto.
-    Conté únicament les mètriques comunes a tots els esports:
-    data, durada, distància, desnivell, FC i zones de FC, PTE i recuperació.
+    Conté les mètriques comunes a tots els esports:
+    data, durada, distància, desnivell, FC, zones de FC,
+    PTE, EPOC, càrrega d'entrenament, calories i recuperació.
 
     Per afegir un nou esport, crear un BaseXxxParser que hereti d'aquesta classe.
     """
@@ -65,26 +66,45 @@ class BaseParser:
     def get_pte(self) -> float:
         return self.header.get("PeakTrainingEffect", 0.0) or 0.0
 
+    def get_epoc(self) -> float:
+        return round(self.header.get("EPOC", 0.0) or 0.0, 1)
+
+    def get_training_load(self) -> float:
+        return round(self.header.get("TraingingLoadPeak", 0.0) or 0.0, 1)
+
+    def get_calories(self) -> int:
+        energy = self.header.get("Energy", 0) or 0
+        return int(round(energy / 4184))
+
     def get_recovery_hours(self) -> float:
         secs = self.header.get("RecoveryTime", 0) or 0
         return round(secs / 3600, 1)
 
     def parse(self) -> dict:
-        """Dades comunes a tots els esports. Els parsers fills amplien aquest diccionari."""
+        """
+        Dades comunes a tots els esports.
+        Ordre de columnes CSV:
+          Data | Tipus | Durada | Dist | Desnivell | FCMitja | FCMax |
+          Z1-Z5 | PTE | EPOC | Càrrega | Calories | Recup(h)
+        Els parsers fills afegeixen les seves columnes específiques al final.
+        """
         zones = self.get_hr_zones()
         return {
-            "Data":         self.get_date(),
-            "Tipus":        "",  # sobreescrit pel parser fill
-            "Durada(min)": self.get_duration_min(),
-            "Dist(km)":    self.get_distance_km(),
+            "Data":          self.get_date(),
+            "Tipus":         "",  # sobreescrit pel parser fill
+            "Durada(min)":   self.get_duration_min(),
+            "Dist(km)":      self.get_distance_km(),
             "Desnivell(m)": self.get_ascent_m(),
-            "FCMitja":     self.get_hr_avg(),
-            "FCMax":       self.get_hr_max(),
-            "Z1(min)":     zones["Z1"],
-            "Z2(min)":     zones["Z2"],
-            "Z3(min)":     zones["Z3"],
-            "Z4(min)":     zones["Z4"],
-            "Z5(min)":     zones["Z5"],
-            "PTE":         self.get_pte(),
-            "Recup(h)":    self.get_recovery_hours(),
+            "FCMitja":       self.get_hr_avg(),
+            "FCMax":         self.get_hr_max(),
+            "Z1(min)":       zones["Z1"],
+            "Z2(min)":       zones["Z2"],
+            "Z3(min)":       zones["Z3"],
+            "Z4(min)":       zones["Z4"],
+            "Z5(min)":       zones["Z5"],
+            "PTE":           self.get_pte(),
+            "EPOC":          self.get_epoc(),
+            "Carrega":       self.get_training_load(),
+            "Calories":      self.get_calories(),
+            "Recup(h)":      self.get_recovery_hours(),
         }

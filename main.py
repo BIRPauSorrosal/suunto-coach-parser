@@ -10,6 +10,7 @@ from src.config import RAW_DIR, ARCHIVE_DIR, CSV_PATH
 from src.parsers.z2_parser import Z2Parser
 from src.parsers.quality_parser import QualityParser
 from src.parsers.long_run_parser import LongRunParser
+from src.parsers.strength_parser import StrengthParser
 
 
 # ─────────────────────────────────────────────────────────────
@@ -32,15 +33,19 @@ PARSER_REGISTRY = {
     "marat":     LongRunParser,   # cobreix 'marató' i 'maraton'
     "trail":     LongRunParser,
     "mitja":     LongRunParser,
+
+    # Força / gimnasio
+    "força":    StrengthParser,
 }
 
 
 def detect_parser(filepath: Path):
     """
     Detecta el parser adequat a partir del nom de l'arxiu.
-    Exemple: '260323_running_z2.json'          -> Z2Parser
-             '260311_running_tempo.json'        -> QualityParser
-             '260315_running_tirada_llarga.json'-> LongRunParser
+    Exemple: '260323_running_z2.json'           -> Z2Parser
+             '260311_running_tempo.json'         -> QualityParser
+             '260315_running_tirada_llarga.json' -> LongRunParser
+             '260317_força_S2.json'             -> StrengthParser
     Retorna la classe del parser o None si no en troba cap.
     """
     filename_lower = filepath.stem.lower()
@@ -87,7 +92,7 @@ def process_file(filepath: Path):
 
     print(f"  📊  Resum extret:")
     for k, v in row.items():
-        if k != "Series_Detall":  # Evitem imprimir el JSON llarg per pantalla
+        if k != "Series_Detall":
             print(f"       {k}: {v}")
 
     append_to_csv(row)
@@ -98,10 +103,6 @@ def process_file(filepath: Path):
 
 
 def main():
-    """
-    Punt d'entrada principal.
-    Busca tots els arxius JSON a data/raw/ i els processa un per un.
-    """
     json_files = list(RAW_DIR.glob("*.json"))
 
     if not json_files:
