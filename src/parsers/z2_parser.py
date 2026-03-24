@@ -1,12 +1,12 @@
 from pathlib import Path
-from src.parsers.base_parser import BaseParser
+from src.parsers.base_running_parser import BaseRunningParser
 
 
-class Z2Parser(BaseParser):
+class Z2Parser(BaseRunningParser):
     """
-    Parser específic per a rodatges suaus (Z2).
-    Ritme i cadència ja els aporta el BaseParser.
-    Aquí només sobreescrivim el camp Tipus.
+    Parser per a rodatges suaus (Z2).
+    Hereta totes les mètriques de BaseRunningParser.
+    Només sobreescriu el camp Tipus.
     """
 
     def __init__(self, filepath: Path):
