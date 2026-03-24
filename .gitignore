@@ -1,0 +1,24 @@
+# Dades personals de salut (MOLT IMPORTANT)
+data/
+*.json
+*.csv
+
+# Entorn virtual
+venv/
+env/
+.venv/
+
+# Arxius binaris i temporals de Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Arxius del sistema operatiu
+.DS_Store
+Thumbs.db
+
+# Arxius de configuració de l'editor (VSCode, etc.)
+.vscode/
+.idea/
+*.swp
