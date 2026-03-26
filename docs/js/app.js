@@ -50,6 +50,7 @@ function initRouter() {
       if (target === 'overview')  renderOverviewView(sessions, planning);
       if (target === 'setmanal')  renderSetmanalView(sessions, planning);
       if (target === 'planning')  renderPlanningView(planning, sessions);
+      if (target === 'sessions')  renderSessionsView(sessions);
     });
   });
 }
@@ -61,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadDashboardData();
 });
 
-// ── Càrrega de dades ──────────────────────────────────────────────────────────
+// ── Càrrega de dades ─────────────────────────────────────────────────────────
 async function loadDashboardData() {
   setNotice('Llegint fitxers CSV...', 'info');
   setBadge('Carregant dades...');
@@ -97,7 +98,7 @@ async function loadDashboardData() {
   }
 }
 
-// ── Fetch ─────────────────────────────────────────────────────────────────────
+// ── Fetch ────────────────────────────────────────────────────────────────────
 async function fetchFirstAvailable(paths) {
   let lastError = null;
   for (const path of paths) {
@@ -165,9 +166,9 @@ function renderDashboard() {
   window._chartData = { sessions, planning };
 
   renderOverviewView(sessions, planning);
-  renderSessionsTable(sessions);
   renderSetmanalView(sessions, planning);
   renderPlanningView(planning, sessions);
+  renderSessionsView(sessions);
 }
 
 // ── Enriquiment de files ──────────────────────────────────────────────────────
@@ -239,24 +240,6 @@ function detectActiveWeek(planning, sessions) {
   if (todayWeek) return todayWeek;
 
   return planning[planning.length - 1];
-}
-
-// ── Sessions table ────────────────────────────────────────────────────────────
-function renderSessionsTable(sessions) {
-  const tbody = document.getElementById('sessions-table-body');
-  if (!tbody) return;
-  setText('sessions-count-badge', `${sessions.length} files`);
-
-  tbody.innerHTML = sessions.length
-    ? sessions.map(s => `
-        <tr>
-          <td>${esc(s.displayDate)}</td>
-          <td>${esc(s.tipus)}</td>
-          <td>${formatMetric(s.durada, 'min')}</td>
-          <td>${formatMetric(s.distancia, 'km')}</td>
-          <td>${formatMetric(s.carrega, '')}</td>
-        </tr>`).join('')
-    : '<tr><td colspan="5" class="empty-row">No hi ha sessions disponibles.</td></tr>';
 }
 
 // ── Status sidebar ────────────────────────────────────────────────────────────
