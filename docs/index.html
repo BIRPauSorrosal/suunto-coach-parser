@@ -64,7 +64,6 @@
           <span class="badge badge-muted" id="load-badge">Inicialitzant...</span>
         </header>
 
-        <!-- Hero cards -->
         <div class="hero-grid">
           <article class="hero-card card-highlight">
             <p class="card-label">Setmana activa</p>
@@ -88,7 +87,6 @@
           </article>
         </div>
 
-        <!-- Resum setmanal + Zones -->
         <div class="content-grid">
           <article class="panel panel-large">
             <div class="panel-header">
@@ -99,33 +97,28 @@
               <span class="badge">Setmana activa</span>
             </div>
             <div class="metrics-grid">
-
               <div class="metric-box">
                 <span>Qualitat</span>
                 <strong id="quality-summary">--</strong>
                 <small id="quality-detail">Tempo i intervals</small>
                 <small id="quality-real" class="metric-real"></small>
               </div>
-
               <div class="metric-box">
                 <span>Z1+Z2 running</span>
                 <strong id="z2-summary">--</strong>
                 <small id="z2-detail">Minuts en zona aeròbica</small>
               </div>
-
               <div class="metric-box">
                 <span>Tirada llarga</span>
                 <strong id="long-summary">--</strong>
                 <small id="long-detail">Tipus i volum setmanal</small>
                 <small id="long-real" class="metric-real"></small>
               </div>
-
               <div class="metric-box">
                 <span>Força</span>
                 <strong id="strength-summary">--</strong>
                 <small id="strength-detail">Sessions de gimnàs</small>
               </div>
-
             </div>
           </article>
 
@@ -143,7 +136,6 @@
           </article>
         </div>
 
-        <!-- Panell Test & Cursa -->
         <article class="panel">
           <div class="panel-header">
             <div>
@@ -157,7 +149,6 @@
           </div>
         </article>
 
-        <!-- Gràfics de volum i càrrega -->
         <div class="charts-grid">
           <article class="panel">
             <div class="panel-header">
@@ -185,7 +176,6 @@
           </article>
         </div>
 
-        <!-- Panell Altres activitats -->
         <article class="panel">
           <div class="panel-header">
             <div>
@@ -367,9 +357,9 @@
           </div>
         </header>
 
-        <!-- Barra de filtres -->
+        <!-- Barra de filtres: tot en una sola línia -->
         <div class="sess-filters">
-          <div class="sess-filter-left">
+          <div class="sess-filter-group">
             <label class="sess-filter-label" for="sess-type-select">Tipus</label>
             <select id="sess-type-select" class="sess-select">
               <option value="all">Totes</option>
@@ -381,8 +371,9 @@
               <option value="other">Altres</option>
             </select>
           </div>
-          <div class="sess-filter-right">
-            <label class="sess-filter-label">Període</label>
+          <div class="sess-filter-sep"></div>
+          <div class="sess-filter-group">
+            <span class="sess-filter-label">Període</span>
             <div class="sess-period-btns">
               <button class="btn btn-ghost btn-sm" data-period="7">1S</button>
               <button class="btn btn-ghost btn-sm" data-period="30">30d</button>
@@ -393,7 +384,7 @@
           </div>
         </div>
 
-        <!-- KPIs dinàmics -->
+        <!-- KPIs: 2 columnes, sense km/setmana -->
         <div class="sess-kpis" id="sess-kpis">
           <div class="sess-kpi">
             <span class="sess-kpi-label">Sessions</span>
@@ -410,10 +401,6 @@
           <div class="sess-kpi">
             <span class="sess-kpi-label">Càrrega total</span>
             <strong class="sess-kpi-value" id="kpi-load">--</strong>
-          </div>
-          <div class="sess-kpi">
-            <span class="sess-kpi-label">Km / setmana</span>
-            <strong class="sess-kpi-value" id="kpi-km-week">--</strong>
           </div>
         </div>
 

@@ -473,7 +473,7 @@ code {
 
 .sw-grid {
   display: grid;
-  grid-template-columns: 1fr;  /* era repeat(2, 1fr) */
+  grid-template-columns: 1fr;
   gap: 24px;
 }
 
@@ -505,7 +505,6 @@ code {
   margin-bottom: 12px;
 }
 
-/* Separador vertical entre pla i real */
 .sw-col:last-child {
   border-left: 1px solid rgba(148, 163, 184, 0.12);
   padding-left: 20px;
@@ -608,10 +607,9 @@ code {
 }
 
 .legend-dot--phase {
-  border-radius: 3px; /* quadrat */
+  border-radius: 3px;
 }
 
-/* Quadrat de fase dins la barra anual */
 .plan-week-phase-sq {
   position: absolute;
   right: 5px;
@@ -624,7 +622,6 @@ code {
   z-index: 1;
 }
 
-/* Dates curtes a la targeta mensual */
 .pwc-dates {
   font-size: 0.82rem;
   color: var(--muted);
@@ -632,14 +629,6 @@ code {
   white-space: nowrap;
 }
 
-.legend-dot {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-}
-
-/* Anual */
 .plan-year-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -688,7 +677,6 @@ code {
 
 .plan-no-data { color: var(--muted); font-size: 0.85rem; padding: 8px 0; }
 
-/* Mensual */
 .plan-month-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -739,7 +727,6 @@ code {
   color: var(--muted);
 }
 
-/* Setmanal pla */
 .plan-week-nav-center {
   flex: 1;
   display: flex;
@@ -779,7 +766,6 @@ code {
   .plan-year-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
-/* Barra de fase (vista mensual) */
 .pwc-phase-bar {
   display: flex;
   align-items: center;
@@ -794,7 +780,6 @@ code {
 }
 .pwc-phase-bar span { letter-spacing: 0.04em; }
 
-/* Llegenda millorada */
 .plan-legend-section {
   font-weight: 700;
   color: var(--text);
@@ -805,10 +790,9 @@ code {
   margin: 0 4px;
 }
 .legend-dot--phase {
-  border-radius: 3px; /* quadrat per diferenciar de cicles */
+  border-radius: 3px;
 }
 
-/* Barra de completat (overlay sobre la barra de pla) */
 .plan-week-done {
   position: absolute;
   left: 0; top: 0; bottom: 0;
@@ -828,7 +812,6 @@ code {
   box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.4);
 }
 
-/* Barra doble mensual */
 .pwc-bar-done {
   position: absolute;
   left: 0; top: 0; bottom: 0;
@@ -839,7 +822,6 @@ code {
 }
 .pwc-bar-wrap { position: relative; overflow: visible; }
 
-/* Badges d'estat */
 .pwc-badge {
   font-size: 0.78rem;
   font-weight: 600;
@@ -852,7 +834,6 @@ code {
 .pwc-badge--done    { background: rgba(34,197,94,0.15);   color: #22c55e; }
 .pwc-badge--partial { background: rgba(245,158,11,0.15);  color: #f59e0b; }
 
-/* Línia real a la vista setmanal */
 .sw-plan-real {
   display: flex;
   justify-content: space-between;
@@ -868,4 +849,129 @@ code {
   font-size: 0.9rem;
   color: var(--primary);
   font-weight: 600;
+}
+
+/* ── Vista Sessions ──────────────────────────────────────────────────────── */
+
+/* Barra de filtres: tot en una sola línia */
+.sess-filters {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  backdrop-filter: blur(18px);
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+  padding: 16px 22px;
+}
+
+.sess-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Separador vertical entre grups */
+.sess-filter-sep {
+  width: 1px;
+  height: 28px;
+  background: rgba(148, 163, 184, 0.2);
+  flex-shrink: 0;
+}
+
+.sess-filter-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Select estilitzat igual que els btn-ghost */
+.sess-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(148, 163, 184, 0.08)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")
+    no-repeat right 12px center;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 8px 36px 8px 14px;
+  cursor: pointer;
+  transition: background 0.18s ease;
+  min-width: 140px;
+}
+.sess-select:hover {
+  background-color: rgba(148, 163, 184, 0.16);
+}
+.sess-select:focus {
+  outline: none;
+  border-color: rgba(56, 189, 248, 0.5);
+  background-color: rgba(148, 163, 184, 0.12);
+}
+/* Corregeix el fons del dropdown nadiu en temes foscos */
+.sess-select option {
+  background: #1e293b;
+  color: var(--text);
+}
+
+/* Botó actiu dels períodes */
+.sess-period-btns {
+  display: flex;
+  gap: 6px;
+}
+.sess-period-btns .btn-ghost.active {
+  background: rgba(56, 189, 248, 0.18);
+  border-color: rgba(56, 189, 248, 0.45);
+  color: #7dd3fc;
+}
+
+/* KPIs: grid de 2 columnes x 2 files */
+.sess-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.sess-kpi {
+  backdrop-filter: blur(18px);
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow);
+  border-radius: var(--radius-sm);
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sess-kpi-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.sess-kpi-value {
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+
+@media (max-width: 760px) {
+  .sess-filters   { gap: 12px; }
+  .sess-filter-sep { display: none; }
+  .sess-kpis      { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px) {
+  .sess-kpis      { grid-template-columns: 1fr; }
+  .sess-period-btns { flex-wrap: wrap; }
 }
