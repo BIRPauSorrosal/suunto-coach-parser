@@ -1,16 +1,18 @@
 // docs/js/views/overview.js
-// Vista Overview: hero-cards + metric-boxes + gràfics
-// Dep: app.js (state, QUALITY_TYPES, LONG_TYPES, EXTRA_TYPES, helpers)
+// Vista Overview: hero-cards + metric-boxes + panells Test/Cursa + Altres
+// Dep: app.js (constants, helpers, detectActiveWeek)
 
 // ── Punt d'entrada ────────────────────────────────────────────────────────────
 function renderOverviewView(sessions, planning) {
-  const activeWeek = detectActiveWeek(planning, sessions);
+  const activeWeek     = detectActiveWeek(planning, sessions);
   const weeklySessions = activeWeek
     ? sessions.filter(s => s.date >= activeWeek.startDate && s.date <= activeWeek.endDate)
     : [];
 
   renderOverview(activeWeek, weeklySessions);
   renderSummary(activeWeek, weeklySessions);
+  renderTestRacePanel(sessions);   // totes les sessions per trobar la darrera
+  renderOthersPanel(sessions);     // totes les sessions pel filtre per exclusió
 
   setTimeout(() => initCharts(sessions, planning), 0);
 }
@@ -31,36 +33,120 @@ function renderOverview(activeWeek, weeklySessions) {
   setText('compliance-value',  compliance == null ? '-- %' : `${Math.round(compliance)} %`);
 }
 
-// ── Metric-boxes ──────────────────────────────────────────────────────────────
+// ── Metric-boxes (resum setmana activa) ──────────────────────────────────────
 function renderSummary(activeWeek, weeklySessions) {
-  const quality = weeklySessions.filter(s => QUALITY_TYPES.has(s.tipusKey));
-  const z2      = weeklySessions.filter(s => s.tipusKey === 'Z2');
-  const llong   = weeklySessions.filter(s => LONG_TYPES.has(s.tipusKey));
-  const extra   = weeklySessions.filter(s =>
-    s.tipusKey.startsWith('FORÇA') || s.tipusKey.startsWith('FORCA') || EXTRA_TYPES.has(s.tipusKey)
-  );
+  // Qualitat: TEMPO + INTERVALS (sense TEST)
+  const quality    = weeklySessions.filter(s => QUALITY_TYPES.has(s.tipusKey));
+  const llong      = weeklySessions.filter(s => LONG_TYPES.has(s.tipusKey));
+  const strength   = weeklySessions.filter(s => isStrength(s));
 
-  const qualityKm = sumNumbers(quality.map(s => s.distancia));
-  const z2Minutes = sumNumbers(weeklySessions.map(s => s.z2min));
-  const longKm    = sumNumbers(llong.map(s => s.distancia));
+  // Z1+Z2: només sessions de running
+  const runningSessions = weeklySessions.filter(s => isRunning(s));
+  const z1z2Minutes     = sumNumbers(runningSessions.map(s => (s.z1min || 0) + (s.z2min || 0)));
 
-  setText('quality-summary', `${quality.length} sessions`);
+  const qualityKm  = sumNumbers(quality.map(s => s.distancia));
+  const longKm     = sumNumbers(llong.map(s => s.distancia));
+  const strengthMin = sumNumbers(strength.map(s => s.durada));
+
+  // Qualitat
+  setText('quality-summary', quality.length ? `${quality.length} sessions` : '—');
   setText('quality-detail', activeWeek
     ? `Pla: ${activeWeek.qSeries} sèries · Km reals: ${formatNumber(qualityKm)}`
     : 'Sense planning setmanal disponible');
 
-  setText('z2-summary', `${formatNumber(z2Minutes)} min`);
+  // Z1+Z2 running
+  setText('z2-summary', z1z2Minutes ? `${formatNumber(z1z2Minutes)} min` : '—');
   setText('z2-detail', activeWeek
-    ? `Ritme objectiu: ${activeWeek.z2PaceMin}–${activeWeek.z2PaceMax} min/km`
+    ? `Ritme objectiu Z2: ${activeWeek.z2PaceMin}–${activeWeek.z2PaceMax} min/km`
     : 'Sense rang de ritme planificat');
 
-  setText('long-summary', `${formatNumber(longKm)} km`);
+  // Tirada llarga
+  setText('long-summary', longKm ? `${formatNumber(longKm)} km` : '—');
   setText('long-detail', activeWeek
     ? `Pla: ${activeWeek.llTipus} · ${formatNumber(activeWeek.llKm)} km`
     : 'Sense tirada llarga planificada');
 
-  setText('extra-summary', `${extra.length} sessions`);
-  setText('extra-detail', activeWeek
-    ? `Força: ${activeWeek.forcaPlan} · Pàdel: ${activeWeek.padelPlan}`
-    : 'Sense treball complementari planificat');
+  // Força
+  setText('strength-summary', strength.length ? `${strength.length} sessions` : '—');
+  setText('strength-detail', activeWeek
+    ? `Pla: ${activeWeek.forcaPlan} · ${formatNumber(strengthMin)} min reals`
+    : 'Sense sessions de força aquesta setmana');
+}
+
+// ── Panell Test & Cursa ───────────────────────────────────────────────────────
+function renderTestRacePanel(sessions) {
+  const container = document.getElementById('test-race-container');
+  if (!container) return;
+
+  // Darrera sessió de cada tipus (sessions ja ordenades de més recent a més antiga)
+  const lastTest  = sessions.find(s => s.tipusKey === 'TEST');
+  const lastCursa = sessions.find(s => s.tipusKey === 'CURSA');
+
+  function rowHTML(label, s) {
+    if (!s) return `
+      <tr class="tr-empty">
+        <td colspan="5"><span class="eyebrow">${label}</span> — Sense registre</td>
+      </tr>`;
+    return `
+      <tr>
+        <td><span class="eyebrow">${label}</span></td>
+        <td>${esc(s.displayDate)}</td>
+        <td>${formatMetric(s.distancia, 'km')}</td>
+        <td>${formatMetric(s.ritme, 'min/km')}</td>
+        <td>${formatMetric(s.carrega, '')}</td>
+      </tr>`;
+  }
+
+  container.innerHTML = `
+    <table class="sw-mini-table">
+      <thead>
+        <tr>
+          <th>Tipus</th>
+          <th>Data</th>
+          <th>Distància</th>
+          <th>Ritme</th>
+          <th>Càrrega</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rowHTML('Test', lastTest)}
+        ${rowHTML('Cursa', lastCursa)}
+      </tbody>
+    </table>`;
+}
+
+// ── Panell Altres activitats ──────────────────────────────────────────────────
+function renderOthersPanel(sessions) {
+  const container = document.getElementById('others-container');
+  if (!container) return;
+
+  // Filtre per exclusió: no running, no força, no test/cursa
+  const others = sessions.filter(s => isOther(s));
+
+  const totalMin = sumNumbers(others.map(s => s.durada));
+  setText('others-count', others.length
+    ? `${others.length} sessions · ${formatNumber(totalMin)} min totals`
+    : 'Sense activitats registrades');
+
+  container.innerHTML = others.length
+    ? `<table class="sw-mini-table">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Tipus</th>
+            <th>Durada</th>
+            <th>Càrrega</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${others.map(s => `
+            <tr>
+              <td>${esc(s.displayDate)}</td>
+              <td>${esc(s.tipus)}</td>
+              <td>${formatMetric(s.durada, 'min')}</td>
+              <td>${formatMetric(s.carrega, '')}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`
+    : '<p class="plan-no-data">Cap activitat alternativa registrada.</p>';
 }

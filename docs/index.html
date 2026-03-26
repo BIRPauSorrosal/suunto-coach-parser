@@ -12,7 +12,7 @@
 <body>
   <div class="app-shell">
 
-    <!-- ── Sidebar ─────────────────────────────────────────────────────── -->
+    <!-- ── Sidebar ──────────────────────────────────────────────────────────── -->
     <aside class="sidebar">
       <div class="brand-block">
         <p class="eyebrow">Suunto Coach</p>
@@ -49,15 +49,15 @@
       </button>
     </aside>
 
-    <!-- ── Main ───────────────────────────────────────────────────────── -->
+    <!-- ── Main ─────────────────────────────────────────────────────────────── -->
     <main class="main-content">
 
-      <!-- Barra d'estat global (sempre visible) -->
+      <!-- Barra d'estat global -->
       <section class="notice-bar" id="notice-bar">
         <p id="notice-text">Llegint fitxers CSV...</p>
       </section>
 
-      <!-- ── Vista: Overview ──────────────────────────────────────────── -->
+      <!-- ── Vista: Overview ──────────────────────────────────────────────── -->
       <section class="view view--active" data-view="overview">
 
         <header class="page-header">
@@ -68,6 +68,7 @@
           <span class="badge badge-muted" id="load-badge">Inicialitzant...</span>
         </header>
 
+        <!-- Hero cards -->
         <div class="hero-grid">
           <article class="hero-card card-highlight">
             <p class="card-label">Setmana activa</p>
@@ -81,7 +82,7 @@
           </article>
           <article class="hero-card">
             <p class="card-label">Càrrega real</p>
-            <h3>Carrega acumulada</h3>
+            <h3>Càrrega acumulada</h3>
             <p class="hero-value" id="real-load-value">--</p>
           </article>
           <article class="hero-card">
@@ -91,6 +92,7 @@
           </article>
         </div>
 
+        <!-- Resum setmanal + Zones -->
         <div class="content-grid">
           <article class="panel panel-large">
             <div class="panel-header">
@@ -98,18 +100,18 @@
                 <p class="eyebrow">Bloc principal</p>
                 <h3>Resum setmanal</h3>
               </div>
-              <span class="badge">Calculat a partir dels dos CSVs</span>
+              <span class="badge">Setmana activa</span>
             </div>
             <div class="metrics-grid">
               <div class="metric-box">
                 <span>Qualitat</span>
                 <strong id="quality-summary">--</strong>
-                <small id="quality-detail">Sèries, tempo, test o intervals</small>
+                <small id="quality-detail">Tempo i intervals</small>
               </div>
               <div class="metric-box">
-                <span>Z2</span>
+                <span>Z1+Z2 running</span>
                 <strong id="z2-summary">--</strong>
-                <small id="z2-detail">Durada i ritme objectiu</small>
+                <small id="z2-detail">Minuts en zona aeròbica</small>
               </div>
               <div class="metric-box">
                 <span>Tirada llarga</span>
@@ -117,9 +119,9 @@
                 <small id="long-detail">Tipus i volum setmanal</small>
               </div>
               <div class="metric-box">
-                <span>Força / Pàdel</span>
-                <strong id="extra-summary">--</strong>
-                <small id="extra-detail">Treball complementari</small>
+                <span>Força</span>
+                <strong id="strength-summary">--</strong>
+                <small id="strength-detail">Sessions de gimnàs</small>
               </div>
             </div>
           </article>
@@ -138,6 +140,21 @@
           </article>
         </div>
 
+        <!-- Panell Test & Cursa (sobre els gràfics de volum) -->
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Rendiment</p>
+              <h3>Test &amp; Cursa</h3>
+            </div>
+            <span class="badge badge-muted">Darrera activitat de cada tipus</span>
+          </div>
+          <div id="test-race-container">
+            <p class="plan-no-data">Carregant...</p>
+          </div>
+        </article>
+
+        <!-- Gràfics de volum i càrrega -->
         <div class="charts-grid">
           <article class="panel">
             <div class="panel-header">
@@ -166,10 +183,24 @@
           </article>
         </div>
 
+        <!-- Panell Altres activitats -->
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Activitats complementàries</p>
+              <h3>Altres activitats</h3>
+            </div>
+            <span class="badge badge-muted" id="others-count">—</span>
+          </div>
+          <div id="others-container">
+            <p class="plan-no-data">Carregant...</p>
+          </div>
+        </article>
+
       </section>
       <!-- /vista overview -->
 
-      <!-- ── Vista: Setmana actual ─────────────────────────────────────── -->
+      <!-- ── Vista: Setmana actual ──────────────────────────────────────────── -->
       <section class="view" data-view="setmanal">
 
         <header class="page-header">
@@ -309,7 +340,7 @@
       </section>
       <!-- /vista setmanal -->
 
-      <!-- ── Vista: Planning ──────────────────────────────────────────── -->
+      <!-- ── Vista: Planning ───────────────────────────────────────────────── -->
       <section class="view" data-view="planning">
         <header class="page-header">
           <div>
@@ -321,14 +352,13 @@
             <button class="btn btn-ghost active" id="btn-plan-monthly">Vista mensual</button>
           </div>
         </header>
-
         <div id="planning-view-container">
           <p class="muted-msg">Carregant planning...</p>
         </div>
       </section>
       <!-- /vista planning -->
 
-      <!-- ── Vista: Sessions ──────────────────────────────────────────── -->
+      <!-- ── Vista: Sessions ───────────────────────────────────────────────── -->
       <section class="view" data-view="sessions">
         <header class="page-header">
           <div>

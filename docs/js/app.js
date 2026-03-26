@@ -6,9 +6,18 @@ const DATA_SOURCES = {
   planning: ['../data/output/planning.csv']
 };
 
-const QUALITY_TYPES = new Set(['TEMPO', 'TEST', 'INTERVALS']);
-const LONG_TYPES    = new Set(['LLARGA', 'MARATÓ', 'TRAIL', 'MITJA', 'MARATO']);
-const EXTRA_TYPES   = new Set(['PADEL', 'TENIS', 'TENNIS']);
+// ── Constants de classificació de sessions ────────────────────────────────────
+const QUALITY_TYPES   = new Set(['TEMPO', 'INTERVALS']);
+const LONG_TYPES      = new Set(['LLARGA', 'MARATÓ', 'TRAIL', 'MITJA', 'MARATO']);
+const RUNNING_TYPES   = new Set([...QUALITY_TYPES, ...LONG_TYPES, 'Z2']);
+const TEST_RACE_TYPES = new Set(['TEST', 'CURSA']);
+// STRENGTH: regex per cobrir FORÇA S1, FORÇA S2, FORCA S1...
+const STRENGTH_RE     = /^FOR[ÇC]A/i;
+// ALTRES: tot el que no sigui running, força ni test/cursa (filtre per exclusió)
+function isRunning(s)   { return RUNNING_TYPES.has(s.tipusKey); }
+function isStrength(s)  { return STRENGTH_RE.test(s.tipusKey); }
+function isTestRace(s)  { return TEST_RACE_TYPES.has(s.tipusKey); }
+function isOther(s)     { return !isRunning(s) && !isStrength(s) && !isTestRace(s); }
 
 const state = {
   sessions: [],
@@ -16,7 +25,7 @@ const state = {
   sources:  {}
 };
 
-// ── Router de vistes ─────────────────────────────────────────────────────────
+// ── Router de vistes ──────────────────────────────────────────────────────────
 function initRouter() {
   const navLinks = document.querySelectorAll('.nav-link[data-target]');
   const views    = document.querySelectorAll('.view[data-view]');
@@ -46,14 +55,14 @@ function initRouter() {
   });
 }
 
-// ── Punt d'entrada ───────────────────────────────────────────────────────────
+// ── Punt d'entrada ────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   initRouter();
   document.getElementById('reload-data-btn').addEventListener('click', loadDashboardData);
   loadDashboardData();
 });
 
-// ── Càrrega de dades ─────────────────────────────────────────────────────────
+// ── Càrrega de dades ──────────────────────────────────────────────────────────
 async function loadDashboardData() {
   setNotice('Llegint fitxers CSV...', 'info');
   setBadge('Carregant dades...');
@@ -89,7 +98,7 @@ async function loadDashboardData() {
   }
 }
 
-// ── Fetch ────────────────────────────────────────────────────────────────────
+// ── Fetch ─────────────────────────────────────────────────────────────────────
 async function fetchFirstAvailable(paths) {
   let lastError = null;
   for (const path of paths) {
@@ -149,6 +158,7 @@ function renderDashboard() {
     .filter(Boolean)
     .sort((a, b) => a.startDate - b.startDate);
 
+  // sessions ordenades de més recent a més antiga
   const sessions = state.sessions
     .map(enrichSessionRow)
     .filter(Boolean)
@@ -204,6 +214,7 @@ function enrichSessionRow(row) {
     durada:      toNumber(row['Durada(min)']),
     distancia:   toNumber(row['Dist(km)']),
     carrega:     toNumber(row['Carrega']),
+    z1min:       toNumber(row['Z1(min)']),
     z2min:       toNumber(row['Z2(min)']),
     fcMitja:     toNumber(row['FCMitja']),
     ritme:       toNumber(row['Ritme(min/km)'])
