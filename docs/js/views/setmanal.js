@@ -1,22 +1,19 @@
 // views/setmanal.js — Fase 4: vista detallada setmana actual
 // Funció principal: renderSetmanalView(sessions, planning)
+// Dep: app.js (formatPace)
 
 const QUALITY_TYPES_V = new Set(['TEMPO', 'TEST', 'INTERVALS']);
 const LONG_TYPES_V    = new Set(['LLARGA', 'MARATÓ', 'TRAIL', 'MITJA', 'MARATO']);
 const EXTRA_TYPES_V   = new Set(['PADEL', 'TENIS', 'TENNIS']);
 
-// Índex de la setmana visible (0 = primera del planning)
 let currentWeekIndex = 0;
 
 // ── Punt d'entrada ────────────────────────────────────────────────────────────
 function renderSetmanalView(sessions, planning) {
   if (!planning.length) return;
-
-  // La primera vegada, situem l'índex a la setmana activa
   if (currentWeekIndex === 0) {
     currentWeekIndex = detectActiveWeekIndex(sessions, planning);
   }
-
   renderWeek(sessions, planning);
   initWeekNav(sessions, planning);
 }
@@ -35,32 +32,21 @@ function detectActiveWeekIndex(sessions, planning) {
   return idx !== -1 ? idx : planning.length - 1;
 }
 
-// ── Navegació ────────────────────────────────────────────────────────────────
+// ── Navegació ─────────────────────────────────────────────────────────────────
 function initWeekNav(sessions, planning) {
   const btnPrev = document.getElementById('week-nav-prev');
   const btnNext = document.getElementById('week-nav-next');
   if (!btnPrev || !btnNext) return;
 
-  // Clonem per eliminar listeners antics
   btnPrev.replaceWith(btnPrev.cloneNode(true));
   btnNext.replaceWith(btnNext.cloneNode(true));
 
   document.getElementById('week-nav-prev').addEventListener('click', () => {
-    if (currentWeekIndex > 0) {
-      currentWeekIndex--;
-      renderWeek(sessions, planning);
-      updateNavButtons(planning);
-    }
+    if (currentWeekIndex > 0) { currentWeekIndex--; renderWeek(sessions, planning); updateNavButtons(planning); }
   });
-
   document.getElementById('week-nav-next').addEventListener('click', () => {
-    if (currentWeekIndex < planning.length - 1) {
-      currentWeekIndex++;
-      renderWeek(sessions, planning);
-      updateNavButtons(planning);
-    }
+    if (currentWeekIndex < planning.length - 1) { currentWeekIndex++; renderWeek(sessions, planning); updateNavButtons(planning); }
   });
-
   updateNavButtons(planning);
 }
 
@@ -75,11 +61,9 @@ function updateNavButtons(planning) {
 function renderWeek(sessions, planning) {
   const week = planning[currentWeekIndex];
   if (!week) return;
-
   const weekSessions = sessions.filter(s =>
     s.date >= week.startDate && s.date <= week.endDate
   );
-
   renderWeekHeader(week, planning);
   renderWeekProgress(week, weekSessions);
   renderQualityBlock(week, weekSessions);
@@ -88,15 +72,15 @@ function renderWeek(sessions, planning) {
   renderExtraBlock(week, weekSessions);
 }
 
-// ── Capçalera de setmana ──────────────────────────────────────────────────────
+// ── Capçalera ─────────────────────────────────────────────────────────────────
 function renderWeekHeader(week, planning) {
-  setTextV('sw-week-label',  `${week.setmana} · ${week.cicle}`);
-  setTextV('sw-week-fase',   week.fase);
-  setTextV('sw-week-range',  `${fmtDate(week.startDate)} → ${fmtDate(week.endDate)}`);
-  setTextV('sw-week-counter',`${currentWeekIndex + 1} / ${planning.length}`);
+  setTextV('sw-week-label',   `${week.setmana} · ${week.cicle}`);
+  setTextV('sw-week-fase',    week.fase);
+  setTextV('sw-week-range',   `${fmtDate(week.startDate)} → ${fmtDate(week.endDate)}`);
+  setTextV('sw-week-counter', `${currentWeekIndex + 1} / ${planning.length}`);
 }
 
-// ── Barra de progrés global ───────────────────────────────────────────────────
+// ── Barra de progrés ──────────────────────────────────────────────────────────
 function renderWeekProgress(week, weekSessions) {
   const realKm    = weekSessions.reduce((a, s) => a + (s.distancia || 0), 0);
   const plannedKm = week.kmTotal || 0;
@@ -115,10 +99,10 @@ function renderQualityBlock(week, weekSessions) {
   const sessions = weekSessions.filter(s => QUALITY_TYPES_V.has(s.tipusKey));
   const realKm   = sessions.reduce((a, s) => a + (s.distancia || 0), 0);
 
-  // Pla
-  setTextV('sw-q-series',  week.qSeries  || '--');
-  setTextV('sw-q-ritme',   week.raw['Q_Ritme_min_km'] || '--');
-  setTextV('sw-q-rec',     week.raw['Q_Rec_min']      || '--');
+  // Pla — ritme via formatPace (suporta decimal i mm:ss)
+  setTextV('sw-q-series',  week.qSeries || '--');
+  setTextV('sw-q-ritme',   formatPace(week.raw['Q_Ritme_min_km']));
+  setTextV('sw-q-rec',     week.raw['Q_Rec_min'] || '--');
   setTextV('sw-q-fc',      formatFCRange(week.raw['Q_FC_min'], week.raw['Q_FC_max']));
   setTextV('sw-q-km-plan', `${fmtNum(week.qKm)} km`);
 
@@ -132,7 +116,6 @@ function renderQualityBlock(week, weekSessions) {
       ? sessions.map(s => sessionRowQuality(s)).join('')
       : `<tr><td colspan="4" class="empty-row muted-msg">Sense sessions de qualitat aquesta setmana</td></tr>`;
   }
-
   setBlockStatus('sw-q-block', sessions.length > 0);
 }
 
@@ -142,11 +125,12 @@ function renderZ2Block(week, weekSessions) {
   const realZ2min = weekSessions.reduce((a, s) => a + (s.z2min || 0), 0);
   const realKm    = sessions.reduce((a, s) => a + (s.distancia || 0), 0);
 
-  // Pla
+  // Pla — ritmes via formatPace
   setTextV('sw-z2-durada-plan', `${fmtNum(week.z2Durada)} min`);
-  setTextV('sw-z2-ritme-plan',  `${week.z2PaceMin}–${week.z2PaceMax} min/km`);
-  setTextV('sw-z2-fc-plan',     formatFCRange(week.raw['Z2_FC_min'], week.raw['Z2_FC_max']));
-  setTextV('sw-z2-km-plan',     `${fmtNum(week.raw['Z2_Km_Plan'])} km`);
+  setTextV('sw-z2-ritme-plan',
+    `${formatPace(week.raw['Z2_Ritme_min_km_min'], '')}–${formatPace(week.raw['Z2_Ritme_min_km_max'])}`);
+  setTextV('sw-z2-fc-plan',   formatFCRange(week.raw['Z2_FC_min'], week.raw['Z2_FC_max']));
+  setTextV('sw-z2-km-plan',   `${fmtNum(week.raw['Z2_Km_Plan'])} km`);
 
   // Real
   setTextV('sw-z2-min-real', realZ2min > 0 ? `${fmtNum(realZ2min)} min Z2` : '—');
@@ -158,7 +142,6 @@ function renderZ2Block(week, weekSessions) {
       ? sessions.map(s => sessionRowZ2(s)).join('')
       : `<tr><td colspan="4" class="empty-row muted-msg">Sense sessions Z2 aquesta setmana</td></tr>`;
   }
-
   setBlockStatus('sw-z2-block', realZ2min >= (week.z2Durada || 0) * 0.8);
 }
 
@@ -167,12 +150,10 @@ function renderLongBlock(week, weekSessions) {
   const sessions = weekSessions.filter(s => LONG_TYPES_V.has(s.tipusKey));
   const realKm   = sessions.reduce((a, s) => a + (s.distancia || 0), 0);
 
-  // Pla
   setTextV('sw-ll-tipus-plan',  week.llTipus || '--');
   setTextV('sw-ll-durada-plan', week.raw['LL_Durada_min'] ? `${fmtNum(week.raw['LL_Durada_min'])} min` : '--');
   setTextV('sw-ll-km-plan',     `${fmtNum(week.llKm)} km`);
 
-  // Real
   setTextV('sw-ll-km-real', realKm > 0 ? `${fmtNum(realKm)} km` : '—');
 
   const tbody = document.getElementById('sw-ll-sessions-list');
@@ -181,22 +162,18 @@ function renderLongBlock(week, weekSessions) {
       ? sessions.map(s => sessionRowLong(s)).join('')
       : `<tr><td colspan="4" class="empty-row muted-msg">Sense tirada llarga aquesta setmana</td></tr>`;
   }
-
   setBlockStatus('sw-ll-block', sessions.length > 0);
 }
 
 // ── Bloc Extra (Força + Pàdel) ────────────────────────────────────────────────
 function renderExtraBlock(week, weekSessions) {
-  const forca  = weekSessions.filter(s =>
+  const forca = weekSessions.filter(s =>
     s.tipusKey.startsWith('FORÇA') || s.tipusKey.startsWith('FORCA')
   );
-  const extra  = weekSessions.filter(s => EXTRA_TYPES_V.has(s.tipusKey));
+  const extra = weekSessions.filter(s => EXTRA_TYPES_V.has(s.tipusKey));
 
-  // Pla
   setTextV('sw-extra-forca-plan', week.forcaPlan || '--');
   setTextV('sw-extra-padel-plan', week.padelPlan || '--');
-
-  // Real
   setTextV('sw-extra-forca-real', forca.length ? `${forca.length} sessió${forca.length > 1 ? 'ns' : ''}` : '—');
   setTextV('sw-extra-padel-real', extra.length  ? `${extra.length} sessió${extra.length  > 1 ? 'ns' : ''}` : '—');
 
@@ -206,47 +183,42 @@ function renderExtraBlock(week, weekSessions) {
       ? [...forca, ...extra].map(s => sessionRowExtra(s)).join('')
       : `<tr><td colspan="4" class="empty-row muted-msg">Sense sessions complementàries</td></tr>`;
   }
-
   setBlockStatus('sw-extra-block', forca.length > 0 || extra.length > 0);
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Rows de taula ─────────────────────────────────────────────────────────────
 function sessionRowQuality(s) {
-  const ritme = s.raw['Ritme_Mitja_Series'] || s.raw['Ritme(min/km)'];
-  const fc    = s.raw['FC_Mitja_Series']    || s.fcMitja;
+  // Prefereix ritme de sèries; fallback al ritme global
+  const ritme = isFinite(s.ritmeMitjaSeries) ? s.ritmeMitjaSeries : s.ritme;
+  const fc    = isFinite(s.fcMitjaSeries)    ? s.fcMitjaSeries    : s.fcMitja;
   return `
     <tr>
       <td>${escV(s.displayDate)}</td>
-      <td>${ritme ? escV(ritme) + ' min/km' : '—'}</td>
-      <td>${isFinite(fc) && fc > 0 ? Math.round(fc) + ' bpm' : '—'}</td>
+      <td>${formatPace(ritme)}</td>
+      <td>${isFinite(fc) && fc > 0 ? Math.round(fc) + ' ppm' : '—'}</td>
       <td>${fmtNum(s.carrega)}</td>
     </tr>`;
 }
 
 function sessionRowZ2(s) {
-  const ritme    = s.ritme    > 0 ? fmtNum(s.ritme) + ' min/km' : '—';
-  const cadencia = toNumberV(s.raw['Cadencia(spm)']) > 0
-    ? Math.round(toNumberV(s.raw['Cadencia(spm)'])) + ' spm' : '—';
+  const cadencia = toNumberV(s.raw['Cadencia(spm)']);
   return `
     <tr>
       <td>${escV(s.displayDate)}</td>
-      <td>${ritme}</td>
-      <td>${cadencia}</td>
+      <td>${formatPace(s.ritme)}</td>
+      <td>${isFinite(cadencia) && cadencia > 0 ? Math.round(cadencia) + ' spm' : '—'}</td>
       <td>${fmtNum(s.carrega)}</td>
     </tr>`;
 }
 
 function sessionRowLong(s) {
-  const ritme    = s.ritme > 0 ? fmtNum(s.ritme) + ' min/km' : '—';
-  const z2min    = s.z2min > 0 ? fmtNum(s.z2min) + ' min' : '—';
-  const desnivell = toNumberV(s.raw['Desnivell(m)']) > 0
-    ? Math.round(toNumberV(s.raw['Desnivell(m)'])) + ' m' : '—';
+  const desnivell = toNumberV(s.raw['Desnivell(m)']);
   return `
     <tr>
       <td>${escV(s.displayDate)}</td>
-      <td>${ritme}</td>
-      <td>${z2min}</td>
-      <td>${desnivell}</td>
+      <td>${formatPace(s.ritme)}</td>
+      <td>${s.z2min > 0 ? fmtNum(s.z2min) + ' min' : '—'}</td>
+      <td>${isFinite(desnivell) && desnivell > 0 ? Math.round(desnivell) + ' m' : '—'}</td>
     </tr>`;
 }
 
@@ -260,7 +232,7 @@ function sessionRowExtra(s) {
     </tr>`;
 }
 
-// Helper local per no dependre de toNumber d'app.js
+// ── Helpers locals ────────────────────────────────────────────────────────────
 function toNumberV(value) {
   if (value == null || value === '') return null;
   const n = Number(String(value).trim().replace(/,/g, '.'));
@@ -286,9 +258,7 @@ function setTextV(id, value) {
 }
 
 function escV(v) {
-  return String(v)
-    .replaceAll('&', '&amp;').replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;');
+  return String(v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
 }
 
 function fmtNum(value) {

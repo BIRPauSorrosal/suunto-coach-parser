@@ -1,4 +1,5 @@
 // docs/js/views/planning.js
+// Dep: app.js (formatPace)
 
 const CYCLE_COLORS = {
   'BASE':         { color: '#38bdf8', bg: 'rgba(56,189,248,0.15)'  },
@@ -51,8 +52,7 @@ function initPlanningNav(planning, sessions) {
   ['btn-plan-yearly', 'btn-plan-monthly'].forEach(id => {
     const btn = document.getElementById(id);
     if (!btn) return;
-    const clone = btn.cloneNode(true);
-    btn.replaceWith(clone);
+    btn.replaceWith(btn.cloneNode(true));
   });
   document.getElementById('btn-plan-yearly')?.addEventListener('click', () => {
     planningViewLevel = 'yearly'; renderPlanningLevel(planning, sessions);
@@ -303,6 +303,10 @@ function renderWeeklyPlanView(container, planning, sessions) {
     + '<li class="sw-plan-real"><span>Pàdel</span><strong>' + (stats.hasPadel ? '✅' : '—') + '</strong></li>'
     : '';
 
+  // Ritmes del planning via formatPace
+  const qRitmePla  = formatPace(week.raw['Q_Ritme_min_km']);
+  const z2RitmePla = formatPace(week.raw['Z2_Ritme_min_km_min'], '') + '–' + formatPace(week.raw['Z2_Ritme_min_km_max']);
+
   container.innerHTML =
     '<div class="plan-week-nav">'
     + '<button class="btn btn-ghost btn-sm" id="btn-wplan-prev"' + (planningWeekIndex === 0 ? ' disabled' : '') + '>◄ Anterior</button>'
@@ -334,7 +338,7 @@ function renderWeeklyPlanView(container, planning, sessions) {
     +   '<p class="eyebrow">🎯 Qualitat</p>'
     +   '<ul class="sw-plan-list" style="margin-top:12px">'
     +     '<li><span>Sèries</span><strong>' + (week.qSeries || '--') + '</strong></li>'
-    +     '<li><span>Ritme</span><strong>' + (week.raw['Q_Ritme_min_km'] || '--') + ' min/km</strong></li>'
+    +     '<li><span>Ritme</span><strong>' + qRitmePla + '</strong></li>'
     +     '<li><span>Recuperació</span><strong>' + (week.raw['Q_Rec_min'] || '--') + ' min</strong></li>'
     +     '<li><span>FC</span><strong>' + formatFCRangeP(week.raw['Q_FC_min'], week.raw['Q_FC_max']) + '</strong></li>'
     +     '<li><span>Km pla</span><strong>' + fmtNumP(week.qKm) + ' km</strong></li>'
@@ -346,7 +350,7 @@ function renderWeeklyPlanView(container, planning, sessions) {
     +   '<p class="eyebrow">🫁 Z2</p>'
     +   '<ul class="sw-plan-list" style="margin-top:12px">'
     +     '<li><span>Durada</span><strong>' + fmtNumP(week.z2Durada) + ' min</strong></li>'
-    +     '<li><span>Ritme</span><strong>' + week.z2PaceMin + '–' + week.z2PaceMax + ' min/km</strong></li>'
+    +     '<li><span>Ritme</span><strong>' + z2RitmePla + '</strong></li>'
     +     '<li><span>FC</span><strong>' + formatFCRangeP(week.raw['Z2_FC_min'], week.raw['Z2_FC_max']) + '</strong></li>'
     +     '<li><span>Km pla</span><strong>' + fmtNumP(week.raw['Z2_Km_Plan']) + ' km</strong></li>'
     +     z2Real
@@ -396,11 +400,11 @@ function getWeekStats(week, sessions) {
   const hasStrength = ws.some(s => s.tipusKey.startsWith('FORÇA') || s.tipusKey.startsWith('FORCA'));
   const hasPadel    = ws.some(s => ['PADEL','TENIS','TENNIS'].includes(s.tipusKey));
 
-  const pctTotal   = week.kmTotal > 0 ? Math.round((kmTotal   / week.kmTotal)                          * 100) : 0;
-  const pctQuality = week.qKm     > 0 ? Math.round((kmQuality / week.qKm)                              * 100) : null;
+  const pctTotal   = week.kmTotal > 0 ? Math.round((kmTotal   / week.kmTotal) * 100) : 0;
+  const pctQuality = week.qKm     > 0 ? Math.round((kmQuality / week.qKm)     * 100) : null;
   const pctZ2      = parseFloat(week.raw['Z2_Km_Plan']) > 0
-                   ? Math.round((kmZ2  / parseFloat(week.raw['Z2_Km_Plan']))                            * 100) : null;
-  const pctLong    = week.llKm    > 0 ? Math.round((kmLong    / week.llKm)                             * 100) : null;
+                   ? Math.round((kmZ2  / parseFloat(week.raw['Z2_Km_Plan']))   * 100) : null;
+  const pctLong    = week.llKm    > 0 ? Math.round((kmLong    / week.llKm)    * 100) : null;
 
   const today  = new Date(); today.setHours(0,0,0,0);
   const start  = new Date(week.startDate); start.setHours(0,0,0,0);

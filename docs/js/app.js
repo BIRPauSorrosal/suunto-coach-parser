@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadDashboardData();
 });
 
-// ── Càrrega de dades ─────────────────────────────────────────────────────────
+// ── Càrrega de dades ──────────────────────────────────────────────────────────
 async function loadDashboardData() {
   setNotice('Llegint fitxers CSV...', 'info');
   setBadge('Carregant dades...');
@@ -97,7 +97,7 @@ async function loadDashboardData() {
   }
 }
 
-// ── Fetch ────────────────────────────────────────────────────────────────────
+// ── Fetch ─────────────────────────────────────────────────────────────────────
 async function fetchFirstAvailable(paths) {
   let lastError = null;
   for (const path of paths) {
@@ -177,27 +177,27 @@ function enrichPlanningRow(row) {
   if (!startDate || !endDate) return null;
 
   return {
-    raw:        row,
-    setmana:    row['Setmana']   || '--',
-    cicle:      row['Cicle']     || '--',
-    fase:       row['Fase']      || '--',
+    raw:          row,
+    setmana:      row['Setmana']   || '--',
+    cicle:        row['Cicle']     || '--',
+    fase:         row['Fase']      || '--',
     startDate,
     endDate,
-    qKm:        toNumber(row['Q_Km_Plan']),
-    z2Durada:   toNumber(row['Z2_Durada_min']),
-    llKm:       toNumber(row['LL_Km_Plan']),
-    kmTotal:    firstFinite([
+    qKm:          toNumber(row['Q_Km_Plan']),
+    z2Durada:     toNumber(row['Z2_Durada_min']),
+    llKm:         toNumber(row['LL_Km_Plan']),
+    kmTotal:      firstFinite([
       toNumber(row['Km_Total_Plan']),
       sumNumbers([toNumber(row['Q_Km_Plan']), toNumber(row['Z2_Km_Plan']), toNumber(row['LL_Km_Plan'])])
     ]),
-    llTipus:    row['LL_Tipus']            || '--',
-    qSeries:    row['Q_Series']            || '--',
-    qDuradaSerie: row['Q_Durada_Serie_min']|| '--',
-    qRitme:     row['Q_Ritme_min_km']      || '--',
-    z2PaceMin:  row['Z2_Ritme_min_km_min'] || '--',
-    z2PaceMax:  row['Z2_Ritme_min_km_max'] || '--',
-    forcaPlan:  row['Forca_Plan']          || '--',
-    padelPlan:  row['Padel_Plan']          || '--'
+    llTipus:      row['LL_Tipus']             || '--',
+    qSeries:      row['Q_Series']             || '--',
+    qDuradaSerie: row['Q_Durada_Serie_min']   || '--',
+    qRitme:       row['Q_Ritme_min_km']       || '--',
+    z2PaceMin:    row['Z2_Ritme_min_km_min']  || '--',
+    z2PaceMax:    row['Z2_Ritme_min_km_max']  || '--',
+    forcaPlan:    row['Forca_Plan']           || '--',
+    padelPlan:    row['Padel_Plan']           || '--'
   };
 }
 
@@ -327,6 +327,26 @@ function formatNumber(value) {
 function formatMetric(value, unit) {
   if (!isFinite(value)) return unit ? `-- ${unit}` : '--';
   return unit ? `${formatNumber(value)} ${unit}` : formatNumber(value);
+}
+
+// ── formatPace: converteix decimal o "mm:ss" a "mm:ss min/km" ────────────────
+// Exemples: 4.75 → "4:45 min/km" | "4:30" → "4:30 min/km" | null → "-- min/km"
+function formatPace(value, unit = 'min/km') {
+  const suffix = unit ? ` ${unit}` : '';
+
+  // Cas 1: string amb format "mm:ss" o "m:ss" ja correcte → retornem tal qual
+  if (typeof value === 'string' && /^\d+:[0-5]\d$/.test(value.trim())) {
+    return value.trim() + suffix;
+  }
+
+  // Cas 2: convertim a number (decimal)
+  const n = (typeof value === 'string') ? toNumber(value) : value;
+  if (n == null || !isFinite(n) || n <= 0) return `--${suffix}`;
+
+  const mins = Math.floor(n);
+  const secs = Math.round((n - mins) * 60);
+  if (secs === 60) return `${mins + 1}:00${suffix}`;
+  return `${mins}:${String(secs).padStart(2, '0')}${suffix}`;
 }
 
 function setBadge(text)     { setText('load-badge', text); }

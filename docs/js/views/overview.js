@@ -1,6 +1,6 @@
 // docs/js/views/overview.js
 // Vista Overview: hero-cards + metric-boxes + panells Test/Cursa + Altres
-// Dep: app.js (constants, helpers, detectActiveWeek)
+// Dep: app.js (constants, helpers, detectActiveWeek, formatPace)
 
 // ── Punt d'entrada ────────────────────────────────────────────────────────────
 function renderOverviewView(sessions, planning) {
@@ -44,30 +44,29 @@ function renderSummary(activeWeek, weeklySessions) {
   const longKm          = sumNumbers(llong.map(s => s.distancia));
   const strengthMin     = sumNumbers(strength.map(s => s.durada));
 
-  // ─ Qualitat: 2 línies al strong (ritme / ppm) quan hi ha sessió feta ───
+  // ─ Qualitat: 2 línies al strong (ritme / ppm) ──────────────────
   if (quality.length) {
     const ritmeMitja = quality.map(s => s.ritmeMitjaSeries).filter(v => isFinite(v));
     const fcMitja    = quality.map(s => s.fcMitjaSeries).filter(v => isFinite(v));
     const ritmeTxt   = ritmeMitja.length
-      ? formatNumber(ritmeMitja.reduce((a, b) => a + b, 0) / ritmeMitja.length) + ' min/km'
+      ? formatPace(ritmeMitja.reduce((a, b) => a + b, 0) / ritmeMitja.length)
       : '--';
     const fcTxt = fcMitja.length
       ? Math.round(fcMitja.reduce((a, b) => a + b, 0) / fcMitja.length) + ' ppm'
       : '--';
-    // Dues línies dins el <strong> via innerHTML
     const el = document.getElementById('quality-summary');
     if (el) el.innerHTML = `${esc(ritmeTxt)}<br><span style="font-size:0.85em;opacity:0.8">${esc(fcTxt)}</span>`;
   } else {
     setText('quality-summary', '—');
   }
   setText('quality-detail', activeWeek
-    ? `Pla: ${activeWeek.qSeries} sèr · ${activeWeek.qDuradaSerie}' · ${activeWeek.qRitme} min/km`
+    ? `Pla: ${activeWeek.qSeries} sèr · ${activeWeek.qDuradaSerie}' · ${formatPace(activeWeek.qRitme)}`
     : 'Sense planning setmanal disponible');
 
   // ─ Z1+Z2 running ───────────────────────────────────────────────
   setText('z2-summary', z1z2Minutes ? `${formatNumber(z1z2Minutes)} min` : '—');
   setText('z2-detail', activeWeek
-    ? `Ritme objectiu Z2: ${activeWeek.z2PaceMin}–${activeWeek.z2PaceMax} min/km`
+    ? `Ritme Z2: ${formatPace(activeWeek.z2PaceMin, '')}–${formatPace(activeWeek.z2PaceMax)}`
     : 'Sense rang de ritme planificat');
 
   // ─ Tirada llarga ───────────────────────────────────────────────
@@ -99,8 +98,6 @@ function renderTestRacePanel(sessions) {
   const lastTest  = sessions.find(s => s.tipusKey === 'TEST');
   const lastCursa = sessions.find(s => s.tipusKey === 'CURSA');
 
-  // TEST: ritme i FC de les sèries (Ritme_Mitja_Series / FC_Mitja_Series)
-  // CURSA: ritme i FC globals (Ritme / FCMitja)
   function rowHTML(label, s) {
     if (!s) return `
       <tr class="tr-empty">
@@ -110,8 +107,7 @@ function renderTestRacePanel(sessions) {
     const isTest   = s.tipusKey === 'TEST';
     const ritme    = isTest ? s.ritmeMitjaSeries : s.ritme;
     const fc       = isTest ? s.fcMitjaSeries    : s.fcMitja;
-    const ritmeTxt = isFinite(ritme) ? `${formatNumber(ritme)} min/km` : '--';
-    const fcTxt    = isFinite(fc)    ? `${Math.round(fc)} ppm`         : '--';
+    const fcTxt    = isFinite(fc) ? `${Math.round(fc)} ppm` : '--';
     const desTxt   = isFinite(s.desnivell) ? `${formatNumber(s.desnivell)} m` : '--';
 
     return `
@@ -119,8 +115,8 @@ function renderTestRacePanel(sessions) {
         <td><span class="eyebrow">${label}</span></td>
         <td>${esc(s.displayDate)}</td>
         <td>${formatMetric(s.distancia, 'km')}</td>
-        <td>${ritmeTxt}${isTest ? ' <span class="eyebrow">(sèries)</span>' : ''}</td>
-        <td>${fcTxt}${isTest ? ' <span class="eyebrow">(sèries)</span>' : ''}</td>
+        <td>${formatPace(ritme)}</td>
+        <td>${fcTxt}</td>
         <td>${desTxt}</td>
         <td>${formatMetric(s.carrega, '')}</td>
       </tr>`;
@@ -146,12 +142,11 @@ function renderTestRacePanel(sessions) {
     </table>`;
 }
 
-// ── Panell Altres activitats — últims 30 dies ───────────────────────────────
+// ── Panell Altres activitats — últims 30 dies ─────────────────────────────────
 function renderOthersPanel(sessions) {
   const container = document.getElementById('others-container');
   if (!container) return;
 
-  // Filtre: no running, no força, no test/cursa + últims 30 dies
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - 30);
   cutoff.setHours(0, 0, 0, 0);
