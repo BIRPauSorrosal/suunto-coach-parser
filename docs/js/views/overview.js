@@ -48,16 +48,7 @@ function renderSummary(activeWeek, weeklySessions) {
   const strengthMin = sumNumbers(strength.map(s => s.durada));
 
   // ─ Qualitat ─────────────────────────────────────────────────────
-  if (activeWeek) {
-    // Pla: sèries x duració i ritme objectiu
-    setText('quality-summary', quality.length ? `${quality.length} sessions` : '—');
-    setText('quality-detail',
-      `Pla: ${activeWeek.qSeries} sèr · ${activeWeek.qDuradaSerie}' · ${activeWeek.qRitme} min/km`);
-  } else {
-    setText('quality-summary', quality.length ? `${quality.length} sessions` : '—');
-    setText('quality-detail', 'Sense planning setmanal disponible');
-  }
-  // Real: si hi ha sessions de qualitat, afegir ritme i FC de sèries
+  // strong: si hi ha sessió feta → ritme i FC reals de sèries; si no → '—'
   if (quality.length) {
     const ritmeMitja = quality.map(s => s.ritmeMitjaSeries).filter(v => isFinite(v));
     const fcMitja    = quality.map(s => s.fcMitjaSeries).filter(v => isFinite(v));
@@ -67,10 +58,13 @@ function renderSummary(activeWeek, weeklySessions) {
     const fcTxt = fcMitja.length
       ? Math.round(fcMitja.reduce((a, b) => a + b, 0) / fcMitja.length) + ' ppm'
       : '--';
-    setText('quality-real', `Real: ${formatNumber(qualityKm)} km · ${ritmeTxt} · ${fcTxt}`);
+    setText('quality-summary', `${ritmeTxt} · ${fcTxt}`);
   } else {
-    setText('quality-real', '');
+    setText('quality-summary', '—');
   }
+  setText('quality-detail', activeWeek
+    ? `Pla: ${activeWeek.qSeries} sèr · ${activeWeek.qDuradaSerie}' · ${activeWeek.qRitme} min/km`
+    : 'Sense planning setmanal disponible');
 
   // ─ Z1+Z2 running ───────────────────────────────────────────────
   setText('z2-summary', z1z2Minutes ? `${formatNumber(z1z2Minutes)} min` : '—');
@@ -85,11 +79,10 @@ function renderSummary(activeWeek, weeklySessions) {
   } else {
     setText('long-detail', 'Sense tirada llarga planificada');
   }
-  // Real: si hi ha activitat llarga, mostrar km, desnivell i FC
   if (llong.length) {
-    const lastLong   = llong[0]; // ja ordenades de més recent
-    const desnivell  = isFinite(lastLong.desnivell) ? `${formatNumber(lastLong.desnivell)} m` : '--';
-    const fc         = isFinite(lastLong.fcMitja)   ? `${Math.round(lastLong.fcMitja)} ppm`  : '--';
+    const lastLong  = llong[0];
+    const desnivell = isFinite(lastLong.desnivell) ? `${formatNumber(lastLong.desnivell)} m` : '--';
+    const fc        = isFinite(lastLong.fcMitja)   ? `${Math.round(lastLong.fcMitja)} ppm`  : '--';
     setText('long-real', `Real: ${formatNumber(longKm)} km · D+ ${desnivell} · FC ${fc}`);
   } else {
     setText('long-real', '');
