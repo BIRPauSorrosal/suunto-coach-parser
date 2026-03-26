@@ -39,16 +39,12 @@ function renderSummary(activeWeek, weeklySessions) {
   const llong    = weeklySessions.filter(s => LONG_TYPES.has(s.tipusKey));
   const strength = weeklySessions.filter(s => isStrength(s));
 
-  // Z1+Z2: només sessions de running
   const runningSessions = weeklySessions.filter(s => isRunning(s));
   const z1z2Minutes     = sumNumbers(runningSessions.map(s => (s.z1min || 0) + (s.z2min || 0)));
+  const longKm          = sumNumbers(llong.map(s => s.distancia));
+  const strengthMin     = sumNumbers(strength.map(s => s.durada));
 
-  const qualityKm   = sumNumbers(quality.map(s => s.distancia));
-  const longKm      = sumNumbers(llong.map(s => s.distancia));
-  const strengthMin = sumNumbers(strength.map(s => s.durada));
-
-  // ─ Qualitat ─────────────────────────────────────────────────────
-  // strong: si hi ha sessió feta → ritme i FC reals de sèries; si no → '—'
+  // ─ Qualitat: 2 línies al strong (ritme / ppm) quan hi ha sessió feta ───
   if (quality.length) {
     const ritmeMitja = quality.map(s => s.ritmeMitjaSeries).filter(v => isFinite(v));
     const fcMitja    = quality.map(s => s.fcMitjaSeries).filter(v => isFinite(v));
@@ -58,7 +54,9 @@ function renderSummary(activeWeek, weeklySessions) {
     const fcTxt = fcMitja.length
       ? Math.round(fcMitja.reduce((a, b) => a + b, 0) / fcMitja.length) + ' ppm'
       : '--';
-    setText('quality-summary', `${ritmeTxt} · ${fcTxt}`);
+    // Dues línies dins el <strong> via innerHTML
+    const el = document.getElementById('quality-summary');
+    if (el) el.innerHTML = `${esc(ritmeTxt)}<br><span style="font-size:0.85em;opacity:0.8">${esc(fcTxt)}</span>`;
   } else {
     setText('quality-summary', '—');
   }
@@ -74,11 +72,9 @@ function renderSummary(activeWeek, weeklySessions) {
 
   // ─ Tirada llarga ───────────────────────────────────────────────
   setText('long-summary', longKm ? `${formatNumber(longKm)} km` : '—');
-  if (activeWeek) {
-    setText('long-detail', `Pla: ${activeWeek.llTipus} · ${formatNumber(activeWeek.llKm)} km`);
-  } else {
-    setText('long-detail', 'Sense tirada llarga planificada');
-  }
+  setText('long-detail', activeWeek
+    ? `Pla: ${activeWeek.llTipus} · ${formatNumber(activeWeek.llKm)} km`
+    : 'Sense tirada llarga planificada');
   if (llong.length) {
     const lastLong  = llong[0];
     const desnivell = isFinite(lastLong.desnivell) ? `${formatNumber(lastLong.desnivell)} m` : '--';
@@ -103,17 +99,29 @@ function renderTestRacePanel(sessions) {
   const lastTest  = sessions.find(s => s.tipusKey === 'TEST');
   const lastCursa = sessions.find(s => s.tipusKey === 'CURSA');
 
+  // TEST: ritme i FC de les sèries (Ritme_Mitja_Series / FC_Mitja_Series)
+  // CURSA: ritme i FC globals (Ritme / FCMitja)
   function rowHTML(label, s) {
     if (!s) return `
       <tr class="tr-empty">
-        <td colspan="5"><span class="eyebrow">${label}</span> — Sense registre</td>
+        <td colspan="7"><span class="eyebrow">${label}</span> — Sense registre</td>
       </tr>`;
+
+    const isTest   = s.tipusKey === 'TEST';
+    const ritme    = isTest ? s.ritmeMitjaSeries : s.ritme;
+    const fc       = isTest ? s.fcMitjaSeries    : s.fcMitja;
+    const ritmeTxt = isFinite(ritme) ? `${formatNumber(ritme)} min/km` : '--';
+    const fcTxt    = isFinite(fc)    ? `${Math.round(fc)} ppm`         : '--';
+    const desTxt   = isFinite(s.desnivell) ? `${formatNumber(s.desnivell)} m` : '--';
+
     return `
       <tr>
         <td><span class="eyebrow">${label}</span></td>
         <td>${esc(s.displayDate)}</td>
         <td>${formatMetric(s.distancia, 'km')}</td>
-        <td>${formatMetric(s.ritme, 'min/km')}</td>
+        <td>${ritmeTxt}${isTest ? ' <span class="eyebrow">(sèries)</span>' : ''}</td>
+        <td>${fcTxt}${isTest ? ' <span class="eyebrow">(sèries)</span>' : ''}</td>
+        <td>${desTxt}</td>
         <td>${formatMetric(s.carrega, '')}</td>
       </tr>`;
   }
@@ -126,6 +134,8 @@ function renderTestRacePanel(sessions) {
           <th>Data</th>
           <th>Distància</th>
           <th>Ritme</th>
+          <th>FC</th>
+          <th>Desnivell</th>
           <th>Càrrega</th>
         </tr>
       </thead>
@@ -136,17 +146,22 @@ function renderTestRacePanel(sessions) {
     </table>`;
 }
 
-// ── Panell Altres activitats ──────────────────────────────────────────────────
+// ── Panell Altres activitats — últims 30 dies ───────────────────────────────
 function renderOthersPanel(sessions) {
   const container = document.getElementById('others-container');
   if (!container) return;
 
-  const others   = sessions.filter(s => isOther(s));
+  // Filtre: no running, no força, no test/cursa + últims 30 dies
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 30);
+  cutoff.setHours(0, 0, 0, 0);
+
+  const others   = sessions.filter(s => isOther(s) && s.date >= cutoff);
   const totalMin = sumNumbers(others.map(s => s.durada));
 
   setText('others-count', others.length
-    ? `${others.length} sessions · ${formatNumber(totalMin)} min totals`
-    : 'Sense activitats registrades');
+    ? `${others.length} sessions · ${formatNumber(totalMin)} min`
+    : 'Sense activitats els últims 30 dies');
 
   container.innerHTML = others.length
     ? `<table class="sw-mini-table">
@@ -163,5 +178,5 @@ function renderOthersPanel(sessions) {
             </tr>`).join('')}
         </tbody>
       </table>`
-    : '<p class="plan-no-data">Cap activitat alternativa registrada.</p>';
+    : '<p class="plan-no-data">Cap activitat alternativa els últims 30 dies.</p>';
 }
