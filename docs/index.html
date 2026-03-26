@@ -53,9 +53,8 @@
         <p id="notice-text">Llegint fitxers CSV...</p>
       </section>
 
-      <!-- ── Vista: Overview ──────────────────────────────────────────────── -->
+      <!-- ── Vista: Overview ── -->
       <section class="view view--active" data-view="overview">
-
         <header class="page-header">
           <div>
             <p class="eyebrow">Dashboard web</p>
@@ -63,7 +62,6 @@
           </div>
           <span class="badge badge-muted" id="load-badge">Inicialitzant...</span>
         </header>
-
         <div class="hero-grid">
           <article class="hero-card card-highlight">
             <p class="card-label">Setmana activa</p>
@@ -86,7 +84,6 @@
             <p class="hero-value" id="compliance-value">-- %</p>
           </article>
         </div>
-
         <div class="content-grid">
           <article class="panel panel-large">
             <div class="panel-header">
@@ -121,7 +118,6 @@
               </div>
             </div>
           </article>
-
           <article class="panel">
             <div class="panel-header">
               <div>
@@ -135,7 +131,6 @@
             </div>
           </article>
         </div>
-
         <article class="panel">
           <div class="panel-header">
             <div>
@@ -148,7 +143,6 @@
             <p class="plan-no-data">Carregant...</p>
           </div>
         </article>
-
         <div class="charts-grid">
           <article class="panel">
             <div class="panel-header">
@@ -175,7 +169,6 @@
             </div>
           </article>
         </div>
-
         <article class="panel">
           <div class="panel-header">
             <div>
@@ -188,11 +181,9 @@
             <p class="plan-no-data">Carregant...</p>
           </div>
         </article>
-
       </section>
-      <!-- /vista overview -->
 
-      <!-- ── Vista: Setmana actual ──────────────────────────────────────────── -->
+      <!-- ── Vista: Setmana actual ── -->
       <section class="view" data-view="setmanal">
         <header class="page-header">
           <div>
@@ -209,7 +200,6 @@
             <button class="btn btn-ghost" id="week-nav-next">Següent ►</button>
           </div>
         </header>
-
         <article class="panel progress-panel">
           <div class="progress-header">
             <span>Km totals setmanals</span>
@@ -219,7 +209,6 @@
             <div class="progress-fill" id="sw-progress-bar" style="width:0%"></div>
           </div>
         </article>
-
         <div class="sw-grid">
           <article class="panel sw-block" id="sw-q-block">
             <div class="sw-block-header">
@@ -247,7 +236,6 @@
               </div>
             </div>
           </article>
-
           <article class="panel sw-block" id="sw-z2-block">
             <div class="sw-block-header">
               <h3>🫁 Z2</h3>
@@ -273,7 +261,6 @@
               </div>
             </div>
           </article>
-
           <article class="panel sw-block" id="sw-ll-block">
             <div class="sw-block-header">
               <h3>🏃 Tirada llarga</h3>
@@ -298,7 +285,6 @@
               </div>
             </div>
           </article>
-
           <article class="panel sw-block" id="sw-extra-block">
             <div class="sw-block-header">
               <h3>💪 Força / Pàdel</h3>
@@ -327,9 +313,8 @@
           </article>
         </div>
       </section>
-      <!-- /vista setmanal -->
 
-      <!-- ── Vista: Planning ───────────────────────────────────────────────── -->
+      <!-- ── Vista: Planning ── -->
       <section class="view" data-view="planning">
         <header class="page-header">
           <div>
@@ -345,9 +330,8 @@
           <p class="muted-msg">Carregant planning...</p>
         </div>
       </section>
-      <!-- /vista planning -->
 
-      <!-- ── Vista: Sessions ───────────────────────────────────────────────── -->
+      <!-- ── Vista: Sessions ── -->
       <section class="view" data-view="sessions">
 
         <header class="page-header">
@@ -375,7 +359,8 @@
           <div class="sess-filter-group">
             <span class="sess-filter-label">Període</span>
             <div class="sess-period-btns">
-              <button class="btn btn-ghost btn-sm" data-period="7">1S</button>
+              <button class="btn btn-ghost btn-sm" data-period="-1">Setmana</button>
+              <button class="btn btn-ghost btn-sm" data-period="7">7d</button>
               <button class="btn btn-ghost btn-sm" data-period="30">30d</button>
               <button class="btn btn-ghost btn-sm active" data-period="180">6m</button>
               <button class="btn btn-ghost btn-sm" data-period="365">1a</button>
@@ -384,12 +369,8 @@
           </div>
         </div>
 
-        <!-- KPIs: 2 columnes, sense km/setmana -->
+        <!-- KPIs: 2x2 — dalt km+temps, baix TSS+EPOC -->
         <div class="sess-kpis" id="sess-kpis">
-          <div class="sess-kpi">
-            <span class="sess-kpi-label">Sessions</span>
-            <strong class="sess-kpi-value" id="kpi-count">--</strong>
-          </div>
           <div class="sess-kpi">
             <span class="sess-kpi-label">Km totals</span>
             <strong class="sess-kpi-value" id="kpi-km">--</strong>
@@ -401,6 +382,10 @@
           <div class="sess-kpi">
             <span class="sess-kpi-label">Càrrega total</span>
             <strong class="sess-kpi-value" id="kpi-load">--</strong>
+          </div>
+          <div class="sess-kpi">
+            <span class="sess-kpi-label">EPOC total</span>
+            <strong class="sess-kpi-value" id="kpi-epoc">--</strong>
           </div>
         </div>
 
@@ -422,7 +407,6 @@
         </article>
 
       </section>
-      <!-- /vista sessions -->
 
     </main>
   </div>
