@@ -1,3 +1,6 @@
+// docs/js/app.js
+// Orquestrador: càrrega de CSVs, estat global, router, helpers compartits.
+
 const DATA_SOURCES = {
   sessions: ['../data/output/sessions.csv'],
   planning: ['../data/output/planning.csv']
@@ -26,25 +29,19 @@ function initRouter() {
       navLinks.forEach(l => l.classList.remove('active'));
       link.classList.add('active');
 
-      // Mostra/oculta notice-bar segons la vista
       const noticeBar = document.getElementById('notice-bar');
       if (noticeBar) noticeBar.style.display = target === 'overview' ? '' : 'none';
-
 
       views.forEach(v => v.classList.remove('view--active'));
       const activeView = document.querySelector(`.view[data-view="${target}"]`);
       if (activeView) activeView.classList.add('view--active');
 
-      // Re-pinta gràfics quan tornem a overview (canvas pot haver perdut mides)
-      if (target === 'overview' && window._chartData) {
-        setTimeout(() => initCharts(window._chartData.sessions, window._chartData.planning), 50);
-      }
-      if (target === 'setmanal' && window._chartData) {
-        renderSetmanalView(window._chartData.sessions, window._chartData.planning);
-      }
-      if (target === 'planning' && window._chartData) {
-        renderPlanningView(window._chartData.planning, window._chartData.sessions);
-      }
+      if (!window._chartData) return;
+      const { sessions, planning } = window._chartData;
+
+      if (target === 'overview')  renderOverviewView(sessions, planning);
+      if (target === 'setmanal')  renderSetmanalView(sessions, planning);
+      if (target === 'planning')  renderPlanningView(planning, sessions);
     });
   });
 }
@@ -157,23 +154,12 @@ function renderDashboard() {
     .filter(Boolean)
     .sort((a, b) => b.date - a.date);
 
-  // Guardem globalment per al router i futures vistes
   window._chartData = { sessions, planning };
 
-  const activeWeek = detectActiveWeek(planning, sessions);
-  const weeklySessions = activeWeek
-    ? sessions.filter(s => s.date >= activeWeek.startDate && s.date <= activeWeek.endDate)
-    : [];
-
-  renderOverview(activeWeek, weeklySessions);
-  renderSummary(activeWeek, weeklySessions);
+  renderOverviewView(sessions, planning);
   renderSessionsTable(sessions);
-  renderPlanningTable(planning);
   renderSetmanalView(sessions, planning);
   renderPlanningView(planning, sessions);
-
-  // Gràfics: setTimeout garanteix que els <canvas> tenen mides reals
-  setTimeout(() => initCharts(sessions, planning), 0);
 }
 
 // ── Enriquiment de files ──────────────────────────────────────────────────────
@@ -241,55 +227,7 @@ function detectActiveWeek(planning, sessions) {
   return planning[planning.length - 1];
 }
 
-// ── Renders ───────────────────────────────────────────────────────────────────
-function renderOverview(activeWeek, weeklySessions) {
-  const plannedKm  = activeWeek?.kmTotal ?? null;
-  const realLoad   = sumNumbers(weeklySessions.map(s => s.carrega));
-  const realKm     = sumNumbers(weeklySessions.map(s => s.distancia));
-  const compliance = (plannedKm && plannedKm > 0) ? (realKm / plannedKm) * 100 : null;
-
-  setText('active-week-label', activeWeek ? `${activeWeek.setmana} · ${activeWeek.cicle}` : '--');
-  setText('active-week-range', activeWeek
-    ? `${formatDate(activeWeek.startDate)} → ${formatDate(activeWeek.endDate)} · ${activeWeek.fase}`
-    : "No s'ha pogut detectar cap setmana activa.");
-  setText('planned-km-value',  formatMetric(plannedKm, 'km'));
-  setText('real-load-value',   formatMetric(realLoad, ''));
-  setText('compliance-value',  compliance == null ? '-- %' : `${Math.round(compliance)} %`);
-}
-
-function renderSummary(activeWeek, weeklySessions) {
-  const quality = weeklySessions.filter(s => QUALITY_TYPES.has(s.tipusKey));
-  const z2      = weeklySessions.filter(s => s.tipusKey === 'Z2');
-  const llong   = weeklySessions.filter(s => LONG_TYPES.has(s.tipusKey));
-  const extra   = weeklySessions.filter(s =>
-    s.tipusKey.startsWith('FORÇA') || s.tipusKey.startsWith('FORCA') || EXTRA_TYPES.has(s.tipusKey)
-  );
-
-  const qualityKm  = sumNumbers(quality.map(s => s.distancia));
-  const z2Minutes  = sumNumbers(weeklySessions.map(s => s.z2min));
-  const longKm     = sumNumbers(llong.map(s => s.distancia));
-
-  setText('quality-summary', `${quality.length} sessions`);
-  setText('quality-detail', activeWeek
-    ? `Pla: ${activeWeek.qSeries} sèries · Km reals: ${formatNumber(qualityKm)}`
-    : 'Sense planning setmanal disponible');
-
-  setText('z2-summary', `${formatNumber(z2Minutes)} min`);
-  setText('z2-detail', activeWeek
-    ? `Ritme objectiu: ${activeWeek.z2PaceMin}–${activeWeek.z2PaceMax} min/km`
-    : 'Sense rang de ritme planificat');
-
-  setText('long-summary', `${formatNumber(longKm)} km`);
-  setText('long-detail', activeWeek
-    ? `Pla: ${activeWeek.llTipus} · ${formatNumber(activeWeek.llKm)} km`
-    : 'Sense tirada llarga planificada');
-
-  setText('extra-summary', `${extra.length} sessions`);
-  setText('extra-detail', activeWeek
-    ? `Força: ${activeWeek.forcaPlan} · Pàdel: ${activeWeek.padelPlan}`
-    : 'Sense treball complementari planificat');
-}
-
+// ── Sessions table ────────────────────────────────────────────────────────────
 function renderSessionsTable(sessions) {
   const tbody = document.getElementById('sessions-table-body');
   if (!tbody) return;
@@ -307,29 +245,7 @@ function renderSessionsTable(sessions) {
     : '<tr><td colspan="5" class="empty-row">No hi ha sessions disponibles.</td></tr>';
 }
 
-function renderPlanningTable(planning) {
-  const tbody = document.getElementById('planning-table-body');
-  if (!tbody) return;
-  setText('planning-count-badge', `${planning.length} files`);
-
-  tbody.innerHTML = planning.length
-    ? [...planning].reverse().map(w => `
-        <tr>
-          <td>${esc(w.setmana)}</td>
-          <td>${esc(w.cicle)}</td>
-          <td>${esc(w.fase)}</td>
-          <td>${formatMetric(w.qKm, 'km')}</td>
-          <td>${formatMetric(w.z2Durada, 'min')}</td>
-          <td>${esc(w.z2PaceMin)}–${esc(w.z2PaceMax)}</td>
-          <td>${esc(w.llTipus)}</td>
-          <td>${formatMetric(w.llKm, 'km')}</td>
-          <td>${esc(w.forcaPlan)}</td>
-          <td>${esc(w.padelPlan)}</td>
-          <td>${formatMetric(w.kmTotal, 'km')}</td>
-        </tr>`).join('')
-    : '<tr><td colspan="11" class="empty-row">No hi ha setmanes planificades.</td></tr>';
-}
-
+// ── Status sidebar ────────────────────────────────────────────────────────────
 function updateStatus(errorMessage = null) {
   setText('status-sessions', state.sessions.length
     ? `sessions.csv carregat (${state.sessions.length} files)`
@@ -350,11 +266,9 @@ function setNotice(message, type = 'info') {
   if (type === 'error')   bar.classList.add('is-error');
   if (type === 'warning') bar.classList.add('is-warning');
   setText('notice-text', message);
-  // Només visible a Overview
   const activeView = document.querySelector('.view--active')?.dataset.view;
   bar.style.display = activeView === 'overview' || activeView == null ? '' : 'none';
 }
-
 
 // ── Helpers de dades ──────────────────────────────────────────────────────────
 function parseDate(value) {
