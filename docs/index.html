@@ -359,37 +359,81 @@
 
       <!-- ── Vista: Sessions ───────────────────────────────────────────────── -->
       <section class="view" data-view="sessions">
+
         <header class="page-header">
           <div>
             <p class="eyebrow">Historial</p>
-            <h2>Totes les sessions</h2>
+            <h2>Sessions</h2>
           </div>
         </header>
+
+        <!-- Barra de filtres -->
+        <div class="sess-filters">
+          <div class="sess-filter-left">
+            <label class="sess-filter-label" for="sess-type-select">Tipus</label>
+            <select id="sess-type-select" class="sess-select">
+              <option value="all">Totes</option>
+              <option value="z2">Z2</option>
+              <option value="quality">Qualitat</option>
+              <option value="long">Tirada llarga</option>
+              <option value="testrace">Test / Cursa</option>
+              <option value="strength">Força</option>
+              <option value="other">Altres</option>
+            </select>
+          </div>
+          <div class="sess-filter-right">
+            <label class="sess-filter-label">Període</label>
+            <div class="sess-period-btns">
+              <button class="btn btn-ghost btn-sm" data-period="7">1S</button>
+              <button class="btn btn-ghost btn-sm" data-period="30">30d</button>
+              <button class="btn btn-ghost btn-sm active" data-period="180">6m</button>
+              <button class="btn btn-ghost btn-sm" data-period="365">1a</button>
+              <button class="btn btn-ghost btn-sm" data-period="0">Sempre</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPIs dinàmics -->
+        <div class="sess-kpis" id="sess-kpis">
+          <div class="sess-kpi">
+            <span class="sess-kpi-label">Sessions</span>
+            <strong class="sess-kpi-value" id="kpi-count">--</strong>
+          </div>
+          <div class="sess-kpi">
+            <span class="sess-kpi-label">Km totals</span>
+            <strong class="sess-kpi-value" id="kpi-km">--</strong>
+          </div>
+          <div class="sess-kpi">
+            <span class="sess-kpi-label">Temps total</span>
+            <strong class="sess-kpi-value" id="kpi-time">--</strong>
+          </div>
+          <div class="sess-kpi">
+            <span class="sess-kpi-label">Càrrega total</span>
+            <strong class="sess-kpi-value" id="kpi-load">--</strong>
+          </div>
+          <div class="sess-kpi">
+            <span class="sess-kpi-label">Km / setmana</span>
+            <strong class="sess-kpi-value" id="kpi-km-week">--</strong>
+          </div>
+        </div>
+
+        <!-- Taula intel·ligent -->
         <article class="panel">
           <div class="panel-header">
             <div>
-              <p class="eyebrow">Sessions</p>
-              <h3>Últimes activitats</h3>
+              <p class="eyebrow">Llistat</p>
+              <h3 id="sess-table-title">Totes les sessions</h3>
             </div>
-            <span class="badge" id="sessions-count-badge">0 files</span>
+            <span class="badge badge-muted" id="sess-count-badge">--</span>
           </div>
           <div class="table-shell">
-            <table>
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Tipus</th>
-                  <th>Durada</th>
-                  <th>Distància</th>
-                  <th>Carrega</th>
-                </tr>
-              </thead>
-              <tbody id="sessions-table-body">
-                <tr><td colspan="5" class="empty-row">Carregant sessions...</td></tr>
-              </tbody>
+            <table id="sess-table">
+              <thead id="sess-thead"></thead>
+              <tbody id="sess-tbody"></tbody>
             </table>
           </div>
         </article>
+
       </section>
       <!-- /vista sessions -->
 
@@ -401,6 +445,7 @@
   <script src="./js/views/overview.js"></script>
   <script src="./js/views/setmanal.js"></script>
   <script src="./js/views/planning.js"></script>
+  <script src="./js/views/sessions.js"></script>
   <script src="./js/app.js"></script>
 </body>
 </html>
