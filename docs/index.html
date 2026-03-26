@@ -12,7 +12,7 @@
 <body>
   <div class="app-shell">
 
-    <!-- ── Sidebar ──────────────────────────────────────────────────────────── -->
+    <!-- ── Sidebar ── -->
     <aside class="sidebar">
       <div class="brand-block">
         <p class="eyebrow">Suunto Coach</p>
@@ -46,7 +46,7 @@
       </button>
     </aside>
 
-    <!-- ── Main ─────────────────────────────────────────────────────────────── -->
+    <!-- ── Main ── -->
     <main class="main-content">
 
       <section class="notice-bar" id="notice-bar">
@@ -211,10 +211,7 @@
         </article>
         <div class="sw-grid">
           <article class="panel sw-block" id="sw-q-block">
-            <div class="sw-block-header">
-              <h3>🎯 Qualitat</h3>
-              <span class="sw-status-dot" id="sw-q-dot"></span>
-            </div>
+            <div class="sw-block-header"><h3>🎯 Qualitat</h3><span class="sw-status-dot" id="sw-q-dot"></span></div>
             <div class="sw-cols">
               <div class="sw-col">
                 <p class="sw-col-title">Planificat</p>
@@ -237,10 +234,7 @@
             </div>
           </article>
           <article class="panel sw-block" id="sw-z2-block">
-            <div class="sw-block-header">
-              <h3>🫁 Z2</h3>
-              <span class="sw-status-dot"></span>
-            </div>
+            <div class="sw-block-header"><h3>🫁 Z2</h3><span class="sw-status-dot"></span></div>
             <div class="sw-cols">
               <div class="sw-col">
                 <p class="sw-col-title">Planificat</p>
@@ -262,10 +256,7 @@
             </div>
           </article>
           <article class="panel sw-block" id="sw-ll-block">
-            <div class="sw-block-header">
-              <h3>🏃 Tirada llarga</h3>
-              <span class="sw-status-dot"></span>
-            </div>
+            <div class="sw-block-header"><h3>🏃 Tirada llarga</h3><span class="sw-status-dot"></span></div>
             <div class="sw-cols">
               <div class="sw-col">
                 <p class="sw-col-title">Planificat</p>
@@ -286,10 +277,7 @@
             </div>
           </article>
           <article class="panel sw-block" id="sw-extra-block">
-            <div class="sw-block-header">
-              <h3>💪 Força / Pàdel</h3>
-              <span class="sw-status-dot"></span>
-            </div>
+            <div class="sw-block-header"><h3>💪 Força / Pàdel</h3><span class="sw-status-dot"></span></div>
             <div class="sw-cols">
               <div class="sw-col">
                 <p class="sw-col-title">Planificat</p>
@@ -341,7 +329,7 @@
           </div>
         </header>
 
-        <!-- Barra de filtres: tot en una sola línia -->
+        <!-- Filtres -->
         <div class="sess-filters">
           <div class="sess-filter-group">
             <label class="sess-filter-label" for="sess-type-select">Tipus</label>
@@ -369,7 +357,7 @@
           </div>
         </div>
 
-        <!-- KPIs: 2x2 — dalt km+temps, baix TSS+EPOC -->
+        <!-- KPIs -->
         <div class="sess-kpis" id="sess-kpis">
           <div class="sess-kpi">
             <span class="sess-kpi-label">Km totals</span>
@@ -388,6 +376,20 @@
             <strong class="sess-kpi-value" id="kpi-epoc">--</strong>
           </div>
         </div>
+
+        <!-- Gràfic de tendència — canvia següent el filtre de tipus -->
+        <article class="panel sess-trend-panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Tendència</p>
+              <h3 id="sess-chart-title">Volum setmanal</h3>
+            </div>
+            <span class="badge badge-muted" id="sess-chart-badge">Per setmanes</span>
+          </div>
+          <div class="chart-wrap chart-wrap--tall">
+            <canvas id="chart-sess-trend"></canvas>
+          </div>
+        </article>
 
         <!-- Taula intel·ligent -->
         <article class="panel">
