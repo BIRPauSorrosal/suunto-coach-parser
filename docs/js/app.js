@@ -11,13 +11,12 @@ const QUALITY_TYPES   = new Set(['TEMPO', 'INTERVALS']);
 const LONG_TYPES      = new Set(['LLARGA', 'MARATÓ', 'TRAIL', 'MITJA', 'MARATO']);
 const RUNNING_TYPES   = new Set([...QUALITY_TYPES, ...LONG_TYPES, 'Z2']);
 const TEST_RACE_TYPES = new Set(['TEST', 'CURSA']);
-// STRENGTH: regex per cobrir FORÇA S1, FORÇA S2, FORCA S1...
-const STRENGTH_RE     = /^FOR[ÇC]A/i;
-// ALTRES: tot el que no sigui running, força ni test/cursa (filtre per exclusió)
-function isRunning(s)   { return RUNNING_TYPES.has(s.tipusKey); }
-function isStrength(s)  { return STRENGTH_RE.test(s.tipusKey); }
-function isTestRace(s)  { return TEST_RACE_TYPES.has(s.tipusKey); }
-function isOther(s)     { return !isRunning(s) && !isStrength(s) && !isTestRace(s); }
+const STRENGTH_RE     = /^FOR[\u00c7C]A/i;
+
+function isRunning(s)  { return RUNNING_TYPES.has(s.tipusKey); }
+function isStrength(s) { return STRENGTH_RE.test(s.tipusKey); }
+function isTestRace(s) { return TEST_RACE_TYPES.has(s.tipusKey); }
+function isOther(s)    { return !isRunning(s) && !isStrength(s) && !isTestRace(s); }
 
 const state = {
   sessions: [],
@@ -62,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadDashboardData();
 });
 
-// ── Càrrega de dades ──────────────────────────────────────────────────────────
+// ── Càrrega de dades ─────────────────────────────────────────────────────────
 async function loadDashboardData() {
   setNotice('Llegint fitxers CSV...', 'info');
   setBadge('Carregant dades...');
@@ -98,7 +97,7 @@ async function loadDashboardData() {
   }
 }
 
-// ── Fetch ─────────────────────────────────────────────────────────────────────
+// ── Fetch ────────────────────────────────────────────────────────────────────
 async function fetchFirstAvailable(paths) {
   let lastError = null;
   for (const path of paths) {
@@ -158,7 +157,6 @@ function renderDashboard() {
     .filter(Boolean)
     .sort((a, b) => a.startDate - b.startDate);
 
-  // sessions ordenades de més recent a més antiga
   const sessions = state.sessions
     .map(enrichSessionRow)
     .filter(Boolean)
@@ -194,6 +192,8 @@ function enrichPlanningRow(row) {
     ]),
     llTipus:    row['LL_Tipus']            || '--',
     qSeries:    row['Q_Series']            || '--',
+    qDuradaSerie: row['Q_Durada_Serie_min']|| '--',
+    qRitme:     row['Q_Ritme_min_km']      || '--',
     z2PaceMin:  row['Z2_Ritme_min_km_min'] || '--',
     z2PaceMax:  row['Z2_Ritme_min_km_max'] || '--',
     forcaPlan:  row['Forca_Plan']          || '--',
@@ -206,18 +206,21 @@ function enrichSessionRow(row) {
   if (!date) return null;
   const tipus = String(row['Tipus'] || '').trim().toUpperCase();
   return {
-    raw:         row,
+    raw:              row,
     date,
-    displayDate: formatDate(date),
-    tipus:       row['Tipus'] || '--',
-    tipusKey:    tipus,
-    durada:      toNumber(row['Durada(min)']),
-    distancia:   toNumber(row['Dist(km)']),
-    carrega:     toNumber(row['Carrega']),
-    z1min:       toNumber(row['Z1(min)']),
-    z2min:       toNumber(row['Z2(min)']),
-    fcMitja:     toNumber(row['FCMitja']),
-    ritme:       toNumber(row['Ritme(min/km)'])
+    displayDate:      formatDate(date),
+    tipus:            row['Tipus'] || '--',
+    tipusKey:         tipus,
+    durada:           toNumber(row['Durada(min)']),
+    distancia:        toNumber(row['Dist(km)']),
+    desnivell:        toNumber(row['Desnivell(m)']),
+    carrega:          toNumber(row['Carrega']),
+    z1min:            toNumber(row['Z1(min)']),
+    z2min:            toNumber(row['Z2(min)']),
+    fcMitja:          toNumber(row['FCMitja']),
+    ritme:            toNumber(row['Ritme(min/km)']),
+    ritmeMitjaSeries: toNumber(row['Ritme_Mitja_Series']),
+    fcMitjaSeries:    toNumber(row['FC_Mitja_Series'])
   };
 }
 

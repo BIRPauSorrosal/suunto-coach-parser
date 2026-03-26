@@ -10,18 +10,17 @@ const CHART_COLORS = {
   gridLine:    'rgba(148, 163, 184, 0.1)',
   text:        '#94a3b8',
   zones: [
-    'rgba(56, 189, 248, 0.85)',   // Z1 — blau clar
-    'rgba(34, 197, 94, 0.85)',    // Z2 — verd
-    'rgba(250, 204, 21, 0.85)',   // Z3 — groc
-    'rgba(249, 115, 22, 0.85)',   // Z4 — taronja
-    'rgba(239, 68, 68, 0.85)',    // Z5 — vermell
+    'rgba(56, 189, 248, 0.85)',
+    'rgba(34, 197, 94, 0.85)',
+    'rgba(250, 204, 21, 0.85)',
+    'rgba(249, 115, 22, 0.85)',
+    'rgba(239, 68, 68, 0.85)',
   ]
 };
 
-// Instàncies actives (per destruir-les en recàrrega)
 const chartInstances = {};
 
-// ── Punt d'entrada cridat des de app.js ──────────────────────────────────────
+// ── Punt d'entrada ───────────────────────────────────────────────────────────
 function initCharts(enrichedSessions, enrichedPlanning) {
   destroyAll();
   Chart.defaults.color = CHART_COLORS.text;
@@ -34,13 +33,12 @@ function initCharts(enrichedSessions, enrichedPlanning) {
   renderZonesChart(enrichedSessions);
 }
 
-// ── Destrucció segura ─────────────────────────────────────────────────────────
 function destroyAll() {
   Object.values(chartInstances).forEach(chart => chart.destroy());
   Object.keys(chartInstances).forEach(key => delete chartInstances[key]);
 }
 
-// ── Preparació de dades setmanals (JOIN planning + sessions) ─────────────────
+// ── Dades setmanals ──────────────────────────────────────────────────────────
 function buildWeeklyData(sessions, planning) {
   return planning.map(week => {
     const weekSessions = sessions.filter(s =>
@@ -48,7 +46,6 @@ function buildWeeklyData(sessions, planning) {
     );
     const realKm   = weekSessions.reduce((acc, s) => acc + (s.distancia || 0), 0);
     const realLoad = weekSessions.reduce((acc, s) => acc + (s.carrega   || 0), 0);
-
     return {
       label:     week.setmana,
       plannedKm: week.kmTotal   || 0,
@@ -58,7 +55,7 @@ function buildWeeklyData(sessions, planning) {
   });
 }
 
-// ── Gràfic 1: Km Pla vs Real ─────────────────────────────────────────────────
+// ── Gràfic 1: Km Pla vs Real ────────────────────────────────────────────────
 function renderKmChart(weeklyData) {
   const ctx = document.getElementById('chart-km');
   if (!ctx) return;
@@ -91,11 +88,7 @@ function renderKmChart(weeklyData) {
       maintainAspectRatio: false,
       plugins: {
         legend: { position: 'top', labels: { boxWidth: 12, padding: 16 } },
-        tooltip: {
-          callbacks: {
-            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} km`
-          }
-        }
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} km` } }
       },
       scales: {
         x: { grid: { color: CHART_COLORS.gridLine }, ticks: { font: { size: 11 } } },
@@ -114,7 +107,6 @@ function renderLoadChart(weeklyData) {
   const ctx = document.getElementById('chart-load');
   if (!ctx) return;
 
-  // Color dinàmic: verd si càrrega <= planificat, taronja si sobrepassat
   const maxLoad = Math.max(...weeklyData.map(w => w.realLoad));
 
   chartInstances['load'] = new Chart(ctx, {
@@ -125,18 +117,14 @@ function renderLoadChart(weeklyData) {
         label: 'Càrrega real',
         data: weeklyData.map(w => w.realLoad),
         backgroundColor: weeklyData.map(w =>
-          w.realLoad === 0
-            ? CHART_COLORS.muted
-            : w.realLoad === maxLoad
-              ? 'rgba(249, 115, 22, 0.7)'
-              : CHART_COLORS.greenSoft
+          w.realLoad === 0 ? CHART_COLORS.muted
+          : w.realLoad === maxLoad ? 'rgba(249, 115, 22, 0.7)'
+          : CHART_COLORS.greenSoft
         ),
         borderColor: weeklyData.map(w =>
-          w.realLoad === 0
-            ? 'rgba(148, 163, 184, 0.3)'
-            : w.realLoad === maxLoad
-              ? 'rgba(249, 115, 22, 1)'
-              : CHART_COLORS.green
+          w.realLoad === 0 ? 'rgba(148, 163, 184, 0.3)'
+          : w.realLoad === maxLoad ? 'rgba(249, 115, 22, 1)'
+          : CHART_COLORS.green
         ),
         borderWidth: 1,
         borderRadius: 6,
@@ -147,11 +135,7 @@ function renderLoadChart(weeklyData) {
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: ctx => ` Càrrega: ${ctx.parsed.y}`
-          }
-        }
+        tooltip: { callbacks: { label: ctx => ` Càrrega: ${ctx.parsed.y}` } }
       },
       scales: {
         x: { grid: { color: CHART_COLORS.gridLine }, ticks: { font: { size: 11 } } },
@@ -165,16 +149,22 @@ function renderLoadChart(weeklyData) {
   });
 }
 
-// ── Gràfic 3: Distribució zones cardíaques ────────────────────────────────────
+// ── Gràfic 3: Zones cardíaques — últims 30 dies ─────────────────────────────
 function renderZonesChart(sessions) {
   const ctx = document.getElementById('chart-zones');
   if (!ctx) return;
+
+  // Filtre: només els últims 30 dies
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 30);
+  cutoff.setHours(0, 0, 0, 0);
+  const recent = sessions.filter(s => s.date >= cutoff);
 
   const zoneKeys   = ['Z1(min)', 'Z2(min)', 'Z3(min)', 'Z4(min)', 'Z5(min)'];
   const zoneLabels = ['Z1', 'Z2', 'Z3', 'Z4', 'Z5'];
 
   const totals = zoneKeys.map(key =>
-    sessions.reduce((acc, s) => {
+    recent.reduce((acc, s) => {
       const v = parseFloat(s.raw[key]);
       return acc + (isFinite(v) ? v : 0);
     }, 0)

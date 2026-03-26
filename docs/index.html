@@ -18,7 +18,6 @@
         <p class="eyebrow">Suunto Coach</p>
         <h1>Parser &amp; Dashboard</h1>
       </div>
-
       <nav class="sidebar-nav" aria-label="Navegació principal">
         <a href="#" class="nav-link active" data-target="overview">
           <span class="nav-icon">◎</span> Overview
@@ -33,7 +32,6 @@
           <span class="nav-icon">◇</span> Sessions
         </a>
       </nav>
-
       <section class="sidebar-panel">
         <h2>Estat dades</h2>
         <ul class="status-list">
@@ -43,7 +41,6 @@
           <li><span class="dot"></span> <span id="status-last-update">Sense actualització</span></li>
         </ul>
       </section>
-
       <button type="button" class="btn btn-primary btn-sidebar" id="reload-data-btn">
         Recarregar dades
       </button>
@@ -52,7 +49,6 @@
     <!-- ── Main ─────────────────────────────────────────────────────────────── -->
     <main class="main-content">
 
-      <!-- Barra d'estat global -->
       <section class="notice-bar" id="notice-bar">
         <p id="notice-text">Llegint fitxers CSV...</p>
       </section>
@@ -103,26 +99,33 @@
               <span class="badge">Setmana activa</span>
             </div>
             <div class="metrics-grid">
+
               <div class="metric-box">
                 <span>Qualitat</span>
                 <strong id="quality-summary">--</strong>
                 <small id="quality-detail">Tempo i intervals</small>
+                <small id="quality-real" class="metric-real"></small>
               </div>
+
               <div class="metric-box">
                 <span>Z1+Z2 running</span>
                 <strong id="z2-summary">--</strong>
                 <small id="z2-detail">Minuts en zona aeròbica</small>
               </div>
+
               <div class="metric-box">
                 <span>Tirada llarga</span>
                 <strong id="long-summary">--</strong>
                 <small id="long-detail">Tipus i volum setmanal</small>
+                <small id="long-real" class="metric-real"></small>
               </div>
+
               <div class="metric-box">
                 <span>Força</span>
                 <strong id="strength-summary">--</strong>
                 <small id="strength-detail">Sessions de gimnàs</small>
               </div>
+
             </div>
           </article>
 
@@ -132,7 +135,7 @@
                 <p class="eyebrow">Zones cardíaques</p>
                 <h3>Distribució Z1–Z5</h3>
               </div>
-              <span class="badge badge-muted">Totes les sessions</span>
+              <span class="badge badge-muted">Últims 30 dies</span>
             </div>
             <div class="chart-wrap">
               <canvas id="chart-zones"></canvas>
@@ -140,7 +143,7 @@
           </article>
         </div>
 
-        <!-- Panell Test & Cursa (sobre els gràfics de volum) -->
+        <!-- Panell Test & Cursa -->
         <article class="panel">
           <div class="panel-header">
             <div>
@@ -168,7 +171,6 @@
               <canvas id="chart-km"></canvas>
             </div>
           </article>
-
           <article class="panel">
             <div class="panel-header">
               <div>
@@ -202,7 +204,6 @@
 
       <!-- ── Vista: Setmana actual ──────────────────────────────────────────── -->
       <section class="view" data-view="setmanal">
-
         <header class="page-header">
           <div>
             <p class="eyebrow">Fase 4</p>
@@ -230,7 +231,6 @@
         </article>
 
         <div class="sw-grid">
-
           <article class="panel sw-block" id="sw-q-block">
             <div class="sw-block-header">
               <h3>🎯 Qualitat</h3>
@@ -335,7 +335,6 @@
               </div>
             </div>
           </article>
-
         </div>
       </section>
       <!-- /vista setmanal -->
