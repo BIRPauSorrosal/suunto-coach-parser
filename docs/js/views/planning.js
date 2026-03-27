@@ -76,9 +76,12 @@ function updateLevelButtons() {
   document.getElementById('btn-plan-monthly')?.classList.toggle('active', planningViewLevel === 'monthly');
 }
 
-// ── Vista ANUAL — timeline de temporada ──────────────────────────────────────
-// Dues línies fixes: Cicle (dalt) i Fase (baix), una cel·la per setmana.
-// Clic a qualsevol cel·la obre la vista setmanal corresponent.
+// ── Vista ANUAL — grid únic alineat ──────────────────────────────────────────
+// Estructura: un sol .plan-season-grid amb grid-template-columns = 60px + N columnes
+// Fila 0: cel·la buida + capçaleres de mes (span per nombre de setmanes)
+// Fila 1: label "Cicle" + N botons de cicle
+// Fila 2: label "Fase"  + N botons de fase
+// Fila 3: label "Setm." + N etiquetes S1..SN
 function renderYearlyView(container, planning, sessions) {
   const yearPlanning = planning
     .filter(w =>
@@ -88,6 +91,7 @@ function renderYearlyView(container, planning, sessions) {
     .sort((a, b) => a.startDate - b.startDate);
 
   const monthNames = ['Gen','Feb','Mar','Abr','Mai','Jun','Jul','Ago','Set','Oct','Nov','Des'];
+  const N = yearPlanning.length;
 
   const legendCycles = [
     ['BASE',        CYCLE_COLORS['BASE'].color],
@@ -104,47 +108,7 @@ function renderYearlyView(container, planning, sessions) {
     ['Competició',   PHASE_COLORS['COMPETICIÓ']],
   ];
 
-  // Agrupa setmanes per mes per construir la capçalera de mesos
-  const monthGroups = [];
-  yearPlanning.forEach(w => {
-    const m = w.startDate.getMonth();
-    const last = monthGroups[monthGroups.length - 1];
-    if (!last || last.month !== m) monthGroups.push({ month: m, count: 0 });
-    monthGroups[monthGroups.length - 1].count++;
-  });
-
-  const totalWeeks = Math.max(yearPlanning.length, 1);
-
-  const monthHeaderHTML = monthGroups.map(g =>
-    `<div class="plan-season-month" style="grid-column:span ${g.count}">${monthNames[g.month]}</div>`
-  ).join('');
-
-  const today = new Date(); today.setHours(0,0,0,0);
-
-  const cycleCellsHTML = yearPlanning.map(w => {
-    const c   = getCycleStyle(w.cicle);
-    const idx = planning.indexOf(w);
-    const isActive = today >= w.startDate && today <= w.endDate;
-    const tip = escapeAttr(`${w.setmana} · ${w.cicle} · ${fmtDateShortP(w.startDate)}→${fmtDateShortP(w.endDate)}`);
-    return `<button type="button" class="plan-season-cell${isActive ? ' plan-season-cell--active' : ''}"
-      data-week="${idx}" title="${tip}"
-      style="--cell-color:${c.color};--cell-bg:${c.bg};"></button>`;
-  }).join('');
-
-  const phaseCellsHTML = yearPlanning.map(w => {
-    const ph  = getPhaseColor(w.fase);
-    const idx = planning.indexOf(w);
-    const isActive = today >= w.startDate && today <= w.endDate;
-    const tip = escapeAttr(`${w.setmana} · ${w.fase} · ${fmtDateShortP(w.startDate)}→${fmtDateShortP(w.endDate)}`);
-    return `<button type="button" class="plan-season-cell plan-season-cell--phase${isActive ? ' plan-season-cell--active' : ''}"
-      data-week="${idx}" title="${tip}"
-      style="--cell-color:${ph};--cell-bg:${ph}22;"></button>`;
-  }).join('');
-
-  const weekLabelsHTML = yearPlanning.map((w, i) =>
-    `<span class="plan-season-week" title="${escapeAttr(w.setmana)}">S${i + 1}</span>`
-  ).join('');
-
+  // Llegenda
   const legendCyclesHTML = legendCycles.map(([k, col]) =>
     `<span><span class="legend-dot" style="background:${col}"></span> ${k}</span>`
   ).join('');
@@ -152,49 +116,113 @@ function renderYearlyView(container, planning, sessions) {
     `<span><span class="legend-dot legend-dot--phase" style="background:${col}"></span> ${k}</span>`
   ).join('');
 
-  container.innerHTML =
-    '<div class="plan-year-nav">'
-    + '<button class="btn btn-ghost btn-sm" id="btn-year-prev">◄</button>'
-    + '<span class="plan-year-label">' + planningYear + '</span>'
-    + '<button class="btn btn-ghost btn-sm" id="btn-year-next">►</button>'
-    + '</div>'
+  if (!N) {
+    container.innerHTML =
+      navHTML() +
+      '<div class="plan-legend">'
+      + '<div class="plan-legend-row"><span class="plan-legend-section">Cicles</span>' + legendCyclesHTML + '</div>'
+      + '<div class="plan-legend-row"><span class="plan-legend-section">Fases</span>'  + legendPhasesHTML + '</div>'
+      + '</div>'
+      + '<p class="plan-no-data">Sense setmanes planificades aquest any.</p>';
+    bindNavButtons(planning, sessions);
+    return;
+  }
 
+  // Calcula quantes setmanes té cada mes (per fer el span dels headers)
+  const monthSpans = {};
+  yearPlanning.forEach(w => {
+    const m = w.startDate.getMonth();
+    monthSpans[m] = (monthSpans[m] || 0) + 1;
+  });
+
+  // Fila 0: [cel·la buida (col 1)] + [headers de mes] — cada header span = nsetmanes del mes
+  // Necessitem mantenir l'ordre dels mesos i omplir els buits amb cel·les buides
+  // per que els spans quadin alineats amb les columnes de dades.
+  // Estratègia: iterem les setmanes i agrupem blocs de mes consecutius.
+  const monthBlocks = [];
+  yearPlanning.forEach(w => {
+    const m = w.startDate.getMonth();
+    const last = monthBlocks[monthBlocks.length - 1];
+    if (!last || last.month !== m) monthBlocks.push({ month: m, count: 0 });
+    monthBlocks[monthBlocks.length - 1].count++;
+  });
+
+  // Construïm les files com a strings de cel·les HTML
+  // — Fila mes (row 0): cel buida + spans de mes
+  let monthRowHTML = '<div class="psg-label"></div>'; // col 1 buida
+  monthBlocks.forEach(b => {
+    monthRowHTML += `<div class="psg-month" style="grid-column:span ${b.count}">${monthNames[b.month]}</div>`;
+  });
+
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // — Fila cicle (row 1) i fase (row 2): label + N botons
+  let cycleRowHTML = '<div class="psg-label">Cicle</div>';
+  let phaseRowHTML = '<div class="psg-label">Fase</div>';
+  let weekRowHTML  = '<div class="psg-label">Setm.</div>';
+
+  yearPlanning.forEach((w, i) => {
+    const c        = getCycleStyle(w.cicle);
+    const ph       = getPhaseColor(w.fase);
+    const idx      = planning.indexOf(w);
+    const isActive = today >= w.startDate && today <= w.endDate;
+    const activeCls = isActive ? ' psg-cell--active' : '';
+
+    const tipCicle = escapeAttr(`${w.setmana} · ${w.cicle} · ${fmtDateShortP(w.startDate)}→${fmtDateShortP(w.endDate)}`);
+    const tipFase  = escapeAttr(`${w.setmana} · ${w.fase}  · ${fmtDateShortP(w.startDate)}→${fmtDateShortP(w.endDate)}`);
+
+    cycleRowHTML += `<button type="button" class="psg-cell${activeCls}" data-week="${idx}"
+      title="${tipCicle}" style="background:${c.color};outline-color:${c.color}"></button>`;
+
+    phaseRowHTML += `<button type="button" class="psg-cell psg-cell--phase${activeCls}" data-week="${idx}"
+      title="${tipFase}" style="background:${ph};outline-color:${ph}"></button>`;
+
+    weekRowHTML += `<span class="psg-week-lbl" title="${escapeAttr(w.setmana)}">S${i + 1}</span>`;
+  });
+
+  // Muntem el grid únic: 4 files × (1 label + N columnes dades)
+  // grid-template-columns: 60px repeat(N, minmax(18px, 1fr))
+  const gridStyle = `grid-template-columns:60px repeat(${N}, minmax(18px, 1fr))`;
+
+  container.innerHTML =
+    navHTML()
     + '<div class="plan-legend">'
     + '<div class="plan-legend-row"><span class="plan-legend-section">Cicles</span>' + legendCyclesHTML + '</div>'
     + '<div class="plan-legend-row"><span class="plan-legend-section">Fases</span>'  + legendPhasesHTML + '</div>'
     + '</div>'
+    + `<div class="plan-season-grid" style="${gridStyle}">`
+    +   `<div class="psg-row-months">${monthRowHTML}</div>`
+    +   `<div class="psg-row">${cycleRowHTML}</div>`
+    +   `<div class="psg-row">${phaseRowHTML}</div>`
+    +   `<div class="psg-row psg-row--weeks">${weekRowHTML}</div>`
+    + '</div>';
 
-    + (yearPlanning.length
-      ? '<div class="plan-season-board" style="--season-cols:' + totalWeeks + '">'
-        + '<div class="plan-season-months">' + monthHeaderHTML + '</div>'
-        + '<div class="plan-season-row">'
-        +   '<div class="plan-season-label">Cicle</div>'
-        +   '<div class="plan-season-track">' + cycleCellsHTML + '</div>'
-        + '</div>'
-        + '<div class="plan-season-row">'
-        +   '<div class="plan-season-label">Fase</div>'
-        +   '<div class="plan-season-track">' + phaseCellsHTML + '</div>'
-        + '</div>'
-        + '<div class="plan-season-row plan-season-row--weeks">'
-        +   '<div class="plan-season-label">Setm.</div>'
-        +   '<div class="plan-season-weeks">' + weekLabelsHTML + '</div>'
-        + '</div>'
-        + '</div>'
-      : '<p class="plan-no-data">Sense setmanes planificades aquest any.</p>');
+  bindNavButtons(planning, sessions);
 
-  document.getElementById('btn-year-prev')?.addEventListener('click', () => {
-    planningYear--; renderPlanningLevel(planning, sessions);
-  });
-  document.getElementById('btn-year-next')?.addEventListener('click', () => {
-    planningYear++; renderPlanningLevel(planning, sessions);
-  });
-  container.querySelectorAll('.plan-season-cell[data-week]').forEach(el => {
+  container.querySelectorAll('.psg-cell[data-week]').forEach(el => {
     el.addEventListener('click', () => {
       planningWeekIndex = parseInt(el.dataset.week, 10);
       planningViewLevel = 'weekly';
       renderPlanningLevel(planning, sessions);
     });
   });
+
+  function navHTML() {
+    return '<div class="plan-year-nav">'
+      + '<button class="btn btn-ghost btn-sm" id="btn-year-prev">◄</button>'
+      + '<span class="plan-year-label">' + planningYear + '</span>'
+      + '<button class="btn btn-ghost btn-sm" id="btn-year-next">►</button>'
+      + '</div>';
+  }
+
+  function bindNavButtons(pl, sess) {
+    document.getElementById('btn-year-prev')?.addEventListener('click', () => {
+      planningYear--; renderPlanningLevel(pl, sess);
+    });
+    document.getElementById('btn-year-next')?.addEventListener('click', () => {
+      planningYear++; renderPlanningLevel(pl, sess);
+    });
+  }
 }
 
 // ── Vista MENSUAL ─────────────────────────────────────────────────────────────
