@@ -30,7 +30,7 @@ html { font-size: 16px; }
 body { font-family: var(--font); background: var(--bg); color: var(--text);
        line-height: 1.5; min-height: 100vh; }
 
-/* ── Layout shell ────────────────────────────────────────────── */
+/* ── Layout shell ──────────────────────────────────────────────── */
 .app-shell   { display: flex; min-height: 100vh; }
 .sidebar     { width: var(--sidebar-w); background: var(--surface);
                border-right: 1px solid var(--border); display: flex;
@@ -39,12 +39,12 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .main-content { flex: 1; padding: 32px 36px; overflow-x: hidden;
                 max-width: calc(100vw - var(--sidebar-w)); }
 
-/* ── Brand ───────────────────────────────────────────────────── */
+/* ── Brand ───────────────────────────────────────────────────────────── */
 .brand-block .eyebrow { font-size:.7rem; font-weight:600; letter-spacing:.1em;
                          text-transform:uppercase; color:var(--accent); }
 .brand-block h1       { font-size:1.05rem; font-weight:700; line-height:1.2; margin-top:4px; }
 
-/* ── Nav ─────────────────────────────────────────────────────── */
+/* ── Nav ───────────────────────────────────────────────────────────────── */
 .sidebar-nav { display:flex; flex-direction:column; gap:4px; }
 .nav-link    { display:flex; align-items:center; gap:8px; padding:9px 12px;
                border-radius:var(--radius); color:var(--text-muted); text-decoration:none;
@@ -53,7 +53,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .nav-link.active { background:var(--accent-soft); color:var(--accent); }
 .nav-icon        { font-size:1rem; width:20px; text-align:center; }
 
-/* ── Sidebar panel ───────────────────────────────────────────── */
+/* ── Sidebar panel ────────────────────────────────────────────────────── */
 .sidebar-panel         { border-top:1px solid var(--border); padding-top:20px; }
 .sidebar-panel h2      { font-size:.7rem; font-weight:600; letter-spacing:.08em;
                           text-transform:uppercase; color:var(--text-muted); margin-bottom:12px; }
@@ -64,12 +64,12 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
                           background:var(--border); flex-shrink:0; }
 .dot.dot-live          { background:var(--accent); box-shadow:0 0 6px var(--accent); }
 
-/* ── Notice bar ──────────────────────────────────────────────── */
+/* ── Notice bar ─────────────────────────────────────────────────────── */
 .notice-bar   { background:var(--surface-2); border:1px solid var(--border);
                 border-radius:var(--radius); padding:10px 16px; margin-bottom:24px; }
 .notice-bar p { font-size:.8rem; color:var(--text-muted); }
 
-/* ── Buttons ─────────────────────────────────────────────────── */
+/* ── Buttons ───────────────────────────────────────────────────────────── */
 .btn          { display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
                 border-radius:var(--radius); font-size:.85rem; font-weight:500;
                 cursor:pointer; border:none; transition:background .15s,color .15s; font-family:var(--font); }
@@ -82,11 +82,11 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .btn-sm       { padding:5px 11px; font-size:.78rem; }
 .btn-sidebar  { margin-top:auto; width:100%; justify-content:center; }
 
-/* ── Views ───────────────────────────────────────────────────── */
+/* ── Views ─────────────────────────────────────────────────────────────────── */
 .view          { display:none; }
 .view--active  { display:block; }
 
-/* ── Page header ─────────────────────────────────────────────── */
+/* ── Page header ─────────────────────────────────────────────────────────── */
 .page-header  { display:flex; align-items:flex-start; justify-content:space-between;
                 gap:16px; margin-bottom:28px; flex-wrap:wrap; }
 .page-header .eyebrow { font-size:.7rem; font-weight:600; letter-spacing:.1em;
@@ -95,13 +95,13 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .page-subtitle        { font-size:.85rem; color:var(--text-muted); margin-top:4px; }
 .header-actions       { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 
-/* ── Badges ──────────────────────────────────────────────────── */
+/* ── Badges ──────────────────────────────────────────────────────────────── */
 .badge        { display:inline-block; padding:3px 10px; border-radius:20px;
                 font-size:.72rem; font-weight:600; background:var(--accent-soft);
                 color:var(--accent); }
 .badge-muted  { background:var(--surface-2); color:var(--text-muted); }
 
-/* ── Panels ──────────────────────────────────────────────────── */
+/* ── Panels ──────────────────────────────────────────────────────────────── */
 .panel        { background:var(--surface); border:1px solid var(--border);
                 border-radius:var(--radius-lg); padding:24px; margin-bottom:20px; }
 .panel-header { display:flex; align-items:flex-start; justify-content:space-between;
@@ -111,7 +111,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .panel-header h3       { font-size:1rem; font-weight:600; }
 .panel-large           { grid-column: span 2; }
 
-/* ── Hero grid ───────────────────────────────────────────────── */
+/* ── Hero grid ───────────────────────────────────────────────────────────── */
 .hero-grid    { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
                 gap:16px; margin-bottom:20px; }
 .hero-card    { background:var(--surface); border:1px solid var(--border);
@@ -122,13 +122,13 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .card-note    { font-size:.78rem; color:var(--text-muted); margin-top:6px; }
 .hero-value   { font-size:1.8rem; font-weight:700; color:var(--accent); margin-top:8px; }
 
-/* ── Content grids ───────────────────────────────────────────── */
+/* ── Content grids ───────────────────────────────────────────────────────── */
 .content-grid { display:grid; grid-template-columns:2fr 1fr; gap:20px; margin-bottom:20px; }
 .charts-grid  { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; }
 @media(max-width:900px) { .content-grid,.charts-grid { grid-template-columns:1fr; }
                           .panel-large { grid-column:span 1; } }
 
-/* ── Metrics grid ────────────────────────────────────────────── */
+/* ── Metrics grid ──────────────────────────────────────────────────────────── */
 .metrics-grid   { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; }
 .metric-box     { background:var(--surface-2); border-radius:var(--radius);
                   padding:14px; display:flex; flex-direction:column; gap:4px; }
@@ -138,12 +138,12 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .metric-box small  { font-size:.72rem; color:var(--text-muted); }
 .metric-real       { color:var(--blue) !important; }
 
-/* ── Chart wraps ─────────────────────────────────────────────── */
+/* ── Chart wraps ──────────────────────────────────────────────────────────── */
 .chart-wrap         { position:relative; height:220px; }
 .chart-wrap--tall   { height:280px; }
 .pmc-chart-wrap     { height:320px; }
 
-/* ── Sessions — filtres ──────────────────────────────────────── */
+/* ── Sessions — filtres ──────────────────────────────────────────────────── */
 .sess-filters     { display:flex; align-items:center; gap:16px; flex-wrap:wrap;
                     margin-bottom:20px; padding:14px 18px;
                     background:var(--surface); border:1px solid var(--border);
@@ -157,7 +157,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
                      padding:6px 10px; font-size:.85rem; font-family:var(--font); cursor:pointer; }
 .sess-period-btns  { display:flex; gap:6px; flex-wrap:wrap; }
 
-/* ── Sessions — KPIs ─────────────────────────────────────────── */
+/* ── Sessions — KPIs ────────────────────────────────────────────────────────── */
 .sess-kpis        { display:grid; grid-template-columns:repeat(4,1fr);
                     gap:12px; margin-bottom:20px; }
 @media(max-width:700px){ .sess-kpis { grid-template-columns:repeat(2,1fr); } }
@@ -168,7 +168,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
                     letter-spacing:.07em; color:var(--text-muted); }
 .sess-kpi-value   { font-size:1.4rem; font-weight:700; color:var(--accent); }
 
-/* ── Sessions — taula ────────────────────────────────────────── */
+/* ── Sessions — taula ─────────────────────────────────────────────────────────── */
 .table-shell      { overflow-x:auto; border-radius:var(--radius); }
 #sess-table       { width:100%; border-collapse:collapse; font-size:.82rem; }
 #sess-table th    { padding:10px 12px; text-align:left; font-size:.7rem; font-weight:600;
@@ -180,7 +180,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .empty-row        { text-align:center; color:var(--text-muted); padding:24px !important; }
 .sess-trend-panel { margin-bottom:20px; }
 
-/* ── PMC legend ──────────────────────────────────────────────── */
+/* ── PMC legend ───────────────────────────────────────────────────────────── */
 .pmc-legend       { display:flex; align-items:center; gap:14px; flex-wrap:wrap;
                     margin-bottom:16px; font-size:.75rem; }
 .pmc-leg-item     { display:flex; align-items:center; gap:5px; color:var(--text-muted); }
@@ -190,12 +190,201 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .pmc-leg-sep      { color:var(--border); }
 .pmc-leg-hint     { color:var(--text-muted); font-style:italic; }
 
-/* ── Planning ────────────────────────────────────────────────── */
+/* ── Planning ─────────────────────────────────────────────────────────────────── */
 .plan-tabs        { display:flex; gap:8px; margin-bottom:20px; }
 .plan-no-data     { color:var(--text-muted); font-size:.85rem; padding:16px 0; }
 .muted-msg        { color:var(--text-muted); font-size:.85rem; }
 
-/* ── Setmana actual ──────────────────────────────────────────── */
+/* Navegació anual/mensual/setmanal */
+.plan-year-nav,
+.plan-month-nav,
+.plan-week-nav    { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+.plan-year-label,
+.plan-month-title { flex:1; text-align:center; font-size:1.1rem; font-weight:700; }
+.plan-week-nav-center { flex:1; display:flex; align-items:center; justify-content:center; gap:10px; }
+.plan-week-nav-label  { font-size:1rem; font-weight:700; }
+.plan-week-counter    { font-size:.78rem; padding:2px 8px; border-radius:20px;
+                         background:var(--surface-2); color:var(--text-muted); }
+
+/* Llegenda */
+.plan-legend      { display:flex; flex-direction:column; gap:8px; margin-bottom:20px;
+                    font-size:.8rem; color:var(--text-muted); }
+.plan-legend-row  { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.plan-legend-section { font-weight:700; color:var(--text); font-size:.78rem;
+                        text-transform:uppercase; letter-spacing:.06em; min-width:52px; }
+.legend-dot       { display:inline-block; width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.legend-dot--phase { border-radius:3px; }
+
+/* ── Planning anual: timeline de temporada ──────────────────────────────── */
+.plan-season-board {
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  overflow-x:auto;
+  padding-bottom:8px;
+}
+.plan-season-months,
+.plan-season-track,
+.plan-season-weeks {
+  display:grid;
+  grid-template-columns:repeat(var(--season-cols), minmax(20px, 1fr));
+  gap:5px;
+}
+.plan-season-row {
+  display:grid;
+  grid-template-columns:60px 1fr;
+  gap:12px;
+  align-items:center;
+  min-width:0;
+}
+.plan-season-row--weeks { align-items:start; }
+.plan-season-label {
+  font-size:.7rem;
+  font-weight:700;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--text-muted);
+  white-space:nowrap;
+}
+.plan-season-month {
+  text-align:center;
+  font-size:.72rem;
+  font-weight:700;
+  color:var(--blue);
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  padding-bottom:4px;
+  border-bottom:1px solid var(--border);
+}
+.plan-season-cell {
+  appearance:none;
+  border:1px solid rgba(148,163,184,.15);
+  border-radius:6px;
+  background:var(--cell-bg, rgba(148,163,184,.08));
+  height:20px;
+  cursor:pointer;
+  position:relative;
+  transition:transform .15s ease, box-shadow .15s ease;
+  padding:0;
+}
+.plan-season-cell::after {
+  content:'';
+  position:absolute;
+  inset:2px;
+  border-radius:4px;
+  background:var(--cell-color, #94a3b8);
+  opacity:.9;
+}
+.plan-season-cell--phase::after {
+  inset:0;
+  border-radius:5px;
+  opacity:.85;
+}
+/* Setmana activa: contorn blanc */
+.plan-season-cell--active {
+  box-shadow:0 0 0 2px #fff, 0 0 0 4px var(--cell-color, #94a3b8);
+  z-index:1;
+}
+.plan-season-cell:hover {
+  transform:translateY(-2px);
+  box-shadow:0 4px 12px rgba(0,0,0,.4);
+  z-index:2;
+}
+.plan-season-week {
+  text-align:center;
+  font-size:.65rem;
+  color:var(--text-muted);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* ── Planning mensual ─────────────────────────────────────────────────────── */
+.plan-month-cards {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));
+  gap:24px;
+}
+.plan-week-card {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:22px 24px;
+  cursor:pointer;
+  transition:transform .15s, box-shadow .15s;
+}
+.plan-week-card:hover {
+  transform:translateY(-2px);
+  box-shadow:var(--shadow);
+}
+.pwc-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  margin-bottom:16px;
+}
+.pwc-setmana  { font-size:1rem; font-weight:700; margin-bottom:2px; }
+.pwc-dates    { font-size:.78rem; color:var(--text-muted); }
+.pwc-badges   { display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
+.pwc-cicle    { font-size:.78rem; font-weight:700; }
+
+.pwc-badge    { font-size:.72rem; font-weight:600; padding:2px 8px;
+                border-radius:20px; white-space:nowrap; }
+.pwc-badge--future  { background:var(--surface-2); color:var(--text-muted); }
+.pwc-badge--active  { background:var(--blue-soft); color:var(--blue); }
+.pwc-badge--done    { background:var(--accent-soft); color:var(--accent); }
+.pwc-badge--partial { background:rgba(245,158,11,.18); color:#f59e0b; }
+
+.pwc-bar-wrap {
+  height:6px;
+  border-radius:999px;
+  background:var(--surface-2);
+  margin:14px 0;
+  overflow:hidden;
+  position:relative;
+}
+.pwc-bar-fill, .pwc-bar-done {
+  position:absolute;
+  left:0; top:0; bottom:0;
+  border-radius:999px;
+  transition:width .3s ease;
+}
+.pwc-bar-done { background:var(--accent); }
+
+.pwc-footer {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:4px;
+}
+.pwc-km   { font-size:.9rem; font-weight:600; }
+.pwc-time { font-size:.82rem; color:var(--text-muted); }
+
+.pwc-phase-bar {
+  display:flex;
+  align-items:center;
+  margin-top:16px;
+  padding:7px 12px;
+  border-radius:8px;
+  font-size:.78rem;
+  font-weight:700;
+  color:#0f172a;
+  letter-spacing:.03em;
+}
+
+/* ── Planning setmanal ─────────────────────────────────────────────────────── */
+.pwv-header     { display:flex; justify-content:space-between; align-items:flex-start;
+                  gap:16px; margin-bottom:20px; }
+.pwv-km-total   { text-align:right; }
+.pwv-real-val   { display:block; font-size:.82rem; color:var(--blue); margin-top:4px; }
+.pwv-grid       { display:grid; grid-template-columns:repeat(2,1fr); gap:20px; }
+@media(max-width:860px){ .pwv-grid { grid-template-columns:1fr; } }
+.pwv-block      { border-left:3px solid var(--border); padding-left:16px; margin-bottom:0; }
+.sw-plan-real   { color:var(--blue); }
+.sw-plan-real span { color:var(--blue) !important; }
+
+/* ── Setmana actual ──────────────────────────────────────────────────────────── */
 .progress-panel   { margin-bottom:20px; }
 .progress-header  { display:flex; justify-content:space-between; align-items:center;
                     margin-bottom:10px; font-size:.85rem; color:var(--text-muted); }
@@ -225,7 +414,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .sw-mini-table td { padding:5px 6px; border-bottom:1px solid rgba(51,65,85,.4); }
 .sw-mini-table tbody tr:last-child td { border-bottom:none; }
 
-/* ── Test & Cursa cards ──────────────────────────────────────── */
+/* ── Test & Cursa cards ───────────────────────────────────────────────────────── */
 .test-race-grid   { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
 .tr-card          { background:var(--surface-2); border:1px solid var(--border);
                     border-radius:var(--radius); padding:14px 16px; }
@@ -234,7 +423,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .tr-card-value    { font-size:1.3rem; font-weight:700; color:var(--blue); margin-bottom:4px; }
 .tr-card-meta     { font-size:.75rem; color:var(--text-muted); }
 
-/* ── Others cards ────────────────────────────────────────────── */
+/* ── Others cards ──────────────────────────────────────────────────────────────── */
 .others-grid      { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; }
 .other-card       { background:var(--surface-2); border:1px solid var(--border);
                     border-radius:var(--radius); padding:12px 14px; }
