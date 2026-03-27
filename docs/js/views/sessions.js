@@ -158,13 +158,13 @@ function renderPMC(sessions) {
     data: {
       labels,
       datasets: [
-        { label:'CTL — Forma', data:_pmcDataCache.map(d=>Math.round(d.ctl*10)/10),
+        { label:'CTL \u2014 Forma', data:_pmcDataCache.map(d=>Math.round(d.ctl*10)/10),
           borderColor:C.green, backgroundColor:'transparent',
           borderWidth:2.5, pointRadius:0, tension:0.3, yAxisID:'y' },
-        { label:'ATL — Fatiga', data:_pmcDataCache.map(d=>Math.round(d.atl*10)/10),
+        { label:'ATL \u2014 Fatiga', data:_pmcDataCache.map(d=>Math.round(d.atl*10)/10),
           borderColor:'rgba(249,115,22,0.9)', backgroundColor:'transparent',
           borderWidth:2, pointRadius:0, tension:0.3, yAxisID:'y' },
-        { label:'TSB — Frescor', data:_pmcDataCache.map(d=>Math.round(d.tsb*10)/10),
+        { label:'TSB \u2014 Frescor', data:_pmcDataCache.map(d=>Math.round(d.tsb*10)/10),
           borderColor:C.blue, backgroundColor:'rgba(56,189,248,0.08)',
           fill:true, borderWidth:2, pointRadius:0, tension:0.3, yAxisID:'y2' },
       ]
@@ -247,8 +247,6 @@ function exportPMCcsv(days) {
 // ════════════════════════════════════════════════════════════════════════════
 
 function exportSessionsCSV(days) {
-  // _sessSessions està ordenat per data DESC (com arriba de app.js)
-  // Filtrem per dies i re-ordenem ASC per als darrers N dies
   let rows = _sessSessions;
   if (days > 0) {
     const cutoff = new Date();
@@ -256,31 +254,22 @@ function exportSessionsCSV(days) {
     cutoff.setHours(0,0,0,0);
     rows = rows.filter(s => s.date >= cutoff);
   }
-  // Re-ordenem ASC perquè la IA llegeixi cronològicament
   rows = [...rows].sort((a,b) => a.date - b.date);
-
   if (!rows.length) return;
-
-  // Captur les claus originals del CSV de la primera fila (s.raw)
-  // Això garanteix que l'exportació tingui exactament les mateixes columnes que sessions.csv
   const headers = Object.keys(rows[0].raw);
-
-  // Escapa un valor per a CSV: posa cometes si conté comes, cometes o salts de línia
   const escapeCell = v => {
     const s = String(v ?? '');
     return (s.includes(',') || s.includes('"') || s.includes('\n'))
       ? `"${s.replaceAll('"', '""')}"`
       : s;
   };
-
   const headerLine = headers.map(escapeCell).join(',');
   const lines = rows.map(s => headers.map(h => escapeCell(s.raw[h] ?? '')).join(','));
-
   const filename = `sessions_${days>0?days+'d':'complet'}_${new Date().toISOString().slice(0,10)}.csv`;
   triggerCsvDownload([headerLine,...lines].join('\n'), filename);
 }
 
-// ── Helper dàrrega CSV ──────────────────────────────────────────────────────────────
+// ── Helper descàrrega CSV ───────────────────────────────────────────────────
 function triggerCsvDownload(csvContent, filename) {
   const blob = new Blob([csvContent], { type:'text/csv;charset=utf-8;' });
   const url  = URL.createObjectURL(blob);
@@ -306,6 +295,7 @@ function renderSessTrendChart(sessions) {
   _sessChart = new Chart(ctx, buildSessChartConfig(byWeek, byWeek.map(w=>w.label), sessions));
 }
 
+// ── groupByWeek: agrega totes les mètriques necessàries per setmana ─────────
 function groupByWeek(sessions) {
   const map = new Map();
   const sorted = [...sessions].sort((a,b)=>a.date-b.date);
@@ -316,21 +306,51 @@ function groupByWeek(sessions) {
     map.get(key).sessions.push(s);
   });
   return Array.from(map.values()).map(w => {
-    const ss=w.sessions;
-    const totalKm   = ss.reduce((a,s)=>a+(s.distancia||0),0);
-    const totalLoad = ss.reduce((a,s)=>a+(s.carrega||0),0);
-    const totalEpoc = ss.reduce((a,s)=>{const e=toNumber(s.raw['EPOC']);return a+(isFinite(e)&&e>0?e:0);},0);
-    const totalZ1   = ss.reduce((a,s)=>{const v=toNumber(s.raw['Z1(min)']);return a+(isFinite(v)&&v>0?v:0);},0);
-    const totalZ2   = ss.reduce((a,s)=>{const v=toNumber(s.raw['Z2(min)']);return a+(isFinite(v)&&v>0?v:0);},0);
-    const avgPace   = avgValidPace(ss);
-    const avgFC     = avgValid(ss,s=>s.fcMitja);
-    const avgPaceSeries=avgValid(ss,s=>isFinite(s.ritmeMitjaSeries)&&s.ritmeMitjaSeries>0?s.ritmeMitjaSeries:null);
+    const ss = w.sessions;
+
+    // Volum i càrrega
+    const totalKm      = ss.reduce((a,s)=>a+(s.distancia||0),0);
+    const totalLoad    = ss.reduce((a,s)=>a+(s.carrega||0),0);
+    const totalEpoc    = ss.reduce((a,s)=>{const e=toNumber(s.raw['EPOC']);return a+(isFinite(e)&&e>0?e:0);},0);
+    const totalDesnivell = ss.reduce((a,s)=>{const d=toNumber(s.raw['Desnivell(m)']);return a+(isFinite(d)&&d>0?d:0);},0);
+
+    // Zones
+    const totalZ1      = ss.reduce((a,s)=>{const v=toNumber(s.raw['Z1(min)']);return a+(isFinite(v)&&v>0?v:0);},0);
+    const totalZ2      = ss.reduce((a,s)=>{const v=toNumber(s.raw['Z2(min)']);return a+(isFinite(v)&&v>0?v:0);},0);
+
+    // Mitjanes genèriques
+    const avgPace      = avgValid(ss, s=>isFinite(s.ritme)&&s.ritme>0?s.ritme:null);
+    const avgFC        = avgValid(ss, s=>isFinite(s.fcMitja)&&s.fcMitja>0?s.fcMitja:null);
+    const avgCad       = avgValid(ss, s=>{const c=toNumber(s.raw['Cadencia(spm)']);return isFinite(c)&&c>0?c:null;});
+
+    // Sèries de qualitat
+    const avgPaceSeries = avgValid(ss, s=>isFinite(s.ritmeMitjaSeries)&&s.ritmeMitjaSeries>0?s.ritmeMitjaSeries:null);
+    const avgFCSeries   = avgValid(ss, s=>isFinite(s.fcMitjaSeries)&&s.fcMitjaSeries>0?s.fcMitjaSeries:null);
+    const avgCadSeries  = avgValid(ss, s=>{const c=toNumber(s.raw['Cadencia(spm)']);return isFinite(c)&&c>0?c:null;});
+    // Km de sèries: sumem distàncies de les sessions que tienen Num_Series
+    const kmSeries      = ss.reduce((a,s)=>{
+      const n=toNumber(s.raw['Num_Series']); if(!isFinite(n)||n<=0) return a;
+      return a+(s.distancia||0);
+    },0);
+
     const d=w.date, dd=String(d.getDate()).padStart(2,'0'), mm=String(d.getMonth()+1).padStart(2,'0');
-    return { label:`${dd}/${mm}`, km:Math.round(totalKm*10)/10,
-      load:Math.round(totalLoad*10)/10, epoc:Math.round(totalEpoc*10)/10,
-      z1min:Math.round(totalZ1*10)/10, z2min:Math.round(totalZ2*10)/10,
-      avgPace, avgFC:avgFC?Math.round(avgFC):null,
-      avgPaceSeries:avgPaceSeries?Math.round(avgPaceSeries*100)/100:null, count:ss.length };
+    return {
+      label: `${dd}/${mm}`,
+      km:    Math.round(totalKm*10)/10,
+      load:  Math.round(totalLoad*10)/10,
+      epoc:  Math.round(totalEpoc*10)/10,
+      desnivell: Math.round(totalDesnivell),
+      z1min: Math.round(totalZ1*10)/10,
+      z2min: Math.round(totalZ2*10)/10,
+      avgPace,
+      avgFC:  avgFC  ? Math.round(avgFC)  : null,
+      avgCad: avgCad ? Math.round(avgCad) : null,
+      avgPaceSeries: avgPaceSeries ? Math.round(avgPaceSeries*100)/100 : null,
+      avgFCSeries:   avgFCSeries   ? Math.round(avgFCSeries)           : null,
+      avgCadSeries:  avgCadSeries  ? Math.round(avgCadSeries)          : null,
+      kmSeries: Math.round(kmSeries*10)/10,
+      count: ss.length,
+    };
   });
 }
 
@@ -338,103 +358,291 @@ function getMondayOf(date) {
   const d=new Date(date), dow=d.getDay();
   d.setDate(d.getDate()-(dow===0?6:dow-1)); d.setHours(0,0,0,0); return d;
 }
-function avgValidPace(sessions) {
-  const vals=sessions.map(s=>s.ritme).filter(v=>isFinite(v)&&v>0);
-  return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null;
-}
-function avgValid(sessions,fn) {
-  const vals=sessions.map(fn).filter(v=>v!=null&&isFinite(v)&&v>0);
-  return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null;
+function avgValid(sessions, fn) {
+  const vals = sessions.map(fn).filter(v=>v!=null&&isFinite(v)&&v>0);
+  return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
 }
 
-// ── Config gràfic tendència ─────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════════
+// buildSessChartConfig — un cas per tipus
+// Paleta: blau=km/dist, verd=ritme(reverse), taronja=FC, lila=cadència, groc=EPOC
+// ════════════════════════════════════════════════════════════════════════════
+
 function buildSessChartConfig(byWeek, labels, sessions) {
-  const C=CHART_COLORS;
-  const baseOpts={ responsive:true, maintainAspectRatio:false,
-    interaction:{mode:'index',intersect:false},
-    plugins:{legend:{position:'top',labels:{boxWidth:12,padding:16}}},
-    scales:{x:{grid:{color:C.gridLine},ticks:{font:{size:11}}}}
-  };
-  const yBase={grid:{color:C.gridLine},ticks:{font:{size:11}},beginAtZero:true};
+  const C = CHART_COLORS;
 
-  switch(_sessType) {
-    case 'z2':{
-      const hasFC=byWeek.some(w=>w.avgFC!==null);
-      const datasets=[
-        {type:'bar',label:'Z1 (min)',data:byWeek.map(w=>w.z1min),
-          backgroundColor:'rgba(56,189,248,0.35)',borderColor:'rgba(56,189,248,0.7)',
-          borderWidth:1,borderRadius:0,stack:'zones',yAxisID:'y'},
-        {type:'bar',label:'Z2 (min)',data:byWeek.map(w=>w.z2min),
-          backgroundColor:'rgba(34,197,94,0.45)',borderColor:C.green,
-          borderWidth:1,borderRadius:0,stack:'zones',yAxisID:'y'},
+  // Colors semàntics reutilitzables
+  const COL = {
+    km:      { bar: 'rgba(56,189,248,0.35)',  line: 'rgba(56,189,248,0.9)'  }, // blau
+    desn:    { bar: 'rgba(148,163,184,0.35)', line: 'rgba(148,163,184,0.9)' }, // gris
+    ritme:   { line: 'rgba(34,197,94,0.9)'   },                                // verd
+    fc:      { line: 'rgba(249,115,22,0.9)'   },                                // taronja
+    cad:     { line: 'rgba(168,85,247,0.85)'  },                                // lila
+    epoc:    { bar: 'rgba(251,191,36,0.35)',  line: 'rgba(251,191,36,0.9)'  }, // groc
+    load:    { bar: 'rgba(34,197,94,0.25)',   line: 'rgba(34,197,94,0.9)'   }, // verd fosc
+  };
+
+  const baseOpts = {
+    responsive:true, maintainAspectRatio:false,
+    interaction:{ mode:'index', intersect:false },
+    plugins:{ legend:{ position:'top', labels:{ boxWidth:12, padding:14 } } },
+    scales:{ x:{ grid:{color:C.gridLine}, ticks:{font:{size:11}} } },
+  };
+  const yBase = { grid:{color:C.gridLine}, ticks:{font:{size:11}}, beginAtZero:true };
+
+  // Helpers de tooltip
+  const tipKm    = v => `  Km: ${v} km`;
+  const tipDesn  = v => `  Desnivell: ${v} m`;
+  const tipRitme = v => `  Ritme: ${formatPace(v,'')}`;
+  const tipFC    = v => `  FC: ${v} ppm`;
+  const tipCad   = v => `  Cad\u00e8ncia: ${v} spm`;
+  const tipEpoc  = v => `  EPOC: ${v}`;
+  const tipLoad  = v => `  C\u00e0rrega: ${v} TSS`;
+
+  // ── Escales reutilitzables ────────────────────────────────────────────────
+  // y   → eix esquerra principal (km / desnivell / minuts / TSS)
+  // y2  → eix dreta ritme (invertit — menor és millor)
+  // y3  → eix dreta FC + cadència (valors absoluts, no invertit)
+  const scaleKm   = (lbl='km')   => ({ ...yBase, position:'left',  title:{display:true,text:lbl,color:C.text,font:{size:10}} });
+  const scaleRitme = ()          => ({ ...yBase, position:'right', reverse:true, grid:{drawOnChartArea:false},
+                                        ticks:{...yBase.ticks,callback:v=>formatPace(v,'')},
+                                        title:{display:true,text:'min/km',color:C.text,font:{size:10}} });
+  const scaleFC   = ()           => ({ ...yBase, position:'right', grid:{drawOnChartArea:false}, beginAtZero:false,
+                                        ticks:{...yBase.ticks,callback:v=>`${v}`},
+                                        title:{display:true,text:'ppm / spm',color:C.text,font:{size:10}} });
+
+  // ── Tooltip genèric: detecta yAxisID i formata ────────────────────────────
+  function tooltipLabel(c) {
+    const v = c.parsed.y; if(v==null) return null;
+    const lbl = c.dataset.label || '';
+    if (lbl.includes('Ritme'))     return tipRitme(v);
+    if (lbl.includes('FC'))        return tipFC(v);
+    if (lbl.includes('Cad'))       return tipCad(v);
+    if (lbl.includes('EPOC'))      return tipEpoc(v);
+    if (lbl.includes('C\u00e0rrega')) return tipLoad(v);
+    if (lbl.includes('Desnivell')) return tipDesn(v);
+    if (lbl.includes('Km'))        return tipKm(v);
+    return ` ${lbl}: ${v}`;
+  }
+
+  switch (_sessType) {
+
+    // ── TOTES ────────────────────────────────────────────────────────────────
+    // Barra: Km | Línies: Càrrega TSS, EPOC
+    case 'all':
+    default: {
+      const hasLoad = byWeek.some(w=>w.load>0);
+      const hasEpoc = byWeek.some(w=>w.epoc>0);
+      const datasets = [
+        { type:'bar', label:'Km', data:byWeek.map(w=>w.km),
+          backgroundColor:COL.km.bar, borderColor:COL.km.line,
+          borderWidth:1, borderRadius:4, yAxisID:'y' },
       ];
-      if(hasFC) datasets.push({type:'line',label:'FC mitja (ppm)',data:byWeek.map(w=>w.avgFC),
-        borderColor:'rgba(249,115,22,0.9)',backgroundColor:'transparent',
-        borderWidth:2,pointRadius:4,tension:0.3,yAxisID:'y2',spanGaps:true});
-      return{type:'bar',data:{labels,datasets},options:{...baseOpts,
-        plugins:{...baseOpts.plugins,tooltip:{callbacks:{label:c=>{
-          if(c.dataset.yAxisID==='y2') return ` FC: ${c.parsed.y} ppm`;
-          return ` ${c.dataset.label}: ${c.parsed.y} min`;
-        }}}},
-        scales:{x:{...baseOpts.scales.x,stacked:true},
-          y:{...yBase,position:'left',stacked:true,ticks:{...yBase.ticks,callback:v=>`${v} min`}},
-          y2:hasFC?{...yBase,position:'right',grid:{drawOnChartArea:false},ticks:{...yBase.ticks,callback:v=>`${v} ppm`}}:{display:false},
+      if (hasLoad) datasets.push(
+        { type:'line', label:'C\u00e0rrega TSS', data:byWeek.map(w=>w.load),
+          borderColor:COL.load.line, backgroundColor:'transparent',
+          borderWidth:2, pointRadius:3, tension:0.3, yAxisID:'y2', spanGaps:true }
+      );
+      if (hasEpoc) datasets.push(
+        { type:'line', label:'EPOC', data:byWeek.map(w=>w.epoc),
+          borderColor:COL.epoc.line, backgroundColor:'transparent',
+          borderWidth:2, pointRadius:3, tension:0.3, yAxisID:'y2', spanGaps:true }
+      );
+      return { type:'bar', data:{labels,datasets}, options:{...baseOpts,
+        plugins:{...baseOpts.plugins, tooltip:{callbacks:{label:tooltipLabel}}},
+        scales:{
+          x: baseOpts.scales.x,
+          y:  { ...scaleKm('km'), position:'left' },
+          y2: { ...yBase, position:'right', grid:{drawOnChartArea:false},
+                ticks:{...yBase.ticks,callback:v=>`${v}`},
+                title:{display:true,text:'TSS / EPOC',color:C.text,font:{size:10}} },
         }
       }};
     }
-    case 'quality':{
-      const hasRitme=byWeek.some(w=>w.avgPaceSeries!==null);
-      const datasets=[{type:'bar',label:'C\u00e0rrega (TSS)',data:byWeek.map(w=>w.load),
-        backgroundColor:C.greenSoft,borderColor:C.green,borderWidth:1,borderRadius:6,yAxisID:'y'}];
-      if(hasRitme) datasets.push({type:'line',label:'Ritme s\u00e8ries (min/km)',data:byWeek.map(w=>w.avgPaceSeries),
-        borderColor:C.blue,backgroundColor:C.blueSoft,borderWidth:2,pointRadius:4,tension:0.3,yAxisID:'y2',spanGaps:true});
-      return{type:'bar',data:{labels,datasets},options:{...baseOpts,
-        plugins:{...baseOpts.plugins,tooltip:{callbacks:{label:c=>c.dataset.yAxisID==='y2'?` Ritme: ${formatPace(c.parsed.y,'')}`:`  C\u00e0rrega: ${c.parsed.y} TSS`}}},
-        scales:{x:baseOpts.scales.x,
-          y:{...yBase,position:'left',ticks:{...yBase.ticks,callback:v=>`${v} TSS`}},
-          y2:{...yBase,position:'right',grid:{drawOnChartArea:false},ticks:{...yBase.ticks,callback:v=>formatPace(v,'')},reverse:true},
+
+    // ── Z2 ───────────────────────────────────────────────────────────────────
+    // Barra: Km | Línies: Ritme mig (y2 inv.), FC mig, Cadència
+    case 'z2': {
+      const hasRitme = byWeek.some(w=>w.avgPace!==null);
+      const hasFC    = byWeek.some(w=>w.avgFC!==null);
+      const hasCad   = byWeek.some(w=>w.avgCad!==null);
+      const datasets = [
+        { type:'bar', label:'Km', data:byWeek.map(w=>w.km),
+          backgroundColor:COL.km.bar, borderColor:COL.km.line,
+          borderWidth:1, borderRadius:4, yAxisID:'y' },
+      ];
+      if (hasRitme) datasets.push(
+        { type:'line', label:'Ritme mig (min/km)', data:byWeek.map(w=>w.avgPace),
+          borderColor:COL.ritme.line, backgroundColor:'transparent',
+          borderWidth:2, pointRadius:4, tension:0.3, yAxisID:'y2', spanGaps:true }
+      );
+      if (hasFC) datasets.push(
+        { type:'line', label:'FC mitja (ppm)', data:byWeek.map(w=>w.avgFC),
+          borderColor:COL.fc.line, backgroundColor:'transparent',
+          borderWidth:2, pointRadius:4, tension:0.3, yAxisID:'y3', spanGaps:true }
+      );
+      if (hasCad) datasets.push(
+        { type:'line', label:'Cad\u00e8ncia (spm)', data:byWeek.map(w=>w.avgCad),
+          borderColor:COL.cad.line, backgroundColor:'transparent',
+          borderWidth:2, pointRadius:4, tension:0.3, yAxisID:'y3', spanGaps:true }
+      );
+      return { type:'bar', data:{labels,datasets}, options:{...baseOpts,
+        plugins:{...baseOpts.plugins, tooltip:{callbacks:{label:tooltipLabel}}},
+        scales:{
+          x:  baseOpts.scales.x,
+          y:  { ...scaleKm('km'), position:'left' },
+          y2: hasRitme ? scaleRitme()                         : {display:false},
+          y3: (hasFC||hasCad) ? { ...scaleFC(), position:'right' } : {display:false},
         }
       }};
     }
+
+    // ── QUALITAT ─────────────────────────────────────────────────────────────
+    // Barra: Km sèries | Línies: Ritme sèries (inv.), FC sèries, Cadència
+    case 'quality': {
+      const hasKmS  = byWeek.some(w=>w.kmSeries>0);
+      const hasPaceS= byWeek.some(w=>w.avgPaceSeries!==null);
+      const hasFCS  = byWeek.some(w=>w.avgFCSeries!==null);
+      const hasCadS = byWeek.some(w=>w.avgCadSeries!==null);
+      const datasets = [];
+      if (hasKmS) datasets.push(
+        { type:'bar', label:'Km s\u00e8ries', data:byWeek.map(w=>w.kmSeries),
+          backgroundColor:COL.km.bar, borderColor:COL.km.line,
+          borderWidth:1, borderRadius:4, yAxisID:'y' }
+      );
+      if (hasPaceS) datasets.push(
+        { type:'line', label:'Ritme s\u00e8ries (min/km)', data:byWeek.map(w=>w.avgPaceSeries),
+          borderColor:COL.ritme.line, backgroundColor:'transparent',
+          borderWidth:2, pointRadius:4, tension:0.3, yAxisID:'y2', spanGaps:true }
+      );
+      if (hasFCS) datasets.push(
+        { type:'line', label:'FC s\u00e8ries (ppm)', data:byWeek.map(w=>w.avgFCSeries),
+          borderColor:COL.fc.line, backgroundColor:'transparent',
+          borderWidth:2, pointRadius:4, tension:0.3, yAxisID:'y3', spanGaps:true }
+      );
+      if (hasCadS) datasets.push(
+        { type:'line', label:'Cad\u00e8ncia (spm)', data:byWeek.map(w=>w.avgCadSeries),
+          borderColor:COL.cad.line, backgroundColor:'transparent',
+          borderWidth:2, pointRadius:4, tension:0.3, yAxisID:'y3', spanGaps:true }
+      );
+      // Fallback si no hi ha cap dataset (dades insuficients)
+      if (!datasets.length) datasets.push(
+        { type:'bar', label:'Km', data:byWeek.map(w=>w.km),
+          backgroundColor:COL.km.bar, borderColor:COL.km.line,
+          borderWidth:1, borderRadius:4, yAxisID:'y' }
+      );
+      return { type:'bar', data:{labels,datasets}, options:{...baseOpts,
+        plugins:{...baseOpts.plugins, tooltip:{callbacks:{label:tooltipLabel}}},
+        scales:{
+          x:  baseOpts.scales.x,
+          y:  { ...scaleKm('km'), position:'left' },
+          y2: hasPaceS ? scaleRitme()                             : {display:false},
+          y3: (hasFCS||hasCadS) ? { ...scaleFC(), position:'right' } : {display:false},
+        }
+      }};
+    }
+
+    // ── TIRADA LLARGA ─────────────────────────────────────────────────────────
+    // Barres: Km, Desnivell | Línies: Ritme mig (inv.), FC mitja
+    case 'long': {
+      const hasDesn  = byWeek.some(w=>w.desnivell>0);
+      const hasRitme = byWeek.some(w=>w.avgPace!==null);
+      const hasFC    = byWeek.some(w=>w.avgFC!==null);
+      const datasets = [
+        { type:'bar', label:'Km', data:byWeek.map(w=>w.km),
+          backgroundColor:COL.km.bar, borderColor:COL.km.line,
+          borderWidth:1, borderRadius:4, yAxisID:'y' },
+      ];
+      if (hasDesn) datasets.push(
+        { type:'bar', label:'Desnivell (m)', data:byWeek.map(w=>w.desnivell),
+          backgroundColor:COL.desn.bar, borderColor:COL.desn.line,
+          borderWidth:1, borderRadius:4, yAxisID:'y' }
+      );
+      if (hasRitme) datasets.push(
+        { type:'line', label:'Ritme mig (min/km)', data:byWeek.map(w=>w.avgPace),
+          borderColor:COL.ritme.line, backgroundColor:'transparent',
+          borderWidth:2, pointRadius:4, tension:0.3, yAxisID:'y2', spanGaps:true }
+      );
+      if (hasFC) datasets.push(
+        { type:'line', label:'FC mitja (ppm)', data:byWeek.map(w=>w.avgFC),
+          borderColor:COL.fc.line, backgroundColor:'transparent',
+          borderWidth:2, pointRadius:4, tension:0.3, yAxisID:'y3', spanGaps:true }
+      );
+      return { type:'bar', data:{labels,datasets}, options:{...baseOpts,
+        plugins:{...baseOpts.plugins, tooltip:{callbacks:{label:tooltipLabel}}},
+        scales:{
+          x:  baseOpts.scales.x,
+          y:  { ...scaleKm('km / m'), position:'left' },
+          y2: hasRitme ? scaleRitme()                    : {display:false},
+          y3: hasFC    ? { ...scaleFC(), position:'right' } : {display:false},
+        }
+      }};
+    }
+
+    // ── TEST / CURSA ──────────────────────────────────────────────────────────
+    // Idèntic a Tirada llarga (km + desnivell barres, ritme + FC línies)
+    // Però per activitat individual (no per setmana) per veure progressió
+    case 'testrace': {
+      const sorted = [...sessions].sort((a,b)=>a.date-b.date);
+      const sLabels = sorted.map(s=>s.displayDate);
+      const hasDesn  = sorted.some(s=>{const d=toNumber(s.raw['Desnivell(m)']);return isFinite(d)&&d>0;});
+      const hasRitme = sorted.some(s=>isFinite(s.ritme)&&s.ritme>0);
+      const hasFC    = sorted.some(s=>isFinite(s.fcMitja)&&s.fcMitja>0);
+      const datasets = [
+        { type:'bar', label:'Km', data:sorted.map(s=>s.distancia||null),
+          backgroundColor:COL.km.bar, borderColor:COL.km.line,
+          borderWidth:1, borderRadius:4, yAxisID:'y' },
+      ];
+      if (hasDesn) datasets.push(
+        { type:'bar', label:'Desnivell (m)', data:sorted.map(s=>{const d=toNumber(s.raw['Desnivell(m)']);return isFinite(d)&&d>0?d:null;}),
+          backgroundColor:COL.desn.bar, borderColor:COL.desn.line,
+          borderWidth:1, borderRadius:4, yAxisID:'y' }
+      );
+      if (hasRitme) datasets.push(
+        { type:'line', label:'Ritme (min/km)', data:sorted.map(s=>isFinite(s.ritme)&&s.ritme>0?s.ritme:null),
+          borderColor:COL.ritme.line, backgroundColor:'transparent',
+          borderWidth:2, pointRadius:5, pointHoverRadius:7, tension:0.2, yAxisID:'y2', spanGaps:false }
+      );
+      if (hasFC) datasets.push(
+        { type:'line', label:'FC mitja (ppm)', data:sorted.map(s=>isFinite(s.fcMitja)&&s.fcMitja>0?s.fcMitja:null),
+          borderColor:COL.fc.line, backgroundColor:'transparent',
+          borderWidth:2, pointRadius:5, pointHoverRadius:7, tension:0.2, yAxisID:'y3', spanGaps:false }
+      );
+      return { type:'bar', data:{labels:sLabels,datasets}, options:{...baseOpts,
+        plugins:{...baseOpts.plugins, tooltip:{callbacks:{label:tooltipLabel}}},
+        scales:{
+          x:  baseOpts.scales.x,
+          y:  { ...scaleKm('km / m'), position:'left' },
+          y2: hasRitme ? scaleRitme()                    : {display:false},
+          y3: hasFC    ? { ...scaleFC(), position:'right' } : {display:false},
+        }
+      }};
+    }
+
+    // ── FORÇA ─────────────────────────────────────────────────────────────────
+    // Barres: Càrrega TSS, EPOC (sense canvis, ja estava bé)
     case 'strength':
-      return{type:'bar',data:{labels,datasets:[
-        {label:'C\u00e0rrega (TSS)',data:byWeek.map(w=>w.load),backgroundColor:C.greenSoft,borderColor:C.green,borderWidth:1,borderRadius:6},
-        {label:'EPOC',data:byWeek.map(w=>w.epoc),backgroundColor:'rgba(249,115,22,0.2)',borderColor:'rgba(249,115,22,0.9)',borderWidth:1,borderRadius:6},
-      ]},options:{...baseOpts,
-        plugins:{...baseOpts.plugins,tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y}`}}},
-        scales:{x:baseOpts.scales.x,y:yBase}
+      return { type:'bar', data:{labels, datasets:[
+        { label:'C\u00e0rrega (TSS)', data:byWeek.map(w=>w.load),
+          backgroundColor:COL.load.bar, borderColor:COL.load.line, borderWidth:1, borderRadius:4 },
+        { label:'EPOC', data:byWeek.map(w=>w.epoc),
+          backgroundColor:COL.epoc.bar, borderColor:COL.epoc.line, borderWidth:1, borderRadius:4 },
+      ]}, options:{...baseOpts,
+        plugins:{...baseOpts.plugins, tooltip:{callbacks:{label:tooltipLabel}}},
+        scales:{ x:baseOpts.scales.x, y:yBase }
       }};
-    case 'long':
-      return{type:'bar',data:{labels,datasets:[
-        {type:'bar',label:'Km',data:byWeek.map(w=>w.km),backgroundColor:C.blueSoft,borderColor:C.blue,borderWidth:1,borderRadius:6,yAxisID:'y'},
-        {type:'line',label:'Ritme mig (min/km)',data:byWeek.map(w=>w.avgPace),borderColor:C.green,backgroundColor:C.greenSoft,borderWidth:2,pointRadius:4,tension:0.3,yAxisID:'y2',spanGaps:true},
-      ]},options:{...baseOpts,
-        plugins:{...baseOpts.plugins,tooltip:{callbacks:{label:c=>c.dataset.yAxisID==='y2'?` Ritme: ${formatPace(c.parsed.y,'')}`:`  Km: ${c.parsed.y} km`}}},
-        scales:{x:baseOpts.scales.x,
-          y:{...yBase,position:'left',ticks:{...yBase.ticks,callback:v=>`${v} km`}},
-          y2:{...yBase,position:'right',grid:{drawOnChartArea:false},ticks:{...yBase.ticks,callback:v=>formatPace(v,'')},reverse:true},
-        }
-      }};
-    case 'testrace':{
-      const sorted=[...sessions].sort((a,b)=>a.date-b.date);
-      return{type:'line',data:{labels:sorted.map(s=>s.displayDate),datasets:[{
-        label:'Ritme (min/km)',data:sorted.map(s=>isFinite(s.ritme)&&s.ritme>0?s.ritme:null),
-        borderColor:C.blue,backgroundColor:C.blueSoft,borderWidth:2,pointRadius:5,pointHoverRadius:7,tension:0.2,spanGaps:false,
-      }]},options:{...baseOpts,
-        plugins:{...baseOpts.plugins,tooltip:{callbacks:{label:c=>c.parsed.y?` Ritme: ${formatPace(c.parsed.y,'')}`:'  --'}}},
-        scales:{x:baseOpts.scales.x,y:{...yBase,reverse:true,ticks:{...yBase.ticks,callback:v=>formatPace(v,'')}}}
-      }};
-    }
-    default:
-      return{type:'bar',data:{labels,datasets:[
-        {type:'bar',label:'Km',data:byWeek.map(w=>w.km),backgroundColor:C.blueSoft,borderColor:C.blue,borderWidth:1,borderRadius:6,yAxisID:'y'},
-        {type:'line',label:'C\u00e0rrega (TSS)',data:byWeek.map(w=>w.load),borderColor:C.green,backgroundColor:'transparent',borderWidth:2,pointRadius:3,tension:0.3,yAxisID:'y2',spanGaps:true},
-      ]},options:{...baseOpts,
-        plugins:{...baseOpts.plugins,tooltip:{callbacks:{label:c=>c.dataset.yAxisID==='y2'?` C\u00e0rrega: ${c.parsed.y} TSS`:`  Km: ${c.parsed.y} km`}}},
-        scales:{x:baseOpts.scales.x,
-          y:{...yBase,position:'left',ticks:{...yBase.ticks,callback:v=>`${v} km`}},
-          y2:{...yBase,position:'right',grid:{drawOnChartArea:false},ticks:{...yBase.ticks,callback:v=>`${v} TSS`}},
-        }
+
+    // ── ALTRES ────────────────────────────────────────────────────────────────
+    // Barres: Càrrega TSS + EPOC (costat a costat, no stacked)
+    case 'other':
+      return { type:'bar', data:{labels, datasets:[
+        { label:'C\u00e0rrega (TSS)', data:byWeek.map(w=>w.load),
+          backgroundColor:COL.load.bar, borderColor:COL.load.line, borderWidth:1, borderRadius:4 },
+        { label:'EPOC', data:byWeek.map(w=>w.epoc),
+          backgroundColor:COL.epoc.bar, borderColor:COL.epoc.line, borderWidth:1, borderRadius:4 },
+      ]}, options:{...baseOpts,
+        plugins:{...baseOpts.plugins, tooltip:{callbacks:{label:tooltipLabel}}},
+        scales:{ x:baseOpts.scales.x, y:yBase }
       }};
   }
 }
@@ -449,7 +657,6 @@ function renderSessTable(sessions) {
   if (title) title.textContent=SESS_TYPE_LABELS[_sessType]||'Sessions';
   if (badge) badge.textContent=`${sessions.length} sessions`;
 
-  // Activa botons d'exportació de sessions
   const sb7  = document.getElementById('sess-export-7');
   const sb90 = document.getElementById('sess-export-90');
   if (sb7)  sb7.disabled  = !_sessSessions.length;
@@ -492,7 +699,7 @@ function getSessCols(type) {
   }
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────────────────
 function fmtS(value) {
   const n=parseFloat(value); if(!isFinite(n)) return '--';
   return new Intl.NumberFormat('ca-ES',{maximumFractionDigits:1}).format(n);
