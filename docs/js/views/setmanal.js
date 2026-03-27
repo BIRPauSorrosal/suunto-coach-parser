@@ -4,7 +4,7 @@
 
 const QUALITY_TYPES_V = new Set(['TEMPO', 'TEST', 'INTERVALS']);
 const LONG_TYPES_V    = new Set(['LLARGA', 'MARATÓ', 'TRAIL', 'MITJA', 'MARATO']);
-const EXTRA_TYPES_V   = new Set(['PADEL', 'TENIS', 'TENNIS']);
+const PADEL_TYPES_V   = new Set(['PADEL', 'TENIS', 'TENNIS']);
 
 let currentWeekIndex = 0;
 
@@ -37,10 +37,8 @@ function initWeekNav(sessions, planning) {
   const btnPrev = document.getElementById('week-nav-prev');
   const btnNext = document.getElementById('week-nav-next');
   if (!btnPrev || !btnNext) return;
-
   btnPrev.replaceWith(btnPrev.cloneNode(true));
   btnNext.replaceWith(btnNext.cloneNode(true));
-
   document.getElementById('week-nav-prev').addEventListener('click', () => {
     if (currentWeekIndex > 0) { currentWeekIndex--; renderWeek(sessions, planning); updateNavButtons(planning); }
   });
@@ -69,7 +67,8 @@ function renderWeek(sessions, planning) {
   renderQualityBlock(week, weekSessions);
   renderZ2Block(week, weekSessions);
   renderLongBlock(week, weekSessions);
-  renderExtraBlock(week, weekSessions);
+  renderForcaBlock(week, weekSessions);
+  renderAltresBlock(week, weekSessions);
 }
 
 // ── Capçalera ─────────────────────────────────────────────────────────────────
@@ -85,47 +84,71 @@ function renderWeekProgress(week, weekSessions) {
   const realKm    = weekSessions.reduce((a, s) => a + (s.distancia || 0), 0);
   const plannedKm = week.kmTotal || 0;
   const pct       = plannedKm > 0 ? Math.min((realKm / plannedKm) * 100, 100) : 0;
-
   setTextV('sw-progress-real',    `${fmtNum(realKm)} km`);
   setTextV('sw-progress-planned', `${fmtNum(plannedKm)} km`);
   setTextV('sw-progress-pct',     `${Math.round(pct)} %`);
-
   const bar = document.getElementById('sw-progress-bar');
   if (bar) bar.style.width = `${pct}%`;
 }
 
 // ── Bloc Qualitat ─────────────────────────────────────────────────────────────
 function renderQualityBlock(week, weekSessions) {
-  const sessions = weekSessions.filter(s => QUALITY_TYPES_V.has(s.tipusKey));
-  const realKm   = sessions.reduce((a, s) => a + (s.distancia || 0), 0);
+  const sess   = weekSessions.filter(s => QUALITY_TYPES_V.has(s.tipusKey));
+  const realKm = sess.reduce((a, s) => a + (s.distancia || 0), 0);
 
-  // Pla — ritme via formatPace (suporta decimal i mm:ss)
+  // Ritme real: prefereix ritmeMitjaSeries; fallback al ritme global
+  const ritmeReal = sess.length
+    ? sess.reduce((best, s) => {
+        const r = isFinite(s.ritmeMitjaSeries) ? s.ritmeMitjaSeries : s.ritme;
+        return (!best || r < best) ? r : best;
+      }, null)
+    : null;
+  // FC real: prefereix fcMitjaSeries
+  const fcReal = sess.length
+    ? Math.round(sess.reduce((acc, s) => {
+        const fc = isFinite(s.fcMitjaSeries) && s.fcMitjaSeries > 0 ? s.fcMitjaSeries : (s.fcMitja || 0);
+        return acc + fc;
+      }, 0) / sess.length)
+    : null;
+
+  // Pla
   setTextV('sw-q-series',  week.qSeries || '--');
   setTextV('sw-q-ritme',   formatPace(week.raw['Q_Ritme_min_km']));
-  setTextV('sw-q-rec',     week.raw['Q_Rec_min'] || '--');
+  setTextV('sw-q-rec',     week.raw['Q_Rec_min'] ? week.raw['Q_Rec_min'] + ' min' : '--');
   setTextV('sw-q-fc',      formatFCRange(week.raw['Q_FC_min'], week.raw['Q_FC_max']));
   setTextV('sw-q-km-plan', `${fmtNum(week.qKm)} km`);
 
   // Real
-  setTextV('sw-q-sessions-real', sessions.length ? `${sessions.length} sessió${sessions.length > 1 ? 'ns' : ''}` : '—');
-  setTextV('sw-q-km-real',       sessions.length ? `${fmtNum(realKm)} km` : '—');
+  setTextV('sw-q-ritme-real', ritmeReal ? formatPace(ritmeReal) : '—');
+  setTextV('sw-q-fc-real',    fcReal && fcReal > 0 ? fcReal + ' bpm' : '—');
+  setTextV('sw-q-km-real',    sess.length ? `${fmtNum(realKm)} km` : '—');
+  setTextV('sw-q-sessions-real', sess.length ? `${sess.length} sess.` : '—');
 
   const tbody = document.getElementById('sw-q-sessions-list');
   if (tbody) {
-    tbody.innerHTML = sessions.length
-      ? sessions.map(s => sessionRowQuality(s)).join('')
-      : `<tr><td colspan="4" class="empty-row muted-msg">Sense sessions de qualitat aquesta setmana</td></tr>`;
+    tbody.innerHTML = sess.length
+      ? sess.map(s => sessionRowQuality(s)).join('')
+      : `<tr><td colspan="4" class="empty-row muted-msg">Sense sessions de qualitat</td></tr>`;
   }
-  setBlockStatus('sw-q-block', sessions.length > 0);
+  setBlockStatus('sw-q-block', sess.length > 0);
 }
 
 // ── Bloc Z2 ───────────────────────────────────────────────────────────────────
 function renderZ2Block(week, weekSessions) {
-  const sessions  = weekSessions.filter(s => s.tipusKey === 'Z2');
-  const realZ2min = weekSessions.reduce((a, s) => a + (s.z2min || 0), 0);
-  const realKm    = sessions.reduce((a, s) => a + (s.distancia || 0), 0);
+  const sess      = weekSessions.filter(s => s.tipusKey === 'Z2');
+  const realZ2min = sess.reduce((a, s) => a + (s.z2min || 0), 0);
+  const realKm    = sess.reduce((a, s) => a + (s.distancia || 0), 0);
 
-  // Pla — ritmes via formatPace
+  // Ritme real mitjà
+  const ritmeReal = sess.length
+    ? sess.reduce((acc, s) => acc + (isFinite(s.ritme) ? s.ritme : 0), 0) / sess.length
+    : null;
+  // FC real mitjana
+  const fcReal = sess.length
+    ? Math.round(sess.reduce((acc, s) => acc + (s.fcMitja || 0), 0) / sess.length)
+    : null;
+
+  // Pla
   setTextV('sw-z2-durada-plan', `${fmtNum(week.z2Durada)} min`);
   setTextV('sw-z2-ritme-plan',
     `${formatPace(week.raw['Z2_Ritme_min_km_min'], '')}–${formatPace(week.raw['Z2_Ritme_min_km_max'])}`);
@@ -133,103 +156,129 @@ function renderZ2Block(week, weekSessions) {
   setTextV('sw-z2-km-plan',   `${fmtNum(week.raw['Z2_Km_Plan'])} km`);
 
   // Real
-  setTextV('sw-z2-min-real', realZ2min > 0 ? `${fmtNum(realZ2min)} min Z2` : '—');
-  setTextV('sw-z2-km-real',  realKm    > 0 ? `${fmtNum(realKm)} km` : '—');
+  setTextV('sw-z2-durada-real', realZ2min > 0 ? `${fmtNum(realZ2min)} min` : '—');
+  setTextV('sw-z2-ritme-real',  ritmeReal && ritmeReal > 0 ? formatPace(ritmeReal) : '—');
+  setTextV('sw-z2-fc-real',     fcReal && fcReal > 0 ? fcReal + ' bpm' : '—');
+  setTextV('sw-z2-km-real',     realKm > 0 ? `${fmtNum(realKm)} km` : '—');
 
   const tbody = document.getElementById('sw-z2-sessions-list');
   if (tbody) {
-    tbody.innerHTML = sessions.length
-      ? sessions.map(s => sessionRowZ2(s)).join('')
-      : `<tr><td colspan="4" class="empty-row muted-msg">Sense sessions Z2 aquesta setmana</td></tr>`;
+    tbody.innerHTML = sess.length
+      ? sess.map(s => sessionRowZ2(s)).join('')
+      : `<tr><td colspan="4" class="empty-row muted-msg">Sense sessions Z2</td></tr>`;
   }
   setBlockStatus('sw-z2-block', realZ2min >= (week.z2Durada || 0) * 0.8);
 }
 
 // ── Bloc Tirada llarga ────────────────────────────────────────────────────────
 function renderLongBlock(week, weekSessions) {
-  const sessions = weekSessions.filter(s => LONG_TYPES_V.has(s.tipusKey));
-  const realKm   = sessions.reduce((a, s) => a + (s.distancia || 0), 0);
+  const sess   = weekSessions.filter(s => LONG_TYPES_V.has(s.tipusKey));
+  const realKm = sess.reduce((a, s) => a + (s.distancia || 0), 0);
 
+  // Ritme real (millor ritme de les tirades)
+  const ritmeReal = sess.length
+    ? sess.reduce((best, s) => (!best || (isFinite(s.ritme) && s.ritme < best)) ? s.ritme : best, null)
+    : null;
+
+  // Pla
   setTextV('sw-ll-tipus-plan',  week.llTipus || '--');
   setTextV('sw-ll-durada-plan', week.raw['LL_Durada_min'] ? `${fmtNum(week.raw['LL_Durada_min'])} min` : '--');
   setTextV('sw-ll-km-plan',     `${fmtNum(week.llKm)} km`);
 
-  setTextV('sw-ll-km-real', realKm > 0 ? `${fmtNum(realKm)} km` : '—');
+  // Real
+  setTextV('sw-ll-ritme-real', ritmeReal ? formatPace(ritmeReal) : '—');
+  setTextV('sw-ll-km-real',    realKm > 0 ? `${fmtNum(realKm)} km` : '—');
 
   const tbody = document.getElementById('sw-ll-sessions-list');
   if (tbody) {
-    tbody.innerHTML = sessions.length
-      ? sessions.map(s => sessionRowLong(s)).join('')
-      : `<tr><td colspan="4" class="empty-row muted-msg">Sense tirada llarga aquesta setmana</td></tr>`;
+    tbody.innerHTML = sess.length
+      ? sess.map(s => sessionRowLong(s)).join('')
+      : `<tr><td colspan="4" class="empty-row muted-msg">Sense tirada llarga</td></tr>`;
   }
-  setBlockStatus('sw-ll-block', sessions.length > 0);
+  setBlockStatus('sw-ll-block', sess.length > 0);
 }
 
-// ── Bloc Extra (Força + Pàdel) ────────────────────────────────────────────────
-function renderExtraBlock(week, weekSessions) {
-  const forca = weekSessions.filter(s =>
+// ── Bloc Força ────────────────────────────────────────────────────────────────
+function renderForcaBlock(week, weekSessions) {
+  const sess = weekSessions.filter(s =>
     s.tipusKey.startsWith('FORÇA') || s.tipusKey.startsWith('FORCA')
   );
-  const extra = weekSessions.filter(s => EXTRA_TYPES_V.has(s.tipusKey));
 
-  setTextV('sw-extra-forca-plan', week.forcaPlan || '--');
-  setTextV('sw-extra-padel-plan', week.padelPlan || '--');
-  setTextV('sw-extra-forca-real', forca.length ? `${forca.length} sessió${forca.length > 1 ? 'ns' : ''}` : '—');
-  setTextV('sw-extra-padel-real', extra.length  ? `${extra.length} sessió${extra.length  > 1 ? 'ns' : ''}` : '—');
+  // Pla
+  setTextV('sw-forca-plan', week.forcaPlan || '--');
 
-  const tbody = document.getElementById('sw-extra-sessions-list');
+  // Real
+  setTextV('sw-forca-real', sess.length ? `${sess.length} sess.` : '—');
+
+  const tbody = document.getElementById('sw-forca-sessions-list');
   if (tbody) {
-    tbody.innerHTML = [...forca, ...extra].length
-      ? [...forca, ...extra].map(s => sessionRowExtra(s)).join('')
-      : `<tr><td colspan="4" class="empty-row muted-msg">Sense sessions complementàries</td></tr>`;
+    tbody.innerHTML = sess.length
+      ? sess.map(s => sessionRowExtra(s)).join('')
+      : `<tr><td colspan="4" class="empty-row muted-msg">Sense sessions de força</td></tr>`;
   }
-  setBlockStatus('sw-extra-block', forca.length > 0 || extra.length > 0);
+  setBlockStatus('sw-forca-block', sess.length > 0);
+}
+
+// ── Bloc Altres (Pàdel / Tennis / ...) ───────────────────────────────────────
+function renderAltresBlock(week, weekSessions) {
+  const sess        = weekSessions.filter(s => PADEL_TYPES_V.has(s.tipusKey));
+  const totalDurada = sess.reduce((a, s) => a + (s.durada || 0), 0);
+
+  // Pla
+  setTextV('sw-altres-padel-plan', week.padelPlan || '--');
+
+  // Real
+  setTextV('sw-altres-sessions-real', sess.length ? `${sess.length} part.` : '—');
+  setTextV('sw-altres-durada-real',   totalDurada > 0 ? `${fmtNum(totalDurada)} min` : '—');
+
+  const tbody = document.getElementById('sw-altres-sessions-list');
+  if (tbody) {
+    tbody.innerHTML = sess.length
+      ? sess.map(s => sessionRowExtra(s)).join('')
+      : `<tr><td colspan="4" class="empty-row muted-msg">Sense activitats complementàries</td></tr>`;
+  }
+  setBlockStatus('sw-altres-block', sess.length > 0);
 }
 
 // ── Rows de taula ─────────────────────────────────────────────────────────────
 function sessionRowQuality(s) {
-  // Prefereix ritme de sèries; fallback al ritme global
   const ritme = isFinite(s.ritmeMitjaSeries) ? s.ritmeMitjaSeries : s.ritme;
   const fc    = isFinite(s.fcMitjaSeries)    ? s.fcMitjaSeries    : s.fcMitja;
-  return `
-    <tr>
-      <td>${escV(s.displayDate)}</td>
-      <td>${formatPace(ritme)}</td>
-      <td>${isFinite(fc) && fc > 0 ? Math.round(fc) + ' ppm' : '—'}</td>
-      <td>${fmtNum(s.carrega)}</td>
-    </tr>`;
+  return `<tr>
+    <td>${escV(s.displayDate)}</td>
+    <td>${formatPace(ritme)}</td>
+    <td>${isFinite(fc) && fc > 0 ? Math.round(fc) + ' bpm' : '—'}</td>
+    <td>${fmtNum(s.carrega)}</td>
+  </tr>`;
 }
 
 function sessionRowZ2(s) {
   const cadencia = toNumberV(s.raw['Cadencia(spm)']);
-  return `
-    <tr>
-      <td>${escV(s.displayDate)}</td>
-      <td>${formatPace(s.ritme)}</td>
-      <td>${isFinite(cadencia) && cadencia > 0 ? Math.round(cadencia) + ' spm' : '—'}</td>
-      <td>${fmtNum(s.carrega)}</td>
-    </tr>`;
+  return `<tr>
+    <td>${escV(s.displayDate)}</td>
+    <td>${formatPace(s.ritme)}</td>
+    <td>${isFinite(cadencia) && cadencia > 0 ? Math.round(cadencia) + ' spm' : '—'}</td>
+    <td>${fmtNum(s.carrega)}</td>
+  </tr>`;
 }
 
 function sessionRowLong(s) {
   const desnivell = toNumberV(s.raw['Desnivell(m)']);
-  return `
-    <tr>
-      <td>${escV(s.displayDate)}</td>
-      <td>${formatPace(s.ritme)}</td>
-      <td>${s.z2min > 0 ? fmtNum(s.z2min) + ' min' : '—'}</td>
-      <td>${isFinite(desnivell) && desnivell > 0 ? Math.round(desnivell) + ' m' : '—'}</td>
-    </tr>`;
+  return `<tr>
+    <td>${escV(s.displayDate)}</td>
+    <td>${formatPace(s.ritme)}</td>
+    <td>${s.z2min > 0 ? fmtNum(s.z2min) + ' min Z2' : '—'}</td>
+    <td>${isFinite(desnivell) && desnivell > 0 ? Math.round(desnivell) + ' m' : '—'}</td>
+  </tr>`;
 }
 
 function sessionRowExtra(s) {
-  return `
-    <tr>
-      <td>${escV(s.displayDate)}</td>
-      <td>${escV(s.tipus)}</td>
-      <td>${s.durada > 0 ? fmtNum(s.durada) + ' min' : '—'}</td>
-      <td>${fmtNum(s.carrega)}</td>
-    </tr>`;
+  return `<tr>
+    <td>${escV(s.displayDate)}</td>
+    <td>${escV(s.tipus)}</td>
+    <td>${s.durada > 0 ? fmtNum(s.durada) + ' min' : '—'}</td>
+    <td>${fmtNum(s.carrega)}</td>
+  </tr>`;
 }
 
 // ── Helpers locals ────────────────────────────────────────────────────────────
