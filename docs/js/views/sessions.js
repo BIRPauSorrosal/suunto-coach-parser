@@ -297,6 +297,20 @@ function getMondayOf(date) {
   d.setDate(d.getDate()-(dow===0?6:dow-1)); d.setHours(0,0,0,0); return d;
 }
 
+// ── parseDurSeries: suma dur_min de Series_Detall (JSON) ─────────────────────
+function parseDurSeries(session) {
+  const raw = session.raw['Series_Detall'];
+  if (!raw || raw === '') return 0;
+  try {
+    const detall = JSON.parse(raw);
+    if (!Array.isArray(detall)) return 0;
+    return detall.reduce((a, s) => {
+      const v = typeof s.dur_min === 'number' ? s.dur_min : parseFloat(s.dur_min);
+      return a + (isFinite(v) && v > 0 ? v : 0);
+    }, 0);
+  } catch { return 0; }
+}
+
 // ── groupByWeek ───────────────────────────────────────────────────────────────
 function groupByWeek(sessions) {
   const map = new Map();
@@ -320,8 +334,9 @@ function groupByWeek(sessions) {
     const avgCad         = avgValid(ss, s => { const c=toNumber(s.raw['Cadencia(spm)']); return (typeof c==='number'&&c>0)?c:null; });
     const avgPaceSeries  = avgValid(ss, s => (typeof s.ritmeMitjaSeries==='number'&&s.ritmeMitjaSeries>0) ? s.ritmeMitjaSeries : null);
     const avgFCSeries    = avgValid(ss, s => (typeof s.fcMitjaSeries==='number'&&s.fcMitjaSeries>0) ? s.fcMitjaSeries : null);
-    const avgCadSeries   = avgValid(ss, s => { const c=toNumber(s.raw['Cadencia(spm)']); return (typeof c==='number'&&c>0)?c:null; });
-    const kmSeries       = ss.reduce((a,s)=>{ const n=toNumber(s.raw['Num_Series']); return (typeof n==='number'&&n>0)?a+(typeof s.distancia==='number'?s.distancia:0):a; },0);
+    const avgCadSeries   = avgValid(ss, s => { const c=toNumber(s.raw['Cadencia_Mitja_Series']); return (typeof c==='number'&&c>0)?c:null; });
+    // Suma de minuts de sèries (parsejant Series_Detall de cada sessió)
+    const totalDurSeries = Math.round(ss.reduce((a,s) => a + parseDurSeries(s), 0) * 10) / 10;
     const d=w.date, dd=String(d.getDate()).padStart(2,'0'), mm=String(d.getMonth()+1).padStart(2,'0');
     return {
       label: `${dd}/${mm}`,
@@ -337,7 +352,7 @@ function groupByWeek(sessions) {
       avgPaceSeries: typeof avgPaceSeries==='number' ? Math.round(avgPaceSeries*100)/100 : null,
       avgFCSeries:   typeof avgFCSeries==='number'   ? Math.round(avgFCSeries)         : null,
       avgCadSeries:  typeof avgCadSeries==='number'  ? Math.round(avgCadSeries)        : null,
-      kmSeries: Math.round(kmSeries*10)/10,
+      totalDurSeries,
       count: ss.length,
     };
   });
@@ -345,12 +360,6 @@ function groupByWeek(sessions) {
 
 // ════════════════════════════════════════════════════════════════════════════
 // buildSessChartConfig
-//
-// Eixos (cas 'long'):
-//   y   → LEFT  — Km (barra)
-//   y2  → RIGHT — Ritme min/km (invertit, 3–8)
-//   y3  → RIGHT — FC ppm (offset:true)
-//   y4  → LEFT  — Desnivell m (línia, offset:true → no distorsiona escala km)
 // ════════════════════════════════════════════════════════════════════════════
 
 function buildSessChartConfig(byWeek, labels, sessions) {
@@ -363,6 +372,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
     cad:  { line:'rgba(168,85,247,0.85)' },
     epoc: { bar:'rgba(251,191,36,0.35)', line:'rgba(251,191,36,0.9)'  },
     load: { bar:'rgba(34,197,94,0.25)',  line:'rgba(34,197,94,0.9)'   },
+    dur:  { bar:'rgba(56,189,248,0.35)', line:'rgba(56,189,248,0.9)'  },
   };
   const baseOpts = {
     responsive:true, maintainAspectRatio:false,
@@ -374,6 +384,8 @@ function buildSessChartConfig(byWeek, labels, sessions) {
 
   const scaleKm = (lbl='km') => ({ ...yBase, position:'left',
     title:{ display:true, text:lbl, color:C.text, font:{size:10} } });
+  const scaleDur = (lbl='min') => ({ ...yBase, position:'left',
+    title:{ display:true, text:lbl, color:C.text, font:{size:10} } });
   const scaleRitme = () => ({ ...yBase, position:'right', reverse:true, min:3, max:8,
     grid:{ drawOnChartArea:false },
     ticks:{ ...yBase.ticks, callback: v => formatPace(v,'') },
@@ -382,7 +394,6 @@ function buildSessChartConfig(byWeek, labels, sessions) {
     grid:{ drawOnChartArea:false },
     ticks:{ ...yBase.ticks, callback: v => `${v}` },
     title:{ display:true, text:'ppm / spm', color:C.text, font:{size:10} } });
-  // Desnivell: eix esquerre separat per no distorsionar l'escala de km
   const scaleDesn = () => ({ ...yBase, position:'left', offset:true,
     grid:{ drawOnChartArea:false },
     ticks:{ ...yBase.ticks, callback: v => `${v} m` },
@@ -391,13 +402,14 @@ function buildSessChartConfig(byWeek, labels, sessions) {
   function tooltipLabel(c) {
     const v = c.parsed.y; if (v == null) return null;
     const lbl = c.dataset.label || '';
-    if (lbl.includes('Ritme'))        return `  Ritme: ${formatPace(v,'')}`;
-    if (lbl.includes('FC'))           return `  FC: ${v} ppm`;
-    if (lbl.includes('Cad'))          return `  Cad\u00e8ncia: ${v} spm`;
-    if (lbl.includes('EPOC'))         return `  EPOC: ${v}`;
-    if (lbl.includes('C\u00e0rrega')) return `  C\u00e0rrega: ${v} TSS`;
-    if (lbl.includes('Desnivell'))    return `  Desnivell: ${v} m`;
-    if (lbl.includes('Km'))           return `  Km: ${v} km`;
+    if (lbl.includes('Ritme'))           return `  Ritme: ${formatPace(v,'')}`;
+    if (lbl.includes('FC'))              return `  FC: ${v} ppm`;
+    if (lbl.includes('Cad'))             return `  Cad\u00e8ncia: ${v} spm`;
+    if (lbl.includes('EPOC'))            return `  EPOC: ${v}`;
+    if (lbl.includes('C\u00e0rrega'))    return `  C\u00e0rrega: ${v} TSS`;
+    if (lbl.includes('Desnivell'))       return `  Desnivell: ${v} m`;
+    if (lbl.includes('Km'))              return `  Km: ${v} km`;
+    if (lbl.includes('Temps s\u00e8ries')) return `  Temps s\u00e8ries: ${v} min`;
     return ` ${lbl}: ${v}`;
   }
 
@@ -456,15 +468,22 @@ function buildSessChartConfig(byWeek, labels, sessions) {
     }
 
     // ── QUALITAT ────────────────────────────────────────────────────────────
+    // Barra: Temps total de sèries (min) ← sum(dur_min) de Series_Detall
+    // Línies: Ritme mig sèries | FC mitja sèries | Cadència mitja sèries
+    // NO hi ha km: els km de la sessió inclouen escalfament i recuperació
     case 'quality': {
-      const hasKmS   = byWeek.some(w => w.kmSeries > 0);
-      const hasPaceS = byWeek.some(w => w.avgPaceSeries !== null);
-      const hasFCS   = byWeek.some(w => w.avgFCSeries   !== null);
-      const hasCadS  = byWeek.some(w => w.avgCadSeries  !== null);
+      const hasDurS  = byWeek.some(w => w.totalDurSeries > 0);
+      const hasPaceS = byWeek.some(w => w.avgPaceSeries  !== null);
+      const hasFCS   = byWeek.some(w => w.avgFCSeries    !== null);
+      const hasCadS  = byWeek.some(w => w.avgCadSeries   !== null);
       const datasets = [];
-      if (hasKmS) datasets.push({ type:'bar', label:'Km s\u00e8ries',
-        data:byWeek.map(w=>w.kmSeries), backgroundColor:COL.km.bar,
-        borderColor:COL.km.line, borderWidth:1, borderRadius:4, yAxisID:'y' });
+      // Barra base: temps de sèries en minuts
+      if (hasDurS) datasets.push({
+        type:'bar', label:'Temps s\u00e8ries (min)',
+        data:byWeek.map(w => w.totalDurSeries > 0 ? w.totalDurSeries : null),
+        backgroundColor:COL.dur.bar, borderColor:COL.dur.line,
+        borderWidth:1, borderRadius:4, yAxisID:'y'
+      });
       if (hasPaceS) datasets.push({ type:'line', label:'Ritme s\u00e8ries (min/km)',
         data:byWeek.map(w=>w.avgPaceSeries), borderColor:COL.ritme.line,
         backgroundColor:'transparent', borderWidth:2, pointRadius:4,
@@ -473,18 +492,16 @@ function buildSessChartConfig(byWeek, labels, sessions) {
         data:byWeek.map(w=>w.avgFCSeries), borderColor:COL.fc.line,
         backgroundColor:'transparent', borderWidth:2, pointRadius:4,
         tension:0.3, yAxisID:'y3', spanGaps:true });
-      if (hasCadS) datasets.push({ type:'line', label:'Cad\u00e8ncia (spm)',
+      if (hasCadS) datasets.push({ type:'line', label:'Cad\u00e8ncia s\u00e8ries (spm)',
         data:byWeek.map(w=>w.avgCadSeries), borderColor:COL.cad.line,
         backgroundColor:'transparent', borderWidth:2, pointRadius:4,
         tension:0.3, yAxisID:'y3', spanGaps:true });
-      if (!datasets.length) datasets.push({ type:'bar', label:'Km',
-        data:byWeek.map(w=>w.km), backgroundColor:COL.km.bar,
-        borderColor:COL.km.line, borderWidth:1, borderRadius:4, yAxisID:'y' });
       return { type:'bar', data:{labels,datasets}, options:{...baseOpts,
         plugins:{...baseOpts.plugins, tooltip:{callbacks:{label:tooltipLabel}}},
-        scales:{ x:baseOpts.scales.x, y:scaleKm('km'),
-          y2: hasPaceS          ? scaleRitme() : { display:false },
-          y3: (hasFCS||hasCadS) ? scaleFC()    : { display:false } }
+        scales:{ x:baseOpts.scales.x,
+          y:  hasDurS            ? scaleDur('min')  : { display:false },
+          y2: hasPaceS           ? scaleRitme()     : { display:false },
+          y3: (hasFCS||hasCadS)  ? scaleFC()        : { display:false } }
       }};
     }
 
@@ -498,7 +515,6 @@ function buildSessChartConfig(byWeek, labels, sessions) {
           backgroundColor:COL.km.bar, borderColor:COL.km.line,
           borderWidth:1, borderRadius:4, yAxisID:'y' },
       ];
-      // Desnivell com a LÍNIA (y4 esquerra, eix independent per no distorsionar km)
       if (hasDesn) datasets.push({
         type:'line', label:'Desnivell (m)',
         data:byWeek.map(w=>w.desnivell),
@@ -517,9 +533,9 @@ function buildSessChartConfig(byWeek, labels, sessions) {
         scales:{
           x:  baseOpts.scales.x,
           y:  scaleKm('km'),
-          y2: hasRitme ? scaleRitme()  : { display:false },
-          y3: hasFC    ? scaleFC()     : { display:false },
-          y4: hasDesn  ? scaleDesn()   : { display:false },
+          y2: hasRitme ? scaleRitme() : { display:false },
+          y3: hasFC    ? scaleFC()    : { display:false },
+          y4: hasDesn  ? scaleDesn()  : { display:false },
         }
       }};
     }
