@@ -135,9 +135,20 @@ function renderQualityBlock(week, weekSessions) {
 
 // ── Bloc Z2 ───────────────────────────────────────────────────────────────────
 function renderZ2Block(week, weekSessions) {
-  const sess      = weekSessions.filter(s => s.tipusKey === 'Z2');
-  const realZ2min = sess.reduce((a, s) => a + (s.z2min || 0), 0);
-  const realKm    = sess.reduce((a, s) => a + (s.distancia || 0), 0);
+  // Només sessions de tipus Z2
+  const sess = weekSessions.filter(s => s.tipusKey === 'Z2');
+
+  // Durada total de les sessions Z2 (columna Durada del CSV, en minuts)
+  const realDuradaTotal = sess.reduce((a, s) => a + (s.durada || 0), 0);
+
+  // Temps efectiu a zones Z1+Z2 (columnes Z1(min) i Z2(min) del CSV)
+  const realZ1Z2min = sess.reduce((a, s) => {
+    const z1 = toNumberV(s.raw['Z1(min)']) || 0;
+    const z2 = toNumberV(s.raw['Z2(min)']) || s.z2min || 0;
+    return a + z1 + z2;
+  }, 0);
+
+  const realKm = sess.reduce((a, s) => a + (s.distancia || 0), 0);
 
   // Ritme real mitjà
   const ritmeReal = sess.length
@@ -155,8 +166,15 @@ function renderZ2Block(week, weekSessions) {
   setTextV('sw-z2-fc-plan',   formatFCRange(week.raw['Z2_FC_min'], week.raw['Z2_FC_max']));
   setTextV('sw-z2-km-plan',   `${fmtNum(week.raw['Z2_Km_Plan'])} km`);
 
-  // Real
-  setTextV('sw-z2-durada-real', realZ2min > 0 ? `${fmtNum(realZ2min)} min` : '—');
+  // Real — Durada: total de la sessió + (temps Z1+Z2) entre parèntesi
+  let duradaRealText = '—';
+  if (realDuradaTotal > 0) {
+    duradaRealText = `${fmtNum(realDuradaTotal)} min`;
+    if (realZ1Z2min > 0) {
+      duradaRealText += ` (${fmtNum(realZ1Z2min)} Z1+Z2)`;
+    }
+  }
+  setTextV('sw-z2-durada-real', duradaRealText);
   setTextV('sw-z2-ritme-real',  ritmeReal && ritmeReal > 0 ? formatPace(ritmeReal) : '—');
   setTextV('sw-z2-fc-real',     fcReal && fcReal > 0 ? fcReal + ' bpm' : '—');
   setTextV('sw-z2-km-real',     realKm > 0 ? `${fmtNum(realKm)} km` : '—');
@@ -167,7 +185,7 @@ function renderZ2Block(week, weekSessions) {
       ? sess.map(s => sessionRowZ2(s)).join('')
       : `<tr><td colspan="4" class="empty-row muted-msg">Sense sessions Z2</td></tr>`;
   }
-  setBlockStatus('sw-z2-block', realZ2min >= (week.z2Durada || 0) * 0.8);
+  setBlockStatus('sw-z2-block', realDuradaTotal >= (week.z2Durada || 0) * 0.8);
 }
 
 // ── Bloc Tirada llarga ────────────────────────────────────────────────────────
