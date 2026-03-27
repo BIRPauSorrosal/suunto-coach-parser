@@ -335,7 +335,6 @@ function groupByWeek(sessions) {
     const avgPaceSeries  = avgValid(ss, s => (typeof s.ritmeMitjaSeries==='number'&&s.ritmeMitjaSeries>0) ? s.ritmeMitjaSeries : null);
     const avgFCSeries    = avgValid(ss, s => (typeof s.fcMitjaSeries==='number'&&s.fcMitjaSeries>0) ? s.fcMitjaSeries : null);
     const avgCadSeries   = avgValid(ss, s => { const c=toNumber(s.raw['Cadencia_Mitja_Series']); return (typeof c==='number'&&c>0)?c:null; });
-    // Suma de minuts de sèries (parsejant Series_Detall de cada sessió)
     const totalDurSeries = Math.round(ss.reduce((a,s) => a + parseDurSeries(s), 0) * 10) / 10;
     const d=w.date, dd=String(d.getDate()).padStart(2,'0'), mm=String(d.getMonth()+1).padStart(2,'0');
     return {
@@ -402,13 +401,13 @@ function buildSessChartConfig(byWeek, labels, sessions) {
   function tooltipLabel(c) {
     const v = c.parsed.y; if (v == null) return null;
     const lbl = c.dataset.label || '';
-    if (lbl.includes('Ritme'))           return `  Ritme: ${formatPace(v,'')}`;
-    if (lbl.includes('FC'))              return `  FC: ${v} ppm`;
-    if (lbl.includes('Cad'))             return `  Cad\u00e8ncia: ${v} spm`;
-    if (lbl.includes('EPOC'))            return `  EPOC: ${v}`;
-    if (lbl.includes('C\u00e0rrega'))    return `  C\u00e0rrega: ${v} TSS`;
-    if (lbl.includes('Desnivell'))       return `  Desnivell: ${v} m`;
-    if (lbl.includes('Km'))              return `  Km: ${v} km`;
+    if (lbl.includes('Ritme'))             return `  Ritme: ${formatPace(v,'')}`;
+    if (lbl.includes('FC'))                return `  FC: ${v} ppm`;
+    if (lbl.includes('Cad'))               return `  Cad\u00e8ncia: ${v} spm`;
+    if (lbl.includes('EPOC'))              return `  EPOC: ${v}`;
+    if (lbl.includes('C\u00e0rrega'))      return `  C\u00e0rrega: ${v} TSS`;
+    if (lbl.includes('Desnivell'))         return `  Desnivell: ${v} m`;
+    if (lbl.includes('Km'))                return `  Km: ${v} km`;
     if (lbl.includes('Temps s\u00e8ries')) return `  Temps s\u00e8ries: ${v} min`;
     return ` ${lbl}: ${v}`;
   }
@@ -468,16 +467,12 @@ function buildSessChartConfig(byWeek, labels, sessions) {
     }
 
     // ── QUALITAT ────────────────────────────────────────────────────────────
-    // Barra: Temps total de sèries (min) ← sum(dur_min) de Series_Detall
-    // Línies: Ritme mig sèries | FC mitja sèries | Cadència mitja sèries
-    // NO hi ha km: els km de la sessió inclouen escalfament i recuperació
     case 'quality': {
       const hasDurS  = byWeek.some(w => w.totalDurSeries > 0);
       const hasPaceS = byWeek.some(w => w.avgPaceSeries  !== null);
       const hasFCS   = byWeek.some(w => w.avgFCSeries    !== null);
       const hasCadS  = byWeek.some(w => w.avgCadSeries   !== null);
       const datasets = [];
-      // Barra base: temps de sèries en minuts
       if (hasDurS) datasets.push({
         type:'bar', label:'Temps s\u00e8ries (min)',
         data:byWeek.map(w => w.totalDurSeries > 0 ? w.totalDurSeries : null),
@@ -624,25 +619,36 @@ function renderSessTable(sessions) {
 }
 
 function getSessCols(type) {
-  const colData       = {label:'Data',            render:s=>escS(s.displayDate)};
-  const colTipus      = {label:'Tipus',            render:s=>escS(s.tipus)};
-  const colKm         = {label:'Km',               render:s=>s.distancia>0?`${fmtS(s.distancia)} km`:'\u2014'};
-  const colDurada     = {label:'Durada',           render:s=>s.durada>0?`${fmtS(s.durada)} min`:'\u2014'};
-  const colRitme      = {label:'Ritme',            render:s=>formatPace(s.ritme)};
-  const colFC         = {label:'FC',               render:s=>typeof s.fcMitja==='number'&&s.fcMitja>0?`${Math.round(s.fcMitja)} ppm`:'\u2014'};
-  const colCarrega    = {label:'C\u00e0rrega TSS', render:s=>typeof s.carrega==='number'&&s.carrega>0?`${fmtS(s.carrega)} TSS`:'\u2014'};
-  const colZ2min      = {label:'Z2 (min)',         render:s=>s.z2min>0?`${fmtS(s.z2min)} min`:'\u2014'};
-  const colCad        = {label:'Cad\u00e8ncia',    render:s=>{const c=toNumber(s.raw['Cadencia(spm)']);return typeof c==='number'&&c>0?`${Math.round(c)} spm`:'\u2014';}};
-  const colDesnivell  = {label:'Desnivell',        render:s=>{const d=toNumber(s.raw['Desnivell(m)']);return typeof d==='number'&&d>0?`${Math.round(d)} m`:'\u2014';}};
-  const colEpoc       = {label:'EPOC',             render:s=>{const e=toNumber(s.raw['EPOC']);return typeof e==='number'&&e>0?fmtS(e):'\u2014';}};
-  const colRecup      = {label:'Recup.',           render:s=>{const r=toNumber(s.raw['Recup(h)']);return typeof r==='number'&&r>0?`${fmtS(r)} h`:'\u2014';}};
-  const colRitmeSeries= {label:'Ritme s\u00e8ries', render:s=>formatPace(typeof s.ritmeMitjaSeries==='number'?s.ritmeMitjaSeries:null)};
-  const colFCSeries   = {label:'FC s\u00e8ries',    render:s=>typeof s.fcMitjaSeries==='number'&&s.fcMitjaSeries>0?`${Math.round(s.fcMitjaSeries)} ppm`:'\u2014'};
-  const colSeries     = {label:'S\u00e8ries',       render:s=>{const n=toNumber(s.raw['Num_Series']);return typeof n==='number'&&n>0?String(Math.round(n)):'\u2014';}};
-  const colPTE        = {label:'PTE',              render:s=>{const p=toNumber(s.raw['PTE']);return typeof p==='number'&&p>0?fmtS(p):'\u2014';}};
+  const colData       = {label:'Data',              render:s=>escS(s.displayDate)};
+  const colTipus      = {label:'Tipus',              render:s=>escS(s.tipus)};
+  const colKm         = {label:'Km',                 render:s=>s.distancia>0?`${fmtS(s.distancia)} km`:'\u2014'};
+  const colDurada     = {label:'Durada',             render:s=>s.durada>0?`${fmtS(s.durada)} min`:'\u2014'};
+  const colRitme      = {label:'Ritme',              render:s=>formatPace(s.ritme)};
+  const colFC         = {label:'FC',                 render:s=>typeof s.fcMitja==='number'&&s.fcMitja>0?`${Math.round(s.fcMitja)} ppm`:'\u2014'};
+  const colCarrega    = {label:'C\u00e0rrega TSS',   render:s=>typeof s.carrega==='number'&&s.carrega>0?`${fmtS(s.carrega)} TSS`:'\u2014'};
+  const colZ2min      = {label:'Z2 (min)',           render:s=>s.z2min>0?`${fmtS(s.z2min)} min`:'\u2014'};
+  const colCad        = {label:'Cad\u00e8ncia',      render:s=>{const c=toNumber(s.raw['Cadencia(spm)']);return typeof c==='number'&&c>0?`${Math.round(c)} spm`:'\u2014';}};
+  const colDesnivell  = {label:'Desnivell',          render:s=>{const d=toNumber(s.raw['Desnivell(m)']);return typeof d==='number'&&d>0?`${Math.round(d)} m`:'\u2014';}};
+  const colEpoc       = {label:'EPOC',               render:s=>{const e=toNumber(s.raw['EPOC']);return typeof e==='number'&&e>0?fmtS(e):'\u2014';}};
+  const colRecup      = {label:'Recup.',             render:s=>{const r=toNumber(s.raw['Recup(h)']);return typeof r==='number'&&r>0?`${fmtS(r)} h`:'\u2014';}};
+  const colRitmeSeries= {label:'Ritme s\u00e8ries',  render:s=>formatPace(typeof s.ritmeMitjaSeries==='number'?s.ritmeMitjaSeries:null)};
+  const colFCSeries   = {label:'FC s\u00e8ries',      render:s=>typeof s.fcMitjaSeries==='number'&&s.fcMitjaSeries>0?`${Math.round(s.fcMitjaSeries)} ppm`:'\u2014'};
+  const colSeries     = {label:'S\u00e8ries',         render:s=>{const n=toNumber(s.raw['Num_Series']);return typeof n==='number'&&n>0?String(Math.round(n)):'\u2014';}};
+  const colPTE        = {label:'PTE',                render:s=>{const p=toNumber(s.raw['PTE']);return typeof p==='number'&&p>0?fmtS(p):'\u2014';}};
+  // Durada mitja per sèrie: totalDurSeries / Num_Series
+  const colDurSerie   = {
+    label: 'Dur/S\u00e8rie',
+    render: s => {
+      const n   = toNumber(s.raw['Num_Series']);
+      const dur = parseDurSeries(s);
+      if (typeof n !== 'number' || n <= 0 || dur <= 0) return '\u2014';
+      const mitja = Math.round((dur / n) * 10) / 10;
+      return `${fmtS(mitja)} min`;
+    }
+  };
   switch (type) {
     case 'z2':       return [colData,colKm,colDurada,colRitme,colCad,colFC,colZ2min,colEpoc,colCarrega];
-    case 'quality':  return [colData,colTipus,colKm,colDurada,colSeries,colRitmeSeries,colFCSeries,colPTE,colCarrega];
+    case 'quality':  return [colData,colTipus,colKm,colDurada,colSeries,colDurSerie,colRitmeSeries,colFCSeries,colPTE,colCarrega];
     case 'long':     return [colData,colTipus,colKm,colDurada,colRitme,colZ2min,colDesnivell,colFC,colCarrega];
     case 'testrace': return [colData,colTipus,colKm,colDurada,colRitme,colFC,colDesnivell,colEpoc,colCarrega];
     case 'strength': return [colData,colTipus,colDurada,colEpoc,colRecup,colCarrega];
