@@ -33,7 +33,7 @@ function renderSessionsView(sessions) {
   _sessSessions = sessions;
   initSessFilters();
   renderSessPanel();
-  renderPMC(_sessSessions); // PMC sempre amb totes les sessions
+  renderPMC(_sessSessions);
 }
 
 // ── Inicialitza listeners ────────────────────────────────────────────────────
@@ -92,7 +92,7 @@ function applyFilters(sessions) {
   return result;
 }
 
-// ── KPIs ─────────────────────────────────────────────────────────────────────
+// ── KPIs ───────────────────────────────────────────────────────────────────
 function renderSessKPIs(sessions) {
   const totalKm   = sessions.reduce((a,s) => a + (s.distancia||0), 0);
   const totalMin  = sessions.reduce((a,s) => a + (s.durada||0), 0);
@@ -112,14 +112,41 @@ function renderSessKPIs(sessions) {
 // PMC — Performance Management Chart (CTL / ATL / TSB)
 // ════════════════════════════════════════════════════════════════════════════
 
-// Constants del model PMC estàndard (TrainingPeaks / Coggan)
-const PMC_CTL_TAU = 42;  // dies — forma crònica ("fitness")
-const PMC_ATL_TAU = 7;   // dies — fatiga aguda
+const PMC_CTL_TAU = 42;
+const PMC_ATL_TAU = 7;
+
+// Plugin inline: aplica el gradient TSB un cop chartArea està garantit finit
+const PMC_GRADIENT_PLUGIN = {
+  id: 'pmcTsbGradient',
+  afterLayout(chart) {
+    const { chartArea, scales } = chart;
+    if (!chartArea || !scales.y2) return;
+    const { top, bottom, height } = chartArea;
+    if (!isFinite(top) || !isFinite(bottom) || height <= 0) return;
+
+    const zeroY = scales.y2.getPixelForValue(0);
+    const pct   = Math.max(0, Math.min(1, (zeroY - top) / height));
+    const grad  = chart.ctx.createLinearGradient(0, top, 0, bottom);
+    grad.addColorStop(0,    'rgba(34,197,94,0.18)');
+    grad.addColorStop(pct,  'rgba(34,197,94,0.05)');
+    grad.addColorStop(pct,  'rgba(239,68,68,0.05)');
+    grad.addColorStop(1,    'rgba(239,68,68,0.18)');
+
+    // Sobreescriu el color del dataset TSB (index 2) sense re-renderitzar
+    chart.data.datasets[2].backgroundColor = grad;
+  }
+};
 
 function renderPMC(sessions) {
-  const ctx = document.getElementById('chart-pmc');
-  if (!ctx) return;
-  if (_pmcChart) { _pmcChart.destroy(); _pmcChart = null; }
+  const canvas = document.getElementById('chart-pmc');
+  if (!canvas) return;
+
+  // FIX: Chart.getChart() és l'API oficial Chart.js 3+ per destruir qualsevol
+  // instància activa sobre el canvas, independentment de la variable local
+  const existing = Chart.getChart(canvas);
+  if (existing) existing.destroy();
+  _pmcChart = null;
+
   if (!sessions.length) return;
 
   const pmcData = buildPMCData(sessions);
@@ -128,9 +155,7 @@ function renderPMC(sessions) {
   const C      = CHART_COLORS;
   const labels = pmcData.map(d => d.label);
 
-  // Zona TSB: colorejada per sobre/sota de 0
-  // Usem un plugin inline per pintar la franja de fons
-  _pmcChart = new Chart(ctx, {
+  _pmcChart = new Chart(canvas, {
     type: 'line',
     data: {
       labels,
@@ -159,20 +184,9 @@ function renderPMC(sessions) {
           label: 'TSB — Frescor',
           data:  pmcData.map(d => Math.round(d.tsb * 10) / 10),
           borderColor:     C.blue,
-          backgroundColor: (ctx2) => {
-            // Gradient verd sobre 0, vermell sota 0
-            const chart = ctx2.chart;
-            const {top, bottom, chartArea} = chart;
-            if (!chartArea) return 'transparent';
-            const zeroY = chart.scales.y2.getPixelForValue(0);
-            const grad  = chart.ctx.createLinearGradient(0, top, 0, bottom);
-            const pct   = Math.max(0, Math.min(1, (zeroY - chartArea.top) / chartArea.height));
-            grad.addColorStop(0,    'rgba(34,197,94,0.15)');
-            grad.addColorStop(pct,  'rgba(34,197,94,0.05)');
-            grad.addColorStop(pct,  'rgba(239,68,68,0.05)');
-            grad.addColorStop(1,    'rgba(239,68,68,0.15)');
-            return grad;
-          },
+          // Color sòlid de fallback — el plugin PMC_GRADIENT_PLUGIN el substitueix
+          // per un gradient un cop chartArea és finit (fase afterLayout)
+          backgroundColor: 'rgba(56,189,248,0.08)',
           fill: true,
           borderWidth: 2,
           pointRadius: 0,
@@ -181,6 +195,7 @@ function renderPMC(sessions) {
         },
       ]
     },
+    plugins: [PMC_GRADIENT_PLUGIN],
     options: {
       responsive: true,
       maintainAspectRatio: false,
@@ -193,9 +208,9 @@ function renderPMC(sessions) {
               const v = c.parsed.y;
               if (c.datasetIndex === 0) return ` CTL (Forma): ${v}`;
               if (c.datasetIndex === 1) return ` ATL (Fatiga): ${v}`;
-              const estat = v > 5  ? '\u2605 Fresc'
+              const estat = v > 5   ? '\u2605 Fresc'
                           : v > -10 ? '\u2248 Neutral'
-                          : '\u26a0\ufe0f Fatigat';
+                          :           '\u26a0\ufe0f Fatigat';
               return ` TSB (Frescor): ${v}  ${estat}`;
             }
           }
@@ -204,23 +219,19 @@ function renderPMC(sessions) {
       scales: {
         x: {
           grid: { color: CHART_COLORS.gridLine },
-          ticks: {
-            font: { size: 10 },
-            maxTicksLimit: 12,
-            maxRotation: 0,
-          }
+          ticks: { font: { size: 10 }, maxTicksLimit: 12, maxRotation: 0 }
         },
         y: {
           position: 'left',
           grid:  { color: CHART_COLORS.gridLine },
-          ticks: { font: { size: 11 }, callback: v => `${v}` },
+          ticks: { font: { size: 11 } },
           beginAtZero: true,
           title: { display: true, text: 'CTL / ATL', color: CHART_COLORS.text, font: { size: 11 } },
         },
         y2: {
           position: 'right',
           grid: { drawOnChartArea: false },
-          ticks: { font: { size: 11 }, callback: v => `${v}` },
+          ticks: { font: { size: 11 } },
           title: { display: true, text: 'TSB', color: CHART_COLORS.text, font: { size: 11 } },
         }
       }
@@ -228,49 +239,32 @@ function renderPMC(sessions) {
   });
 }
 
-// Càlcul PMC diari sobre tota la temporada
-// Retorna un punt per cada dia que tingui alguna sessió o sigui dins del rang
 function buildPMCData(sessions) {
   if (!sessions.length) return [];
-
-  // Construïm un map dia → TSS total (ISO string YYYY-MM-DD)
   const tssByDay = new Map();
   sessions.forEach(s => {
     if (!s.date) return;
     const key = s.date.toISOString().slice(0, 10);
     tssByDay.set(key, (tssByDay.get(key) || 0) + (s.carrega || 0));
   });
-
-  // Rang: primer dia de sessió → avui
   const allDates = [...tssByDay.keys()].sort();
   if (!allDates.length) return [];
-
   const startDate = new Date(allDates[0]);
-  const endDate   = new Date();
-  endDate.setHours(0,0,0,0);
-
-  // Iteració diària amb les fórmules EMA del PMC
-  // k_ctl = e^(-1/42),  k_atl = e^(-1/7)
+  const endDate   = new Date(); endDate.setHours(0,0,0,0);
   const kCTL = Math.exp(-1 / PMC_CTL_TAU);
   const kATL = Math.exp(-1 / PMC_ATL_TAU);
-
   let ctl = 0, atl = 0;
   const result = [];
-
   for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
     const key = d.toISOString().slice(0, 10);
     const tss = tssByDay.get(key) || 0;
-
     ctl = ctl * kCTL + tss * (1 - kCTL);
     atl = atl * kATL + tss * (1 - kATL);
-    const tsb = ctl - atl;  // TSB calculat ANTES d'afegir el TSS d'avui (convenció TrainingPeaks)
-
-    // Mostrem tots els dies (etiqueta lleugera: DD/MM)
+    const tsb = ctl - atl;
     const dd = String(d.getDate()).padStart(2,'0');
     const mm = String(d.getMonth()+1).padStart(2,'0');
     result.push({ label: `${dd}/${mm}`, ctl, atl, tsb, tss, date: key });
   }
-
   return result;
 }
 
@@ -281,7 +275,9 @@ function buildPMCData(sessions) {
 function renderSessTrendChart(sessions) {
   const ctx = document.getElementById('chart-sess-trend');
   if (!ctx) return;
-  if (_sessChart) { _sessChart.destroy(); _sessChart = null; }
+  const existing = Chart.getChart(ctx);
+  if (existing) existing.destroy();
+  _sessChart = null;
   if (sessions.length < 2) { ctx.style.display = 'none'; return; }
   ctx.style.display = '';
   const byWeek = groupByWeek(sessions);
@@ -299,14 +295,13 @@ function groupByWeek(sessions) {
   });
   return Array.from(map.values()).map(w => {
     const ss = w.sessions;
-    const totalKm    = ss.reduce((a,s) => a+(s.distancia||0), 0);
-    const totalLoad  = ss.reduce((a,s) => a+(s.carrega||0), 0);
-    const totalEpoc  = ss.reduce((a,s) => { const e=toNumber(s.raw['EPOC']); return a+(isFinite(e)&&e>0?e:0); }, 0);
-    // Z1 + Z2 en minuts
-    const totalZ1    = ss.reduce((a,s) => { const v=toNumber(s.raw['Z1(min)']); return a+(isFinite(v)&&v>0?v:0); }, 0);
-    const totalZ2    = ss.reduce((a,s) => { const v=toNumber(s.raw['Z2(min)']); return a+(isFinite(v)&&v>0?v:0); }, 0);
-    const avgPace    = avgValidPace(ss);
-    const avgFC      = avgValid(ss, s => s.fcMitja);
+    const totalKm   = ss.reduce((a,s) => a+(s.distancia||0), 0);
+    const totalLoad = ss.reduce((a,s) => a+(s.carrega||0), 0);
+    const totalEpoc = ss.reduce((a,s) => { const e=toNumber(s.raw['EPOC']); return a+(isFinite(e)&&e>0?e:0); }, 0);
+    const totalZ1   = ss.reduce((a,s) => { const v=toNumber(s.raw['Z1(min)']); return a+(isFinite(v)&&v>0?v:0); }, 0);
+    const totalZ2   = ss.reduce((a,s) => { const v=toNumber(s.raw['Z2(min)']); return a+(isFinite(v)&&v>0?v:0); }, 0);
+    const avgPace   = avgValidPace(ss);
+    const avgFC     = avgValid(ss, s => s.fcMitja);
     const avgPaceSeries = avgValid(ss, s => isFinite(s.ritmeMitjaSeries)&&s.ritmeMitjaSeries>0?s.ritmeMitjaSeries:null);
     const d  = w.date;
     const dd = String(d.getDate()).padStart(2,'0');
@@ -356,184 +351,120 @@ function buildSessChartConfig(byWeek, labels, sessions) {
 
   switch (_sessType) {
 
-    // ─ Z2: barres apilades Z1+Z2 (min) + FC mitja (línia) ────────────────
     case 'z2': {
       const hasFC = byWeek.some(w => w.avgFC !== null);
       const datasets = [
-        {
-          type: 'bar', label: 'Z1 (min)',
-          data: byWeek.map(w => w.z1min),
-          backgroundColor: 'rgba(56,189,248,0.35)',
-          borderColor:     'rgba(56,189,248,0.7)',
-          borderWidth: 1, borderRadius: 0,
-          stack: 'zones', yAxisID: 'y',
-        },
-        {
-          type: 'bar', label: 'Z2 (min)',
-          data: byWeek.map(w => w.z2min),
-          backgroundColor: 'rgba(34,197,94,0.45)',
-          borderColor:     C.green,
-          borderWidth: 1, borderRadius: 0,
-          stack: 'zones', yAxisID: 'y',
-        },
+        { type:'bar', label:'Z1 (min)', data: byWeek.map(w=>w.z1min),
+          backgroundColor:'rgba(56,189,248,0.35)', borderColor:'rgba(56,189,248,0.7)',
+          borderWidth:1, borderRadius:0, stack:'zones', yAxisID:'y' },
+        { type:'bar', label:'Z2 (min)', data: byWeek.map(w=>w.z2min),
+          backgroundColor:'rgba(34,197,94,0.45)', borderColor:C.green,
+          borderWidth:1, borderRadius:0, stack:'zones', yAxisID:'y' },
       ];
       if (hasFC) datasets.push({
-        type: 'line', label: 'FC mitja (ppm)',
-        data: byWeek.map(w => w.avgFC),
-        borderColor: 'rgba(249,115,22,0.9)',
-        backgroundColor: 'transparent',
-        borderWidth: 2, pointRadius: 4, tension: 0.3,
-        yAxisID: 'y2', spanGaps: true,
+        type:'line', label:'FC mitja (ppm)', data: byWeek.map(w=>w.avgFC),
+        borderColor:'rgba(249,115,22,0.9)', backgroundColor:'transparent',
+        borderWidth:2, pointRadius:4, tension:0.3, yAxisID:'y2', spanGaps:true,
       });
       return {
-        type: 'bar',
-        data: { labels, datasets },
-        options: {
-          ...baseOpts,
-          plugins: { ...baseOpts.plugins, tooltip: { callbacks: {
-            label: c => {
-              if (c.dataset.yAxisID === 'y2') return ` FC: ${c.parsed.y} ppm`;
-              return ` ${c.dataset.label}: ${c.parsed.y} min`;
-            }
-          }}},
-          scales: {
-            x: { ...baseOpts.scales.x, stacked: true },
-            y:  { ...yBase, position: 'left',  stacked: true,
-                  ticks: { ...yBase.ticks, callback: v => `${v} min` } },
-            y2: hasFC
-              ? { ...yBase, position: 'right', grid: { drawOnChartArea: false },
-                  ticks: { ...yBase.ticks, callback: v => `${v} ppm` } }
-              : { display: false },
+        type:'bar', data:{ labels, datasets },
+        options:{ ...baseOpts,
+          plugins:{ ...baseOpts.plugins, tooltip:{ callbacks:{ label: c => {
+            if (c.dataset.yAxisID==='y2') return ` FC: ${c.parsed.y} ppm`;
+            return ` ${c.dataset.label}: ${c.parsed.y} min`;
+          }}}},
+          scales:{
+            x:{ ...baseOpts.scales.x, stacked:true },
+            y:{ ...yBase, position:'left', stacked:true, ticks:{...yBase.ticks, callback:v=>`${v} min`} },
+            y2: hasFC ? { ...yBase, position:'right', grid:{drawOnChartArea:false},
+                          ticks:{...yBase.ticks, callback:v=>`${v} ppm`} } : { display:false },
           }
         }
       };
     }
 
-    // ─ Qualitat ───────────────────────────────────────────────────────────
     case 'quality': {
       const hasRitme = byWeek.some(w => w.avgPaceSeries !== null);
-      const datasets = [{
-        type: 'bar', label: 'C\u00e0rrega (TSS)',
-        data: byWeek.map(w => w.load),
-        backgroundColor: C.greenSoft, borderColor: C.green,
-        borderWidth: 1, borderRadius: 6, yAxisID: 'y',
-      }];
-      if (hasRitme) datasets.push({
-        type: 'line', label: 'Ritme s\u00e8ries (min/km)',
-        data: byWeek.map(w => w.avgPaceSeries),
-        borderColor: C.blue, backgroundColor: C.blueSoft,
-        borderWidth: 2, pointRadius: 4, tension: 0.3,
-        yAxisID: 'y2', spanGaps: true,
-      });
-      return {
-        type: 'bar', data: { labels, datasets },
-        options: {
-          ...baseOpts,
-          plugins: { ...baseOpts.plugins, tooltip: { callbacks: {
-            label: c => c.dataset.yAxisID==='y2'
-              ? ` Ritme: ${formatPace(c.parsed.y,'')}`
-              : ` C\u00e0rrega: ${c.parsed.y} TSS`
+      const datasets = [{ type:'bar', label:'C\u00e0rrega (TSS)', data: byWeek.map(w=>w.load),
+        backgroundColor:C.greenSoft, borderColor:C.green, borderWidth:1, borderRadius:6, yAxisID:'y' }];
+      if (hasRitme) datasets.push({ type:'line', label:'Ritme s\u00e8ries (min/km)',
+        data: byWeek.map(w=>w.avgPaceSeries), borderColor:C.blue, backgroundColor:C.blueSoft,
+        borderWidth:2, pointRadius:4, tension:0.3, yAxisID:'y2', spanGaps:true });
+      return { type:'bar', data:{ labels, datasets },
+        options:{ ...baseOpts,
+          plugins:{ ...baseOpts.plugins, tooltip:{ callbacks:{ label: c =>
+            c.dataset.yAxisID==='y2' ? ` Ritme: ${formatPace(c.parsed.y,'')}` : ` C\u00e0rrega: ${c.parsed.y} TSS`
           }}},
-          scales: {
-            x: baseOpts.scales.x,
-            y:  { ...yBase, position: 'left',  ticks: { ...yBase.ticks, callback: v=>`${v} TSS` } },
-            y2: { ...yBase, position: 'right', grid: { drawOnChartArea: false },
-                  ticks: { ...yBase.ticks, callback: v=>formatPace(v,'') }, reverse: true },
+          scales:{ x:baseOpts.scales.x,
+            y:{ ...yBase, position:'left', ticks:{...yBase.ticks, callback:v=>`${v} TSS`} },
+            y2:{ ...yBase, position:'right', grid:{drawOnChartArea:false},
+                 ticks:{...yBase.ticks, callback:v=>formatPace(v,'')}, reverse:true },
           }
         }
       };
     }
 
-    // ─ Força ──────────────────────────────────────────────────────────────
     case 'strength':
-      return {
-        type: 'bar',
-        data: { labels, datasets: [
-          { label: 'C\u00e0rrega (TSS)', data: byWeek.map(w=>w.load),
-            backgroundColor: C.greenSoft, borderColor: C.green, borderWidth:1, borderRadius:6 },
-          { label: 'EPOC', data: byWeek.map(w=>w.epoc),
-            backgroundColor: 'rgba(249,115,22,0.2)', borderColor: 'rgba(249,115,22,0.9)',
-            borderWidth:1, borderRadius:6 },
-        ]},
-        options: { ...baseOpts,
-          plugins: { ...baseOpts.plugins, tooltip: { callbacks: {
-            label: c=>` ${c.dataset.label}: ${c.parsed.y}`
-          }}},
-          scales: { x: baseOpts.scales.x, y: yBase }
-        }
-      };
+      return { type:'bar', data:{ labels, datasets:[
+        { label:'C\u00e0rrega (TSS)', data:byWeek.map(w=>w.load), backgroundColor:C.greenSoft,
+          borderColor:C.green, borderWidth:1, borderRadius:6 },
+        { label:'EPOC', data:byWeek.map(w=>w.epoc), backgroundColor:'rgba(249,115,22,0.2)',
+          borderColor:'rgba(249,115,22,0.9)', borderWidth:1, borderRadius:6 },
+      ]}, options:{ ...baseOpts,
+        plugins:{ ...baseOpts.plugins, tooltip:{ callbacks:{ label:c=>` ${c.dataset.label}: ${c.parsed.y}` }}},
+        scales:{ x:baseOpts.scales.x, y:yBase }
+      }};
 
-    // ─ Tirada llarga ──────────────────────────────────────────────────────
     case 'long':
-      return {
-        type: 'bar',
-        data: { labels, datasets: [
-          { type:'bar',  label:'Km', data: byWeek.map(w=>w.km),
-            backgroundColor: C.blueSoft, borderColor: C.blue, borderWidth:1, borderRadius:6, yAxisID:'y' },
-          { type:'line', label:'Ritme mig (min/km)', data: byWeek.map(w=>w.avgPace),
-            borderColor: C.green, backgroundColor: C.greenSoft,
-            borderWidth:2, pointRadius:4, tension:0.3, yAxisID:'y2', spanGaps:true },
-        ]},
-        options: { ...baseOpts,
-          plugins: { ...baseOpts.plugins, tooltip: { callbacks: {
-            label: c => c.dataset.yAxisID==='y2'
-              ? ` Ritme: ${formatPace(c.parsed.y,'')}`
-              : ` Km: ${c.parsed.y} km`
-          }}},
-          scales: {
-            x: baseOpts.scales.x,
-            y:  { ...yBase, position:'left',  ticks:{...yBase.ticks, callback:v=>`${v} km`} },
-            y2: { ...yBase, position:'right', grid:{drawOnChartArea:false},
-                  ticks:{...yBase.ticks, callback:v=>formatPace(v,'')}, reverse:true },
-          }
+      return { type:'bar', data:{ labels, datasets:[
+        { type:'bar',  label:'Km', data:byWeek.map(w=>w.km), backgroundColor:C.blueSoft,
+          borderColor:C.blue, borderWidth:1, borderRadius:6, yAxisID:'y' },
+        { type:'line', label:'Ritme mig (min/km)', data:byWeek.map(w=>w.avgPace),
+          borderColor:C.green, backgroundColor:C.greenSoft,
+          borderWidth:2, pointRadius:4, tension:0.3, yAxisID:'y2', spanGaps:true },
+      ]}, options:{ ...baseOpts,
+        plugins:{ ...baseOpts.plugins, tooltip:{ callbacks:{ label: c =>
+          c.dataset.yAxisID==='y2' ? ` Ritme: ${formatPace(c.parsed.y,'')}` : ` Km: ${c.parsed.y} km`
+        }}},
+        scales:{ x:baseOpts.scales.x,
+          y:{ ...yBase, position:'left', ticks:{...yBase.ticks, callback:v=>`${v} km`} },
+          y2:{ ...yBase, position:'right', grid:{drawOnChartArea:false},
+               ticks:{...yBase.ticks, callback:v=>formatPace(v,'')}, reverse:true },
         }
-      };
+      }};
 
-    // ─ Test/Cursa: línia per sessió ───────────────────────────────────────
     case 'testrace': {
       const sorted = [...sessions].sort((a,b)=>a.date-b.date);
-      return {
-        type: 'line',
-        data: { labels: sorted.map(s=>s.displayDate), datasets: [{
-          label: 'Ritme (min/km)', data: sorted.map(s=>isFinite(s.ritme)&&s.ritme>0?s.ritme:null),
-          borderColor: C.blue, backgroundColor: C.blueSoft,
-          borderWidth:2, pointRadius:5, pointHoverRadius:7, tension:0.2, spanGaps:false,
-        }]},
-        options: { ...baseOpts,
-          plugins: { ...baseOpts.plugins, tooltip: { callbacks: {
-            label: c => c.parsed.y ? ` Ritme: ${formatPace(c.parsed.y,'')}` : ' --'
-          }}},
-          scales: { x: baseOpts.scales.x,
-            y: { ...yBase, reverse:true, ticks:{...yBase.ticks, callback:v=>formatPace(v,'')} } }
-        }
-      };
+      return { type:'line', data:{ labels:sorted.map(s=>s.displayDate), datasets:[{
+        label:'Ritme (min/km)', data:sorted.map(s=>isFinite(s.ritme)&&s.ritme>0?s.ritme:null),
+        borderColor:C.blue, backgroundColor:C.blueSoft,
+        borderWidth:2, pointRadius:5, pointHoverRadius:7, tension:0.2, spanGaps:false,
+      }]}, options:{ ...baseOpts,
+        plugins:{ ...baseOpts.plugins, tooltip:{ callbacks:{ label: c =>
+          c.parsed.y ? ` Ritme: ${formatPace(c.parsed.y,'')}` : ' --'
+        }}},
+        scales:{ x:baseOpts.scales.x,
+          y:{ ...yBase, reverse:true, ticks:{...yBase.ticks, callback:v=>formatPace(v,'')} } }
+      }};
     }
 
-    // ─ All / Altres: Km (barres) + TSS (línia) ───────────────────────────
     default:
-      return {
-        type: 'bar',
-        data: { labels, datasets: [
-          { type:'bar',  label:'Km', data: byWeek.map(w=>w.km),
-            backgroundColor: C.blueSoft, borderColor: C.blue, borderWidth:1, borderRadius:6, yAxisID:'y' },
-          { type:'line', label:'C\u00e0rrega (TSS)', data: byWeek.map(w=>w.load),
-            borderColor: C.green, backgroundColor:'transparent',
-            borderWidth:2, pointRadius:3, tension:0.3, yAxisID:'y2', spanGaps:true },
-        ]},
-        options: { ...baseOpts,
-          plugins: { ...baseOpts.plugins, tooltip: { callbacks: {
-            label: c => c.dataset.yAxisID==='y2'
-              ? ` C\u00e0rrega: ${c.parsed.y} TSS`
-              : ` Km: ${c.parsed.y} km`
-          }}},
-          scales: {
-            x: baseOpts.scales.x,
-            y:  { ...yBase, position:'left',  ticks:{...yBase.ticks, callback:v=>`${v} km`} },
-            y2: { ...yBase, position:'right', grid:{drawOnChartArea:false},
-                  ticks:{...yBase.ticks, callback:v=>`${v} TSS`} },
-          }
+      return { type:'bar', data:{ labels, datasets:[
+        { type:'bar',  label:'Km', data:byWeek.map(w=>w.km), backgroundColor:C.blueSoft,
+          borderColor:C.blue, borderWidth:1, borderRadius:6, yAxisID:'y' },
+        { type:'line', label:'C\u00e0rrega (TSS)', data:byWeek.map(w=>w.load),
+          borderColor:C.green, backgroundColor:'transparent',
+          borderWidth:2, pointRadius:3, tension:0.3, yAxisID:'y2', spanGaps:true },
+      ]}, options:{ ...baseOpts,
+        plugins:{ ...baseOpts.plugins, tooltip:{ callbacks:{ label: c =>
+          c.dataset.yAxisID==='y2' ? ` C\u00e0rrega: ${c.parsed.y} TSS` : ` Km: ${c.parsed.y} km`
+        }}},
+        scales:{ x:baseOpts.scales.x,
+          y:{ ...yBase, position:'left', ticks:{...yBase.ticks, callback:v=>`${v} km`} },
+          y2:{ ...yBase, position:'right', grid:{drawOnChartArea:false},
+               ticks:{...yBase.ticks, callback:v=>`${v} TSS`} },
         }
-      };
+      }};
   }
 }
 
@@ -552,9 +483,9 @@ function renderSessTable(sessions) {
     tbody.innerHTML = `<tr><td colspan="${cols.length}" class="empty-row">Cap sessi\u00f3 amb els filtres seleccionats.</td></tr>`;
     return;
   }
-  tbody.innerHTML = sessions.map(s => {
-    return `<tr>${cols.map(c=>`<td>${c.render(s)}</td>`).join('')}</tr>`;
-  }).join('');
+  tbody.innerHTML = sessions.map(s =>
+    `<tr>${cols.map(c=>`<td>${c.render(s)}</td>`).join('')}</tr>`
+  ).join('');
 }
 
 function getSessCols(type) {
@@ -592,8 +523,7 @@ function fmtS(value) {
   return new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 }).format(n);
 }
 function setSessText(id, value) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = value;
+  const el = document.getElementById(id); if (el) el.textContent = value;
 }
 function escS(v) {
   return String(v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
