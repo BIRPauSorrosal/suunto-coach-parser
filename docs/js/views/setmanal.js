@@ -1,6 +1,7 @@
-// views/setmanal.js — Fase 4: vista detallada setmana actual
+// docs/js/views/setmanal.js — Fase 4: vista detallada setmana actual
 // Funció principal: renderSetmanalView(sessions, planning)
-// Dep: app.js (formatPace)
+// Dep: lib/formatters.js (formatPace, fmtNum, formatDate, toNumber, esc)
+//      app.js (detectActiveWeek)
 
 const QUALITY_TYPES_V = new Set(['TEMPO', 'TEST', 'INTERVALS']);
 const LONG_TYPES_V    = new Set(['LLARGA', 'MARATÓ', 'TRAIL', 'MITJA', 'MARATO']);
@@ -75,7 +76,7 @@ function renderWeek(sessions, planning) {
 function renderWeekHeader(week, planning) {
   setTextV('sw-week-label',   `${week.setmana} · ${week.cicle}`);
   setTextV('sw-week-fase',    week.fase);
-  setTextV('sw-week-range',   `${fmtDate(week.startDate)} → ${fmtDate(week.endDate)}`);
+  setTextV('sw-week-range',   `${formatDate(week.startDate)} → ${formatDate(week.endDate)}`);
   setTextV('sw-week-counter', `${currentWeekIndex + 1} / ${planning.length}`);
 }
 
@@ -96,14 +97,12 @@ function renderQualityBlock(week, weekSessions) {
   const sess   = weekSessions.filter(s => QUALITY_TYPES_V.has(s.tipusKey));
   const realKm = sess.reduce((a, s) => a + (s.distancia || 0), 0);
 
-  // Ritme real: prefereix ritmeMitjaSeries; fallback al ritme global
   const ritmeReal = sess.length
     ? sess.reduce((best, s) => {
         const r = isFinite(s.ritmeMitjaSeries) ? s.ritmeMitjaSeries : s.ritme;
         return (!best || r < best) ? r : best;
       }, null)
     : null;
-  // FC real: prefereix fcMitjaSeries
   const fcReal = sess.length
     ? Math.round(sess.reduce((acc, s) => {
         const fc = isFinite(s.fcMitjaSeries) && s.fcMitjaSeries > 0 ? s.fcMitjaSeries : (s.fcMitja || 0);
@@ -111,17 +110,15 @@ function renderQualityBlock(week, weekSessions) {
       }, 0) / sess.length)
     : null;
 
-  // Pla
   setTextV('sw-q-series',  week.qSeries || '--');
   setTextV('sw-q-ritme',   formatPace(week.raw['Q_Ritme_min_km']));
   setTextV('sw-q-rec',     week.raw['Q_Rec_min'] ? week.raw['Q_Rec_min'] + ' min' : '--');
   setTextV('sw-q-fc',      formatFCRange(week.raw['Q_FC_min'], week.raw['Q_FC_max']));
   setTextV('sw-q-km-plan', `${fmtNum(week.qKm)} km`);
 
-  // Real
-  setTextV('sw-q-ritme-real', ritmeReal ? formatPace(ritmeReal) : '—');
-  setTextV('sw-q-fc-real',    fcReal && fcReal > 0 ? fcReal + ' bpm' : '—');
-  setTextV('sw-q-km-real',    sess.length ? `${fmtNum(realKm)} km` : '—');
+  setTextV('sw-q-ritme-real',    ritmeReal ? formatPace(ritmeReal) : '—');
+  setTextV('sw-q-fc-real',       fcReal && fcReal > 0 ? fcReal + ' bpm' : '—');
+  setTextV('sw-q-km-real',       sess.length ? `${fmtNum(realKm)} km` : '—');
   setTextV('sw-q-sessions-real', sess.length ? `${sess.length} sess.` : '—');
 
   const tbody = document.getElementById('sw-q-sessions-list');
@@ -135,44 +132,33 @@ function renderQualityBlock(week, weekSessions) {
 
 // ── Bloc Z2 ───────────────────────────────────────────────────────────────────
 function renderZ2Block(week, weekSessions) {
-  // Només sessions de tipus Z2
   const sess = weekSessions.filter(s => s.tipusKey === 'Z2');
 
-  // Durada total de les sessions Z2 (columna Durada del CSV, en minuts)
   const realDuradaTotal = sess.reduce((a, s) => a + (s.durada || 0), 0);
-
-  // Temps efectiu a zones Z1+Z2 (columnes Z1(min) i Z2(min) del CSV)
   const realZ1Z2min = sess.reduce((a, s) => {
-    const z1 = toNumberV(s.raw['Z1(min)']) || 0;
-    const z2 = toNumberV(s.raw['Z2(min)']) || s.z2min || 0;
+    const z1 = toNumber(s.raw['Z1(min)']) || 0;
+    const z2 = toNumber(s.raw['Z2(min)']) || s.z2min || 0;
     return a + z1 + z2;
   }, 0);
-
   const realKm = sess.reduce((a, s) => a + (s.distancia || 0), 0);
 
-  // Ritme real mitjà
   const ritmeReal = sess.length
     ? sess.reduce((acc, s) => acc + (isFinite(s.ritme) ? s.ritme : 0), 0) / sess.length
     : null;
-  // FC real mitjana
   const fcReal = sess.length
     ? Math.round(sess.reduce((acc, s) => acc + (s.fcMitja || 0), 0) / sess.length)
     : null;
 
-  // Pla
   setTextV('sw-z2-durada-plan', `${fmtNum(week.z2Durada)} min`);
   setTextV('sw-z2-ritme-plan',
     `${formatPace(week.raw['Z2_Ritme_min_km_min'], '')}–${formatPace(week.raw['Z2_Ritme_min_km_max'])}`);
   setTextV('sw-z2-fc-plan',   formatFCRange(week.raw['Z2_FC_min'], week.raw['Z2_FC_max']));
   setTextV('sw-z2-km-plan',   `${fmtNum(week.raw['Z2_Km_Plan'])} km`);
 
-  // Real — Durada: total de la sessió + (temps Z1+Z2) entre parèntesi
   let duradaRealText = '—';
   if (realDuradaTotal > 0) {
     duradaRealText = `${fmtNum(realDuradaTotal)} min`;
-    if (realZ1Z2min > 0) {
-      duradaRealText += ` (${fmtNum(realZ1Z2min)} Z1+Z2)`;
-    }
+    if (realZ1Z2min > 0) duradaRealText += ` (${fmtNum(realZ1Z2min)} Z1+Z2)`;
   }
   setTextV('sw-z2-durada-real', duradaRealText);
   setTextV('sw-z2-ritme-real',  ritmeReal && ritmeReal > 0 ? formatPace(ritmeReal) : '—');
@@ -193,17 +179,14 @@ function renderLongBlock(week, weekSessions) {
   const sess   = weekSessions.filter(s => LONG_TYPES_V.has(s.tipusKey));
   const realKm = sess.reduce((a, s) => a + (s.distancia || 0), 0);
 
-  // Ritme real (millor ritme de les tirades)
   const ritmeReal = sess.length
     ? sess.reduce((best, s) => (!best || (isFinite(s.ritme) && s.ritme < best)) ? s.ritme : best, null)
     : null;
 
-  // Pla
   setTextV('sw-ll-tipus-plan',  week.llTipus || '--');
   setTextV('sw-ll-durada-plan', week.raw['LL_Durada_min'] ? `${fmtNum(week.raw['LL_Durada_min'])} min` : '--');
   setTextV('sw-ll-km-plan',     `${fmtNum(week.llKm)} km`);
 
-  // Real
   setTextV('sw-ll-ritme-real', ritmeReal ? formatPace(ritmeReal) : '—');
   setTextV('sw-ll-km-real',    realKm > 0 ? `${fmtNum(realKm)} km` : '—');
 
@@ -222,10 +205,7 @@ function renderForcaBlock(week, weekSessions) {
     s.tipusKey.startsWith('FORÇA') || s.tipusKey.startsWith('FORCA')
   );
 
-  // Pla
   setTextV('sw-forca-plan', week.forcaPlan || '--');
-
-  // Real
   setTextV('sw-forca-real', sess.length ? `${sess.length} sess.` : '—');
 
   const tbody = document.getElementById('sw-forca-sessions-list');
@@ -237,15 +217,12 @@ function renderForcaBlock(week, weekSessions) {
   setBlockStatus('sw-forca-block', sess.length > 0);
 }
 
-// ── Bloc Altres (Pàdel / Tennis / ...) ───────────────────────────────────────
+// ── Bloc Altres ───────────────────────────────────────────────────────────────
 function renderAltresBlock(week, weekSessions) {
   const sess        = weekSessions.filter(s => PADEL_TYPES_V.has(s.tipusKey));
   const totalDurada = sess.reduce((a, s) => a + (s.durada || 0), 0);
 
-  // Pla
-  setTextV('sw-altres-padel-plan', week.padelPlan || '--');
-
-  // Real
+  setTextV('sw-altres-padel-plan',    week.padelPlan || '--');
   setTextV('sw-altres-sessions-real', sess.length ? `${sess.length} part.` : '—');
   setTextV('sw-altres-durada-real',   totalDurada > 0 ? `${fmtNum(totalDurada)} min` : '—');
 
@@ -263,7 +240,7 @@ function sessionRowQuality(s) {
   const ritme = isFinite(s.ritmeMitjaSeries) ? s.ritmeMitjaSeries : s.ritme;
   const fc    = isFinite(s.fcMitjaSeries)    ? s.fcMitjaSeries    : s.fcMitja;
   return `<tr>
-    <td>${escV(s.displayDate)}</td>
+    <td>${esc(s.displayDate)}</td>
     <td>${formatPace(ritme)}</td>
     <td>${isFinite(fc) && fc > 0 ? Math.round(fc) + ' bpm' : '—'}</td>
     <td>${fmtNum(s.carrega)}</td>
@@ -271,9 +248,9 @@ function sessionRowQuality(s) {
 }
 
 function sessionRowZ2(s) {
-  const cadencia = toNumberV(s.raw['Cadencia(spm)']);
+  const cadencia = toNumber(s.raw['Cadencia(spm)']);
   return `<tr>
-    <td>${escV(s.displayDate)}</td>
+    <td>${esc(s.displayDate)}</td>
     <td>${formatPace(s.ritme)}</td>
     <td>${isFinite(cadencia) && cadencia > 0 ? Math.round(cadencia) + ' spm' : '—'}</td>
     <td>${fmtNum(s.carrega)}</td>
@@ -281,9 +258,9 @@ function sessionRowZ2(s) {
 }
 
 function sessionRowLong(s) {
-  const desnivell = toNumberV(s.raw['Desnivell(m)']);
+  const desnivell = toNumber(s.raw['Desnivell(m)']);
   return `<tr>
-    <td>${escV(s.displayDate)}</td>
+    <td>${esc(s.displayDate)}</td>
     <td>${formatPace(s.ritme)}</td>
     <td>${s.z2min > 0 ? fmtNum(s.z2min) + ' min Z2' : '—'}</td>
     <td>${isFinite(desnivell) && desnivell > 0 ? Math.round(desnivell) + ' m' : '—'}</td>
@@ -292,20 +269,14 @@ function sessionRowLong(s) {
 
 function sessionRowExtra(s) {
   return `<tr>
-    <td>${escV(s.displayDate)}</td>
-    <td>${escV(s.tipus)}</td>
+    <td>${esc(s.displayDate)}</td>
+    <td>${esc(s.tipus)}</td>
     <td>${s.durada > 0 ? fmtNum(s.durada) + ' min' : '—'}</td>
     <td>${fmtNum(s.carrega)}</td>
   </tr>`;
 }
 
 // ── Helpers locals ────────────────────────────────────────────────────────────
-function toNumberV(value) {
-  if (value == null || value === '') return null;
-  const n = Number(String(value).trim().replace(/,/g, '.'));
-  return isFinite(n) ? n : null;
-}
-
 function setBlockStatus(id, done) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -322,18 +293,4 @@ function formatFCRange(min, max) {
 function setTextV(id, value) {
   const el = document.getElementById(id);
   if (el) el.textContent = value;
-}
-
-function escV(v) {
-  return String(v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
-}
-
-function fmtNum(value) {
-  const n = parseFloat(value);
-  if (!isFinite(n)) return '--';
-  return new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 }).format(n);
-}
-
-function fmtDate(date) {
-  return new Intl.DateTimeFormat('ca-ES').format(date);
 }

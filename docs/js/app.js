@@ -1,5 +1,6 @@
 // docs/js/app.js
 // Orquestrador: càrrega de CSVs, estat global, router, helpers compartits.
+// Dep: lib/formatters.js, lib/metrics.js (carregats abans via index.html)
 
 const DATA_SOURCES = {
   sessions: ['../data/output/sessions.csv'],
@@ -62,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadDashboardData();
 });
 
-// ── Càrrega de dades ─────────────────────────────────────────────────────────
+// ── Càrrega de dades ──────────────────────────────────────────────────────────
 async function loadDashboardData() {
   setNotice('Llegint fitxers CSV...', 'info');
   setBadge('Carregant dades...');
@@ -98,7 +99,7 @@ async function loadDashboardData() {
   }
 }
 
-// ── Fetch ────────────────────────────────────────────────────────────────────
+// ── Fetch ─────────────────────────────────────────────────────────────────────
 async function fetchFirstAvailable(paths) {
   let lastError = null;
   for (const path of paths) {
@@ -283,17 +284,6 @@ function parseDate(value) {
   return isNaN(p.getTime()) ? null : p;
 }
 
-function formatDate(date) {
-  return new Intl.DateTimeFormat('ca-ES').format(date);
-}
-
-function toNumber(value) {
-  if (value == null || value === '') return null;
-  const cleaned = String(value).trim().replace(/,/g, '.');
-  const n = Number(cleaned);
-  return isFinite(n) ? n : null;
-}
-
 function sumNumbers(values) {
   return values.filter(v => isFinite(v)).reduce((acc, v) => acc + v, 0);
 }
@@ -302,41 +292,5 @@ function firstFinite(values) {
   return values.find(v => isFinite(v)) ?? null;
 }
 
-function formatNumber(value) {
-  if (!isFinite(value)) return '--';
-  return new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 }).format(value);
-}
-
-function formatMetric(value, unit) {
-  if (!isFinite(value)) return unit ? `-- ${unit}` : '--';
-  return unit ? `${formatNumber(value)} ${unit}` : formatNumber(value);
-}
-
-// ── formatPace: converteix decimal o "mm:ss" a "mm:ss min/km" ────────────────
-// Exemples: 4.75 → "4:45 min/km" | "4:30" → "4:30 min/km" | null → "-- min/km"
-function formatPace(value, unit = 'min/km') {
-  const suffix = unit ? ` ${unit}` : '';
-
-  // Cas 1: string amb format "mm:ss" o "m:ss" ja correcte → retornem tal qual
-  if (typeof value === 'string' && /^\d+:[0-5]\d$/.test(value.trim())) {
-    return value.trim() + suffix;
-  }
-
-  // Cas 2: convertim a number (decimal)
-  const n = (typeof value === 'string') ? toNumber(value) : value;
-  if (n == null || !isFinite(n) || n <= 0) return `--${suffix}`;
-
-  const mins = Math.floor(n);
-  const secs = Math.round((n - mins) * 60);
-  if (secs === 60) return `${mins + 1}:00${suffix}`;
-  return `${mins}:${String(secs).padStart(2, '0')}${suffix}`;
-}
-
 function setBadge(text)     { setText('load-badge', text); }
 function setText(id, value) { const el = document.getElementById(id); if (el) el.textContent = value; }
-function esc(v) {
-  return String(v)
-    .replaceAll('&', '&amp;').replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;').replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
-}
