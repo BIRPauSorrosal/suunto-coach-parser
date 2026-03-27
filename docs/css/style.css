@@ -213,18 +213,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .legend-dot--phase { border-radius:3px; }
 
 /* ── Planning anual: calendari 3x4 targetes de mes (".pcy-*") ─────────────── */
-/*
-  Estructura:
-    .pcy-grid                  → grid 4 columnes × 3 files (12 mesos)
-      .pcy-month-card           → targeta d'un mes
-        .pcy-month-header       → nom del mes + comptador
-        .pcy-inner              → grid intern repeat(N, 1fr)
-          .pcy-row.pcy-row--lbl   → etiquetes S1..SN
-          .pcy-row.pcy-row--cycle → botons/spans de cicle
-          .pcy-row.pcy-row--phase → botons/spans de fase
-*/
-
-/* Grid exterior: 4 columnes fixes, 3 files implícites */
 .pcy-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -237,7 +225,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   .pcy-grid { grid-template-columns: 1fr; }
 }
 
-/* Targeta de mes */
 .pcy-month-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -246,45 +233,25 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   padding: 14px 14px 12px;
   transition: box-shadow .15s;
 }
-.pcy-month-card--empty {
-  opacity: 0.55;
-}
-.pcy-month-card:not(.pcy-month-card--empty):hover {
-  box-shadow: 0 4px 16px rgba(0,0,0,.30);
-}
+.pcy-month-card--empty { opacity: 0.55; }
+.pcy-month-card:not(.pcy-month-card--empty):hover { box-shadow: 0 4px 16px rgba(0,0,0,.30); }
 
-/* Capçalera del mes */
 .pcy-month-header {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   margin-bottom: 10px;
 }
-.pcy-month-name {
-  font-size: .82rem;
-  font-weight: 700;
-  color: var(--text);
-  letter-spacing: .02em;
-}
-.pcy-month-count {
-  font-size: .68rem;
-  color: var(--text-muted);
-}
+.pcy-month-name { font-size: .82rem; font-weight: 700; color: var(--text); letter-spacing: .02em; }
+.pcy-month-count { font-size: .68rem; color: var(--text-muted); }
 
-/* Grid intern: N columnes (una per setmana del mes) */
-/* --n-weeks s'injecta per JS via style="--n-weeks:N" */
 .pcy-inner {
   display: grid;
   grid-template-columns: repeat(var(--n-weeks, 4), 1fr);
   gap: 2px 3px;
 }
+.pcy-row { display: contents; }
 
-/* Fila: display:contents perquè tots els fills entrin al grid intern */
-.pcy-row {
-  display: contents;
-}
-
-/* Etiquetes de setmana */
 .pcy-week-lbl {
   text-align: center;
   font-size: .55rem;
@@ -294,12 +261,8 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   text-overflow: ellipsis;
   padding-bottom: 4px;
 }
-.pcy-week-lbl--active {
-  color: var(--accent);
-  font-weight: 700;
-}
+.pcy-week-lbl--active { color: var(--accent); font-weight: 700; }
 
-/* Cel·les de cicle */
 .pcy-cell {
   appearance: none;
   border: none;
@@ -312,13 +275,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   outline: 2px solid transparent;
   outline-offset: 0px;
 }
-.pcy-cell--phase {
-  height: 13px;
-  border-radius: 4px;
-  opacity: 0.70;
-  margin-top: 1px;
-}
-/* Cel·la buida (sense dades) */
+.pcy-cell--phase { height: 13px; border-radius: 4px; opacity: 0.70; margin-top: 1px; }
 .pcy-cell--empty {
   cursor: default;
   background: rgba(148,163,184,0.07) !important;
@@ -327,15 +284,8 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   outline: none !important;
   transform: none !important;
 }
-.pcy-cell:not(.pcy-cell--empty):hover {
-  opacity: 1;
-  transform: translateY(-2px);
-}
-/* Setmana activa */
-.pcy-cell--active:not(.pcy-cell--empty) {
-  opacity: 1;
-  outline-offset: 3px;
-}
+.pcy-cell:not(.pcy-cell--empty):hover { opacity: 1; transform: translateY(-2px); }
+.pcy-cell--active:not(.pcy-cell--empty) { opacity: 1; outline-offset: 3px; }
 
 /* ── Planning mensual ─────────────────────────────────────────────────────── */
 .plan-month-cards {
@@ -351,10 +301,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   cursor: pointer;
   transition: transform .15s, box-shadow .15s;
 }
-.plan-week-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow);
-}
+.plan-week-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
 .pwc-header {
   display: flex;
   justify-content: space-between;
@@ -367,53 +314,34 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .pwc-badges   { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .pwc-cicle    { font-size: .78rem; font-weight: 700; }
 
-.pwc-badge            { font-size: .72rem; font-weight: 600; padding: 2px 8px;
-                        border-radius: 20px; white-space: nowrap; }
+.pwc-badge            { font-size: .72rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
 .pwc-badge--future    { background: var(--surface-2); color: var(--text-muted); }
 .pwc-badge--active    { background: var(--blue-soft); color: var(--blue); }
 .pwc-badge--done      { background: var(--accent-soft); color: var(--accent); }
 .pwc-badge--partial   { background: rgba(245,158,11,.18); color: #f59e0b; }
 
 .pwc-bar-wrap {
-  height: 6px;
-  border-radius: 999px;
-  background: var(--surface-2);
-  margin: 14px 0;
-  overflow: hidden;
-  position: relative;
+  height: 6px; border-radius: 999px; background: var(--surface-2);
+  margin: 14px 0; overflow: hidden; position: relative;
 }
 .pwc-bar-fill, .pwc-bar-done {
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  border-radius: 999px;
-  transition: width .3s ease;
+  position: absolute; left: 0; top: 0; bottom: 0;
+  border-radius: 999px; transition: width .3s ease;
 }
 .pwc-bar-done { background: var(--accent); }
 
-.pwc-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 4px;
-}
+.pwc-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
 .pwc-km   { font-size: .9rem; font-weight: 600; }
 .pwc-time { font-size: .82rem; color: var(--text-muted); }
 
 .pwc-phase-bar {
-  display: flex;
-  align-items: center;
-  margin-top: 16px;
-  padding: 7px 12px;
-  border-radius: 8px;
-  font-size: .78rem;
-  font-weight: 700;
-  color: #0f172a;
-  letter-spacing: .03em;
+  display: flex; align-items: center; margin-top: 16px;
+  padding: 7px 12px; border-radius: 8px;
+  font-size: .78rem; font-weight: 700; color: #0f172a; letter-spacing: .03em;
 }
 
 /* ── Planning setmanal ─────────────────────────────────────────────────────── */
-.pwv-header     { display: flex; justify-content: space-between; align-items: flex-start;
-                  gap: 16px; margin-bottom: 20px; }
+.pwv-header     { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 20px; }
 .pwv-km-total   { text-align: right; }
 .pwv-real-val   { display: block; font-size: .82rem; color: var(--blue); margin-top: 4px; }
 .pwv-grid       { display: grid; grid-template-columns: repeat(2,1fr); gap: 20px; }
@@ -435,22 +363,105 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .sw-block-header  { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .sw-block-header h3 { font-size: .95rem; font-weight: 600; }
 .sw-status-dot    { width: 10px; height: 10px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+
+/* Antic sistema de columnes (ja no s'usa, mantingut per retrocompat.) */
 .sw-cols          { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media(max-width:600px){ .sw-cols { grid-template-columns: 1fr; } }
 .sw-col-title     { font-size: .68rem; font-weight: 600; text-transform: uppercase;
                     letter-spacing: .07em; color: var(--text-muted); margin-bottom: 10px; }
 .sw-plan-list     { list-style: none; display: flex; flex-direction: column; gap: 7px; }
-.sw-plan-list li  { display: flex; justify-content: space-between; align-items: center;
-                    font-size: .82rem; }
+.sw-plan-list li  { display: flex; justify-content: space-between; align-items: center; font-size: .82rem; }
 .sw-plan-list li span   { color: var(--text-muted); }
 .sw-plan-list li strong { font-weight: 600; }
 .sw-real-summary  { font-size: .82rem; color: var(--text-muted); margin-bottom: 10px; }
+
+/* ── sw-htable: taula horitzontal Pla / Real ───────────────────────────── */
+/*
+  Estructura:
+    .sw-htable-wrap   → contenidor amb overflow-x per mòbil
+      .sw-htable      → taula 2 files (Pla + Real) × N columnes de mètriques
+        thead th      → capçaleres de mètriques (text muted uppercase)
+        .sw-row--plan → fila de valors planificats (text normal)
+        .sw-row--real → fila de valors reals (color blau --blue)
+        .sw-row-lbl   → primera cel·la de cada fila (etiqueta Pla/Real)
+*/
+.sw-htable-wrap {
+  overflow-x: auto;
+  margin-bottom: 16px;
+  /* Barra de scroll subtil */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.sw-htable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .82rem;
+  /* Amplada mínima per evitar compressió excessiva en mòbil */
+  min-width: 320px;
+}
+/* Capçaleres de columna */
+.sw-htable thead th {
+  padding: 0 12px 8px 12px;
+  text-align: left;
+  font-size: .65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+/* Primera columna (etiqueta Pla/Real): estreta i fixada visualment */
+.sw-htable thead th:first-child,
+.sw-htable .sw-row-lbl {
+  width: 44px;
+  min-width: 44px;
+  padding-left: 0;
+  font-size: .68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  white-space: nowrap;
+}
+/* Fila Pla */
+.sw-htable .sw-row--plan td {
+  padding: 10px 12px 6px 12px;
+  color: var(--text);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.sw-htable .sw-row--plan .sw-row-lbl {
+  color: var(--text-muted);
+  padding-left: 0;
+}
+/* Fila Real */
+.sw-htable .sw-row--real td {
+  padding: 6px 12px 10px 12px;
+  color: var(--blue);
+  font-weight: 600;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(51,65,85,.4);
+}
+.sw-htable .sw-row--real .sw-row-lbl {
+  color: var(--text-muted);
+  padding-left: 0;
+}
+/* Separació visual entre fila Pla i Real */
+.sw-htable .sw-row--plan td {
+  border-top: 1px solid rgba(51,65,85,.35);
+}
+
+/* ── Mini-taula de sessions individuals ────────────────────────────── */
 .sw-mini-table    { width: 100%; border-collapse: collapse; font-size: .78rem; }
 .sw-mini-table th { padding: 5px 6px; text-align: left; font-size: .65rem; font-weight: 600;
                     text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted);
                     border-bottom: 1px solid var(--border); }
 .sw-mini-table td { padding: 5px 6px; border-bottom: 1px solid rgba(51,65,85,.4); }
 .sw-mini-table tbody tr:last-child td { border-bottom: none; }
+
+/* ── 5è panell (Altres): ocupa les 2 columnes del sw-grid ─────────── */
+.sw-block--wide { grid-column: span 2; }
+@media(max-width:860px){ .sw-block--wide { grid-column: span 1; } }
 
 /* ── Test & Cursa cards ───────────────────────────────────────────────────────── */
 .test-race-grid   { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 12px; }
