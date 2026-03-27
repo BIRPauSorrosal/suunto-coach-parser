@@ -76,22 +76,18 @@ function updateLevelButtons() {
   document.getElementById('btn-plan-monthly')?.classList.toggle('active', planningViewLevel === 'monthly');
 }
 
-// ── Vista ANUAL ───────────────────────────────────────────────────────────────
+// ── Vista ANUAL — timeline de temporada ──────────────────────────────────────
+// Dues línies fixes: Cicle (dalt) i Fase (baix), una cel·la per setmana.
+// Clic a qualsevol cel·la obre la vista setmanal corresponent.
 function renderYearlyView(container, planning, sessions) {
-  const yearPlanning = planning.filter(w =>
-    w.startDate.getFullYear() === planningYear ||
-    w.endDate.getFullYear()   === planningYear
-  );
-
-  const byMonth = {};
-  yearPlanning.forEach(w => {
-    const m = w.startDate.getMonth();
-    if (!byMonth[m]) byMonth[m] = [];
-    byMonth[m].push(w);
-  });
+  const yearPlanning = planning
+    .filter(w =>
+      w.startDate.getFullYear() === planningYear ||
+      w.endDate.getFullYear()   === planningYear
+    )
+    .sort((a, b) => a.startDate - b.startDate);
 
   const monthNames = ['Gen','Feb','Mar','Abr','Mai','Jun','Jul','Ago','Set','Oct','Nov','Des'];
-  const maxKm = Math.max(...planning.map(w => w.kmTotal || 0), 1);
 
   const legendCycles = [
     ['BASE',        CYCLE_COLORS['BASE'].color],
@@ -105,52 +101,56 @@ function renderYearlyView(container, planning, sessions) {
     ['Extensió',     PHASE_COLORS['EXTENSIÓ']],
     ['Descàrrega',   PHASE_COLORS['DESCÀRREGA']],
     ['Consolidació', PHASE_COLORS['CONSOLIDACIÓ']],
+    ['Competició',   PHASE_COLORS['COMPETICIÓ']],
   ];
 
-  let weeksHTML = '';
-  monthNames.forEach((name, m) => {
-    const weeks = byMonth[m] || [];
-    let barsHTML = '';
-    weeks.forEach(w => {
-      const c      = getCycleStyle(w.cicle);
-      const pct    = Math.round(((w.kmTotal || 0) / maxKm) * 100);
-      const ph     = getPhaseColor(w.fase);
-      const idx    = planning.indexOf(w);
-      const stats  = getWeekStats(w, sessions);
-      const donePct = Math.min(stats.pctTotal, 100);
-      const statusCls = stats.status === 'active' ? 'bar--active' : '';
-
-      barsHTML += '<div class="plan-week-bar ' + statusCls + '" style="border-color:' + c.color + '"'
-               +  ' data-week="' + idx + '"'
-               +  ' title="' + w.setmana + ' · ' + w.cicle + ' · ' + w.fase
-               +  ' · ' + fmtNumP(stats.kmTotal) + '/' + fmtNumP(w.kmTotal) + ' km (' + stats.pctTotal + '%)">'
-               +  '<div class="plan-week-fill" style="width:' + pct + '%;background:' + c.color + '"></div>'
-               +  '<div class="plan-week-done" style="width:' + donePct + '%"></div>'
-               +  '<span class="plan-week-name">' + w.setmana + '</span>'
-               +  (stats.status !== 'future'
-                 ? '<span class="plan-week-pct">' + stats.pctTotal + '%</span>'
-                 : '')
-               +  '<span class="plan-week-phase-sq" style="background:' + ph + '" title="' + w.fase + '"></span>'
-               +  '</div>';
-    });
-
-    weeksHTML += '<div class="plan-month-col" data-month="' + m + '">'
-              +  '<p class="plan-month-name">' + name + '</p>'
-              +  '<div class="plan-month-weeks">'
-              +  (barsHTML || '<p class="plan-no-data">—</p>')
-              +  '</div></div>';
+  // Agrupa setmanes per mes per construir la capçalera de mesos
+  const monthGroups = [];
+  yearPlanning.forEach(w => {
+    const m = w.startDate.getMonth();
+    const last = monthGroups[monthGroups.length - 1];
+    if (!last || last.month !== m) monthGroups.push({ month: m, count: 0 });
+    monthGroups[monthGroups.length - 1].count++;
   });
 
-  let legendCyclesHTML = '';
-  legendCycles.forEach(function(item) {
-    legendCyclesHTML += '<span class="legend-dot" style="background:' + item[1] + '"></span>'
-                     +  '<span>' + capitalize(item[0]) + '</span>';
-  });
-  let legendPhasesHTML = '';
-  legendPhases.forEach(function(item) {
-    legendPhasesHTML += '<span class="legend-dot legend-dot--phase" style="background:' + item[1] + '"></span>'
-                     +  '<span>' + item[0] + '</span>';
-  });
+  const totalWeeks = Math.max(yearPlanning.length, 1);
+
+  const monthHeaderHTML = monthGroups.map(g =>
+    `<div class="plan-season-month" style="grid-column:span ${g.count}">${monthNames[g.month]}</div>`
+  ).join('');
+
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  const cycleCellsHTML = yearPlanning.map(w => {
+    const c   = getCycleStyle(w.cicle);
+    const idx = planning.indexOf(w);
+    const isActive = today >= w.startDate && today <= w.endDate;
+    const tip = escapeAttr(`${w.setmana} · ${w.cicle} · ${fmtDateShortP(w.startDate)}→${fmtDateShortP(w.endDate)}`);
+    return `<button type="button" class="plan-season-cell${isActive ? ' plan-season-cell--active' : ''}"
+      data-week="${idx}" title="${tip}"
+      style="--cell-color:${c.color};--cell-bg:${c.bg};"></button>`;
+  }).join('');
+
+  const phaseCellsHTML = yearPlanning.map(w => {
+    const ph  = getPhaseColor(w.fase);
+    const idx = planning.indexOf(w);
+    const isActive = today >= w.startDate && today <= w.endDate;
+    const tip = escapeAttr(`${w.setmana} · ${w.fase} · ${fmtDateShortP(w.startDate)}→${fmtDateShortP(w.endDate)}`);
+    return `<button type="button" class="plan-season-cell plan-season-cell--phase${isActive ? ' plan-season-cell--active' : ''}"
+      data-week="${idx}" title="${tip}"
+      style="--cell-color:${ph};--cell-bg:${ph}22;"></button>`;
+  }).join('');
+
+  const weekLabelsHTML = yearPlanning.map((w, i) =>
+    `<span class="plan-season-week" title="${escapeAttr(w.setmana)}">S${i + 1}</span>`
+  ).join('');
+
+  const legendCyclesHTML = legendCycles.map(([k, col]) =>
+    `<span><span class="legend-dot" style="background:${col}"></span> ${k}</span>`
+  ).join('');
+  const legendPhasesHTML = legendPhases.map(([k, col]) =>
+    `<span><span class="legend-dot legend-dot--phase" style="background:${col}"></span> ${k}</span>`
+  ).join('');
 
   container.innerHTML =
     '<div class="plan-year-nav">'
@@ -158,11 +158,29 @@ function renderYearlyView(container, planning, sessions) {
     + '<span class="plan-year-label">' + planningYear + '</span>'
     + '<button class="btn btn-ghost btn-sm" id="btn-year-next">►</button>'
     + '</div>'
+
     + '<div class="plan-legend">'
-    + '<div class="plan-legend-row"><span class="plan-legend-section">Cicles:</span>' + legendCyclesHTML + '</div>'
-    + '<div class="plan-legend-row"><span class="plan-legend-section">Fases:</span>'  + legendPhasesHTML + '</div>'
+    + '<div class="plan-legend-row"><span class="plan-legend-section">Cicles</span>' + legendCyclesHTML + '</div>'
+    + '<div class="plan-legend-row"><span class="plan-legend-section">Fases</span>'  + legendPhasesHTML + '</div>'
     + '</div>'
-    + '<div class="plan-year-grid">' + weeksHTML + '</div>';
+
+    + (yearPlanning.length
+      ? '<div class="plan-season-board" style="--season-cols:' + totalWeeks + '">'
+        + '<div class="plan-season-months">' + monthHeaderHTML + '</div>'
+        + '<div class="plan-season-row">'
+        +   '<div class="plan-season-label">Cicle</div>'
+        +   '<div class="plan-season-track">' + cycleCellsHTML + '</div>'
+        + '</div>'
+        + '<div class="plan-season-row">'
+        +   '<div class="plan-season-label">Fase</div>'
+        +   '<div class="plan-season-track">' + phaseCellsHTML + '</div>'
+        + '</div>'
+        + '<div class="plan-season-row plan-season-row--weeks">'
+        +   '<div class="plan-season-label">Setm.</div>'
+        +   '<div class="plan-season-weeks">' + weekLabelsHTML + '</div>'
+        + '</div>'
+        + '</div>'
+      : '<p class="plan-no-data">Sense setmanes planificades aquest any.</p>');
 
   document.getElementById('btn-year-prev')?.addEventListener('click', () => {
     planningYear--; renderPlanningLevel(planning, sessions);
@@ -170,17 +188,10 @@ function renderYearlyView(container, planning, sessions) {
   document.getElementById('btn-year-next')?.addEventListener('click', () => {
     planningYear++; renderPlanningLevel(planning, sessions);
   });
-  container.querySelectorAll('.plan-week-bar[data-week]').forEach(el => {
+  container.querySelectorAll('.plan-season-cell[data-week]').forEach(el => {
     el.addEventListener('click', () => {
-      planningWeekIndex = parseInt(el.dataset.week);
+      planningWeekIndex = parseInt(el.dataset.week, 10);
       planningViewLevel = 'weekly';
-      renderPlanningLevel(planning, sessions);
-    });
-  });
-  container.querySelectorAll('.plan-month-col[data-month]').forEach(el => {
-    el.querySelector('.plan-month-name')?.addEventListener('click', () => {
-      planningMonth     = parseInt(el.dataset.month);
-      planningViewLevel = 'monthly';
       renderPlanningLevel(planning, sessions);
     });
   });
@@ -271,7 +282,7 @@ function renderMonthlyView(container, planning, sessions) {
   });
   container.querySelectorAll('.plan-week-card[data-week]').forEach(el => {
     el.addEventListener('click', () => {
-      planningWeekIndex = parseInt(el.dataset.week);
+      planningWeekIndex = parseInt(el.dataset.week, 10);
       planningViewLevel = 'weekly';
       renderPlanningLevel(planning, sessions);
     });
@@ -303,7 +314,6 @@ function renderWeeklyPlanView(container, planning, sessions) {
     + '<li class="sw-plan-real"><span>Pàdel</span><strong>' + (stats.hasPadel ? '✅' : '—') + '</strong></li>'
     : '';
 
-  // Ritmes del planning via formatPace
   const qRitmePla  = formatPace(week.raw['Q_Ritme_min_km']);
   const z2RitmePla = formatPace(week.raw['Z2_Ritme_min_km_min'], '') + '–' + formatPace(week.raw['Z2_Ritme_min_km_max']);
 
@@ -459,4 +469,12 @@ function fmtDateShortP(date) {
   const d = date.getDate();
   const m = ['gen','feb','mar','abr','mai','jun','jul','ago','set','oct','nov','des'][date.getMonth()];
   return d + ' ' + m;
+}
+function escapeAttr(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
 }
