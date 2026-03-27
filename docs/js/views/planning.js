@@ -87,7 +87,6 @@ function buildISOWeeks(year) {
   while (monday.getFullYear() <= year) {
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
-    // Salta setmanes que comencin l'any anterior amb < 4 dies dins l'any
     if (monday.getFullYear() < year) {
       const daysIn = (new Date(year, 0, 1) - monday) / -86400000;
       if (daysIn < 4) { monday = new Date(monday); monday.setDate(monday.getDate() + 7); continue; }
@@ -113,17 +112,7 @@ function findPlanningForWeek(isoStart, isoEnd, planning) {
 }
 
 // ── Vista ANUAL — calendari 3 files × 4 columnes de mesos ────────────────────
-//
-// Cada mes és una targeta .pcy-month-card amb:
-//   - header del mes
-//   - grid intern de N columnes (setmanes del mes)
-//   - fila etiquetes: S1..SN
-//   - fila cicle:     cel·les de color / buides
-//   - fila fase:      cel·les de color / buides
-//
-// El grid exterior és 4 columnes × 3 files (els 12 mesos de l'any).
 function renderYearlyView(container, planning, sessions) {
-  const MONTH_NAMES_SHORT = ['Gen','Feb','Mar','Abr','Mai','Jun','Jul','Ago','Set','Oct','Nov','Des'];
   const MONTH_NAMES_LONG  = ['Gener','Febrer','Març','Abril','Maig','Juny',
                               'Juliol','Agost','Setembre','Octubre','Novembre','Desembre'];
 
@@ -146,11 +135,9 @@ function renderYearlyView(container, planning, sessions) {
   const legendPhasesHTML = legendPhases.map(([k,col]) =>
     `<span><span class="legend-dot legend-dot--phase" style="background:${col}"></span> ${k}</span>`).join('');
 
-  // Genera totes les setmanes ISO de l'any
   const isoWeeks = buildISOWeeks(planningYear);
   const today    = new Date(); today.setHours(0,0,0,0);
 
-  // Enriqueix cada setmana amb el match del planning
   const weekData = isoWeeks.map((w, i) => {
     const plan    = findPlanningForWeek(w.isoStart, w.isoEnd, planning);
     const planIdx = plan ? planning.indexOf(plan) : -1;
@@ -158,50 +145,36 @@ function renderYearlyView(container, planning, sessions) {
     return { ...w, plan, planIdx, isActive, isoNum: i + 1 };
   });
 
-  // Agrupa les setmanes per mes (convenció dijous ISO)
-  // month 0..11 → array de weekData
   const byMonth = Array.from({ length: 12 }, () => []);
-  weekData.forEach(w => {
-    const m = isoWeekMonth(w.isoStart);
-    byMonth[m].push(w);
-  });
+  weekData.forEach(w => { byMonth[isoWeekMonth(w.isoStart)].push(w); });
 
-  // Genera les 12 targetes de mes
   let cardsHTML = '';
   for (let m = 0; m < 12; m++) {
-    const weeks = byMonth[m];
-    const N = weeks.length; // 4 o 5 setmanes
+    const weeks  = byMonth[m];
+    const N      = weeks.length;
     const hasAny = weeks.some(w => w.plan !== null);
 
-    // Fila etiquetes
-    let lblRow    = '';
-    let cycleRow  = '';
-    let phaseRow  = '';
-
+    let lblRow = '', cycleRow = '', phaseRow = '';
     weeks.forEach(w => {
-      // Etiqueta: nom del planning si n'hi ha, sino S{ISO}
       const lbl = w.plan ? w.plan.setmana : `S${w.isoNum}`;
       const tip = escapeAttr(`${fmtDateShortP(w.isoStart)} → ${fmtDateShortP(w.isoEnd)}`);
       lblRow += `<span class="pcy-week-lbl${w.isActive ? ' pcy-week-lbl--active' : ''}" title="${tip}">${lbl}</span>`;
-
       if (w.plan) {
         const c   = getCycleStyle(w.plan.cicle);
         const ph  = getPhaseColor(w.plan.fase);
         const act = w.isActive ? ' pcy-cell--active' : '';
-        const tcC = escapeAttr(`${w.plan.setmana} · ${w.plan.cicle}`);
-        const tcP = escapeAttr(`${w.plan.setmana} · ${w.plan.fase}`);
         cycleRow += `<button type="button" class="pcy-cell${act}" data-week="${w.planIdx}"
-          title="${tcC}" style="background:${c.color};outline-color:${c.color}"></button>`;
+          title="${escapeAttr(w.plan.setmana + ' · ' + w.plan.cicle)}"
+          style="background:${c.color};outline-color:${c.color}"></button>`;
         phaseRow += `<button type="button" class="pcy-cell pcy-cell--phase${act}" data-week="${w.planIdx}"
-          title="${tcP}" style="background:${ph};outline-color:${ph}"></button>`;
+          title="${escapeAttr(w.plan.setmana + ' · ' + w.plan.fase)}"
+          style="background:${ph};outline-color:${ph}"></button>`;
       } else {
         cycleRow += `<span class="pcy-cell pcy-cell--empty" title="${tip}"></span>`;
         phaseRow += `<span class="pcy-cell pcy-cell--phase pcy-cell--empty" title="${tip}"></span>`;
       }
     });
 
-    // Aplica color de border superior al mes si té dades
-    // Utilitza el color del primer cicle que apareix
     const firstPlan  = weeks.find(w => w.plan)?.plan;
     const monthColor = firstPlan ? getCycleStyle(firstPlan.cicle).color : 'var(--border)';
     const emptyClass = hasAny ? '' : ' pcy-month-card--empty';
@@ -230,7 +203,6 @@ function renderYearlyView(container, planning, sessions) {
 
   bindNavButtons(planning, sessions);
 
-  // Click en cel·la → vista setmanal
   container.querySelectorAll('.pcy-cell[data-week]').forEach(el => {
     el.addEventListener('click', () => {
       planningWeekIndex = parseInt(el.dataset.week, 10);
@@ -349,6 +321,7 @@ function renderMonthlyView(container, planning, sessions) {
 }
 
 // ── Vista SETMANAL (pla + real) ───────────────────────────────────────────────
+// 5 panells: Qualitat · Z2 · Tirada llarga · Força · Altres (Pàdel...)
 function renderWeeklyPlanView(container, planning, sessions) {
   const week = planning[planningWeekIndex];
   if (!week) return;
@@ -359,6 +332,7 @@ function renderWeeklyPlanView(container, planning, sessions) {
     ? ' <span class="pwv-real-val">' + fmtNumP(stats.kmTotal) + ' km fets (' + stats.pctTotal + '%)</span>'
     : '';
 
+  // ── Reals per panell ──────────────────────────────────────────────────────
   const qReal = week.qKm > 0 && stats.status !== 'future'
     ? '<li class="sw-plan-real"><span>Real</span><strong>' + fmtNumP(stats.kmQuality) + ' km (' + (stats.pctQuality || 0) + '%)</strong></li>'
     : '';
@@ -368,9 +342,19 @@ function renderWeeklyPlanView(container, planning, sessions) {
   const llReal = week.llKm > 0 && stats.status !== 'future'
     ? '<li class="sw-plan-real"><span>Real</span><strong>' + fmtNumP(stats.kmLong) + ' km (' + (stats.pctLong || 0) + '%)</strong></li>'
     : '';
-  const extraReal = stats.status !== 'future'
-    ? '<li class="sw-plan-real"><span>Força</span><strong>' + (stats.hasStrength ? '✅' : '—') + '</strong></li>'
-    + '<li class="sw-plan-real"><span>Pàdel</span><strong>' + (stats.hasPadel ? '✅' : '—') + '</strong></li>'
+
+  // Força real: nº de sessions de força fetes
+  const strengthReal = stats.status !== 'future'
+    ? '<li class="sw-plan-real"><span>Fet</span><strong>'
+      + (stats.strengthCount > 0 ? '✅ ' + stats.strengthCount + ' sess.' : '—')
+      + '</strong></li>'
+    : '';
+
+  // Altres real: pàdel + tennis
+  const altresReal = stats.status !== 'future'
+    ? '<li class="sw-plan-real"><span>Pàdel fet</span><strong>'
+      + (stats.padelCount > 0 ? '✅ ' + stats.padelCount + ' part.' : '—')
+      + '</strong></li>'
     : '';
 
   const qRitmePla  = formatPace(week.raw['Q_Ritme_min_km']);
@@ -401,7 +385,10 @@ function renderWeeklyPlanView(container, planning, sessions) {
     +   '</div>'
     + '</div>'
 
+    // ── 5 panells ──────────────────────────────────────────────────────────
     + '<div class="pwv-grid">'
+
+    // 1 · Qualitat
     + '<article class="panel pwv-block">'
     +   '<p class="eyebrow">🎯 Qualitat</p>'
     +   '<ul class="sw-plan-list" style="margin-top:12px">'
@@ -413,6 +400,8 @@ function renderWeeklyPlanView(container, planning, sessions) {
     +     qReal
     +   '</ul>'
     + '</article>'
+
+    // 2 · Z2
     + '<article class="panel pwv-block">'
     +   '<p class="eyebrow">🫁 Z2</p>'
     +   '<ul class="sw-plan-list" style="margin-top:12px">'
@@ -423,6 +412,8 @@ function renderWeeklyPlanView(container, planning, sessions) {
     +     z2Real
     +   '</ul>'
     + '</article>'
+
+    // 3 · Tirada llarga
     + '<article class="panel pwv-block">'
     +   '<p class="eyebrow">🏃 Tirada llarga</p>'
     +   '<ul class="sw-plan-list" style="margin-top:12px">'
@@ -432,14 +423,25 @@ function renderWeeklyPlanView(container, planning, sessions) {
     +     llReal
     +   '</ul>'
     + '</article>'
+
+    // 4 · Força  (només força, sense pàdel)
     + '<article class="panel pwv-block">'
-    +   '<p class="eyebrow">💪 Força / Pàdel</p>'
+    +   '<p class="eyebrow">💪 Força</p>'
     +   '<ul class="sw-plan-list" style="margin-top:12px">'
-    +     '<li><span>Força</span><strong>' + (week.forcaPlan || '--') + '</strong></li>'
-    +     '<li><span>Pàdel</span><strong>' + (week.padelPlan || '--') + '</strong></li>'
-    +     extraReal
+    +     '<li><span>Pla</span><strong>' + (week.forcaPlan || '--') + '</strong></li>'
+    +     strengthReal
     +   '</ul>'
     + '</article>'
+
+    // 5 · Altres  (pàdel, tennis i futurs esports)
+    + '<article class="panel pwv-block pwv-block--wide">'
+    +   '<p class="eyebrow">🎾 Altres</p>'
+    +   '<ul class="sw-plan-list" style="margin-top:12px">'
+    +     '<li><span>Pàdel pla</span><strong>' + (week.padelPlan || '--') + '</strong></li>'
+    +     altresReal
+    +   '</ul>'
+    + '</article>'
+
     + '</div>';
 
   document.getElementById('btn-wplan-prev')?.addEventListener('click', () => {
@@ -453,6 +455,7 @@ function renderWeeklyPlanView(container, planning, sessions) {
 // ── Stats per setmana (JOIN planning ↔ sessions) ──────────────────────────────
 function getWeekStats(week, sessions) {
   const ws = sessions.filter(s => s.date >= week.startDate && s.date <= week.endDate);
+
   const kmTotal    = ws.reduce((acc, s) => acc + (s.distancia || 0), 0);
   const kmQuality  = ws.filter(s => ['TEMPO','TEST','INTERVALS'].includes(s.tipusKey))
                        .reduce((acc, s) => acc + (s.distancia || 0), 0);
@@ -460,19 +463,31 @@ function getWeekStats(week, sessions) {
                        .reduce((acc, s) => acc + (s.distancia || 0), 0);
   const kmLong     = ws.filter(s => ['LLARGA','MARATÓ','TRAIL','MITJA','MARATO'].includes(s.tipusKey))
                        .reduce((acc, s) => acc + (s.distancia || 0), 0);
-  const hasStrength = ws.some(s => s.tipusKey.startsWith('FORÇA') || s.tipusKey.startsWith('FORCA'));
-  const hasPadel    = ws.some(s => ['PADEL','TENIS','TENNIS'].includes(s.tipusKey));
+
+  // Força: sessions que comencen per FORÇA/FORCA
+  const strengthSess  = ws.filter(s => s.tipusKey.startsWith('FORÇA') || s.tipusKey.startsWith('FORCA'));
+  const hasStrength   = strengthSess.length > 0;
+  const strengthCount = strengthSess.length;
+
+  // Altres: pàdel + tennis (comptem partides, no km)
+  const padelSess  = ws.filter(s => ['PADEL','TENIS','TENNIS'].includes(s.tipusKey));
+  const hasPadel   = padelSess.length > 0;
+  const padelCount = padelSess.length;
+
   const pctTotal   = week.kmTotal > 0 ? Math.round((kmTotal   / week.kmTotal) * 100) : 0;
   const pctQuality = week.qKm     > 0 ? Math.round((kmQuality / week.qKm)     * 100) : null;
   const pctZ2      = parseFloat(week.raw['Z2_Km_Plan']) > 0
                    ? Math.round((kmZ2  / parseFloat(week.raw['Z2_Km_Plan'])) * 100) : null;
   const pctLong    = week.llKm > 0 ? Math.round((kmLong / week.llKm) * 100) : null;
+
   const today  = new Date(); today.setHours(0,0,0,0);
   const start  = new Date(week.startDate); start.setHours(0,0,0,0);
   const end    = new Date(week.endDate);   end.setHours(23,59,59,999);
   const status = today < start ? 'future' : today > end ? 'done' : 'active';
+
   return { ws, kmTotal, kmQuality, kmZ2, kmLong,
-           hasStrength, hasPadel,
+           hasStrength, strengthCount,
+           hasPadel, padelCount,
            pctTotal, pctQuality, pctZ2, pctLong, status };
 }
 
