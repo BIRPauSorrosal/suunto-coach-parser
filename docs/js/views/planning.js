@@ -76,22 +76,49 @@ function updateLevelButtons() {
   document.getElementById('btn-plan-monthly')?.classList.toggle('active', planningViewLevel === 'monthly');
 }
 
-// ── Vista ANUAL — grid únic alineat ──────────────────────────────────────────
-// Estructura: un sol .plan-season-grid amb grid-template-columns = 60px + N columnes
-// Fila 0: cel·la buida + capçaleres de mes (span per nombre de setmanes)
-// Fila 1: label "Cicle" + N botons de cicle
-// Fila 2: label "Fase"  + N botons de fase
-// Fila 3: label "Setm." + N etiquetes S1..SN
-function renderYearlyView(container, planning, sessions) {
-  const yearPlanning = planning
-    .filter(w =>
-      w.startDate.getFullYear() === planningYear ||
-      w.endDate.getFullYear()   === planningYear
-    )
-    .sort((a, b) => a.startDate - b.startDate);
+// ── Genera les setmanes ISO de l'any (dilluns a diumenge) ────────────────────
+// Retorna array de { isoStart: Date, isoEnd: Date } per totes les setmanes
+// on el dilluns (o almenys el divendres) pertany a l'any donat.
+function buildISOWeeks(year) {
+  const weeks = [];
+  // Primer dilluns de l'any (o anterior)
+  const jan1 = new Date(year, 0, 1);
+  const dayOfWeek = jan1.getDay(); // 0=diumenge, 1=dilluns...
+  const offset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // quants dies fins dilluns
+  let monday = new Date(year, 0, 1 + offset);
 
+  while (true) {
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    // Inclou la setmana si el dilluns o el diumenge pertany a l'any
+    if (monday.getFullYear() > year) break;
+    // Excloem setmanes que comencin l'any anterior i acabin molt aviat (< 4 dies dins l'any)
+    const daysInYear = sunday.getFullYear() === year
+      ? 7
+      : Math.max(0, new Date(year, 11, 31) - monday) / 86400000 + 1;
+    if (monday.getFullYear() < year && daysInYear < 4) {
+      monday = new Date(monday); monday.setDate(monday.getDate() + 7);
+      continue;
+    }
+    weeks.push({ isoStart: new Date(monday), isoEnd: new Date(sunday) });
+    monday = new Date(monday);
+    monday.setDate(monday.getDate() + 7);
+  }
+  return weeks;
+}
+
+// ── Troba el planning entry que solapa amb una setmana ISO ───────────────────
+function findPlanningForWeek(isoStart, isoEnd, planning) {
+  return planning.find(w =>
+    w.startDate <= isoEnd && w.endDate >= isoStart
+  ) || null;
+}
+
+// ── Vista ANUAL — 52 setmanes ISO fixes, calendari complet ───────────────────
+// Ordre de files: Mesos → Setmanes → Cicle → Fase
+// Les setmanes sense dades al planning es mostren com a cel·les buides.
+function renderYearlyView(container, planning, sessions) {
   const monthNames = ['Gen','Feb','Mar','Abr','Mai','Jun','Jul','Ago','Set','Oct','Nov','Des'];
-  const N = yearPlanning.length;
 
   const legendCycles = [
     ['BASE',        CYCLE_COLORS['BASE'].color],
@@ -108,7 +135,6 @@ function renderYearlyView(container, planning, sessions) {
     ['Competició',   PHASE_COLORS['COMPETICIÓ']],
   ];
 
-  // Llegenda
   const legendCyclesHTML = legendCycles.map(([k, col]) =>
     `<span><span class="legend-dot" style="background:${col}"></span> ${k}</span>`
   ).join('');
@@ -116,73 +142,80 @@ function renderYearlyView(container, planning, sessions) {
     `<span><span class="legend-dot legend-dot--phase" style="background:${col}"></span> ${k}</span>`
   ).join('');
 
-  if (!N) {
-    container.innerHTML =
-      navHTML() +
-      '<div class="plan-legend">'
-      + '<div class="plan-legend-row"><span class="plan-legend-section">Cicles</span>' + legendCyclesHTML + '</div>'
-      + '<div class="plan-legend-row"><span class="plan-legend-section">Fases</span>'  + legendPhasesHTML + '</div>'
-      + '</div>'
-      + '<p class="plan-no-data">Sense setmanes planificades aquest any.</p>';
-    bindNavButtons(planning, sessions);
-    return;
-  }
+  // Genera les 52 (o 53) setmanes ISO de l'any
+  const isoWeeks = buildISOWeeks(planningYear);
+  const N = isoWeeks.length;
 
-  // Calcula quantes setmanes té cada mes (per fer el span dels headers)
-  const monthSpans = {};
-  yearPlanning.forEach(w => {
-    const m = w.startDate.getMonth();
-    monthSpans[m] = (monthSpans[m] || 0) + 1;
+  // Per cada setmana ISO, busca si hi ha entrada al planning
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  const weekData = isoWeeks.map((w, i) => {
+    const plan     = findPlanningForWeek(w.isoStart, w.isoEnd, planning);
+    const isActive = today >= w.isoStart && today <= w.isoEnd;
+    const planIdx  = plan ? planning.indexOf(plan) : -1;
+    return { ...w, plan, isActive, planIdx, isoNum: i + 1 };
   });
 
-  // Fila 0: [cel·la buida (col 1)] + [headers de mes] — cada header span = nsetmanes del mes
-  // Necessitem mantenir l'ordre dels mesos i omplir els buits amb cel·les buides
-  // per que els spans quadin alineats amb les columnes de dades.
-  // Estratègia: iterem les setmanes i agrupem blocs de mes consecutius.
+  // Calcula els blocs de mes a partir del dilluns de cada setmana
+  // El mes d'una setmana = mes del dijous (convenció ISO 8601)
   const monthBlocks = [];
-  yearPlanning.forEach(w => {
-    const m = w.startDate.getMonth();
+  weekData.forEach(w => {
+    const thursday = new Date(w.isoStart);
+    thursday.setDate(thursday.getDate() + 3); // dijous = dia representatiu
+    const m = thursday.getMonth();
+    // Però per l'any visual, assignem al mes del dilluns si el dijous és l'any correcte
+    const repMonth = thursday.getFullYear() === planningYear ? m : w.isoStart.getMonth();
     const last = monthBlocks[monthBlocks.length - 1];
-    if (!last || last.month !== m) monthBlocks.push({ month: m, count: 0 });
+    if (!last || last.month !== repMonth) monthBlocks.push({ month: repMonth, count: 0 });
     monthBlocks[monthBlocks.length - 1].count++;
   });
 
-  // Construïm les files com a strings de cel·les HTML
-  // — Fila mes (row 0): cel buida + spans de mes
-  let monthRowHTML = '<div class="psg-label"></div>'; // col 1 buida
+  // ── Construeix les files ──────────────────────────────────────────────────
+
+  // Fila 0 — Mesos
+  let monthRowHTML = '<div class="psg-label"></div>';
   monthBlocks.forEach(b => {
     monthRowHTML += `<div class="psg-month" style="grid-column:span ${b.count}">${monthNames[b.month]}</div>`;
   });
 
-  const today = new Date(); today.setHours(0,0,0,0);
-
-  // — Fila cicle (row 1) i fase (row 2): label + N botons
-  let cycleRowHTML = '<div class="psg-label">Cicle</div>';
-  let phaseRowHTML = '<div class="psg-label">Fase</div>';
-  let weekRowHTML  = '<div class="psg-label">Setm.</div>';
-
-  yearPlanning.forEach((w, i) => {
-    const c        = getCycleStyle(w.cicle);
-    const ph       = getPhaseColor(w.fase);
-    const idx      = planning.indexOf(w);
-    const isActive = today >= w.startDate && today <= w.endDate;
-    const activeCls = isActive ? ' psg-cell--active' : '';
-
-    const tipCicle = escapeAttr(`${w.setmana} · ${w.cicle} · ${fmtDateShortP(w.startDate)}→${fmtDateShortP(w.endDate)}`);
-    const tipFase  = escapeAttr(`${w.setmana} · ${w.fase}  · ${fmtDateShortP(w.startDate)}→${fmtDateShortP(w.endDate)}`);
-
-    cycleRowHTML += `<button type="button" class="psg-cell${activeCls}" data-week="${idx}"
-      title="${tipCicle}" style="background:${c.color};outline-color:${c.color}"></button>`;
-
-    phaseRowHTML += `<button type="button" class="psg-cell psg-cell--phase${activeCls}" data-week="${idx}"
-      title="${tipFase}" style="background:${ph};outline-color:${ph}"></button>`;
-
-    weekRowHTML += `<span class="psg-week-lbl" title="${escapeAttr(w.setmana)}">S${i + 1}</span>`;
+  // Fila 1 — Etiquetes de setmana (just sota els mesos)
+  let weekRowHTML = '<div class="psg-label">Setm.</div>';
+  weekData.forEach(w => {
+    const label = w.plan ? w.plan.setmana : `S${w.isoNum}`;
+    const tip   = escapeAttr(`${fmtDateShortP(w.isoStart)} → ${fmtDateShortP(w.isoEnd)}${w.plan ? ' · ' + w.plan.cicle : ''}`);
+    weekRowHTML += `<span class="psg-week-lbl${w.isActive ? ' psg-week-lbl--active' : ''}" title="${tip}">${label}</span>`;
   });
 
-  // Muntem el grid únic: 4 files × (1 label + N columnes dades)
-  // grid-template-columns: 60px repeat(N, minmax(18px, 1fr))
-  const gridStyle = `grid-template-columns:60px repeat(${N}, minmax(18px, 1fr))`;
+  // Fila 2 — Cicle
+  let cycleRowHTML = '<div class="psg-label">Cicle</div>';
+  weekData.forEach(w => {
+    if (w.plan) {
+      const c         = getCycleStyle(w.plan.cicle);
+      const activeCls = w.isActive ? ' psg-cell--active' : '';
+      const tip       = escapeAttr(`${w.plan.setmana} · ${w.plan.cicle} · ${fmtDateShortP(w.isoStart)}→${fmtDateShortP(w.isoEnd)}`);
+      cycleRowHTML += `<button type="button" class="psg-cell${activeCls}" data-week="${w.planIdx}"
+        title="${tip}" style="background:${c.color};outline-color:${c.color}"></button>`;
+    } else {
+      cycleRowHTML += `<span class="psg-cell psg-cell--empty" title="${escapeAttr(fmtDateShortP(w.isoStart) + ' → ' + fmtDateShortP(w.isoEnd))}"></span>`;
+    }
+  });
+
+  // Fila 3 — Fase
+  let phaseRowHTML = '<div class="psg-label">Fase</div>';
+  weekData.forEach(w => {
+    if (w.plan) {
+      const ph        = getPhaseColor(w.plan.fase);
+      const activeCls = w.isActive ? ' psg-cell--active' : '';
+      const tip       = escapeAttr(`${w.plan.setmana} · ${w.plan.fase} · ${fmtDateShortP(w.isoStart)}→${fmtDateShortP(w.isoEnd)}`);
+      phaseRowHTML += `<button type="button" class="psg-cell psg-cell--phase${activeCls}" data-week="${w.planIdx}"
+        title="${tip}" style="background:${ph};outline-color:${ph}"></button>`;
+    } else {
+      phaseRowHTML += `<span class="psg-cell psg-cell--phase psg-cell--empty" title="${escapeAttr(fmtDateShortP(w.isoStart) + ' → ' + fmtDateShortP(w.isoEnd))}"></span>`;
+    }
+  });
+
+  // ── Munta el grid ─────────────────────────────────────────────────────────
+  const gridStyle = `grid-template-columns:60px repeat(${N}, minmax(16px, 1fr))`;
 
   container.innerHTML =
     navHTML()
@@ -192,9 +225,9 @@ function renderYearlyView(container, planning, sessions) {
     + '</div>'
     + `<div class="plan-season-grid" style="${gridStyle}">`
     +   `<div class="psg-row-months">${monthRowHTML}</div>`
+    +   `<div class="psg-row psg-row--weeks">${weekRowHTML}</div>`
     +   `<div class="psg-row">${cycleRowHTML}</div>`
     +   `<div class="psg-row">${phaseRowHTML}</div>`
-    +   `<div class="psg-row psg-row--weeks">${weekRowHTML}</div>`
     + '</div>';
 
   bindNavButtons(planning, sessions);

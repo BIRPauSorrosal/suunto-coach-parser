@@ -30,7 +30,7 @@ html { font-size: 16px; }
 body { font-family: var(--font); background: var(--bg); color: var(--text);
        line-height: 1.5; min-height: 100vh; }
 
-/* ── Layout shell ────────────────────────────────────────────── */
+/* ── Layout shell ──────────────────────────────────────────────── */
 .app-shell   { display: flex; min-height: 100vh; }
 .sidebar     { width: var(--sidebar-w); background: var(--surface);
                border-right: 1px solid var(--border); display: flex;
@@ -39,12 +39,12 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .main-content { flex: 1; padding: 32px 36px; overflow-x: hidden;
                 max-width: calc(100vw - var(--sidebar-w)); }
 
-/* ── Brand ───────────────────────────────────────────────────── */
+/* ── Brand ───────────────────────────────────────────────────────────── */
 .brand-block .eyebrow { font-size:.7rem; font-weight:600; letter-spacing:.1em;
                          text-transform:uppercase; color:var(--accent); }
 .brand-block h1       { font-size:1.05rem; font-weight:700; line-height:1.2; margin-top:4px; }
 
-/* ── Nav ─────────────────────────────────────────────────────── */
+/* ── Nav ───────────────────────────────────────────────────────────────── */
 .sidebar-nav { display:flex; flex-direction:column; gap:4px; }
 .nav-link    { display:flex; align-items:center; gap:8px; padding:9px 12px;
                border-radius:var(--radius); color:var(--text-muted); text-decoration:none;
@@ -53,7 +53,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .nav-link.active { background:var(--accent-soft); color:var(--accent); }
 .nav-icon        { font-size:1rem; width:20px; text-align:center; }
 
-/* ── Sidebar panel ───────────────────────────────────────────── */
+/* ── Sidebar panel ────────────────────────────────────────────────────── */
 .sidebar-panel         { border-top:1px solid var(--border); padding-top:20px; }
 .sidebar-panel h2      { font-size:.7rem; font-weight:600; letter-spacing:.08em;
                           text-transform:uppercase; color:var(--text-muted); margin-bottom:12px; }
@@ -64,12 +64,12 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
                           background:var(--border); flex-shrink:0; }
 .dot.dot-live          { background:var(--accent); box-shadow:0 0 6px var(--accent); }
 
-/* ── Notice bar ──────────────────────────────────────────────── */
+/* ── Notice bar ─────────────────────────────────────────────────────── */
 .notice-bar   { background:var(--surface-2); border:1px solid var(--border);
                 border-radius:var(--radius); padding:10px 16px; margin-bottom:24px; }
 .notice-bar p { font-size:.8rem; color:var(--text-muted); }
 
-/* ── Buttons ─────────────────────────────────────────────────── */
+/* ── Buttons ───────────────────────────────────────────────────────────── */
 .btn          { display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
                 border-radius:var(--radius); font-size:.85rem; font-weight:500;
                 cursor:pointer; border:none; transition:background .15s,color .15s; font-family:var(--font); }
@@ -82,11 +82,11 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .btn-sm       { padding:5px 11px; font-size:.78rem; }
 .btn-sidebar  { margin-top:auto; width:100%; justify-content:center; }
 
-/* ── Views ───────────────────────────────────────────────────── */
+/* ── Views ─────────────────────────────────────────────────────────────────── */
 .view          { display:none; }
 .view--active  { display:block; }
 
-/* ── Page header ─────────────────────────────────────────────── */
+/* ── Page header ─────────────────────────────────────────────────────────── */
 .page-header  { display:flex; align-items:flex-start; justify-content:space-between;
                 gap:16px; margin-bottom:28px; flex-wrap:wrap; }
 .page-header .eyebrow { font-size:.7rem; font-weight:600; letter-spacing:.1em;
@@ -95,13 +95,13 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .page-subtitle        { font-size:.85rem; color:var(--text-muted); margin-top:4px; }
 .header-actions       { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 
-/* ── Badges ──────────────────────────────────────────────────── */
+/* ── Badges ──────────────────────────────────────────────────────────────── */
 .badge        { display:inline-block; padding:3px 10px; border-radius:20px;
                 font-size:.72rem; font-weight:600; background:var(--accent-soft);
                 color:var(--accent); }
 .badge-muted  { background:var(--surface-2); color:var(--text-muted); }
 
-/* ── Panels ──────────────────────────────────────────────────── */
+/* ── Panels ──────────────────────────────────────────────────────────────── */
 .panel        { background:var(--surface); border:1px solid var(--border);
                 border-radius:var(--radius-lg); padding:24px; margin-bottom:20px; }
 .panel-header { display:flex; align-items:flex-start; justify-content:space-between;
@@ -111,7 +111,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .panel-header h3       { font-size:1rem; font-weight:600; }
 .panel-large           { grid-column: span 2; }
 
-/* ── Hero grid ───────────────────────────────────────────────── */
+/* ── Hero grid ───────────────────────────────────────────────────────────── */
 .hero-grid    { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
                 gap:16px; margin-bottom:20px; }
 .hero-card    { background:var(--surface); border:1px solid var(--border);
@@ -122,13 +122,13 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .card-note    { font-size:.78rem; color:var(--text-muted); margin-top:6px; }
 .hero-value   { font-size:1.8rem; font-weight:700; color:var(--accent); margin-top:8px; }
 
-/* ── Content grids ───────────────────────────────────────────── */
+/* ── Content grids ───────────────────────────────────────────────────────── */
 .content-grid { display:grid; grid-template-columns:2fr 1fr; gap:20px; margin-bottom:20px; }
 .charts-grid  { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; }
 @media(max-width:900px) { .content-grid,.charts-grid { grid-template-columns:1fr; }
                           .panel-large { grid-column:span 1; } }
 
-/* ── Metrics grid ────────────────────────────────────────────── */
+/* ── Metrics grid ──────────────────────────────────────────────────────────── */
 .metrics-grid   { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; }
 .metric-box     { background:var(--surface-2); border-radius:var(--radius);
                   padding:14px; display:flex; flex-direction:column; gap:4px; }
@@ -138,12 +138,12 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .metric-box small  { font-size:.72rem; color:var(--text-muted); }
 .metric-real       { color:var(--blue) !important; }
 
-/* ── Chart wraps ─────────────────────────────────────────────── */
+/* ── Chart wraps ──────────────────────────────────────────────────────────── */
 .chart-wrap         { position:relative; height:220px; }
 .chart-wrap--tall   { height:280px; }
 .pmc-chart-wrap     { height:320px; }
 
-/* ── Sessions — filtres ──────────────────────────────────────── */
+/* ── Sessions — filtres ──────────────────────────────────────────────────── */
 .sess-filters     { display:flex; align-items:center; gap:16px; flex-wrap:wrap;
                     margin-bottom:20px; padding:14px 18px;
                     background:var(--surface); border:1px solid var(--border);
@@ -157,7 +157,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
                      padding:6px 10px; font-size:.85rem; font-family:var(--font); cursor:pointer; }
 .sess-period-btns  { display:flex; gap:6px; flex-wrap:wrap; }
 
-/* ── Sessions — KPIs ─────────────────────────────────────────── */
+/* ── Sessions — KPIs ────────────────────────────────────────────────────────── */
 .sess-kpis        { display:grid; grid-template-columns:repeat(4,1fr);
                     gap:12px; margin-bottom:20px; }
 @media(max-width:700px){ .sess-kpis { grid-template-columns:repeat(2,1fr); } }
@@ -168,7 +168,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
                     letter-spacing:.07em; color:var(--text-muted); }
 .sess-kpi-value   { font-size:1.4rem; font-weight:700; color:var(--accent); }
 
-/* ── Sessions — taula ────────────────────────────────────────── */
+/* ── Sessions — taula ─────────────────────────────────────────────────────────── */
 .table-shell      { overflow-x:auto; border-radius:var(--radius); }
 #sess-table       { width:100%; border-collapse:collapse; font-size:.82rem; }
 #sess-table th    { padding:10px 12px; text-align:left; font-size:.7rem; font-weight:600;
@@ -180,7 +180,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .empty-row        { text-align:center; color:var(--text-muted); padding:24px !important; }
 .sess-trend-panel { margin-bottom:20px; }
 
-/* ── PMC legend ──────────────────────────────────────────────── */
+/* ── PMC legend ───────────────────────────────────────────────────────────── */
 .pmc-legend       { display:flex; align-items:center; gap:14px; flex-wrap:wrap;
                     margin-bottom:16px; font-size:.75rem; }
 .pmc-leg-item     { display:flex; align-items:center; gap:5px; color:var(--text-muted); }
@@ -190,7 +190,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .pmc-leg-sep      { color:var(--border); }
 .pmc-leg-hint     { color:var(--text-muted); font-style:italic; }
 
-/* ── Planning ────────────────────────────────────────────────── */
+/* ── Planning ─────────────────────────────────────────────────────────────────── */
 .plan-tabs        { display:flex; gap:8px; margin-bottom:20px; }
 .plan-no-data     { color:var(--text-muted); font-size:.85rem; padding:16px 0; }
 .muted-msg        { color:var(--text-muted); font-size:.85rem; }
@@ -215,98 +215,115 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .legend-dot       { display:inline-block; width:10px; height:10px; border-radius:50%; flex-shrink:0; }
 .legend-dot--phase { border-radius:3px; }
 
-/* ── Planning anual: grid únic alineat ───────────────────────── */
+/* ── Planning anual: grid únic de 52 setmanes ────────────────────────────── */
 /*
-  .plan-season-grid té grid-template-columns injectat per JS:
-    60px repeat(N, minmax(18px, 1fr))
-  Cada fila (.psg-row-months, .psg-row) usa subgrid (o display:contents)
-  per heretar les columnes del grid pare.
+  Ordre de files dins el grid:
+    0 — Mesos    (psg-row-months)
+    1 — Setmanes (psg-row--weeks)   ← just sota els mesos
+    2 — Cicle    (psg-row)
+    3 — Fase     (psg-row)
+
+  Cada fila usa display:contents per heretar les columnes del grid pare.
+  grid-template-columns s'injecta per JS: 60px repeat(N, minmax(16px,1fr))
 */
 .plan-season-grid {
   display: grid;
   gap: 0;
   overflow-x: auto;
   padding-bottom: 8px;
-  /* grid-template-columns s'injecta per JS */
 }
 
-/* Cada fila ocupa totes les columnes del grid pare via display:contents */
+/* Totes les files: display:contents per entrar al grid pare */
 .psg-row-months,
 .psg-row,
 .psg-row--weeks {
   display: contents;
 }
 
-/* Label de fila (columna 1 = 60px) */
+/* ── Label de fila (col 1, 60px) ─────────────────────── */
 .psg-label {
   display: flex;
   align-items: center;
-  font-size: .7rem;
+  font-size: .68rem;
   font-weight: 700;
   letter-spacing: .06em;
   text-transform: uppercase;
   color: var(--text-muted);
   white-space: nowrap;
-  padding: 4px 0;
-  /* separació vertical entre files */
-  margin-bottom: 6px;
+  padding: 3px 0;
 }
 
-/* Header de mes (fila 0, span N columnes) */
+/* ── Fila 0: capçalera de mes ────────────────────────── */
 .psg-month {
   text-align: center;
   font-size: .7rem;
   font-weight: 700;
   color: var(--blue);
-  letter-spacing: .05em;
+  letter-spacing: .06em;
   text-transform: uppercase;
-  padding: 2px 0 6px;
+  padding: 2px 0 5px;
   border-bottom: 1px solid var(--border);
-  margin-bottom: 6px;
+  /* marge baix per separar de les etiquetes de setmana */
+  margin-bottom: 4px;
 }
 
-/* Cel·la de cicle / fase */
+/* ── Fila 1: etiquetes de setmana ────────────────────── */
+.psg-week-lbl {
+  text-align: center;
+  font-size: .58rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 2px 1px 6px;
+}
+/* Setmana activa: ressalta l'etiqueta */
+.psg-week-lbl--active {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* ── Files 2 i 3: cel·les de cicle i fase ────────────── */
 .psg-cell {
   appearance: none;
   border: none;
   border-radius: 5px;
   height: 22px;
   cursor: pointer;
-  opacity: 0.75;
-  transition: opacity .15s, transform .15s, outline-offset .15s;
+  opacity: 0.80;
+  transition: opacity .15s, transform .15s, outline-offset .12s;
   outline: 2px solid transparent;
   outline-offset: 0px;
-  margin: 3px 2px;
+  margin: 3px 2px 2px;
+}
+/* Cel·la buida: sense dades al planning */
+.psg-cell--empty {
+  cursor: default;
+  background: rgba(148,163,184,0.07) !important;
+  border: 1px dashed rgba(148,163,184,0.20);
+  opacity: 1;
+  outline: none !important;
 }
 .psg-cell--phase {
   border-radius: 4px;
   height: 16px;
-  opacity: 0.65;
+  opacity: 0.70;
   margin-top: 2px;
 }
-.psg-cell:hover {
+.psg-cell--phase.psg-cell--empty {
+  height: 16px;
+}
+.psg-cell:not(.psg-cell--empty):hover {
   opacity: 1;
   transform: translateY(-2px);
 }
 /* Setmana activa: outline del color de la cel·la */
-.psg-cell--active {
+.psg-cell--active:not(.psg-cell--empty) {
   opacity: 1;
   outline-offset: 3px;
 }
 
-/* Etiqueta de setmana (S1, S2…) */
-.psg-week-lbl {
-  text-align: center;
-  font-size: .6rem;
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding: 4px 0 0;
-  margin: 0 2px;
-}
-
-/* ── Planning mensual ────────────────────────────────────────── */
+/* ── Planning mensual ─────────────────────────────────────────────────────── */
 .plan-month-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -380,7 +397,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   letter-spacing: .03em;
 }
 
-/* ── Planning setmanal ───────────────────────────────────────── */
+/* ── Planning setmanal ─────────────────────────────────────────────────────── */
 .pwv-header     { display: flex; justify-content: space-between; align-items: flex-start;
                   gap: 16px; margin-bottom: 20px; }
 .pwv-km-total   { text-align: right; }
@@ -391,7 +408,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .sw-plan-real   { color: var(--blue); }
 .sw-plan-real span { color: var(--blue) !important; }
 
-/* ── Setmana actual ──────────────────────────────────────────── */
+/* ── Setmana actual ──────────────────────────────────────────────────────────── */
 .progress-panel   { margin-bottom: 20px; }
 .progress-header  { display: flex; justify-content: space-between; align-items: center;
                     margin-bottom: 10px; font-size: .85rem; color: var(--text-muted); }
@@ -421,7 +438,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .sw-mini-table td { padding: 5px 6px; border-bottom: 1px solid rgba(51,65,85,.4); }
 .sw-mini-table tbody tr:last-child td { border-bottom: none; }
 
-/* ── Test & Cursa cards ──────────────────────────────────────── */
+/* ── Test & Cursa cards ───────────────────────────────────────────────────────── */
 .test-race-grid   { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 12px; }
 .tr-card          { background: var(--surface-2); border: 1px solid var(--border);
                     border-radius: var(--radius); padding: 14px 16px; }
@@ -430,7 +447,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .tr-card-value    { font-size: 1.3rem; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
 .tr-card-meta     { font-size: .75rem; color: var(--text-muted); }
 
-/* ── Others cards ────────────────────────────────────────────── */
+/* ── Others cards ──────────────────────────────────────────────────────────────── */
 .others-grid      { display: grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap: 12px; }
 .other-card       { background: var(--surface-2); border: 1px solid var(--border);
                     border-radius: var(--radius); padding: 12px 14px; }
