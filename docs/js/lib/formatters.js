@@ -15,6 +15,19 @@ function fmtNum(value) {
   return new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 }).format(n);
 }
 
+// Àlies de fmtNum — usat a overview.js i altres llocs
+function formatNumber(value) {
+  return fmtNum(value);
+}
+
+// Combina formatNumber + unitat: formatMetric(4.5, 'km') → "4,5 km"
+function formatMetric(value, unit) {
+  const n = parseFloat(value);
+  if (!isFinite(n)) return unit ? `-- ${unit}` : '--';
+  const formatted = formatNumber(n);
+  return unit ? `${formatted} ${unit}` : formatted;
+}
+
 // ── Dates ─────────────────────────────────────────────────────────────────────
 function formatDate(date) {
   return new Intl.DateTimeFormat('ca-ES').format(date);
