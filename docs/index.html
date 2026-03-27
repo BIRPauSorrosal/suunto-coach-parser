@@ -12,25 +12,16 @@
 <body>
   <div class="app-shell">
 
-    <!-- ── Sidebar ── -->
     <aside class="sidebar">
       <div class="brand-block">
         <p class="eyebrow">Suunto Coach</p>
         <h1>Parser &amp; Dashboard</h1>
       </div>
       <nav class="sidebar-nav" aria-label="Navegació principal">
-        <a href="#" class="nav-link active" data-target="overview">
-          <span class="nav-icon">◎</span> Overview
-        </a>
-        <a href="#" class="nav-link" data-target="setmanal">
-          <span class="nav-icon">◈</span> Setmana actual
-        </a>
-        <a href="#" class="nav-link" data-target="planning">
-          <span class="nav-icon">◫</span> Planning
-        </a>
-        <a href="#" class="nav-link" data-target="sessions">
-          <span class="nav-icon">◇</span> Sessions
-        </a>
+        <a href="#" class="nav-link active" data-target="overview"><span class="nav-icon">◎</span> Overview</a>
+        <a href="#" class="nav-link" data-target="setmanal"><span class="nav-icon">◈</span> Setmana actual</a>
+        <a href="#" class="nav-link" data-target="planning"><span class="nav-icon">◫</span> Planning</a>
+        <a href="#" class="nav-link" data-target="sessions"><span class="nav-icon">◇</span> Sessions</a>
       </nav>
       <section class="sidebar-panel">
         <h2>Estat dades</h2>
@@ -41,25 +32,19 @@
           <li><span class="dot"></span> <span id="status-last-update">Sense actualització</span></li>
         </ul>
       </section>
-      <button type="button" class="btn btn-primary btn-sidebar" id="reload-data-btn">
-        Recarregar dades
-      </button>
+      <button type="button" class="btn btn-primary btn-sidebar" id="reload-data-btn">Recarregar dades</button>
     </aside>
 
-    <!-- ── Main ── -->
     <main class="main-content">
 
       <section class="notice-bar" id="notice-bar">
         <p id="notice-text">Llegint fitxers CSV...</p>
       </section>
 
-      <!-- ── Vista: Overview ── -->
+      <!-- Vista: Overview -->
       <section class="view view--active" data-view="overview">
         <header class="page-header">
-          <div>
-            <p class="eyebrow">Dashboard web</p>
-            <h2>Seguiment d'entrenament</h2>
-          </div>
+          <div><p class="eyebrow">Dashboard web</p><h2>Seguiment d'entrenament</h2></div>
           <span class="badge badge-muted" id="load-badge">Inicialitzant...</span>
         </header>
         <div class="hero-grid">
@@ -87,112 +72,63 @@
         <div class="content-grid">
           <article class="panel panel-large">
             <div class="panel-header">
-              <div>
-                <p class="eyebrow">Bloc principal</p>
-                <h3>Resum setmanal</h3>
-              </div>
+              <div><p class="eyebrow">Bloc principal</p><h3>Resum setmanal</h3></div>
               <span class="badge">Setmana activa</span>
             </div>
             <div class="metrics-grid">
-              <div class="metric-box">
-                <span>Qualitat</span>
-                <strong id="quality-summary">--</strong>
-                <small id="quality-detail">Tempo i intervals</small>
-                <small id="quality-real" class="metric-real"></small>
-              </div>
-              <div class="metric-box">
-                <span>Z1+Z2 running</span>
-                <strong id="z2-summary">--</strong>
-                <small id="z2-detail">Minuts en zona aeròbica</small>
-              </div>
-              <div class="metric-box">
-                <span>Tirada llarga</span>
-                <strong id="long-summary">--</strong>
-                <small id="long-detail">Tipus i volum setmanal</small>
-                <small id="long-real" class="metric-real"></small>
-              </div>
-              <div class="metric-box">
-                <span>Força</span>
-                <strong id="strength-summary">--</strong>
-                <small id="strength-detail">Sessions de gimnàs</small>
-              </div>
+              <div class="metric-box"><span>Qualitat</span><strong id="quality-summary">--</strong><small id="quality-detail">Tempo i intervals</small><small id="quality-real" class="metric-real"></small></div>
+              <div class="metric-box"><span>Z1+Z2 running</span><strong id="z2-summary">--</strong><small id="z2-detail">Minuts en zona aeròbica</small></div>
+              <div class="metric-box"><span>Tirada llarga</span><strong id="long-summary">--</strong><small id="long-detail">Tipus i volum setmanal</small><small id="long-real" class="metric-real"></small></div>
+              <div class="metric-box"><span>Força</span><strong id="strength-summary">--</strong><small id="strength-detail">Sessions de gimnàs</small></div>
             </div>
           </article>
           <article class="panel">
             <div class="panel-header">
-              <div>
-                <p class="eyebrow">Zones cardíaques</p>
-                <h3>Distribució Z1–Z5</h3>
-              </div>
+              <div><p class="eyebrow">Zones cardíaques</p><h3>Distribució Z1–Z5</h3></div>
               <span class="badge badge-muted">Últims 30 dies</span>
             </div>
-            <div class="chart-wrap">
-              <canvas id="chart-zones"></canvas>
-            </div>
+            <div class="chart-wrap"><canvas id="chart-zones"></canvas></div>
           </article>
         </div>
         <article class="panel">
           <div class="panel-header">
-            <div>
-              <p class="eyebrow">Rendiment</p>
-              <h3>Test &amp; Cursa</h3>
-            </div>
+            <div><p class="eyebrow">Rendiment</p><h3>Test &amp; Cursa</h3></div>
             <span class="badge badge-muted">Darrera activitat de cada tipus</span>
           </div>
-          <div id="test-race-container">
-            <p class="plan-no-data">Carregant...</p>
-          </div>
+          <div id="test-race-container"><p class="plan-no-data">Carregant...</p></div>
         </article>
         <div class="charts-grid">
           <article class="panel">
             <div class="panel-header">
-              <div>
-                <p class="eyebrow">Volum setmanal</p>
-                <h3>Km planificats vs reals</h3>
-              </div>
+              <div><p class="eyebrow">Volum setmanal</p><h3>Km planificats vs reals</h3></div>
               <span class="badge badge-muted">Planning + Sessions</span>
             </div>
-            <div class="chart-wrap chart-wrap--tall">
-              <canvas id="chart-km"></canvas>
-            </div>
+            <div class="chart-wrap chart-wrap--tall"><canvas id="chart-km"></canvas></div>
           </article>
           <article class="panel">
             <div class="panel-header">
-              <div>
-                <p class="eyebrow">Estrès d'entrenament</p>
-                <h3>Càrrega setmanal</h3>
-              </div>
+              <div><p class="eyebrow">Estrès d'entrenament</p><h3>Càrrega setmanal</h3></div>
               <span class="badge badge-muted">Sessions reals</span>
             </div>
-            <div class="chart-wrap chart-wrap--tall">
-              <canvas id="chart-load"></canvas>
-            </div>
+            <div class="chart-wrap chart-wrap--tall"><canvas id="chart-load"></canvas></div>
           </article>
         </div>
         <article class="panel">
           <div class="panel-header">
-            <div>
-              <p class="eyebrow">Activitats complementàries</p>
-              <h3>Altres activitats</h3>
-            </div>
+            <div><p class="eyebrow">Activitats complementàries</p><h3>Altres activitats</h3></div>
             <span class="badge badge-muted" id="others-count">—</span>
           </div>
-          <div id="others-container">
-            <p class="plan-no-data">Carregant...</p>
-          </div>
+          <div id="others-container"><p class="plan-no-data">Carregant...</p></div>
         </article>
       </section>
 
-      <!-- ── Vista: Setmana actual ── -->
+      <!-- Vista: Setmana actual -->
       <section class="view" data-view="setmanal">
         <header class="page-header">
           <div>
             <p class="eyebrow">Fase 4</p>
             <h2 id="sw-week-label">--</h2>
-            <p class="page-subtitle">
-              <span id="sw-week-range">--</span> ·
-              <span id="sw-week-fase">--</span>
-            </p>
+            <p class="page-subtitle"><span id="sw-week-range">--</span> · <span id="sw-week-fase">--</span></p>
           </div>
           <div class="header-actions">
             <button class="btn btn-ghost" id="week-nav-prev">◄ Anterior</button>
@@ -205,9 +141,7 @@
             <span>Km totals setmanals</span>
             <span><strong id="sw-progress-real">--</strong> de <strong id="sw-progress-planned">--</strong> · <span id="sw-progress-pct">-- %</span></span>
           </div>
-          <div class="progress-track">
-            <div class="progress-fill" id="sw-progress-bar" style="width:0%"></div>
-          </div>
+          <div class="progress-track"><div class="progress-fill" id="sw-progress-bar" style="width:0%"></div></div>
         </article>
         <div class="sw-grid">
           <article class="panel sw-block" id="sw-q-block">
@@ -288,10 +222,7 @@
               </div>
               <div class="sw-col">
                 <p class="sw-col-title">Real</p>
-                <p class="sw-real-summary">
-                  Força: <span id="sw-extra-forca-real">—</span> ·
-                  Pàdel: <span id="sw-extra-padel-real">—</span>
-                </p>
+                <p class="sw-real-summary">Força: <span id="sw-extra-forca-real">—</span> · Pàdel: <span id="sw-extra-padel-real">—</span></p>
                 <table class="sw-mini-table">
                   <thead><tr><th>Data</th><th>Tipus</th><th>Durada</th><th>Càrrega</th></tr></thead>
                   <tbody id="sw-extra-sessions-list"></tbody>
@@ -302,31 +233,23 @@
         </div>
       </section>
 
-      <!-- ── Vista: Planning ── -->
+      <!-- Vista: Planning -->
       <section class="view" data-view="planning">
         <header class="page-header">
-          <div>
-            <p class="eyebrow">Planificació</p>
-            <h2>Temporada</h2>
-          </div>
+          <div><p class="eyebrow">Planificació</p><h2>Temporada</h2></div>
           <div class="header-actions">
             <button class="btn btn-ghost" id="btn-plan-yearly">Vista anual</button>
             <button class="btn btn-ghost active" id="btn-plan-monthly">Vista mensual</button>
           </div>
         </header>
-        <div id="planning-view-container">
-          <p class="muted-msg">Carregant planning...</p>
-        </div>
+        <div id="planning-view-container"><p class="muted-msg">Carregant planning...</p></div>
       </section>
 
-      <!-- ── Vista: Sessions ── -->
+      <!-- Vista: Sessions -->
       <section class="view" data-view="sessions">
 
         <header class="page-header">
-          <div>
-            <p class="eyebrow">Historial</p>
-            <h2>Sessions</h2>
-          </div>
+          <div><p class="eyebrow">Historial</p><h2>Sessions</h2></div>
         </header>
 
         <!-- Filtres -->
@@ -359,31 +282,16 @@
 
         <!-- KPIs -->
         <div class="sess-kpis" id="sess-kpis">
-          <div class="sess-kpi">
-            <span class="sess-kpi-label">Km totals</span>
-            <strong class="sess-kpi-value" id="kpi-km">--</strong>
-          </div>
-          <div class="sess-kpi">
-            <span class="sess-kpi-label">Temps total</span>
-            <strong class="sess-kpi-value" id="kpi-time">--</strong>
-          </div>
-          <div class="sess-kpi">
-            <span class="sess-kpi-label">Càrrega total</span>
-            <strong class="sess-kpi-value" id="kpi-load">--</strong>
-          </div>
-          <div class="sess-kpi">
-            <span class="sess-kpi-label">EPOC total</span>
-            <strong class="sess-kpi-value" id="kpi-epoc">--</strong>
-          </div>
+          <div class="sess-kpi"><span class="sess-kpi-label">Km totals</span><strong class="sess-kpi-value" id="kpi-km">--</strong></div>
+          <div class="sess-kpi"><span class="sess-kpi-label">Temps total</span><strong class="sess-kpi-value" id="kpi-time">--</strong></div>
+          <div class="sess-kpi"><span class="sess-kpi-label">Càrrega total</span><strong class="sess-kpi-value" id="kpi-load">--</strong></div>
+          <div class="sess-kpi"><span class="sess-kpi-label">EPOC total</span><strong class="sess-kpi-value" id="kpi-epoc">--</strong></div>
         </div>
 
-        <!-- Gràfic de tendència — canvia següent el filtre de tipus -->
+        <!-- Gràfic de tendència (canvia per filtre) -->
         <article class="panel sess-trend-panel">
           <div class="panel-header">
-            <div>
-              <p class="eyebrow">Tendència</p>
-              <h3 id="sess-chart-title">Volum setmanal</h3>
-            </div>
+            <div><p class="eyebrow">Tendència</p><h3 id="sess-chart-title">Volum setmanal</h3></div>
             <span class="badge badge-muted" id="sess-chart-badge">Per setmanes</span>
           </div>
           <div class="chart-wrap chart-wrap--tall">
@@ -391,13 +299,32 @@
           </div>
         </article>
 
-        <!-- Taula intel·ligent -->
+        <!-- PMC — Performance Management Chart -->
         <article class="panel">
           <div class="panel-header">
             <div>
-              <p class="eyebrow">Llistat</p>
-              <h3 id="sess-table-title">Totes les sessions</h3>
+              <p class="eyebrow">Forma &middot; Fatiga &middot; Frescor</p>
+              <h3>Performance Management Chart</h3>
             </div>
+            <span class="badge badge-muted">CTL &middot; ATL &middot; TSB &mdash; Tota la temporada</span>
+          </div>
+          <!-- llegenda explicativa -->
+          <div class="pmc-legend">
+            <span class="pmc-leg-item pmc-ctl">&#9644; CTL (Forma crònica, τ=42d)</span>
+            <span class="pmc-leg-item pmc-atl">&#9644; ATL (Fatiga aguda, τ=7d)</span>
+            <span class="pmc-leg-item pmc-tsb">&#9644; TSB (Frescor = CTL &minus; ATL)</span>
+            <span class="pmc-leg-sep">&middot;</span>
+            <span class="pmc-leg-hint">TSB &gt; +5 fresc &nbsp;|&nbsp; TSB &lt; &minus;10 fatigat</span>
+          </div>
+          <div class="chart-wrap pmc-chart-wrap">
+            <canvas id="chart-pmc"></canvas>
+          </div>
+        </article>
+
+        <!-- Taula intel·ligent -->
+        <article class="panel">
+          <div class="panel-header">
+            <div><p class="eyebrow">Llistat</p><h3 id="sess-table-title">Totes les sessions</h3></div>
             <span class="badge badge-muted" id="sess-count-badge">--</span>
           </div>
           <div class="table-shell">
@@ -409,7 +336,6 @@
         </article>
 
       </section>
-
     </main>
   </div>
 
