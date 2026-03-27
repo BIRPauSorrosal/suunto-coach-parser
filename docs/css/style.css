@@ -1,6 +1,5 @@
 /* ============================================================
    style.css — Suunto Coach Dashboard
-   Fase 1-4: layout, components, sessions, PMC
    ============================================================ */
 
 /* ── Reset & tokens ──────────────────────────────────────────── */
@@ -195,7 +194,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .plan-no-data     { color:var(--text-muted); font-size:.85rem; padding:16px 0; }
 .muted-msg        { color:var(--text-muted); font-size:.85rem; }
 
-/* Navegació anual/mensual/setmanal */
 .plan-year-nav,
 .plan-month-nav,
 .plan-week-nav    { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
@@ -206,7 +204,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .plan-week-counter    { font-size:.78rem; padding:2px 8px; border-radius:20px;
                          background:var(--surface-2); color:var(--text-muted); }
 
-/* Llegenda */
 .plan-legend      { display:flex; flex-direction:column; gap:8px; margin-bottom:20px;
                     font-size:.8rem; color:var(--text-muted); }
 .plan-legend-row  { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
@@ -215,110 +212,127 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .legend-dot       { display:inline-block; width:10px; height:10px; border-radius:50%; flex-shrink:0; }
 .legend-dot--phase { border-radius:3px; }
 
-/* ── Planning anual: grid únic de 52 setmanes ────────────────────────────── */
+/* ── Planning anual: calendari 3x4 targetes de mes (".pcy-*") ─────────────── */
 /*
-  Ordre de files dins el grid:
-    0 — Mesos    (psg-row-months)
-    1 — Setmanes (psg-row--weeks)   ← just sota els mesos
-    2 — Cicle    (psg-row)
-    3 — Fase     (psg-row)
-
-  Cada fila usa display:contents per heretar les columnes del grid pare.
-  grid-template-columns s'injecta per JS: 60px repeat(N, minmax(16px,1fr))
+  Estructura:
+    .pcy-grid                  → grid 4 columnes × 3 files (12 mesos)
+      .pcy-month-card           → targeta d'un mes
+        .pcy-month-header       → nom del mes + comptador
+        .pcy-inner              → grid intern repeat(N, 1fr)
+          .pcy-row.pcy-row--lbl   → etiquetes S1..SN
+          .pcy-row.pcy-row--cycle → botons/spans de cicle
+          .pcy-row.pcy-row--phase → botons/spans de fase
 */
-.plan-season-grid {
+
+/* Grid exterior: 4 columnes fixes, 3 files implícites */
+.pcy-grid {
   display: grid;
-  gap: 0;
-  overflow-x: auto;
-  padding-bottom: 8px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+@media (max-width: 900px) {
+  .pcy-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 520px) {
+  .pcy-grid { grid-template-columns: 1fr; }
 }
 
-/* Totes les files: display:contents per entrar al grid pare */
-.psg-row-months,
-.psg-row,
-.psg-row--weeks {
+/* Targeta de mes */
+.pcy-month-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--month-color, var(--border));
+  border-radius: var(--radius-lg);
+  padding: 14px 14px 12px;
+  transition: box-shadow .15s;
+}
+.pcy-month-card--empty {
+  opacity: 0.55;
+}
+.pcy-month-card:not(.pcy-month-card--empty):hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,.30);
+}
+
+/* Capçalera del mes */
+.pcy-month-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.pcy-month-name {
+  font-size: .82rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: .02em;
+}
+.pcy-month-count {
+  font-size: .68rem;
+  color: var(--text-muted);
+}
+
+/* Grid intern: N columnes (una per setmana del mes) */
+/* --n-weeks s'injecta per JS via style="--n-weeks:N" */
+.pcy-inner {
+  display: grid;
+  grid-template-columns: repeat(var(--n-weeks, 4), 1fr);
+  gap: 2px 3px;
+}
+
+/* Fila: display:contents perquè tots els fills entrin al grid intern */
+.pcy-row {
   display: contents;
 }
 
-/* ── Label de fila (col 1, 60px) ─────────────────────── */
-.psg-label {
-  display: flex;
-  align-items: center;
-  font-size: .68rem;
-  font-weight: 700;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  white-space: nowrap;
-  padding: 3px 0;
-}
-
-/* ── Fila 0: capçalera de mes ────────────────────────── */
-.psg-month {
+/* Etiquetes de setmana */
+.pcy-week-lbl {
   text-align: center;
-  font-size: .7rem;
-  font-weight: 700;
-  color: var(--blue);
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  padding: 2px 0 5px;
-  border-bottom: 1px solid var(--border);
-  /* marge baix per separar de les etiquetes de setmana */
-  margin-bottom: 4px;
-}
-
-/* ── Fila 1: etiquetes de setmana ────────────────────── */
-.psg-week-lbl {
-  text-align: center;
-  font-size: .58rem;
+  font-size: .55rem;
   color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding: 2px 1px 6px;
+  padding-bottom: 4px;
 }
-/* Setmana activa: ressalta l'etiqueta */
-.psg-week-lbl--active {
+.pcy-week-lbl--active {
   color: var(--accent);
   font-weight: 700;
 }
 
-/* ── Files 2 i 3: cel·les de cicle i fase ────────────── */
-.psg-cell {
+/* Cel·les de cicle */
+.pcy-cell {
   appearance: none;
   border: none;
   border-radius: 5px;
-  height: 22px;
+  height: 20px;
+  width: 100%;
   cursor: pointer;
-  opacity: 0.80;
+  opacity: 0.85;
   transition: opacity .15s, transform .15s, outline-offset .12s;
   outline: 2px solid transparent;
   outline-offset: 0px;
-  margin: 3px 2px 2px;
 }
-/* Cel·la buida: sense dades al planning */
-.psg-cell--empty {
+.pcy-cell--phase {
+  height: 13px;
+  border-radius: 4px;
+  opacity: 0.70;
+  margin-top: 1px;
+}
+/* Cel·la buida (sense dades) */
+.pcy-cell--empty {
   cursor: default;
   background: rgba(148,163,184,0.07) !important;
-  border: 1px dashed rgba(148,163,184,0.20);
+  border: 1px dashed rgba(148,163,184,0.18);
   opacity: 1;
   outline: none !important;
+  transform: none !important;
 }
-.psg-cell--phase {
-  border-radius: 4px;
-  height: 16px;
-  opacity: 0.70;
-  margin-top: 2px;
-}
-.psg-cell--phase.psg-cell--empty {
-  height: 16px;
-}
-.psg-cell:not(.psg-cell--empty):hover {
+.pcy-cell:not(.pcy-cell--empty):hover {
   opacity: 1;
   transform: translateY(-2px);
 }
-/* Setmana activa: outline del color de la cel·la */
-.psg-cell--active:not(.psg-cell--empty) {
+/* Setmana activa */
+.pcy-cell--active:not(.pcy-cell--empty) {
   opacity: 1;
   outline-offset: 3px;
 }

@@ -77,29 +77,22 @@ function updateLevelButtons() {
 }
 
 // ── Genera les setmanes ISO de l'any (dilluns a diumenge) ────────────────────
-// Retorna array de { isoStart: Date, isoEnd: Date } per totes les setmanes
-// on el dilluns (o almenys el divendres) pertany a l'any donat.
 function buildISOWeeks(year) {
   const weeks = [];
-  // Primer dilluns de l'any (o anterior)
-  const jan1 = new Date(year, 0, 1);
-  const dayOfWeek = jan1.getDay(); // 0=diumenge, 1=dilluns...
-  const offset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // quants dies fins dilluns
-  let monday = new Date(year, 0, 1 + offset);
+  const jan1     = new Date(year, 0, 1);
+  const dow      = jan1.getDay();
+  const offset   = dow === 0 ? -6 : 1 - dow;
+  let monday     = new Date(year, 0, 1 + offset);
 
-  while (true) {
+  while (monday.getFullYear() <= year) {
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
-    // Inclou la setmana si el dilluns o el diumenge pertany a l'any
-    if (monday.getFullYear() > year) break;
-    // Excloem setmanes que comencin l'any anterior i acabin molt aviat (< 4 dies dins l'any)
-    const daysInYear = sunday.getFullYear() === year
-      ? 7
-      : Math.max(0, new Date(year, 11, 31) - monday) / 86400000 + 1;
-    if (monday.getFullYear() < year && daysInYear < 4) {
-      monday = new Date(monday); monday.setDate(monday.getDate() + 7);
-      continue;
+    // Salta setmanes que comencin l'any anterior amb < 4 dies dins l'any
+    if (monday.getFullYear() < year) {
+      const daysIn = (new Date(year, 0, 1) - monday) / -86400000;
+      if (daysIn < 4) { monday = new Date(monday); monday.setDate(monday.getDate() + 7); continue; }
     }
+    if (monday.getFullYear() > year) break;
     weeks.push({ isoStart: new Date(monday), isoEnd: new Date(sunday) });
     monday = new Date(monday);
     monday.setDate(monday.getDate() + 7);
@@ -107,18 +100,32 @@ function buildISOWeeks(year) {
   return weeks;
 }
 
-// ── Troba el planning entry que solapa amb una setmana ISO ───────────────────
-function findPlanningForWeek(isoStart, isoEnd, planning) {
-  return planning.find(w =>
-    w.startDate <= isoEnd && w.endDate >= isoStart
-  ) || null;
+// ── Mes representatiu d'una setmana (dijous → convenció ISO) ─────────────────
+function isoWeekMonth(isoStart) {
+  const thu = new Date(isoStart);
+  thu.setDate(thu.getDate() + 3);
+  return thu.getMonth();
 }
 
-// ── Vista ANUAL — 52 setmanes ISO fixes, calendari complet ───────────────────
-// Ordre de files: Mesos → Setmanes → Cicle → Fase
-// Les setmanes sense dades al planning es mostren com a cel·les buides.
+// ── Troba el planning entry que solapa amb una setmana ISO ───────────────────
+function findPlanningForWeek(isoStart, isoEnd, planning) {
+  return planning.find(w => w.startDate <= isoEnd && w.endDate >= isoStart) || null;
+}
+
+// ── Vista ANUAL — calendari 3 files × 4 columnes de mesos ────────────────────
+//
+// Cada mes és una targeta .pcy-month-card amb:
+//   - header del mes
+//   - grid intern de N columnes (setmanes del mes)
+//   - fila etiquetes: S1..SN
+//   - fila cicle:     cel·les de color / buides
+//   - fila fase:      cel·les de color / buides
+//
+// El grid exterior és 4 columnes × 3 files (els 12 mesos de l'any).
 function renderYearlyView(container, planning, sessions) {
-  const monthNames = ['Gen','Feb','Mar','Abr','Mai','Jun','Jul','Ago','Set','Oct','Nov','Des'];
+  const MONTH_NAMES_SHORT = ['Gen','Feb','Mar','Abr','Mai','Jun','Jul','Ago','Set','Oct','Nov','Des'];
+  const MONTH_NAMES_LONG  = ['Gener','Febrer','Març','Abril','Maig','Juny',
+                              'Juliol','Agost','Setembre','Octubre','Novembre','Desembre'];
 
   const legendCycles = [
     ['BASE',        CYCLE_COLORS['BASE'].color],
@@ -134,88 +141,84 @@ function renderYearlyView(container, planning, sessions) {
     ['Consolidació', PHASE_COLORS['CONSOLIDACIÓ']],
     ['Competició',   PHASE_COLORS['COMPETICIÓ']],
   ];
+  const legendCyclesHTML = legendCycles.map(([k,col]) =>
+    `<span><span class="legend-dot" style="background:${col}"></span> ${k}</span>`).join('');
+  const legendPhasesHTML = legendPhases.map(([k,col]) =>
+    `<span><span class="legend-dot legend-dot--phase" style="background:${col}"></span> ${k}</span>`).join('');
 
-  const legendCyclesHTML = legendCycles.map(([k, col]) =>
-    `<span><span class="legend-dot" style="background:${col}"></span> ${k}</span>`
-  ).join('');
-  const legendPhasesHTML = legendPhases.map(([k, col]) =>
-    `<span><span class="legend-dot legend-dot--phase" style="background:${col}"></span> ${k}</span>`
-  ).join('');
-
-  // Genera les 52 (o 53) setmanes ISO de l'any
+  // Genera totes les setmanes ISO de l'any
   const isoWeeks = buildISOWeeks(planningYear);
-  const N = isoWeeks.length;
+  const today    = new Date(); today.setHours(0,0,0,0);
 
-  // Per cada setmana ISO, busca si hi ha entrada al planning
-  const today = new Date(); today.setHours(0,0,0,0);
-
+  // Enriqueix cada setmana amb el match del planning
   const weekData = isoWeeks.map((w, i) => {
-    const plan     = findPlanningForWeek(w.isoStart, w.isoEnd, planning);
+    const plan    = findPlanningForWeek(w.isoStart, w.isoEnd, planning);
+    const planIdx = plan ? planning.indexOf(plan) : -1;
     const isActive = today >= w.isoStart && today <= w.isoEnd;
-    const planIdx  = plan ? planning.indexOf(plan) : -1;
-    return { ...w, plan, isActive, planIdx, isoNum: i + 1 };
+    return { ...w, plan, planIdx, isActive, isoNum: i + 1 };
   });
 
-  // Calcula els blocs de mes a partir del dilluns de cada setmana
-  // El mes d'una setmana = mes del dijous (convenció ISO 8601)
-  const monthBlocks = [];
+  // Agrupa les setmanes per mes (convenció dijous ISO)
+  // month 0..11 → array de weekData
+  const byMonth = Array.from({ length: 12 }, () => []);
   weekData.forEach(w => {
-    const thursday = new Date(w.isoStart);
-    thursday.setDate(thursday.getDate() + 3); // dijous = dia representatiu
-    const m = thursday.getMonth();
-    // Però per l'any visual, assignem al mes del dilluns si el dijous és l'any correcte
-    const repMonth = thursday.getFullYear() === planningYear ? m : w.isoStart.getMonth();
-    const last = monthBlocks[monthBlocks.length - 1];
-    if (!last || last.month !== repMonth) monthBlocks.push({ month: repMonth, count: 0 });
-    monthBlocks[monthBlocks.length - 1].count++;
+    const m = isoWeekMonth(w.isoStart);
+    byMonth[m].push(w);
   });
 
-  // ── Construeix les files ──────────────────────────────────────────────────
+  // Genera les 12 targetes de mes
+  let cardsHTML = '';
+  for (let m = 0; m < 12; m++) {
+    const weeks = byMonth[m];
+    const N = weeks.length; // 4 o 5 setmanes
+    const hasAny = weeks.some(w => w.plan !== null);
 
-  // Fila 0 — Mesos
-  let monthRowHTML = '<div class="psg-label"></div>';
-  monthBlocks.forEach(b => {
-    monthRowHTML += `<div class="psg-month" style="grid-column:span ${b.count}">${monthNames[b.month]}</div>`;
-  });
+    // Fila etiquetes
+    let lblRow    = '';
+    let cycleRow  = '';
+    let phaseRow  = '';
 
-  // Fila 1 — Etiquetes de setmana (just sota els mesos)
-  let weekRowHTML = '<div class="psg-label">Setm.</div>';
-  weekData.forEach(w => {
-    const label = w.plan ? w.plan.setmana : `S${w.isoNum}`;
-    const tip   = escapeAttr(`${fmtDateShortP(w.isoStart)} → ${fmtDateShortP(w.isoEnd)}${w.plan ? ' · ' + w.plan.cicle : ''}`);
-    weekRowHTML += `<span class="psg-week-lbl${w.isActive ? ' psg-week-lbl--active' : ''}" title="${tip}">${label}</span>`;
-  });
+    weeks.forEach(w => {
+      // Etiqueta: nom del planning si n'hi ha, sino S{ISO}
+      const lbl = w.plan ? w.plan.setmana : `S${w.isoNum}`;
+      const tip = escapeAttr(`${fmtDateShortP(w.isoStart)} → ${fmtDateShortP(w.isoEnd)}`);
+      lblRow += `<span class="pcy-week-lbl${w.isActive ? ' pcy-week-lbl--active' : ''}" title="${tip}">${lbl}</span>`;
 
-  // Fila 2 — Cicle
-  let cycleRowHTML = '<div class="psg-label">Cicle</div>';
-  weekData.forEach(w => {
-    if (w.plan) {
-      const c         = getCycleStyle(w.plan.cicle);
-      const activeCls = w.isActive ? ' psg-cell--active' : '';
-      const tip       = escapeAttr(`${w.plan.setmana} · ${w.plan.cicle} · ${fmtDateShortP(w.isoStart)}→${fmtDateShortP(w.isoEnd)}`);
-      cycleRowHTML += `<button type="button" class="psg-cell${activeCls}" data-week="${w.planIdx}"
-        title="${tip}" style="background:${c.color};outline-color:${c.color}"></button>`;
-    } else {
-      cycleRowHTML += `<span class="psg-cell psg-cell--empty" title="${escapeAttr(fmtDateShortP(w.isoStart) + ' → ' + fmtDateShortP(w.isoEnd))}"></span>`;
-    }
-  });
+      if (w.plan) {
+        const c   = getCycleStyle(w.plan.cicle);
+        const ph  = getPhaseColor(w.plan.fase);
+        const act = w.isActive ? ' pcy-cell--active' : '';
+        const tcC = escapeAttr(`${w.plan.setmana} · ${w.plan.cicle}`);
+        const tcP = escapeAttr(`${w.plan.setmana} · ${w.plan.fase}`);
+        cycleRow += `<button type="button" class="pcy-cell${act}" data-week="${w.planIdx}"
+          title="${tcC}" style="background:${c.color};outline-color:${c.color}"></button>`;
+        phaseRow += `<button type="button" class="pcy-cell pcy-cell--phase${act}" data-week="${w.planIdx}"
+          title="${tcP}" style="background:${ph};outline-color:${ph}"></button>`;
+      } else {
+        cycleRow += `<span class="pcy-cell pcy-cell--empty" title="${tip}"></span>`;
+        phaseRow += `<span class="pcy-cell pcy-cell--phase pcy-cell--empty" title="${tip}"></span>`;
+      }
+    });
 
-  // Fila 3 — Fase
-  let phaseRowHTML = '<div class="psg-label">Fase</div>';
-  weekData.forEach(w => {
-    if (w.plan) {
-      const ph        = getPhaseColor(w.plan.fase);
-      const activeCls = w.isActive ? ' psg-cell--active' : '';
-      const tip       = escapeAttr(`${w.plan.setmana} · ${w.plan.fase} · ${fmtDateShortP(w.isoStart)}→${fmtDateShortP(w.isoEnd)}`);
-      phaseRowHTML += `<button type="button" class="psg-cell psg-cell--phase${activeCls}" data-week="${w.planIdx}"
-        title="${tip}" style="background:${ph};outline-color:${ph}"></button>`;
-    } else {
-      phaseRowHTML += `<span class="psg-cell psg-cell--phase psg-cell--empty" title="${escapeAttr(fmtDateShortP(w.isoStart) + ' → ' + fmtDateShortP(w.isoEnd))}"></span>`;
-    }
-  });
+    // Aplica color de border superior al mes si té dades
+    // Utilitza el color del primer cicle que apareix
+    const firstPlan  = weeks.find(w => w.plan)?.plan;
+    const monthColor = firstPlan ? getCycleStyle(firstPlan.cicle).color : 'var(--border)';
+    const emptyClass = hasAny ? '' : ' pcy-month-card--empty';
 
-  // ── Munta el grid ─────────────────────────────────────────────────────────
-  const gridStyle = `grid-template-columns:60px repeat(${N}, minmax(16px, 1fr))`;
+    cardsHTML +=
+      `<div class="pcy-month-card${emptyClass}" style="--month-color:${monthColor}">`
+      + `<div class="pcy-month-header">`
+      +   `<span class="pcy-month-name">${MONTH_NAMES_LONG[m]}</span>`
+      +   `<span class="pcy-month-count">${hasAny ? weeks.filter(w=>w.plan).length + ' set.' : '—'}</span>`
+      + `</div>`
+      + `<div class="pcy-inner" style="--n-weeks:${N}">`
+      +   `<div class="pcy-row pcy-row--lbl">${lblRow}</div>`
+      +   `<div class="pcy-row pcy-row--cycle">${cycleRow}</div>`
+      +   `<div class="pcy-row pcy-row--phase">${phaseRow}</div>`
+      + `</div>`
+      + `</div>`;
+  }
 
   container.innerHTML =
     navHTML()
@@ -223,16 +226,12 @@ function renderYearlyView(container, planning, sessions) {
     + '<div class="plan-legend-row"><span class="plan-legend-section">Cicles</span>' + legendCyclesHTML + '</div>'
     + '<div class="plan-legend-row"><span class="plan-legend-section">Fases</span>'  + legendPhasesHTML + '</div>'
     + '</div>'
-    + `<div class="plan-season-grid" style="${gridStyle}">`
-    +   `<div class="psg-row-months">${monthRowHTML}</div>`
-    +   `<div class="psg-row psg-row--weeks">${weekRowHTML}</div>`
-    +   `<div class="psg-row">${cycleRowHTML}</div>`
-    +   `<div class="psg-row">${phaseRowHTML}</div>`
-    + '</div>';
+    + `<div class="pcy-grid">${cardsHTML}</div>`;
 
   bindNavButtons(planning, sessions);
 
-  container.querySelectorAll('.psg-cell[data-week]').forEach(el => {
+  // Click en cel·la → vista setmanal
+  container.querySelectorAll('.pcy-cell[data-week]').forEach(el => {
     el.addEventListener('click', () => {
       planningWeekIndex = parseInt(el.dataset.week, 10);
       planningViewLevel = 'weekly';
@@ -243,11 +242,10 @@ function renderYearlyView(container, planning, sessions) {
   function navHTML() {
     return '<div class="plan-year-nav">'
       + '<button class="btn btn-ghost btn-sm" id="btn-year-prev">◄</button>'
-      + '<span class="plan-year-label">' + planningYear + '</span>'
+      + `<span class="plan-year-label">${planningYear}</span>`
       + '<button class="btn btn-ghost btn-sm" id="btn-year-next">►</button>'
       + '</div>';
   }
-
   function bindNavButtons(pl, sess) {
     document.getElementById('btn-year-prev')?.addEventListener('click', () => {
       planningYear--; renderPlanningLevel(pl, sess);
@@ -404,7 +402,6 @@ function renderWeeklyPlanView(container, planning, sessions) {
     + '</div>'
 
     + '<div class="pwv-grid">'
-
     + '<article class="panel pwv-block">'
     +   '<p class="eyebrow">🎯 Qualitat</p>'
     +   '<ul class="sw-plan-list" style="margin-top:12px">'
@@ -416,7 +413,6 @@ function renderWeeklyPlanView(container, planning, sessions) {
     +     qReal
     +   '</ul>'
     + '</article>'
-
     + '<article class="panel pwv-block">'
     +   '<p class="eyebrow">🫁 Z2</p>'
     +   '<ul class="sw-plan-list" style="margin-top:12px">'
@@ -427,7 +423,6 @@ function renderWeeklyPlanView(container, planning, sessions) {
     +     z2Real
     +   '</ul>'
     + '</article>'
-
     + '<article class="panel pwv-block">'
     +   '<p class="eyebrow">🏃 Tirada llarga</p>'
     +   '<ul class="sw-plan-list" style="margin-top:12px">'
@@ -437,7 +432,6 @@ function renderWeeklyPlanView(container, planning, sessions) {
     +     llReal
     +   '</ul>'
     + '</article>'
-
     + '<article class="panel pwv-block">'
     +   '<p class="eyebrow">💪 Força / Pàdel</p>'
     +   '<ul class="sw-plan-list" style="margin-top:12px">'
@@ -446,7 +440,6 @@ function renderWeeklyPlanView(container, planning, sessions) {
     +     extraReal
     +   '</ul>'
     + '</article>'
-
     + '</div>';
 
   document.getElementById('btn-wplan-prev')?.addEventListener('click', () => {
@@ -460,7 +453,6 @@ function renderWeeklyPlanView(container, planning, sessions) {
 // ── Stats per setmana (JOIN planning ↔ sessions) ──────────────────────────────
 function getWeekStats(week, sessions) {
   const ws = sessions.filter(s => s.date >= week.startDate && s.date <= week.endDate);
-
   const kmTotal    = ws.reduce((acc, s) => acc + (s.distancia || 0), 0);
   const kmQuality  = ws.filter(s => ['TEMPO','TEST','INTERVALS'].includes(s.tipusKey))
                        .reduce((acc, s) => acc + (s.distancia || 0), 0);
@@ -470,18 +462,15 @@ function getWeekStats(week, sessions) {
                        .reduce((acc, s) => acc + (s.distancia || 0), 0);
   const hasStrength = ws.some(s => s.tipusKey.startsWith('FORÇA') || s.tipusKey.startsWith('FORCA'));
   const hasPadel    = ws.some(s => ['PADEL','TENIS','TENNIS'].includes(s.tipusKey));
-
   const pctTotal   = week.kmTotal > 0 ? Math.round((kmTotal   / week.kmTotal) * 100) : 0;
   const pctQuality = week.qKm     > 0 ? Math.round((kmQuality / week.qKm)     * 100) : null;
   const pctZ2      = parseFloat(week.raw['Z2_Km_Plan']) > 0
-                   ? Math.round((kmZ2  / parseFloat(week.raw['Z2_Km_Plan']))   * 100) : null;
-  const pctLong    = week.llKm    > 0 ? Math.round((kmLong    / week.llKm)    * 100) : null;
-
+                   ? Math.round((kmZ2  / parseFloat(week.raw['Z2_Km_Plan'])) * 100) : null;
+  const pctLong    = week.llKm > 0 ? Math.round((kmLong / week.llKm) * 100) : null;
   const today  = new Date(); today.setHours(0,0,0,0);
   const start  = new Date(week.startDate); start.setHours(0,0,0,0);
   const end    = new Date(week.endDate);   end.setHours(23,59,59,999);
   const status = today < start ? 'future' : today > end ? 'done' : 'active';
-
   return { ws, kmTotal, kmQuality, kmZ2, kmLong,
            hasStrength, hasPadel,
            pctTotal, pctQuality, pctZ2, pctLong, status };
@@ -493,9 +482,6 @@ function getCycleStyle(cicle) {
 }
 function getPhaseColor(fase) {
   return PHASE_COLORS[String(fase || '').toUpperCase().trim()] || PHASE_DEFAULT;
-}
-function capitalize(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 function formatFCRangeP(min, max) {
   if (!min && !max) return '--';
