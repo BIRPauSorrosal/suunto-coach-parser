@@ -284,18 +284,13 @@
               <p class="eyebrow">Forma &middot; Fatiga &middot; Frescor</p>
               <h3>Performance Management Chart</h3>
             </div>
-            <!-- Botons d'exportació: desactivats fins que renderPMC() tingui dades -->
             <div class="pmc-export-btns">
-              <button id="pmc-export-7"
-                      class="btn btn-ghost btn-sm"
-                      disabled
+              <button id="pmc-export-7" class="btn btn-ghost btn-sm" disabled
                       onclick="exportPMCcsv(7)"
                       title="Exporta els darrers 7 dies com a CSV per enviar a la IA">
                 ↓ CSV 7 dies
               </button>
-              <button id="pmc-export-90"
-                      class="btn btn-ghost btn-sm"
-                      disabled
+              <button id="pmc-export-90" class="btn btn-ghost btn-sm" disabled
                       onclick="exportPMCcsv(90)"
                       title="Exporta els darrers 90 dies com a CSV per enviar a la IA">
                 ↓ CSV 90 dies
@@ -312,11 +307,23 @@
           <div class="chart-wrap pmc-chart-wrap"><canvas id="chart-pmc"></canvas></div>
         </article>
 
-        <!-- Taula -->
+        <!-- Taula Sessions -->
         <article class="panel">
           <div class="panel-header">
             <div><p class="eyebrow">Llistat</p><h3 id="sess-table-title">Totes les sessions</h3></div>
-            <span class="badge badge-muted" id="sess-count-badge">--</span>
+            <div class="pmc-export-btns">
+              <span class="badge badge-muted" id="sess-count-badge">--</span>
+              <button id="sess-export-7" class="btn btn-ghost btn-sm" disabled
+                      onclick="exportSessionsCSV(7)"
+                      title="Exporta els darrers 7 dies de sessions com a CSV per enviar a la IA">
+                ↓ CSV 7 dies
+              </button>
+              <button id="sess-export-90" class="btn btn-ghost btn-sm" disabled
+                      onclick="exportSessionsCSV(90)"
+                      title="Exporta els darrers 90 dies de sessions com a CSV per enviar a la IA">
+                ↓ CSV 90 dies
+              </button>
+            </div>
           </div>
           <div class="table-shell">
             <table id="sess-table">
