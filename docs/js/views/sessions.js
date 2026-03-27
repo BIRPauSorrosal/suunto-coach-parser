@@ -278,16 +278,11 @@ function renderSessTrendChart(sessions) {
   const existing = Chart.getChart(ctx);
   if (existing) existing.destroy();
   _sessChart = null;
-
-  // FIX: mostrar gràfic amb 1 sola sessió (abans exigia length >= 2)
   if (sessions.length < 1) { ctx.style.display='none'; return; }
   ctx.style.display = '';
-
-  // testrace opera per sessió individual → no cal agrupar per setmana
   const byWeek = (_sessType === 'testrace')
-    ? sessions.map(s => ({ ...s, label: s.displayDate }))   // array de sessions, no setmanes
+    ? sessions.map(s => ({ ...s, label: s.displayDate }))
     : groupByWeek(sessions);
-
   _sessChart = new Chart(ctx, buildSessChartConfig(byWeek, byWeek.map(w=>w.label), sessions));
 }
 
@@ -351,17 +346,18 @@ function groupByWeek(sessions) {
 // ════════════════════════════════════════════════════════════════════════════
 // buildSessChartConfig
 //
-// Eixos:
-//   y   → LEFT  — km / desnivell / TSS
+// Eixos (cas 'long'):
+//   y   → LEFT  — Km (barra)
 //   y2  → RIGHT — Ritme min/km (invertit, 3–8)
-//   y3  → RIGHT — FC + Cadència (offset:true, no xoca amb y2)
+//   y3  → RIGHT — FC ppm (offset:true)
+//   y4  → LEFT  — Desnivell m (línia, offset:true → no distorsiona escala km)
 // ════════════════════════════════════════════════════════════════════════════
 
 function buildSessChartConfig(byWeek, labels, sessions) {
   const C = CHART_COLORS;
   const COL = {
     km:   { bar:'rgba(56,189,248,0.35)',  line:'rgba(56,189,248,0.9)'  },
-    desn: { bar:'rgba(148,163,184,0.35)', line:'rgba(148,163,184,0.9)' },
+    desn: { line:'rgba(148,163,184,0.9)' },
     ritme:{ line:'rgba(34,197,94,0.9)'   },
     fc:   { line:'rgba(249,115,22,0.9)'  },
     cad:  { line:'rgba(168,85,247,0.85)' },
@@ -386,6 +382,11 @@ function buildSessChartConfig(byWeek, labels, sessions) {
     grid:{ drawOnChartArea:false },
     ticks:{ ...yBase.ticks, callback: v => `${v}` },
     title:{ display:true, text:'ppm / spm', color:C.text, font:{size:10} } });
+  // Desnivell: eix esquerre separat per no distorsionar l'escala de km
+  const scaleDesn = () => ({ ...yBase, position:'left', offset:true,
+    grid:{ drawOnChartArea:false },
+    ticks:{ ...yBase.ticks, callback: v => `${v} m` },
+    title:{ display:true, text:'m D+', color:C.text, font:{size:10} } });
 
   function tooltipLabel(c) {
     const v = c.parsed.y; if (v == null) return null;
@@ -449,8 +450,8 @@ function buildSessChartConfig(byWeek, labels, sessions) {
       return { type:'bar', data:{labels,datasets}, options:{...baseOpts,
         plugins:{...baseOpts.plugins, tooltip:{callbacks:{label:tooltipLabel}}},
         scales:{ x:baseOpts.scales.x, y:scaleKm('km'),
-          y2: hasRitme        ? scaleRitme()    : { display:false },
-          y3: (hasFC||hasCad) ? scaleFC()       : { display:false } }
+          y2: hasRitme        ? scaleRitme() : { display:false },
+          y3: (hasFC||hasCad) ? scaleFC()    : { display:false } }
       }};
     }
 
@@ -497,9 +498,14 @@ function buildSessChartConfig(byWeek, labels, sessions) {
           backgroundColor:COL.km.bar, borderColor:COL.km.line,
           borderWidth:1, borderRadius:4, yAxisID:'y' },
       ];
-      if (hasDesn) datasets.push({ type:'bar', label:'Desnivell (m)',
-        data:byWeek.map(w=>w.desnivell), backgroundColor:COL.desn.bar,
-        borderColor:COL.desn.line, borderWidth:1, borderRadius:4, yAxisID:'y' });
+      // Desnivell com a LÍNIA (y4 esquerra, eix independent per no distorsionar km)
+      if (hasDesn) datasets.push({
+        type:'line', label:'Desnivell (m)',
+        data:byWeek.map(w=>w.desnivell),
+        borderColor:COL.desn.line, backgroundColor:'transparent',
+        borderWidth:2, pointRadius:4, pointHoverRadius:6,
+        tension:0.3, yAxisID:'y4', spanGaps:true
+      });
       if (hasRitme) datasets.push({ type:'line', label:'Ritme mig (min/km)',
         data:byWeek.map(w=>w.avgPace), borderColor:COL.ritme.line, backgroundColor:'transparent',
         borderWidth:2, pointRadius:4, tension:0.3, yAxisID:'y2', spanGaps:true });
@@ -508,15 +514,18 @@ function buildSessChartConfig(byWeek, labels, sessions) {
         borderWidth:2, pointRadius:4, tension:0.3, yAxisID:'y3', spanGaps:true });
       return { type:'bar', data:{labels,datasets}, options:{...baseOpts,
         plugins:{...baseOpts.plugins, tooltip:{callbacks:{label:tooltipLabel}}},
-        scales:{ x:baseOpts.scales.x, y:scaleKm('km / m'),
-          y2: hasRitme ? scaleRitme() : { display:false },
-          y3: hasFC    ? scaleFC()    : { display:false } }
+        scales:{
+          x:  baseOpts.scales.x,
+          y:  scaleKm('km'),
+          y2: hasRitme ? scaleRitme()  : { display:false },
+          y3: hasFC    ? scaleFC()     : { display:false },
+          y4: hasDesn  ? scaleDesn()   : { display:false },
+        }
       }};
     }
 
-    // ── TEST / CURSA (per sessió individual, no agrupat per setmana) ─────────────
+    // ── TEST / CURSA ─────────────────────────────────────────────────────────
     case 'testrace': {
-      // byWeek ja és l'array de sessions individuals (veure renderSessTrendChart)
       const sorted   = [...sessions].sort((a,b)=>a.date-b.date);
       const sLabels  = sorted.map(s=>s.displayDate);
       const hasDesn  = sorted.some(s => { const d=toNumber(s.raw['Desnivell(m)']); return typeof d==='number'&&d>0; });
@@ -530,7 +539,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
       ];
       if (hasDesn) datasets.push({ type:'bar', label:'Desnivell (m)',
         data:sorted.map(s=>{ const d=toNumber(s.raw['Desnivell(m)']); return (typeof d==='number'&&d>0)?d:null; }),
-        backgroundColor:COL.desn.bar, borderColor:COL.desn.line,
+        backgroundColor:'rgba(148,163,184,0.3)', borderColor:'rgba(148,163,184,0.9)',
         borderWidth:1, borderRadius:4, yAxisID:'y' });
       if (hasRitme) datasets.push({ type:'line', label:'Ritme (min/km)',
         data:sorted.map(s=>(typeof s.ritme==='number'&&s.ritme>0)?s.ritme:null),
