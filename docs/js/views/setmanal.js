@@ -1,11 +1,8 @@
 // docs/js/views/setmanal.js — Fase 4: vista detallada setmana actual
 // Funció principal: renderSetmanalView(sessions, planning)
 // Dep: lib/formatters.js (formatPace, fmtNum, formatDate, toNumber, esc)
-//      app.js (detectActiveWeek)
-
-const QUALITY_TYPES_V = new Set(['TEMPO', 'TEST', 'INTERVALS']);
-const LONG_TYPES_V    = new Set(['LLARGA', 'MARATÓ', 'TRAIL', 'MITJA', 'MARATO']);
-const PADEL_TYPES_V   = new Set(['PADEL', 'TENIS', 'TENNIS']);
+//      app.js (detectActiveWeek, QUALITY_TYPES, LONG_TYPES, PADEL_TYPES, STRENGTH_RE)
+// NOTA: No declarar aquí constants de tipus — usar les de app.js
 
 let currentWeekIndex = 0;
 
@@ -94,7 +91,10 @@ function renderWeekProgress(week, weekSessions) {
 
 // ── Bloc Qualitat ─────────────────────────────────────────────────────────────
 function renderQualityBlock(week, weekSessions) {
-  const sess   = weekSessions.filter(s => QUALITY_TYPES_V.has(s.tipusKey));
+  // Usa QUALITY_TYPES de app.js (inclou TEST per planificació, però SESS_GROUPS
+  // de sessions.js separa 'testrace'. Aquí usem el Set ampliat per al bloc setmanal.)
+  const qualityTypesSetmanal = new Set([...QUALITY_TYPES, 'TEST']);
+  const sess   = weekSessions.filter(s => qualityTypesSetmanal.has(s.tipusKey));
   const realKm = sess.reduce((a, s) => a + (s.distancia || 0), 0);
 
   const ritmeReal = sess.length
@@ -176,7 +176,7 @@ function renderZ2Block(week, weekSessions) {
 
 // ── Bloc Tirada llarga ────────────────────────────────────────────────────────
 function renderLongBlock(week, weekSessions) {
-  const sess   = weekSessions.filter(s => LONG_TYPES_V.has(s.tipusKey));
+  const sess   = weekSessions.filter(s => LONG_TYPES.has(s.tipusKey));
   const realKm = sess.reduce((a, s) => a + (s.distancia || 0), 0);
 
   const ritmeReal = sess.length
@@ -201,9 +201,8 @@ function renderLongBlock(week, weekSessions) {
 
 // ── Bloc Força ────────────────────────────────────────────────────────────────
 function renderForcaBlock(week, weekSessions) {
-  const sess = weekSessions.filter(s =>
-    s.tipusKey.startsWith('FORÇA') || s.tipusKey.startsWith('FORCA')
-  );
+  // Usa STRENGTH_RE de app.js
+  const sess = weekSessions.filter(s => STRENGTH_RE.test(s.tipusKey));
 
   setTextV('sw-forca-plan', week.forcaPlan || '--');
   setTextV('sw-forca-real', sess.length ? `${sess.length} sess.` : '—');
@@ -219,7 +218,8 @@ function renderForcaBlock(week, weekSessions) {
 
 // ── Bloc Altres ───────────────────────────────────────────────────────────────
 function renderAltresBlock(week, weekSessions) {
-  const sess        = weekSessions.filter(s => PADEL_TYPES_V.has(s.tipusKey));
+  // Usa PADEL_TYPES de app.js
+  const sess        = weekSessions.filter(s => PADEL_TYPES.has(s.tipusKey));
   const totalDurada = sess.reduce((a, s) => a + (s.durada || 0), 0);
 
   setTextV('sw-altres-padel-plan',    week.padelPlan || '--');

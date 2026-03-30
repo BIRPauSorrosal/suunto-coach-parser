@@ -1,6 +1,7 @@
 // docs/js/lib/metrics.js
 // Càlculs de negoci purs — sense DOM, sense Chart.js
 // Disponibles globalment per a totes les vistes
+// DEP: lib/formatters.js ha d'estar carregat abans (usa toNumber)
 
 // ── Constants PMC ─────────────────────────────────────────────────────────────
 const PMC_CTL_TAU = 42;
@@ -33,7 +34,9 @@ function parseDurSeries(session) {
 }
 
 // ── groupByWeek ───────────────────────────────────────────────────────────────
-// Agrupa sessions per setmana i calcula agregats
+// Agrupa sessions per setmana natural (dilluns–diumenge) i calcula agregats.
+// NOTA: Diferent de buildWeeklyData() a charts.js, que usa el planning com a eix.
+//       Usar groupByWeek per a vistes de sessions; buildWeeklyData per a Overview.
 function groupByWeek(sessions) {
   const map = new Map();
   const sorted = [...sessions].sort((a, b) => a.date - b.date);

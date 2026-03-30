@@ -1,8 +1,10 @@
 // docs/js/views/sessions.js
 // Panell Sessions: filtres, KPIs, gràfic tendència, PMC + exportació CSV, taula
 // Dep: lib/formatters.js (formatPace, fmtNum, toNumber, esc)
-//      lib/metrics.js    (buildPMCData, groupByWeek)
-//      app.js            (CHART_COLORS via charts.js)
+//      lib/metrics.js    (buildPMCData, groupByWeek, parseDurSeries)
+//      app.js            (CHART_COLORS via charts.js, STRENGTH_RE, PADEL_TYPES,
+//                         QUALITY_TYPES, LONG_TYPES, TEST_RACE_TYPES)
+// NOTA: No declarar aquí constants de tipus — usar les de app.js
 
 let _sessSessions = [];
 let _sessType     = 'all';
@@ -11,14 +13,15 @@ let _sessChart    = null;
 let _pmcChart     = null;
 let _pmcDataCache = [];
 
+// SESS_GROUPS: usa les constants centralitzades de app.js
 const SESS_GROUPS = {
   z2:        s => s.tipusKey === 'Z2',
-  quality:   s => ['TEMPO', 'INTERVALS'].includes(s.tipusKey),
-  long:      s => ['LLARGA', 'MARATÓ', 'TRAIL', 'MITJA', 'MARATO'].includes(s.tipusKey),
-  testrace:  s => ['TEST', 'CURSA'].includes(s.tipusKey),
-  strength:  s => /^FOR[\u00c7C]A/i.test(s.tipusKey),
-  other:     s => !['Z2','TEMPO','INTERVALS','LLARGA','MARATÓ','TRAIL','MITJA','MARATO',
-                    'TEST','CURSA'].includes(s.tipusKey) && !/^FOR[\u00c7C]A/i.test(s.tipusKey),
+  quality:   s => QUALITY_TYPES.has(s.tipusKey),
+  long:      s => LONG_TYPES.has(s.tipusKey),
+  testrace:  s => TEST_RACE_TYPES.has(s.tipusKey),
+  strength:  s => STRENGTH_RE.test(s.tipusKey),
+  other:     s => !RUNNING_TYPES.has(s.tipusKey) && !STRENGTH_RE.test(s.tipusKey)
+               && !TEST_RACE_TYPES.has(s.tipusKey) && !PADEL_TYPES.has(s.tipusKey),
 };
 
 const SESS_TYPE_LABELS = {
@@ -536,14 +539,16 @@ function getSessCols(type) {
   };
   switch (type) {
     case 'z2':       return [colData,colKm,colDurada,colRitme,colCad,colFC,colZ2min,colEpoc,colCarrega];
-    case 'quality':  return [colData,colTipus,colKm,colDurada,colSeries,colDurSerie,colRitmeSeries,colFCSeries,colPTE,colCarrega];
-    case 'long':     return [colData,colTipus,colKm,colDurada,colRitme,colZ2min,colDesnivell,colFC,colCarrega];
-    case 'testrace': return [colData,colTipus,colKm,colDurada,colRitme,colFC,colDesnivell,colEpoc,colCarrega];
-    case 'strength': return [colData,colTipus,colDurada,colEpoc,colRecup,colCarrega];
-    case 'other':    return [colData,colTipus,colDurada,colFC,colEpoc,colCarrega];
-    default:         return [colData,colTipus,colKm,colDurada,colFC,colEpoc,colCarrega];
+    case 'quality':  return [colData,colTipus,colSeries,colDurSerie,colRitmeSeries,colFCSeries,colKm,colCarrega,colPTE];
+    case 'long':     return [colData,colTipus,colKm,colDurada,colRitme,colFC,colDesnivell,colZ2min,colCarrega];
+    case 'testrace': return [colData,colTipus,colKm,colDurada,colRitme,colFC,colDesnivell,colCarrega];
+    case 'strength': return [colData,colTipus,colDurada,colCarrega,colEpoc,colRecup];
+    case 'other':    return [colData,colTipus,colDurada,colCarrega,colEpoc];
+    default:         return [colData,colTipus,colKm,colDurada,colRitme,colFC,colCarrega,colEpoc];
   }
 }
 
-// ── Helpers locals ────────────────────────────────────────────────────────
-function setSessText(id, value) { const el=document.getElementById(id); if(el) el.textContent=value; }
+function setSessText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}

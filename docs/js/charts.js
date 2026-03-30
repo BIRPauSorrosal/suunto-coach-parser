@@ -1,5 +1,13 @@
 // charts.js — Fase 3: visualitzacions Chart.js
 // Rep les dades ja processades des de app.js via initCharts()
+// DEP: app.js ha d'estar carregat abans (usa CHART_COLORS des d'aquí)
+//
+// NOTA sobre buildWeeklyData vs groupByWeek (lib/metrics.js):
+//   - buildWeeklyData (aquest fitxer): eix = setmanes del PLANNING.
+//     Usada per a Overview (Km pla vs real, càrrega).
+//   - groupByWeek (metrics.js): eix = setmanes naturals de calendari (dilluns).
+//     Usada per a la vista de Sessions.
+//   No són intercanviables: retornen grups per criteris d'agrupació diferents.
 
 const CHART_COLORS = {
   green:       '#22c55e',
@@ -38,7 +46,8 @@ function destroyAll() {
   Object.keys(chartInstances).forEach(key => delete chartInstances[key]);
 }
 
-// ── Dades setmanals ──────────────────────────────────────────────────────────
+// ── Dades setmanals (eix planning) ───────────────────────────────────────────
+// Veure nota a la capçalera sobre la diferència amb groupByWeek de metrics.js
 function buildWeeklyData(sessions, planning) {
   return planning.map(week => {
     const weekSessions = sessions.filter(s =>
