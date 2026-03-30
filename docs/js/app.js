@@ -230,18 +230,23 @@ function enrichSessionRow(row) {
 
 // ── Detecció setmana activa ───────────────────────────────────────────────────
 function detectActiveWeek(planning, sessions) {
-  if (!planning.length) return null;
-
-  const latest = sessions[0];
-  if (latest) {
-    const match = planning.find(w => latest.date >= w.startDate && latest.date <= w.endDate);
-    if (match) return match;
-  }
-
+  // PRIORITAT 1: setmana del calendari que conté AVUI
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   const todayWeek = planning.find(w => today >= w.startDate && today <= w.endDate);
   if (todayWeek) return todayWeek;
 
+  // PRIORITAT 2: setmana de la última sessió registrada
+  const latest = sessions[0];
+  if (latest) {
+    const match = planning.find(w =>
+      latest.date >= w.startDate && latest.date <= w.endDate
+    );
+    if (match) return match;
+  }
+
+  // FALLBACK: última setmana del planning
   return planning[planning.length - 1];
 }
 

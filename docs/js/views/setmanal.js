@@ -18,6 +18,14 @@ function renderSetmanalView(sessions, planning) {
 
 // ── Detecció setmana activa ───────────────────────────────────────────────────
 function detectActiveWeekIndex(sessions, planning) {
+  // PRIORITAT 1: setmana del calendari que conté AVUI
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const todayIdx = planning.findIndex(w => today >= w.startDate && today <= w.endDate);
+  if (todayIdx !== -1) return todayIdx;
+
+  // PRIORITAT 2: setmana de la última sessió registrada
   const latest = sessions[0];
   if (latest) {
     const idx = planning.findIndex(w =>
@@ -25,9 +33,9 @@ function detectActiveWeekIndex(sessions, planning) {
     );
     if (idx !== -1) return idx;
   }
-  const today = new Date();
-  const idx = planning.findIndex(w => today >= w.startDate && today <= w.endDate);
-  return idx !== -1 ? idx : planning.length - 1;
+
+  // FALLBACK: última setmana
+  return planning.length - 1;
 }
 
 // ── Navegació ─────────────────────────────────────────────────────────────────
