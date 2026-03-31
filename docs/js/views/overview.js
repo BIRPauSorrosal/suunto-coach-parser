@@ -2,7 +2,7 @@
 // Vista Overview: hero-cards + metric-boxes + panells Test/Cursa + Altres
 // Dep: app.js (constants, helpers, detectActiveWeek, formatPace)
 
-// ── Punt d'entrada ────────────────────────────────────────────────────────────
+// ── Punt d'entrada ──────────────────────────────────────────────────────────
 function renderOverviewView(sessions, planning) {
   const activeWeek     = detectActiveWeek(planning, sessions);
   const weeklySessions = activeWeek
@@ -12,6 +12,7 @@ function renderOverviewView(sessions, planning) {
   renderOverview(activeWeek, weeklySessions);
   renderCycleProgress(activeWeek, planning);
   renderSummary(activeWeek, weeklySessions);
+  renderEpocPanel(sessions);
   renderTestRacePanel(sessions);
   renderOthersPanel(sessions);
 
@@ -34,31 +35,24 @@ function renderOverview(activeWeek, weeklySessions) {
   setText('compliance-value',  compliance == null ? '-- %' : `${Math.round(compliance)} %`);
 }
 
-// ── Progrés del cicle (#P2) ───────────────────────────────────────────────────
-// Mostra: títol del cicle, setmana X de N, barra de progrés i pills de fases.
-// Un "cicle" és el conjunt de setmanes consecutives amb el mateix valor a
-// la columna Cicle del planning. La setmana activa determina quin cicle
-// es visualitza.
+// ── Progrés del cicle (#P2) ─────────────────────────────────────────────────────
 function renderCycleProgress(activeWeek, planning) {
-  const barEl    = document.getElementById('cycle-bar-fill');
-  const titleEl  = document.getElementById('cycle-title');
+  const barEl     = document.getElementById('cycle-bar-fill');
+  const titleEl   = document.getElementById('cycle-title');
   const counterEl = document.getElementById('cycle-week-counter');
-  const phasesEl = document.getElementById('cycle-phases');
+  const phasesEl  = document.getElementById('cycle-phases');
   if (!barEl || !titleEl || !counterEl || !phasesEl) return;
 
-  // Sense setmana activa → panell buit
   if (!activeWeek) {
-    titleEl.textContent  = 'Sense cicle detectat';
+    titleEl.textContent   = 'Sense cicle detectat';
     counterEl.textContent = '-- / --';
-    barEl.style.width    = '0%';
-    phasesEl.innerHTML   = '';
+    barEl.style.width     = '0%';
+    phasesEl.innerHTML    = '';
     return;
   }
 
   const currentCycle = activeWeek.cicle;
-
-  // Totes les setmanes del mateix cicle, ordenades cronològicament
-  const cycleWeeks = planning
+  const cycleWeeks   = planning
     .filter(w => w.cicle === currentCycle)
     .sort((a, b) => a.startDate - b.startDate);
 
@@ -66,20 +60,16 @@ function renderCycleProgress(activeWeek, planning) {
   const currentIndex = cycleWeeks.findIndex(
     w => w.startDate.getTime() === activeWeek.startDate.getTime()
   );
-  // currentIndex pot ser -1 si la setmana activa no és del cicle (no hauria de passar)
   const weekNum = currentIndex >= 0 ? currentIndex + 1 : 1;
   const pct     = totalWeeks > 0 ? Math.round((weekNum / totalWeeks) * 100) : 0;
 
-  // Títol i comptador
   titleEl.textContent   = currentCycle;
   counterEl.textContent = `Setmana ${weekNum} / ${totalWeeks}`;
   barEl.style.width     = `${pct}%`;
 
-  // Pills de fases: agrupa setmanes consecutives per Fase i marca l'activa
-  // Exemple: [Acumulació x3] [Específic x4*] [Tapering x1]
   const phases = [];
-  cycleWeeks.forEach((w, i) => {
-    const last = phases[phases.length - 1];
+  cycleWeeks.forEach(w => {
+    const last     = phases[phases.length - 1];
     const isActive = w.startDate.getTime() === activeWeek.startDate.getTime();
     if (last && last.fase === w.fase) {
       last.count++;
@@ -95,7 +85,7 @@ function renderCycleProgress(activeWeek, planning) {
   }).join('');
 }
 
-// ── Metric-boxes (resum setmana activa) ──────────────────────────────────────
+// ── Metric-boxes (resum setmana activa) ────────────────────────────────────────────
 function renderSummary(activeWeek, weeklySessions) {
   const quality  = weeklySessions.filter(s => QUALITY_TYPES.has(s.tipusKey));
   const llong    = weeklySessions.filter(s => LONG_TYPES.has(s.tipusKey));
@@ -106,7 +96,7 @@ function renderSummary(activeWeek, weeklySessions) {
   const longKm          = sumNumbers(llong.map(s => s.distancia));
   const strengthMin     = sumNumbers(strength.map(s => s.durada));
 
-  // \u2500 Qualitat: 2 l\u00ednies al strong (ritme / ppm) ──────────────────
+  // ─ Qualitat ──────────────────────────────────────────────────────────────────
   if (quality.length) {
     const ritmeMitja = quality.map(s => s.ritmeMitjaSeries).filter(v => isFinite(v));
     const fcMitja    = quality.map(s => s.fcMitjaSeries).filter(v => isFinite(v));
@@ -125,13 +115,13 @@ function renderSummary(activeWeek, weeklySessions) {
     ? `Pla: ${activeWeek.qSeries} s\u00e8r \u00b7 ${activeWeek.qDuradaSerie}' \u00b7 ${formatPace(activeWeek.qRitme)}`
     : 'Sense planning setmanal disponible');
 
-  // \u2500 Z1+Z2 running ───────────────────────────────────────────────
+  // ─ Z1+Z2 ─────────────────────────────────────────────────────────────────────
   setText('z2-summary', z1z2Minutes ? `${formatNumber(z1z2Minutes)} min` : '\u2014');
   setText('z2-detail', activeWeek
     ? `Ritme Z2: ${formatPace(activeWeek.z2PaceMin, '')}\u2013${formatPace(activeWeek.z2PaceMax)}`
     : 'Sense rang de ritme planificat');
 
-  // \u2500 Tirada llarga ───────────────────────────────────────────────
+  // ─ Tirada llarga ───────────────────────────────────────────────────────────
   setText('long-summary', longKm ? `${formatNumber(longKm)} km` : '\u2014');
   setText('long-detail', activeWeek
     ? `Pla: ${activeWeek.llTipus} \u00b7 ${formatNumber(activeWeek.llKm)} km`
@@ -145,14 +135,87 @@ function renderSummary(activeWeek, weeklySessions) {
     setText('long-real', '');
   }
 
-  // \u2500 For\u00e7a ────────────────────────────────────────────────────────
+  // ─ For\u00e7a ───────────────────────────────────────────────────────────────────
   setText('strength-summary', strength.length ? `${strength.length} sessions` : '\u2014');
   setText('strength-detail', activeWeek
     ? `Pla: ${activeWeek.forcaPlan} \u00b7 ${formatNumber(strengthMin)} min reals`
     : 'Sense sessions de for\u00e7a aquesta setmana');
 }
 
-// ── Panell Test & Cursa ───────────────────────────────────────────────────────
+// ── Panell EPOC & Recuperació (#P3) ──────────────────────────────────────────────
+// Finestra: últims 7 dies. Sessions assumides finalitzades a les 20:00h.
+// EPOC: suma de tots els valors EPOC dels últims 7 dies.
+// Recuperació: màxim de (Recup(h) - hores_transcorregudes) per sessió, mínim 0.
+function renderEpocPanel(sessions) {
+  const container = document.getElementById('epoc-panel-content');
+  if (!container) return;
+
+  const now    = new Date();
+  const cutoff = new Date(now);
+  cutoff.setDate(cutoff.getDate() - 7);
+  cutoff.setHours(0, 0, 0, 0);
+
+  const recent = sessions.filter(s => s.date >= cutoff);
+
+  // ─ EPOC acumulat ───────────────────────────────────────────────────────
+  const epocTotal = sumNumbers(recent.map(s => s.epoc).filter(v => v !== null));
+  const epocClass = epocTotal < 100 ? 'epoc-low' : epocTotal <= 200 ? 'epoc-mid' : 'epoc-high';
+  const epocLabel = epocTotal < 100 ? 'C\u00e0rrega lleugera'
+                  : epocTotal <= 200 ? 'C\u00e0rrega moderada'
+                  : 'C\u00e0rrega alta';
+  const epocMax   = 300; // escala visual de la barra
+  const epocPct   = Math.min(100, Math.round((epocTotal / epocMax) * 100));
+
+  // ─ Recuperació pendent ────────────────────────────────────────────────
+  // Cada sessió es considera finalitzada a les 20:00h del dia de la sessió.
+  let maxPendent = 0;
+  let origenTipus = '--';
+  let origenData  = '--';
+
+  recent.forEach(s => {
+    if (s.recuperacio == null || !isFinite(s.recuperacio)) return;
+    // Fi de sessió = mateix dia a les 20:00h
+    const sessionEnd = new Date(s.date);
+    sessionEnd.setHours(20, 0, 0, 0);
+    const horaPassades = (now - sessionEnd) / (1000 * 60 * 60);
+    const pendent      = Math.max(0, s.recuperacio - horaPassades);
+    if (pendent > maxPendent) {
+      maxPendent  = pendent;
+      origenTipus = s.tipus;
+      origenData  = s.displayDate;
+    }
+  });
+
+  const recuperacioText = maxPendent > 0
+    ? `${Math.round(maxPendent)}h restants`
+    : 'Recuperat \u2713';
+  const recuperacioOrigen = maxPendent > 0
+    ? `Origen: ${esc(origenTipus)} \u00b7 ${esc(origenData)}`
+    : 'Cap sessió pendent de recuperació';
+
+  container.innerHTML = `
+    <div class="epoc-block">
+      <div class="epoc-block-header">
+        <span class="epoc-block-title">EPOC acumulat</span>
+        <span class="epoc-value ${epocClass}">${formatNumber(epocTotal)}</span>
+      </div>
+      <div class="epoc-bar-wrap">
+        <div class="epoc-bar-fill ${epocClass}" style="width:${epocPct}%"></div>
+      </div>
+      <p class="epoc-label">${esc(epocLabel)}</p>
+    </div>
+    <div class="epoc-divider"></div>
+    <div class="epoc-block">
+      <div class="epoc-block-header">
+        <span class="epoc-block-title">Recuperació pendent</span>
+        <span class="epoc-recup-value">${esc(recuperacioText)}</span>
+      </div>
+      <p class="epoc-label">${recuperacioOrigen}</p>
+    </div>
+  `;
+}
+
+// ── Panell Test & Cursa ────────────────────────────────────────────────────────────
 function renderTestRacePanel(sessions) {
   const container = document.getElementById('test-race-container');
   if (!container) return;
@@ -166,11 +229,11 @@ function renderTestRacePanel(sessions) {
         <td colspan="7"><span class="eyebrow">${label}</span> \u2014 Sense registre</td>
       </tr>`;
 
-    const isTest   = s.tipusKey === 'TEST';
-    const ritme    = isTest ? s.ritmeMitjaSeries : s.ritme;
-    const fc       = isTest ? s.fcMitjaSeries    : s.fcMitja;
-    const fcTxt    = isFinite(fc) ? `${Math.round(fc)} ppm` : '--';
-    const desTxt   = isFinite(s.desnivell) ? `${formatNumber(s.desnivell)} m` : '--';
+    const isTest = s.tipusKey === 'TEST';
+    const ritme  = isTest ? s.ritmeMitjaSeries : s.ritme;
+    const fc     = isTest ? s.fcMitjaSeries    : s.fcMitja;
+    const fcTxt  = isFinite(fc) ? `${Math.round(fc)} ppm` : '--';
+    const desTxt = isFinite(s.desnivell) ? `${formatNumber(s.desnivell)} m` : '--';
 
     return `
       <tr>
@@ -204,7 +267,7 @@ function renderTestRacePanel(sessions) {
     </table>`;
 }
 
-// ── Panell Altres activitats \u2014 \u00faltims 30 dies ─────────────────────────────────
+// ── Panell Altres activitats — últims 30 dies ───────────────────────────────────
 function renderOthersPanel(sessions) {
   const container = document.getElementById('others-container');
   if (!container) return;
