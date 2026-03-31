@@ -1,6 +1,7 @@
 // docs/js/views/setmanal.js — Fase 4: vista detallada setmana actual
 // Funció principal: renderSetmanalView(sessions, planning)
 // Dep: lib/formatters.js (formatPace, fmtNum, formatDate, toNumber, esc)
+//      lib/load-scale.js (tssDotHTML)
 //      app.js (detectActiveWeek, QUALITY_TYPES, LONG_TYPES, PADEL_TYPES, STRENGTH_RE)
 // NOTA: No declarar aquí constants de tipus — usar les de app.js
 
@@ -18,14 +19,12 @@ function renderSetmanalView(sessions, planning) {
 
 // ── Detecció setmana activa ───────────────────────────────────────────────────
 function detectActiveWeekIndex(sessions, planning) {
-  // PRIORITAT 1: setmana del calendari que conté AVUI
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   const todayIdx = planning.findIndex(w => today >= w.startDate && today <= w.endDate);
   if (todayIdx !== -1) return todayIdx;
 
-  // PRIORITAT 2: setmana de la última sessió registrada
   const latest = sessions[0];
   if (latest) {
     const idx = planning.findIndex(w =>
@@ -34,7 +33,6 @@ function detectActiveWeekIndex(sessions, planning) {
     if (idx !== -1) return idx;
   }
 
-  // FALLBACK: última setmana
   return planning.length - 1;
 }
 
@@ -99,8 +97,6 @@ function renderWeekProgress(week, weekSessions) {
 
 // ── Bloc Qualitat ─────────────────────────────────────────────────────────────
 function renderQualityBlock(week, weekSessions) {
-  // Usa QUALITY_TYPES de app.js (inclou TEST per planificació, però SESS_GROUPS
-  // de sessions.js separa 'testrace'. Aquí usem el Set ampliat per al bloc setmanal.)
   const qualityTypesSetmanal = new Set([...QUALITY_TYPES, 'TEST']);
   const sess   = weekSessions.filter(s => qualityTypesSetmanal.has(s.tipusKey));
   const realKm = sess.reduce((a, s) => a + (s.distancia || 0), 0);
@@ -202,14 +198,13 @@ function renderLongBlock(week, weekSessions) {
   if (tbody) {
     tbody.innerHTML = sess.length
       ? sess.map(s => sessionRowLong(s)).join('')
-      : `<tr><td colspan="4" class="empty-row muted-msg">Sense tirada llarga</td></tr>`;
+      : `<tr><td colspan="5" class="empty-row muted-msg">Sense tirada llarga</td></tr>`;
   }
   setBlockStatus('sw-ll-block', sess.length > 0);
 }
 
 // ── Bloc Força ────────────────────────────────────────────────────────────────
 function renderForcaBlock(week, weekSessions) {
-  // Usa STRENGTH_RE de app.js
   const sess = weekSessions.filter(s => STRENGTH_RE.test(s.tipusKey));
 
   setTextV('sw-forca-plan', week.forcaPlan || '--');
@@ -226,7 +221,6 @@ function renderForcaBlock(week, weekSessions) {
 
 // ── Bloc Altres ───────────────────────────────────────────────────────────────
 function renderAltresBlock(week, weekSessions) {
-  // Usa PADEL_TYPES de app.js
   const sess        = weekSessions.filter(s => PADEL_TYPES.has(s.tipusKey));
   const totalDurada = sess.reduce((a, s) => a + (s.durada || 0), 0);
 
@@ -244,6 +238,16 @@ function renderAltresBlock(week, weekSessions) {
 }
 
 // ── Rows de taula ─────────────────────────────────────────────────────────────
+// Totes les columnes TSS usen tssDotHTML(s.carrega) per coherència visual
+// amb la pestanya Sessions. El dot de color indica la intensitat relativa
+// (Recuperació / Fàcil / Moderada / Dura / Extrem) del barem TSS.
+
+function tssCell(carrega) {
+  if (!(typeof carrega === 'number' && carrega > 0)) return '—';
+  return `${tssDotHTML(carrega)} ${fmtNum(carrega)}`;
+}
+
+// Qualitat: Data | Ritme sèries | FC sèries | TSS
 function sessionRowQuality(s) {
   const ritme = isFinite(s.ritmeMitjaSeries) ? s.ritmeMitjaSeries : s.ritme;
   const fc    = isFinite(s.fcMitjaSeries)    ? s.fcMitjaSeries    : s.fcMitja;
@@ -251,20 +255,22 @@ function sessionRowQuality(s) {
     <td>${esc(s.displayDate)}</td>
     <td>${formatPace(ritme)}</td>
     <td>${isFinite(fc) && fc > 0 ? Math.round(fc) + ' bpm' : '—'}</td>
-    <td>${fmtNum(s.carrega)}</td>
+    <td>${tssCell(s.carrega)}</td>
   </tr>`;
 }
 
+// Z2: Data | Ritme | Cadència | TSS
 function sessionRowZ2(s) {
   const cadencia = toNumber(s.raw['Cadencia(spm)']);
   return `<tr>
     <td>${esc(s.displayDate)}</td>
     <td>${formatPace(s.ritme)}</td>
     <td>${isFinite(cadencia) && cadencia > 0 ? Math.round(cadencia) + ' spm' : '—'}</td>
-    <td>${fmtNum(s.carrega)}</td>
+    <td>${tssCell(s.carrega)}</td>
   </tr>`;
 }
 
+// Llarga: Data | Ritme | Z2 | Desnivell | TSS
 function sessionRowLong(s) {
   const desnivell = toNumber(s.raw['Desnivell(m)']);
   return `<tr>
@@ -272,15 +278,17 @@ function sessionRowLong(s) {
     <td>${formatPace(s.ritme)}</td>
     <td>${s.z2min > 0 ? fmtNum(s.z2min) + ' min Z2' : '—'}</td>
     <td>${isFinite(desnivell) && desnivell > 0 ? Math.round(desnivell) + ' m' : '—'}</td>
+    <td>${tssCell(s.carrega)}</td>
   </tr>`;
 }
 
+// Força / Altres: Data | Tipus | Durada | TSS
 function sessionRowExtra(s) {
   return `<tr>
     <td>${esc(s.displayDate)}</td>
     <td>${esc(s.tipus)}</td>
     <td>${s.durada > 0 ? fmtNum(s.durada) + ' min' : '—'}</td>
-    <td>${fmtNum(s.carrega)}</td>
+    <td>${tssCell(s.carrega)}</td>
   </tr>`;
 }
 
