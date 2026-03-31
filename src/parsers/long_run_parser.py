@@ -12,6 +12,7 @@ LONG_RUN_TYPES = {
     "marat":   "MARATÓ",   # cobreix 'marató' i 'maraton'
     "trail":   "TRAIL",
     "mitja":   "MITJA",
+    "cursa": "CURSA"
 }
 
 
@@ -28,6 +29,7 @@ class LongRunParser(BaseRunningParser):
       _marat_    → MARATÓ
       _trail_    → TRAIL
       _mitja_    → MITJA
+      _cursa_    → CURSA
     """
 
     def __init__(self, filepath: Path):

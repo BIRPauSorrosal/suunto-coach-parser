@@ -34,6 +34,7 @@ PARSER_REGISTRY = {
     "marat":         LongRunParser,   # cobreix 'marató' i 'maraton'
     "trail":         LongRunParser,
     "mitja":         LongRunParser,
+    "cursa":         LongRunParser,
 
     # Força / gimnasio
     "força":        StrengthParser,
