@@ -9,13 +9,6 @@ const DATA_SOURCES = {
 
 // ── Constants de classificació de sessions ────────────────────────────────────
 // Font única de veritat per a totes les vistes. No duplicar en cap vista.
-const QUALITY_TYPES   = new Set(['TEMPO', 'INTERVALS']);
-const LONG_TYPES      = new Set(['LLARGA', 'MARATÓ', 'TRAIL', 'MITJA', 'MARATO']);
-const RUNNING_TYPES   = new Set([...QUALITY_TYPES, ...LONG_TYPES, 'Z2']);
-const TEST_RACE_TYPES = new Set(['TEST', 'CURSA']);
-const PADEL_TYPES     = new Set(['PADEL', 'TENIS', 'TENNIS']);
-const STRENGTH_RE     = /^FOR[\u00c7C]A/i;
-
 function isRunning(s)  { return RUNNING_TYPES.has(s.tipusKey); }
 function isStrength(s) { return STRENGTH_RE.test(s.tipusKey); }
 function isTestRace(s) { return TEST_RACE_TYPES.has(s.tipusKey); }

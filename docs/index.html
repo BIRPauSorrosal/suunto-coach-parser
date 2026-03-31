@@ -17,16 +17,25 @@
   <div class="app-shell">
 
     <aside class="sidebar">
+
+      <!-- 1. Header -->
       <div class="brand-block">
         <p class="eyebrow">Suunto Coach</p>
         <h1>Parser &amp; Dashboard</h1>
       </div>
+
+      <!-- 2. Pestanyes -->
       <nav class="sidebar-nav" aria-label="Navegació principal">
         <a href="#" class="nav-link active" data-target="overview"><span class="nav-icon">◎</span> Overview</a>
         <a href="#" class="nav-link" data-target="setmanal"><span class="nav-icon">◈</span> Setmana actual</a>
         <a href="#" class="nav-link" data-target="planning"><span class="nav-icon">◫</span> Planning</a>
         <a href="#" class="nav-link" data-target="sessions"><span class="nav-icon">◇</span> Sessions</a>
       </nav>
+
+      <!-- 3. Espai central buit — empeny tot el que ve després cap avall -->
+      <div class="sidebar-spacer"></div>
+
+      <!-- 4. Estat dades -->
       <section class="sidebar-panel">
         <h2>Estat dades</h2>
         <ul class="status-list">
@@ -36,7 +45,12 @@
           <li><span class="dot"></span> <span id="status-last-update">Sense actualització</span></li>
         </ul>
       </section>
-      <button type="button" class="btn btn-primary btn-sidebar" id="reload-data-btn">Recarregar dades</button>
+
+      <!-- 5. Botons dades -->
+      <div class="sidebar-actions">
+        <button type="button" class="btn btn-primary btn-sidebar" id="reload-data-btn">Recarregar dades</button>
+      </div>
+
     </aside>
 
     <main class="main-content">
@@ -392,6 +406,7 @@
 
   <script src="./js/vendor/chart.umd.min.js"></script>
   <script src="./js/lib/formatters.js"></script>
+  <script src="./js/lib/activity-types.js"></script>
   <script src="./js/lib/metrics.js"></script>
   <script src="./js/lib/load-scale.js"></script>
   <script src="./js/lib/fc-scale.js"></script>

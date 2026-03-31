@@ -77,6 +77,8 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
                           background:var(--border); flex-shrink:0; }
 .dot.dot-live          { background:var(--accent); box-shadow:0 0 6px var(--accent); }
 
+.sidebar-spacer { flex: 1; }
+
 /* ── Notice bar ─────────────────────────────────────────────────────────── */
 .notice-bar   { background:var(--surface-2); border:1px solid var(--border);
                 border-radius:var(--radius); padding:10px 16px; margin-bottom:24px; }
@@ -93,7 +95,20 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .btn-ghost:hover  { background:var(--surface-2); color:var(--text); }
 .btn-ghost.active { background:var(--accent-soft); color:var(--accent); border-color:var(--accent); }
 .btn-sm       { padding:5px 11px; font-size:.78rem; }
-.btn-sidebar  { margin-top:auto; width:100%; justify-content:center; }
+
+.sidebar-actions {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+/* Elimina el margin-top:auto individual i centra el text */
+.sidebar-actions .btn-sidebar {
+  margin-top: 0;
+  justify-content: center;
+}
 
 /* ── Views ────────────────────────────────────────────────────────────────────────────────── */
 .view          { display:none; }

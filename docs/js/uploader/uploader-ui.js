@@ -240,7 +240,7 @@ function initUploaderUI() {
   btn.textContent = "Importar activitats";
   btn.addEventListener("click", openUploaderModal);
 
-  reloadBtn.insertAdjacentElement("afterend", btn);
+  reloadBtn.insertAdjacentElement("beforebegin", btn);
 }
 
 document.addEventListener("DOMContentLoaded", initUploaderUI);
