@@ -527,7 +527,7 @@ function getSessCols(type) {
       const e = toNumber(s.raw['EPOC']);
       const dot = (typeof e === 'number' && e > 0) ? loadDotHTML(e) : '';
       return (typeof s.carrega === 'number' && s.carrega > 0)
-        ? `${dot} ${fmtNum(s.carrega)} TSS`
+        ? `${dot} ${fmtNum(s.carrega)}`
         : '\u2014';
     }
   };
