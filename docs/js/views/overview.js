@@ -270,7 +270,7 @@ function renderTestRacePanel(sessions) {
     </table>`;
 }
 
-// ── Panell Altres activitats — \u00faltims 30 dies ───────────────────────────────────────────
+// ── Panell Altres activitats — últims 30 dies ───────────────────────────────────────────
 function renderOthersPanel(sessions) {
   const container = document.getElementById('others-container');
   if (!container) return;
@@ -305,61 +305,51 @@ function renderOthersPanel(sessions) {
 }
 
 // ============================================================
-// #P-TREND A — Tend\u00e8ncia de c\u00e0rrega (\u00faltimes 7 setmanes)
+// #P-TREND A — Tendència de càrrega (últimes 7 setmanes)
 // ============================================================
-// L\u00f2gica:
-//   1. Agrupem sessions per setmana ISO (dilluns-diumenge).
-//   2. Calculem la c\u00e0rrega total (suma de s.carrega) per a les
-//      7 setmanes anteriors + la setmana activa (= 7 barres).
-//   3. La setmana activa es pinta en --accent (verd);
-//      les anteriors en --surface-2 (gris).
-//   4. Afegim una l\u00ednia de refer\u00e8ncia horitzontal amb la mitjana
-//      de les 6 setmanes passades.
-//   5. Generem la trend-pill: ↑ pujada | \u2192 en l\u00ednia | \u2193 desc\u00e0rrega
-//      (llindar ±15 % de la mitjana).
+// Lògica (finestra mòbil de 7 dies):
+//   Cada bloc = [avui − i*7 − 6, avui − i*7] per a i ∈ [6..0].
+//   Així el bloc "Avui" sempre conté les sessions dels últims 7 dies,
+//   independentment del dia de la setmana que sigui.
+//   Canvi respecte v1: en comptes de setmana ISO (dl→dg) usem
+//   finestra mòbil perquè el primer dia de setmana ISO pot tenir
+//   el bloc actiu buit si no s'ha entrenat encara aquell dia.
 // ============================================================
 function renderLoadTrend(sessions, planning) {
   const canvas = document.getElementById('chart-load-trend');
   const pillEl = document.getElementById('load-trend-pill');
   if (!canvas || !pillEl) return;
 
-  // Destrueix gr\u00e0fic anterior si existeix (reutilitzaci\u00f3 en reload)
+  // Destrueix gràfic anterior si existeix (reutilització en reload)
   if (canvas._chartInstance) { canvas._chartInstance.destroy(); }
 
-  // ─ Helpers de setmana ISO ────────────────────────────────────────────────────────────
-  // Retorna el dilluns (00:00:00) de la setmana que cont\u00e9 `d`.
-  function isoMonday(d) {
-    const t = new Date(d);
-    const day = t.getDay(); // 0=dg, 1=dl...
-    const diff = (day === 0) ? -6 : 1 - day;
-    t.setDate(t.getDate() + diff);
-    t.setHours(0, 0, 0, 0);
-    return t;
-  }
-
-  // Etiqueta curta: "S52" o "1 gen"
-  function weekLabel(monday) {
-    const d = new Date(monday);
-    d.setDate(d.getDate() + 3); // dijous → representa b\u00e9 la setmana ISO
+  // ─ Etiqueta curta per a un rang: mostra la data de fi del bloc ─────────────────
+  function blockLabel(endDate) {
     const months = ['gen','feb','mar','abr','mai','jun','jul','ago','set','oct','nov','des'];
-    return `${d.getDate()} ${months[d.getMonth()]}`;
+    return `${endDate.getDate()} ${months[endDate.getMonth()]}`;
   }
 
-  // ─ Dilluns de la setmana activa ────────────────────────────────────────────────────
-  const todayMonday = isoMonday(new Date());
+  // ─ Construïm 7 blocs de 7 dies amb finestra mòbil ──────────────────────────────
+  // bloc i=6 → [avui-48, avui-42]   (el més antic)
+  // bloc i=0 → [avui-6,  avui]      (els últims 7 dies = "Avui")
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
 
-  // Construim array de 7 setmanes: [avui-6, avui-5, ..., avui-0]
   const weeks = [];
   for (let i = 6; i >= 0; i--) {
-    const mon = new Date(todayMonday);
-    mon.setDate(mon.getDate() - i * 7);
-    const sun = new Date(mon);
-    sun.setDate(sun.getDate() + 6);
-    sun.setHours(23, 59, 59, 999);
-    weeks.push({ mon, sun, label: weekLabel(mon), isActive: i === 0 });
+    const end = new Date(today);
+    end.setDate(end.getDate() - i * 7);
+
+    const start = new Date(end);
+    start.setDate(start.getDate() - 6);
+    start.setHours(0, 0, 0, 0);
+
+    const isActive = i === 0;
+    const label    = isActive ? 'Avui' : blockLabel(end);
+    weeks.push({ mon: start, sun: end, label, isActive });
   }
 
-  // ─ Agrupa c\u00e0rrega per setmana ─────────────────────────────────────────────────────
+  // ─ Agrupa càrrega per bloc ──────────────────────────────────────────────────────
   const loads = weeks.map(w => {
     const total = sessions
       .filter(s => s.date >= w.mon && s.date <= w.sun)
@@ -369,25 +359,22 @@ function renderLoadTrend(sessions, planning) {
 
   const labels = weeks.map(w => w.label);
 
-  // Colors: l\u00faltima barra (setmana activa) en accent, la resta en gris
-  const CSS   = getComputedStyle(document.documentElement);
-  const clrAccent  = CSS.getPropertyValue('--accent').trim()  || '#22c55e';
+  // Colors: últim bloc (avui) en accent, la resta en gris
+  const CSS        = getComputedStyle(document.documentElement);
+  const clrAccent  = CSS.getPropertyValue('--accent').trim()    || '#22c55e';
   const clrSurface = CSS.getPropertyValue('--surface-2').trim() || '#263349';
-  const clrMuted   = CSS.getPropertyValue('--text-muted').trim() || '#94a3b8';
-  const clrBg      = CSS.getPropertyValue('--bg').trim()         || '#0f172a';
+  const clrMuted   = CSS.getPropertyValue('--text-muted').trim()|| '#94a3b8';
 
-  const barColors = loads.map((_, i) =>
-    i === loads.length - 1 ? clrAccent : clrSurface
-  );
+  const barColors    = loads.map((_, i) => i === loads.length - 1 ? clrAccent : clrSurface);
   const borderColors = loads.map((_, i) =>
     i === loads.length - 1
       ? clrAccent
       : CSS.getPropertyValue('--border').trim() || '#334155'
   );
 
-  // ─ Mitjana de les 6 setmanes passades ───────────────────────────────────────────
-  const pastLoads  = loads.slice(0, 6).filter(v => v > 0);
-  const avgPast    = pastLoads.length
+  // ─ Mitjana de les 6 blocs anteriors (exclou el bloc "Avui") ────────────────────
+  const pastLoads = loads.slice(0, 6).filter(v => v > 0);
+  const avgPast   = pastLoads.length
     ? Math.round(pastLoads.reduce((a, b) => a + b, 0) / pastLoads.length)
     : 0;
 
@@ -395,21 +382,21 @@ function renderLoadTrend(sessions, planning) {
   const currentLoad = loads[loads.length - 1];
   let pillClass, pillIcon, pillText;
 
-  if (avgPast === 0 || currentLoad === 0) {
-    pillClass = 'neutral'; pillIcon = '\u2192'; pillText = 'Sense dades suficients';
+  if (avgPast === 0 && currentLoad === 0) {
+    pillClass = 'neutral'; pillIcon = '\u2192'; pillText = 'Sense dades de càrrega';
+  } else if (avgPast === 0) {
+    // Primera setmana amb dades: no hi ha referència anterior
+    pillClass = 'neutral'; pillIcon = '\u2192'; pillText = `${currentLoad} TSS \u00b7 Sense referència anterior`;
   } else {
     const diffPct = ((currentLoad - avgPast) / avgPast) * 100;
     if (diffPct > 15) {
-      pillClass = 'up';
-      pillIcon  = '\u2191';
+      pillClass = 'up';      pillIcon = '\u2191';
       pillText  = `Pujada +${Math.round(diffPct)}% (Mij. ${avgPast})`;
     } else if (diffPct < -15) {
-      pillClass = 'down';
-      pillIcon  = '\u2193';
+      pillClass = 'down';    pillIcon = '\u2193';
       pillText  = `Desc\u00e0rrega ${Math.round(diffPct)}% (Mij. ${avgPast})`;
     } else {
-      pillClass = 'neutral';
-      pillIcon  = '\u2192';
+      pillClass = 'neutral'; pillIcon = '\u2192';
       pillText  = `En l\u00ednia ${diffPct >= 0 ? '+' : ''}${Math.round(diffPct)}% (Mij. ${avgPast})`;
     }
   }
@@ -419,7 +406,7 @@ function renderLoadTrend(sessions, planning) {
     <span class="trend-context">±15% = en l\u00ednia | >+15% = pujada | <-15% = desc\u00e0rrega</span>
   `;
 
-  // ─ Chart.js ───────────────────────────────────────────────────────────────────────
+  // ─ Chart.js ─────────────────────────────────────────────────────────────────────
   canvas._chartInstance = new Chart(canvas, {
     type: 'bar',
     data: {
@@ -434,7 +421,6 @@ function renderLoadTrend(sessions, planning) {
           borderRadius: 4,
           borderSkipped: 'bottom',
         },
-        // L\u00ednia de mitjana de les 6 setmanes passades
         {
           type: 'line',
           label: `Mij. ${avgPast}`,
@@ -458,7 +444,7 @@ function renderLoadTrend(sessions, planning) {
           callbacks: {
             label: ctx => ctx.datasetIndex === 0
               ? ` C\u00e0rrega: ${ctx.raw}`
-              : ` Mitjana 6s: ${avgPast}`,
+              : ` Mitjana 6 blocs: ${avgPast}`,
           },
         },
       },
@@ -478,16 +464,16 @@ function renderLoadTrend(sessions, planning) {
 }
 
 // ============================================================
-// #P-TREND B — Forma actual: CTL (\u00faltims 42 dies)
+// #P-TREND B — Forma actual: CTL (últims 42 dies)
 // ============================================================
-// L\u00f2gica:
+// Lògica:
 //   1. Calculem el CTL (Chronic Training Load) dia a dia
 //      sobre tots els sessions disponibles.
 //      CTL(n) = CTL(n-1) * e^(-1/42) + load(n) * (1 - e^(-1/42))
-//   2. Mostrem la l\u00ednia dels \u00faltims 42 dies fins a avui.
-//   3. Dos punts destacats: primer i \u00faltim del rang.
+//   2. Mostrem la línia dels últims 42 dies fins a avui.
+//   3. Dos punts destacats: primer i últim del rang.
 //   4. Trend-pill: compara CTL avui vs CTL fa 7 dies
-//      (llindar \u00b11 punt CTL = estable).
+//      (llindar ±1 punt CTL = estable).
 // ============================================================
 function renderCtlTrend(sessions) {
   const canvas = document.getElementById('chart-ctl-trend');
@@ -508,12 +494,11 @@ function renderCtlTrend(sessions) {
   rangeStart.setDate(rangeStart.getDate() - 41); // 42 dies incloent avui
 
   // Necessitem sessions anteriors per preescalfar el CTL
-  // Preescalfem des del primer dia disponible fins a rangeStart
   const sorted = [...sessions]
     .filter(s => s.date instanceof Date && isFinite(s.date))
     .sort((a, b) => a.date - b.date);
 
-  // ─ Construim un mapa data -> c\u00e0rrega total ─────────────────────────────────────
+  // ─ Construïm un mapa data -> càrrega total ──────────────────────────────────────
   const dayLoad = new Map(); // key: 'YYYY-MM-DD', value: sum(carrega)
   sorted.forEach(s => {
     const key = s.date.toISOString().slice(0, 10);
@@ -537,14 +522,13 @@ function renderCtlTrend(sessions) {
     ctlByDate.set(key, +ctl.toFixed(1));
   }
 
-  // ─ Extraiem els 42 dies per al gr\u00e0fic ───────────────────────────────────────────
+  // ─ Extraiem els 42 dies per al gràfic ─────────────────────────────────────────
   const labels  = [];
   const ctlData = [];
   const months  = ['gen','feb','mar','abr','mai','jun','jul','ago','set','oct','nov','des'];
 
   for (let d = new Date(rangeStart); d <= today; d.setDate(d.getDate() + 1)) {
     const key = d.toISOString().slice(0, 10);
-    // Etiqueta: només cada 7 dies i el dia d'avui
     const diff = Math.round((today - d) / 86400000);
     const showLabel = diff % 7 === 0;
     labels.push(showLabel ? `${d.getDate()} ${months[d.getMonth()]}` : '');
@@ -574,17 +558,17 @@ function renderCtlTrend(sessions) {
     <span class="trend-context">±1 pt = estable | >+1 = guany de forma | <-1 = p\u00e8rdua forma</span>
   `;
 
-  // ─ Punts destacats: inici i avui ──────────────────────────────────────────────────
+  // ─ Punts destacats: inici i avui ──────────────────────────────────────────────
   const pointColors = ctlData.map((_, i) => {
-    if (i === 0)                    return clrMuted;   // inici: gris
-    if (i === ctlData.length - 1)   return ctlDiff >= 0 ? clrAccent : clrOrange; // avui
+    if (i === 0)                  return clrMuted;
+    if (i === ctlData.length - 1) return ctlDiff >= 0 ? clrAccent : clrOrange;
     return 'transparent';
   });
   const pointRadius = ctlData.map((_, i) =>
     (i === 0 || i === ctlData.length - 1) ? 5 : 0
   );
 
-  // ─ Chart.js ───────────────────────────────────────────────────────────────────────
+  // ─ Chart.js ─────────────────────────────────────────────────────────────────────
   canvas._chartInstance = new Chart(canvas, {
     type: 'line',
     data: {
