@@ -87,7 +87,7 @@
           <div class="cycle-phases" id="cycle-phases"></div>
         </article>
 
-        <!-- Fila 1: Resum setmanal (ample complet) -->
+        <!-- Resum setmanal (ample complet) -->
         <article class="panel">
           <div class="panel-header">
             <div><p class="eyebrow">Bloc principal</p><h3>Resum setmanal</h3></div>
@@ -100,6 +100,43 @@
             <div class="metric-box"><span>Força</span><strong id="strength-summary">--</strong><small id="strength-detail">Sessions de gimnàs</small></div>
           </div>
         </article>
+
+        <!-- ② Tendència càrrega + ④ Forma actual (CTL) -->
+        <div class="overview-trend-grid">
+
+          <!-- ② Tendència de càrrega -->
+          <article class="panel" id="panel-load-trend">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Últimes 7 setmanes</p>
+                <h3>Tendència de càrrega</h3>
+              </div>
+              <span class="badge badge-muted">TSS setmanal</span>
+            </div>
+            <div class="chart-wrap chart-wrap--trend">
+              <canvas id="chart-load-trend"></canvas>
+            </div>
+            <!-- pill generada per JS: renderLoadTrendPanel() -->
+            <div id="load-trend-pill"></div>
+          </article>
+
+          <!-- ④ Forma actual (CTL) -->
+          <article class="panel" id="panel-ctl">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Últims 42 dies</p>
+                <h3>Forma actual (CTL)</h3>
+              </div>
+              <span class="badge badge-muted">PMC · τ=42d</span>
+            </div>
+            <div class="chart-wrap chart-wrap--trend">
+              <canvas id="chart-ctl-trend"></canvas>
+            </div>
+            <!-- pill generada per JS: renderCTLPanel() -->
+            <div id="ctl-trend-pill"></div>
+          </article>
+
+        </div><!-- /overview-trend-grid -->
 
         <!-- Fila 2: Zones cardíaques + EPOC costat a costat -->
         <div class="overview-bottom-grid">
