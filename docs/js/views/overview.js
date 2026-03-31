@@ -10,6 +10,7 @@ function renderOverviewView(sessions, planning) {
     : [];
 
   renderOverview(activeWeek, weeklySessions);
+  renderCycleProgress(activeWeek, planning);
   renderSummary(activeWeek, weeklySessions);
   renderTestRacePanel(sessions);
   renderOthersPanel(sessions);
@@ -26,11 +27,72 @@ function renderOverview(activeWeek, weeklySessions) {
 
   setText('active-week-label', activeWeek ? `${activeWeek.setmana} · ${activeWeek.cicle}` : '--');
   setText('active-week-range', activeWeek
-    ? `${formatDate(activeWeek.startDate)} → ${formatDate(activeWeek.endDate)} · ${activeWeek.fase}`
+    ? `${formatDate(activeWeek.startDate)} \u2192 ${formatDate(activeWeek.endDate)} \u00b7 ${activeWeek.fase}`
     : "No s'ha pogut detectar cap setmana activa.");
   setText('planned-km-value',  formatMetric(plannedKm, 'km'));
   setText('real-load-value',   formatMetric(realLoad, ''));
   setText('compliance-value',  compliance == null ? '-- %' : `${Math.round(compliance)} %`);
+}
+
+// ── Progrés del cicle (#P2) ───────────────────────────────────────────────────
+// Mostra: títol del cicle, setmana X de N, barra de progrés i pills de fases.
+// Un "cicle" és el conjunt de setmanes consecutives amb el mateix valor a
+// la columna Cicle del planning. La setmana activa determina quin cicle
+// es visualitza.
+function renderCycleProgress(activeWeek, planning) {
+  const barEl    = document.getElementById('cycle-bar-fill');
+  const titleEl  = document.getElementById('cycle-title');
+  const counterEl = document.getElementById('cycle-week-counter');
+  const phasesEl = document.getElementById('cycle-phases');
+  if (!barEl || !titleEl || !counterEl || !phasesEl) return;
+
+  // Sense setmana activa → panell buit
+  if (!activeWeek) {
+    titleEl.textContent  = 'Sense cicle detectat';
+    counterEl.textContent = '-- / --';
+    barEl.style.width    = '0%';
+    phasesEl.innerHTML   = '';
+    return;
+  }
+
+  const currentCycle = activeWeek.cicle;
+
+  // Totes les setmanes del mateix cicle, ordenades cronològicament
+  const cycleWeeks = planning
+    .filter(w => w.cicle === currentCycle)
+    .sort((a, b) => a.startDate - b.startDate);
+
+  const totalWeeks   = cycleWeeks.length;
+  const currentIndex = cycleWeeks.findIndex(
+    w => w.startDate.getTime() === activeWeek.startDate.getTime()
+  );
+  // currentIndex pot ser -1 si la setmana activa no és del cicle (no hauria de passar)
+  const weekNum = currentIndex >= 0 ? currentIndex + 1 : 1;
+  const pct     = totalWeeks > 0 ? Math.round((weekNum / totalWeeks) * 100) : 0;
+
+  // Títol i comptador
+  titleEl.textContent   = currentCycle;
+  counterEl.textContent = `Setmana ${weekNum} / ${totalWeeks}`;
+  barEl.style.width     = `${pct}%`;
+
+  // Pills de fases: agrupa setmanes consecutives per Fase i marca l'activa
+  // Exemple: [Acumulació x3] [Específic x4*] [Tapering x1]
+  const phases = [];
+  cycleWeeks.forEach((w, i) => {
+    const last = phases[phases.length - 1];
+    const isActive = w.startDate.getTime() === activeWeek.startDate.getTime();
+    if (last && last.fase === w.fase) {
+      last.count++;
+      if (isActive) last.active = true;
+    } else {
+      phases.push({ fase: w.fase, count: 1, active: isActive });
+    }
+  });
+
+  phasesEl.innerHTML = phases.map(p => {
+    const cls = p.active ? 'cycle-phase-pill cycle-phase-pill--active' : 'cycle-phase-pill';
+    return `<span class="${cls}">${esc(p.fase)}<em>${p.count}s</em></span>`;
+  }).join('');
 }
 
 // ── Metric-boxes (resum setmana activa) ──────────────────────────────────────
@@ -44,7 +106,7 @@ function renderSummary(activeWeek, weeklySessions) {
   const longKm          = sumNumbers(llong.map(s => s.distancia));
   const strengthMin     = sumNumbers(strength.map(s => s.durada));
 
-  // ─ Qualitat: 2 línies al strong (ritme / ppm) ──────────────────
+  // \u2500 Qualitat: 2 l\u00ednies al strong (ritme / ppm) ──────────────────
   if (quality.length) {
     const ritmeMitja = quality.map(s => s.ritmeMitjaSeries).filter(v => isFinite(v));
     const fcMitja    = quality.map(s => s.fcMitjaSeries).filter(v => isFinite(v));
@@ -57,37 +119,37 @@ function renderSummary(activeWeek, weeklySessions) {
     const el = document.getElementById('quality-summary');
     if (el) el.innerHTML = `${esc(ritmeTxt)}<br><span style="font-size:0.85em;opacity:0.8">${esc(fcTxt)}</span>`;
   } else {
-    setText('quality-summary', '—');
+    setText('quality-summary', '\u2014');
   }
   setText('quality-detail', activeWeek
-    ? `Pla: ${activeWeek.qSeries} sèr · ${activeWeek.qDuradaSerie}' · ${formatPace(activeWeek.qRitme)}`
+    ? `Pla: ${activeWeek.qSeries} s\u00e8r \u00b7 ${activeWeek.qDuradaSerie}' \u00b7 ${formatPace(activeWeek.qRitme)}`
     : 'Sense planning setmanal disponible');
 
-  // ─ Z1+Z2 running ───────────────────────────────────────────────
-  setText('z2-summary', z1z2Minutes ? `${formatNumber(z1z2Minutes)} min` : '—');
+  // \u2500 Z1+Z2 running ───────────────────────────────────────────────
+  setText('z2-summary', z1z2Minutes ? `${formatNumber(z1z2Minutes)} min` : '\u2014');
   setText('z2-detail', activeWeek
-    ? `Ritme Z2: ${formatPace(activeWeek.z2PaceMin, '')}–${formatPace(activeWeek.z2PaceMax)}`
+    ? `Ritme Z2: ${formatPace(activeWeek.z2PaceMin, '')}\u2013${formatPace(activeWeek.z2PaceMax)}`
     : 'Sense rang de ritme planificat');
 
-  // ─ Tirada llarga ───────────────────────────────────────────────
-  setText('long-summary', longKm ? `${formatNumber(longKm)} km` : '—');
+  // \u2500 Tirada llarga ───────────────────────────────────────────────
+  setText('long-summary', longKm ? `${formatNumber(longKm)} km` : '\u2014');
   setText('long-detail', activeWeek
-    ? `Pla: ${activeWeek.llTipus} · ${formatNumber(activeWeek.llKm)} km`
+    ? `Pla: ${activeWeek.llTipus} \u00b7 ${formatNumber(activeWeek.llKm)} km`
     : 'Sense tirada llarga planificada');
   if (llong.length) {
     const lastLong  = llong[0];
     const desnivell = isFinite(lastLong.desnivell) ? `${formatNumber(lastLong.desnivell)} m` : '--';
     const fc        = isFinite(lastLong.fcMitja)   ? `${Math.round(lastLong.fcMitja)} ppm`  : '--';
-    setText('long-real', `Real: ${formatNumber(longKm)} km · D+ ${desnivell} · FC ${fc}`);
+    setText('long-real', `Real: ${formatNumber(longKm)} km \u00b7 D+ ${desnivell} \u00b7 FC ${fc}`);
   } else {
     setText('long-real', '');
   }
 
-  // ─ Força ────────────────────────────────────────────────────────
-  setText('strength-summary', strength.length ? `${strength.length} sessions` : '—');
+  // \u2500 For\u00e7a ────────────────────────────────────────────────────────
+  setText('strength-summary', strength.length ? `${strength.length} sessions` : '\u2014');
   setText('strength-detail', activeWeek
-    ? `Pla: ${activeWeek.forcaPlan} · ${formatNumber(strengthMin)} min reals`
-    : 'Sense sessions de força aquesta setmana');
+    ? `Pla: ${activeWeek.forcaPlan} \u00b7 ${formatNumber(strengthMin)} min reals`
+    : 'Sense sessions de for\u00e7a aquesta setmana');
 }
 
 // ── Panell Test & Cursa ───────────────────────────────────────────────────────
@@ -101,7 +163,7 @@ function renderTestRacePanel(sessions) {
   function rowHTML(label, s) {
     if (!s) return `
       <tr class="tr-empty">
-        <td colspan="7"><span class="eyebrow">${label}</span> — Sense registre</td>
+        <td colspan="7"><span class="eyebrow">${label}</span> \u2014 Sense registre</td>
       </tr>`;
 
     const isTest   = s.tipusKey === 'TEST';
@@ -128,11 +190,11 @@ function renderTestRacePanel(sessions) {
         <tr>
           <th>Tipus</th>
           <th>Data</th>
-          <th>Distància</th>
+          <th>Dist\u00e0ncia</th>
           <th>Ritme</th>
           <th>FC</th>
           <th>Desnivell</th>
-          <th>Càrrega</th>
+          <th>C\u00e0rrega</th>
         </tr>
       </thead>
       <tbody>
@@ -142,7 +204,7 @@ function renderTestRacePanel(sessions) {
     </table>`;
 }
 
-// ── Panell Altres activitats — últims 30 dies ─────────────────────────────────
+// ── Panell Altres activitats \u2014 \u00faltims 30 dies ─────────────────────────────────
 function renderOthersPanel(sessions) {
   const container = document.getElementById('others-container');
   if (!container) return;
@@ -155,13 +217,13 @@ function renderOthersPanel(sessions) {
   const totalMin = sumNumbers(others.map(s => s.durada));
 
   setText('others-count', others.length
-    ? `${others.length} sessions · ${formatNumber(totalMin)} min`
-    : 'Sense activitats els últims 30 dies');
+    ? `${others.length} sessions \u00b7 ${formatNumber(totalMin)} min`
+    : 'Sense activitats els \u00faltims 30 dies');
 
   container.innerHTML = others.length
     ? `<table class="sw-mini-table">
         <thead>
-          <tr><th>Data</th><th>Tipus</th><th>Durada</th><th>Càrrega</th></tr>
+          <tr><th>Data</th><th>Tipus</th><th>Durada</th><th>C\u00e0rrega</th></tr>
         </thead>
         <tbody>
           ${others.map(s => `
@@ -173,5 +235,5 @@ function renderOthersPanel(sessions) {
             </tr>`).join('')}
         </tbody>
       </table>`
-    : '<p class="plan-no-data">Cap activitat alternativa els últims 30 dies.</p>';
+    : '<p class="plan-no-data">Cap activitat alternativa els \u00faltims 30 dies.</p>';
 }
