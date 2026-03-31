@@ -17,9 +17,8 @@ const GITHUB_CONFIG = {
   path:   "docs/data/sessions.csv",
   // Personal Access Token amb permís: Contents → Read & Write
   // Genera'l a: GitHub → Settings → Developer settings → PAT (classic)
-  token:  window.getGitHubToken()
+  get token() { return window.getGitHubToken ? window.getGitHubToken() : ''; },
 };
-
 
 // ─── CSV PARSER (text → array de objectes) ───────────────────
 
@@ -250,7 +249,8 @@ async function appendRowsToCSV(newRows) {
 
     let existingRows = [];
     let sha          = null;
-    const useGitHub  = !!GITHUB_CONFIG.token;
+    const token     = window.getGitHubToken ? window.getGitHubToken() : '';
+    const useGitHub = !!token;
 
     if (useGitHub) {
       const { content, sha: fileSha } = await fetchCurrentCSV();
