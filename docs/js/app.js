@@ -232,9 +232,11 @@ function enrichSessionRow(row) {
 
 // ── Detecció setmana activa ───────────────────────────────────────────────────
 function detectActiveWeek(planning, sessions) {
-  // PRIORITAT 1: setmana del calendari que conté AVUI
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // PRIORITAT 1: setmana del calendari que conté AVUI.
+  // Assumim que les sessions acaben a les 20:00h, per tant fins les 20:00h
+  // del primer dia de la nova setmana encara estem "dins" la setmana anterior.
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 20, 0, 0);
 
   const todayWeek = planning.find(w => today >= w.startDate && today <= w.endDate);
   if (todayWeek) return todayWeek;
