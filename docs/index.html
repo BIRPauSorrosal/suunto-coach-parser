@@ -48,7 +48,12 @@
 
       <!-- 5. Botons dades -->
       <div class="sidebar-actions">
-        <button type="button" class="btn btn-primary btn-sidebar" id="reload-data-btn">Recarregar dades</button>
+        <button type="button" class="btn btn-ghost btn-sidebar" id="gh-token-btn"
+                onclick="openGitHubTokenModal()">⚙️ Token GitHub</button>
+        <!-- importar i recarregar s'insereixen via JS -->
+        <button type="button" class="btn btn-primary btn-sidebar" id="reload-data-btn">
+          Recarregar dades
+        </button>
       </div>
 
     </aside>
@@ -416,6 +421,7 @@
   <script src="./js/views/planning.js"></script>
   <script src="./js/views/sessions.js"></script>
   <script src="./js/charts.js"></script>
+  <script src="./js/lib/github-token-modal.js"></script>
   <script src="./js/uploader/parser.js"></script>
   <script src="./js/uploader/csv-writer.js"></script>
   <script src="./js/uploader/uploader.js"></script>

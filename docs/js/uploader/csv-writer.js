@@ -14,10 +14,10 @@ const GITHUB_CONFIG = {
   owner:  "BIRPauSorrosal",
   repo:   "suunto-coach-parser",
   branch: "main",
-  path:   "data/sessions.csv",
+  path:   "docs/data/sessions.csv",
   // Personal Access Token amb permís: Contents → Read & Write
   // Genera'l a: GitHub → Settings → Developer settings → PAT (classic)
-  token:  "",   // ← omple aquí el teu token
+  token:  window.getGitHubToken()
 };
 
 
@@ -283,3 +283,7 @@ async function appendRowsToCSV(newRows) {
     showNotice(`❌ Error: ${err.message}`, true);
   }
 }
+
+window.addEventListener('gh-token-changed', () => {
+  GITHUB_CONFIG.token = window.getGitHubToken();
+});
