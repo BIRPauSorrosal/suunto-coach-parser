@@ -2,6 +2,42 @@
 // Vista Overview: hero-cards + metric-boxes + panells Test/Cursa + Altres
 // Dep: app.js (constants, helpers, detectActiveWeek, formatPace)
 
+// ── Barems de càrrega (Firstbeat/EPOC) ──────────────────────────────────────
+// Basats en el model EPOC de Firstbeat per a atletes aficionats consistents
+// (~20-30 km/setmana, cicle de construcció aeròbica).
+//
+// NIVELL         SESSIÓ        SETMANAL     COLOR CSS
+// Molt baixa     < 20          < 60         --load-vlow
+// Baixa          20 – 50       60 – 120     --load-low
+// Moderada       50 – 90       120 – 200    --load-mid
+// Alta           90 – 150      200 – 280    --load-high
+// Molt alta      > 150         > 280        --load-vhigh
+
+function getLoadLevelSession(epoc) {
+  if (!isFinite(epoc) || epoc <= 0) return null;
+  if (epoc < 20)  return { key: 'vlow',  label: 'Mínima',     cls: 'load-vlow'  };
+  if (epoc < 50)  return { key: 'low',   label: 'Baixa',      cls: 'load-low'   };
+  if (epoc < 90)  return { key: 'mid',   label: 'Moderada',   cls: 'load-mid'   };
+  if (epoc < 150) return { key: 'high',  label: 'Alta',       cls: 'load-high'  };
+  return              { key: 'vhigh', label: 'Molt alta',  cls: 'load-vhigh' };
+}
+
+function getLoadLevelWeekly(epoc) {
+  if (!isFinite(epoc) || epoc <= 0) return { key: 'vlow', label: 'Molt baixa', cls: 'load-vlow' };
+  if (epoc < 60)  return { key: 'vlow',  label: 'Molt baixa',  cls: 'load-vlow'  };
+  if (epoc < 120) return { key: 'low',   label: 'Baixa',       cls: 'load-low'   };
+  if (epoc < 200) return { key: 'mid',   label: 'Moderada',    cls: 'load-mid'   };
+  if (epoc < 280) return { key: 'high',  label: 'Alta',        cls: 'load-high'  };
+  return              { key: 'vhigh', label: 'Molt alta',   cls: 'load-vhigh' };
+}
+
+// Retorna el HTML d'un badge de càrrega per a una sessió individual
+function loadBadgeHTML(epoc) {
+  const lvl = getLoadLevelSession(epoc);
+  if (!lvl) return formatMetric(epoc, '');
+  return `<span class="load-badge load-badge--${lvl.cls}" title="${lvl.label}">${formatMetric(epoc, '')}</span>`;
+}
+
 // ── Punt d'entrada ──────────────────────────────────────────────────────────
 function renderOverviewView(sessions, planning) {
   const activeWeek     = detectActiveWeek(planning, sessions);
@@ -146,6 +182,7 @@ function renderSummary(activeWeek, weeklySessions) {
 // Finestra: últims 7 dies. Sessions assumides finalitzades a les 20:00h.
 // EPOC: suma de tots els valors EPOC dels últims 7 dies.
 // Recuperació: màxim de (Recup(h) - hores_transcorregudes) per sessió, mínim 0.
+// Barem setmanal: <60 molt baixa | 60-120 baixa | 120-200 moderada | 200-280 alta | >280 molt alta
 function renderEpocPanel(sessions) {
   const container = document.getElementById('epoc-panel-content');
   if (!container) return;
@@ -159,22 +196,19 @@ function renderEpocPanel(sessions) {
 
   // ─ EPOC acumulat ───────────────────────────────────────────────────────
   const epocTotal = sumNumbers(recent.map(s => s.epoc).filter(v => v !== null));
-  const epocClass = epocTotal < 100 ? 'epoc-low' : epocTotal <= 200 ? 'epoc-mid' : 'epoc-high';
-  const epocLabel = epocTotal < 100 ? 'C\u00e0rrega lleugera'
-                  : epocTotal <= 200 ? 'C\u00e0rrega moderada'
-                  : 'C\u00e0rrega alta';
-  const epocMax   = 300; // escala visual de la barra
-  const epocPct   = Math.min(100, Math.round((epocTotal / epocMax) * 100));
+  const lvl       = getLoadLevelWeekly(epocTotal);
+
+  // Escala visual: 280 = llindar màxim recomanat (zona "molt alta")
+  const epocMax = 280;
+  const epocPct = Math.min(100, Math.round((epocTotal / epocMax) * 100));
 
   // ─ Recuperació pendent ────────────────────────────────────────────────
-  // Cada sessió es considera finalitzada a les 20:00h del dia de la sessió.
   let maxPendent = 0;
   let origenTipus = '--';
   let origenData  = '--';
 
   recent.forEach(s => {
     if (s.recuperacio == null || !isFinite(s.recuperacio)) return;
-    // Fi de sessió = mateix dia a les 20:00h
     const sessionEnd = new Date(s.date);
     sessionEnd.setHours(20, 0, 0, 0);
     const horaPassades = (now - sessionEnd) / (1000 * 60 * 60);
@@ -186,28 +220,30 @@ function renderEpocPanel(sessions) {
     }
   });
 
-  const recuperacioText = maxPendent > 0
+  const recuperacioText   = maxPendent > 0
     ? `${Math.round(maxPendent)}h restants`
     : 'Recuperat \u2713';
   const recuperacioOrigen = maxPendent > 0
     ? `Origen: ${esc(origenTipus)} \u00b7 ${esc(origenData)}`
-    : 'Cap sessió pendent de recuperació';
+    : 'Cap sessi\u00f3 pendent de recuperaci\u00f3';
 
   container.innerHTML = `
     <div class="epoc-block">
       <div class="epoc-block-header">
         <span class="epoc-block-title">EPOC acumulat</span>
-        <span class="epoc-value ${epocClass}">${formatNumber(epocTotal)}</span>
+        <span class="epoc-value load-${lvl.key}">${formatNumber(epocTotal)}</span>
       </div>
       <div class="epoc-bar-wrap">
-        <div class="epoc-bar-fill ${epocClass}" style="width:${epocPct}%"></div>
+        <div class="epoc-bar-fill load-${lvl.key}" style="width:${epocPct}%"></div>
       </div>
-      <p class="epoc-label">${esc(epocLabel)}</p>
+      <p class="epoc-label">
+        <span class="load-badge load-badge--load-${lvl.key}">${esc(lvl.label)}</span>
+      </p>
     </div>
     <div class="epoc-divider"></div>
     <div class="epoc-block">
       <div class="epoc-block-header">
-        <span class="epoc-block-title">Recuperació pendent</span>
+        <span class="epoc-block-title">Recuperaci\u00f3 pendent</span>
         <span class="epoc-recup-value">${esc(recuperacioText)}</span>
       </div>
       <p class="epoc-label">${recuperacioOrigen}</p>
@@ -243,7 +279,7 @@ function renderTestRacePanel(sessions) {
         <td>${formatPace(ritme)}</td>
         <td>${fcTxt}</td>
         <td>${desTxt}</td>
-        <td>${formatMetric(s.carrega, '')}</td>
+        <td>${loadBadgeHTML(s.carrega)}</td>
       </tr>`;
   }
 
@@ -294,7 +330,7 @@ function renderOthersPanel(sessions) {
               <td>${esc(s.displayDate)}</td>
               <td>${esc(s.tipus)}</td>
               <td>${formatMetric(s.durada, 'min')}</td>
-              <td>${formatMetric(s.carrega, '')}</td>
+              <td>${loadBadgeHTML(s.carrega)}</td>
             </tr>`).join('')}
         </tbody>
       </table>`
