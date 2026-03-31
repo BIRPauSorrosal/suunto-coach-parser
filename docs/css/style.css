@@ -2,7 +2,7 @@
    style.css — Suunto Coach Dashboard
    ============================================================ */
 
-/* ── Reset & tokens ─────────────────────────────────────────────── */
+/* ── Reset & tokens ────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -23,13 +23,27 @@
   --shadow:      0 4px 24px rgba(0,0,0,.35);
   --sidebar-w:   260px;
   --font:        'Inter', system-ui, sans-serif;
+
+  /* ── Barem de càrrega EPOC (Firstbeat) ────────────────────────── */
+  /* Sessió:  <20 mínima | 20-50 baixa | 50-90 moderada | 90-150 alta | >150 molt alta */
+  /* Setmanal: <60 molt baixa | 60-120 baixa | 120-200 moderada | 200-280 alta | >280 molt alta */
+  --load-vlow:       #38bdf8;        /* blau   — molt baixa / mínima */
+  --load-vlow-soft:  rgba(56,189,248,.15);
+  --load-low:        #22c55e;        /* verd   — baixa */
+  --load-low-soft:   rgba(34,197,94,.15);
+  --load-mid:        #f59e0b;        /* groc   — moderada */
+  --load-mid-soft:   rgba(245,158,11,.15);
+  --load-high:       #f97316;        /* taronja — alta */
+  --load-high-soft:  rgba(249,115,22,.15);
+  --load-vhigh:      #ef4444;        /* vermell — molt alta */
+  --load-vhigh-soft: rgba(239,68,68,.15);
 }
 
 html { font-size: 16px; }
 body { font-family: var(--font); background: var(--bg); color: var(--text);
        line-height: 1.5; min-height: 100vh; }
 
-/* ── Layout shell ────────────────────────────────────────────────── */
+/* ── Layout shell ───────────────────────────────────────────────── */
 .app-shell   { display: flex; min-height: 100vh; }
 .sidebar     { width: var(--sidebar-w); background: var(--surface);
                border-right: 1px solid var(--border); display: flex;
@@ -38,12 +52,12 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .main-content { flex: 1; padding: 32px 36px; overflow-x: hidden;
                 max-width: calc(100vw - var(--sidebar-w)); }
 
-/* ── Brand ────────────────────────────────────────────────────────────── */
+/* ── Brand ───────────────────────────────────────────────────────────────── */
 .brand-block .eyebrow { font-size:.7rem; font-weight:600; letter-spacing:.1em;
                          text-transform:uppercase; color:var(--accent); }
 .brand-block h1       { font-size:1.05rem; font-weight:700; line-height:1.2; margin-top:4px; }
 
-/* ── Nav ─────────────────────────────────────────────────────────────────── */
+/* ── Nav ───────────────────────────────────────────────────────────────────────── */
 .sidebar-nav { display:flex; flex-direction:column; gap:4px; }
 .nav-link    { display:flex; align-items:center; gap:8px; padding:9px 12px;
                border-radius:var(--radius); color:var(--text-muted); text-decoration:none;
@@ -52,7 +66,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .nav-link.active { background:var(--accent-soft); color:var(--accent); }
 .nav-icon        { font-size:1rem; width:20px; text-align:center; }
 
-/* ── Sidebar panel ─────────────────────────────────────────────────────── */
+/* ── Sidebar panel ────────────────────────────────────────────────────── */
 .sidebar-panel         { border-top:1px solid var(--border); padding-top:20px; }
 .sidebar-panel h2      { font-size:.7rem; font-weight:600; letter-spacing:.08em;
                           text-transform:uppercase; color:var(--text-muted); margin-bottom:12px; }
@@ -63,12 +77,12 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
                           background:var(--border); flex-shrink:0; }
 .dot.dot-live          { background:var(--accent); box-shadow:0 0 6px var(--accent); }
 
-/* ── Notice bar ───────────────────────────────────────────────────── */
+/* ── Notice bar ─────────────────────────────────────────────────────────── */
 .notice-bar   { background:var(--surface-2); border:1px solid var(--border);
                 border-radius:var(--radius); padding:10px 16px; margin-bottom:24px; }
 .notice-bar p { font-size:.8rem; color:var(--text-muted); }
 
-/* ── Buttons ────────────────────────────────────────────────────────────────── */
+/* ── Buttons ───────────────────────────────────────────────────────────────────────────── */
 .btn          { display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
                 border-radius:var(--radius); font-size:.85rem; font-weight:500;
                 cursor:pointer; border:none; transition:background .15s,color .15s; font-family:var(--font); }
@@ -81,11 +95,11 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .btn-sm       { padding:5px 11px; font-size:.78rem; }
 .btn-sidebar  { margin-top:auto; width:100%; justify-content:center; }
 
-/* ── Views ──────────────────────────────────────────────────────────────────────── */
+/* ── Views ────────────────────────────────────────────────────────────────────────────────── */
 .view          { display:none; }
 .view--active  { display:block; }
 
-/* ── Page header ────────────────────────────────────────────────────────── */
+/* ── Page header ───────────────────────────────────────────────────────────────── */
 .page-header  { display:flex; align-items:flex-start; justify-content:space-between;
                 gap:16px; margin-bottom:28px; flex-wrap:wrap; }
 .page-header .eyebrow { font-size:.7rem; font-weight:600; letter-spacing:.1em;
@@ -94,13 +108,40 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .page-subtitle        { font-size:.85rem; color:var(--text-muted); margin-top:4px; }
 .header-actions       { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 
-/* ── Badges ─────────────────────────────────────────────────────────────────── */
+/* ── Badges genèrics ─────────────────────────────────────────────────────────────── */
 .badge        { display:inline-block; padding:3px 10px; border-radius:20px;
                 font-size:.72rem; font-weight:600; background:var(--accent-soft);
                 color:var(--accent); }
 .badge-muted  { background:var(--surface-2); color:var(--text-muted); }
 
-/* ── Panels ─────────────────────────────────────────────────────────────────── */
+/* ── Badges de càrrega (barem 5 nivells) ───────────────────────────────── */
+.load-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: .72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.load-badge--load-vlow  { background: var(--load-vlow-soft);  color: var(--load-vlow);  }
+.load-badge--load-low   { background: var(--load-low-soft);   color: var(--load-low);   }
+.load-badge--load-mid   { background: var(--load-mid-soft);   color: var(--load-mid);   }
+.load-badge--load-high  { background: var(--load-high-soft);  color: var(--load-high);  }
+.load-badge--load-vhigh { background: var(--load-vhigh-soft); color: var(--load-vhigh); }
+
+/* Alias per als 5 nivells usats com a classe directa (epoc-value, epoc-bar-fill) */
+.load-vlow  { color: var(--load-vlow);  }
+.load-low   { color: var(--load-low);   }
+.load-mid   { color: var(--load-mid);   }
+.load-high  { color: var(--load-high);  }
+.load-vhigh { color: var(--load-vhigh); }
+
+/* Retrocompatància: classes antigues epoc-low/mid/high (no s'esborren) */
+.epoc-low  { color: var(--accent); }
+.epoc-mid  { color: var(--orange); }
+.epoc-high { color: var(--red); }
+
+/* ── Panels ───────────────────────────────────────────────────────────────────────────── */
 .panel        { background:var(--surface); border:1px solid var(--border);
                 border-radius:var(--radius-lg); padding:24px; margin-bottom:20px; }
 .panel-header { display:flex; align-items:flex-start; justify-content:space-between;
@@ -110,7 +151,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .panel-header h3       { font-size:1rem; font-weight:600; }
 .panel-large           { grid-column: span 2; }
 
-/* ── Hero grid ────────────────────────────────────────────────────────────────── */
+/* ── Hero grid ──────────────────────────────────────────────────────────────────────── */
 .hero-grid    { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
                 gap:16px; margin-bottom:20px; }
 .hero-card    { background:var(--surface); border:1px solid var(--border);
@@ -121,7 +162,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .card-note    { font-size:.78rem; color:var(--text-muted); margin-top:6px; }
 .hero-value   { font-size:1.8rem; font-weight:700; color:var(--accent); margin-top:8px; }
 
-/* ── Content grids ────────────────────────────────────────────────────────────── */
+/* ── Content grids ────────────────────────────────────────────────────────────────────── */
 .content-grid { display:grid; grid-template-columns:2fr 1fr; gap:20px; margin-bottom:20px; }
 .charts-grid  { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; }
 @media(max-width:900px) { .content-grid,.charts-grid { grid-template-columns:1fr; }
@@ -130,14 +171,13 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 /*
   .overview-bottom-grid — 2a fila de l'overview:
   Zones cardíaques (1fr) + EPOC & Recuperació (1fr) costat a costat.
-  El gràfic de zones s'adapta a l'alçada disponible.
 */
 .overview-bottom-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
   margin-bottom: 20px;
-  align-items: stretch; /* els 2 panells estiren a la mateixa alçada */
+  align-items: stretch;
 }
 .overview-bottom-grid .panel {
   margin-bottom: 0;
@@ -146,13 +186,12 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   .overview-bottom-grid { grid-template-columns: 1fr; }
 }
 
-/* Gràfic de zones en context bottom-grid: alçada estàndard */
 .chart-wrap--zones {
   position: relative;
   height: 200px;
 }
 
-/* ── Metrics grid ────────────────────────────────────────────────────────────── */
+/* ── Metrics grid ────────────────────────────────────────────────────────────────────── */
 .metrics-grid   { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; }
 .metric-box     { background:var(--surface-2); border-radius:var(--radius);
                   padding:14px; display:flex; flex-direction:column; gap:4px; }
@@ -162,12 +201,12 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .metric-box small  { font-size:.72rem; color:var(--text-muted); }
 .metric-real       { color:var(--blue) !important; }
 
-/* ── Chart wraps ──────────────────────────────────────────────────────────────── */
+/* ── Chart wraps ─────────────────────────────────────────────────────────────────────── */
 .chart-wrap         { position:relative; height:220px; }
 .chart-wrap--tall   { height:280px; }
 .pmc-chart-wrap     { height:320px; }
 
-/* ── Sessions — filtres ────────────────────────────────────────────────── */
+/* ── Sessions — filtres ────────────────────────────────────────────────────── */
 .sess-filters     { display:flex; align-items:center; gap:16px; flex-wrap:wrap;
                     margin-bottom:20px; padding:14px 18px;
                     background:var(--surface); border:1px solid var(--border);
@@ -181,7 +220,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
                      padding:6px 10px; font-size:.85rem; font-family:var(--font); cursor:pointer; }
 .sess-period-btns  { display:flex; gap:6px; flex-wrap:wrap; }
 
-/* ── Sessions — KPIs ──────────────────────────────────────────────────────────────── */
+/* ── Sessions — KPIs ──────────────────────────────────────────────────────────────────────── */
 .sess-kpis        { display:grid; grid-template-columns:repeat(4,1fr);
                     gap:12px; margin-bottom:20px; }
 @media(max-width:700px){ .sess-kpis { grid-template-columns:repeat(2,1fr); } }
@@ -192,7 +231,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
                     letter-spacing:.07em; color:var(--text-muted); }
 .sess-kpi-value   { font-size:1.4rem; font-weight:700; color:var(--accent); }
 
-/* ── Sessions — taula ───────────────────────────────────────────────────────────────────────── */
+/* ── Sessions — taula ───────────────────────────────────────────────────────────────────────────────────── */
 .table-shell      { overflow-x:auto; border-radius:var(--radius); }
 #sess-table       { width:100%; border-collapse:collapse; font-size:.82rem; }
 #sess-table th    { padding:10px 12px; text-align:left; font-size:.7rem; font-weight:600;
@@ -204,7 +243,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .empty-row        { text-align:center; color:var(--text-muted); padding:24px !important; }
 .sess-trend-panel { margin-bottom:20px; }
 
-/* ── PMC legend ─────────────────────────────────────────────────────────────────── */
+/* ── PMC legend ────────────────────────────────────────────────────────────────────────── */
 .pmc-legend       { display:flex; align-items:center; gap:14px; flex-wrap:wrap;
                     margin-bottom:16px; font-size:.75rem; }
 .pmc-leg-item     { display:flex; align-items:center; gap:5px; color:var(--text-muted); }
@@ -214,7 +253,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .pmc-leg-sep      { color:var(--border); }
 .pmc-leg-hint     { color:var(--text-muted); font-style:italic; }
 
-/* ── Planning ─────────────────────────────────────────────────────────────────────────── */
+/* ── Planning ──────────────────────────────────────────────────────────────────────────────────────────── */
 .plan-tabs        { display:flex; gap:8px; margin-bottom:20px; }
 .plan-no-data     { color:var(--text-muted); font-size:.85rem; padding:16px 0; }
 .muted-msg        { color:var(--text-muted); font-size:.85rem; }
@@ -312,7 +351,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .pcy-cell:not(.pcy-cell--empty):hover { opacity: 1; transform: translateY(-2px); }
 .pcy-cell--active:not(.pcy-cell--empty) { opacity: 1; outline-offset: 3px; }
 
-/* ── Planning mensual ───────────────────────────────────────────────────────── */
+/* ── Planning mensual ─────────────────────────────────────────────────────────────────────── */
 .plan-month-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -365,7 +404,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   font-size: .78rem; font-weight: 700; color: #0f172a; letter-spacing: .03em;
 }
 
-/* ── Planning setmanal ───────────────────────────────────────────────────────── */
+/* ── Planning setmanal ────────────────────────────────────────────────────────────────────────── */
 .pwv-header     { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 20px; }
 .pwv-km-total   { text-align: right; }
 .pwv-real-val   { display: block; font-size: .82rem; color: var(--blue); margin-top: 4px; }
@@ -375,7 +414,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .sw-plan-real   { color: var(--blue); }
 .sw-plan-real span { color: var(--blue) !important; }
 
-/* ── Setmana actual ──────────────────────────────────────────────────────────────── */
+/* ── Setmana actual ────────────────────────────────────────────────────────────────────────────────── */
 .progress-panel   { margin-bottom: 20px; }
 .progress-header  { display: flex; justify-content: space-between; align-items: center;
                     margin-bottom: 10px; font-size: .85rem; color: var(--text-muted); }
@@ -389,7 +428,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .sw-block-header h3 { font-size: .95rem; font-weight: 600; }
 .sw-status-dot    { width: 10px; height: 10px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
 
-/* Antic sistema de columnes (ja no s'usa, mantingut per retrocompat.) */
 .sw-cols          { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media(max-width:600px){ .sw-cols { grid-template-columns: 1fr; } }
 .sw-col-title     { font-size: .68rem; font-weight: 600; text-transform: uppercase;
@@ -400,7 +438,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .sw-plan-list li strong { font-weight: 600; }
 .sw-real-summary  { font-size: .82rem; color: var(--text-muted); margin-bottom: 10px; }
 
-/* ── sw-htable: taula horitzontal Pla / Real ────────────────────────────── */
+/* ── sw-htable: taula horitzontal Pla / Real ───────────────────────────────────────── */
 .sw-htable-wrap {
   overflow-x: auto;
   margin-bottom: 16px;
@@ -460,7 +498,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   border-top: 1px solid rgba(51,65,85,.35);
 }
 
-/* ── Mini-taula de sessions individuals ───────────────────────────────── */
+/* ── Mini-taula de sessions individuals ─────────────────────────────────────────────── */
 .sw-mini-table    { width: 100%; border-collapse: collapse; font-size: .78rem; }
 .sw-mini-table th { padding: 5px 6px; text-align: left; font-size: .65rem; font-weight: 600;
                     text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted);
@@ -468,11 +506,11 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .sw-mini-table td { padding: 5px 6px; border-bottom: 1px solid rgba(51,65,85,.4); }
 .sw-mini-table tbody tr:last-child td { border-bottom: none; }
 
-/* ── 5è panell (Altres): ocupa les 2 columnes del sw-grid ───────────────── */
+/* ── 5è panell (Altres): ocupa les 2 columnes del sw-grid ───────────────────────────── */
 .sw-block--wide { grid-column: span 2; }
 @media(max-width:860px){ .sw-block--wide { grid-column: span 1; } }
 
-/* ── Test & Cursa cards ───────────────────────────────────────────────────────────────── */
+/* ── Test & Cursa cards ────────────────────────────────────────────────────────────────────────────── */
 .test-race-grid   { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 12px; }
 .tr-card          { background: var(--surface-2); border: 1px solid var(--border);
                     border-radius: var(--radius); padding: 14px 16px; }
@@ -481,7 +519,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .tr-card-value    { font-size: 1.3rem; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
 .tr-card-meta     { font-size: .75rem; color: var(--text-muted); }
 
-/* ── Others cards ─────────────────────────────────────────────────────────────────────────── */
+/* ── Others cards ────────────────────────────────────────────────────────────────────────────────────────────── */
 .others-grid      { display: grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap: 12px; }
 .other-card       { background: var(--surface-2); border: 1px solid var(--border);
                     border-radius: var(--radius); padding: 12px 14px; }
@@ -568,14 +606,13 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 /* ============================================================
    #P3 — EPOC & Recuperació
    Layout: 2 files verticals (EPOC a dalt, Recuperació a baix)
-   per aprofitar tota l'alçada del panell i alinear-se amb les Zones.
    ============================================================ */
 
 #epoc-panel-content {
   display: flex;
-  flex-direction: column; /* vertical: EPOC dalt, Recuperació baix */
+  flex-direction: column;
   gap: 0;
-  height: 100%;            /* ocupa tota l'alçada disponible del panell */
+  height: 100%;
 }
 
 .epoc-block {
@@ -584,17 +621,9 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   padding: 12px 0;
 }
 
-/* Primer bloc (EPOC): sense padding superior */
-.epoc-block:first-child {
-  padding-top: 0;
-}
+.epoc-block:first-child { padding-top: 0; }
+.epoc-block:last-child  { padding-bottom: 0; }
 
-/* Últim bloc (Recuperació): sense padding inferior */
-.epoc-block:last-child {
-  padding-bottom: 0;
-}
-
-/* Divisor ara és horitzontal */
 .epoc-divider {
   width: 100%;
   height: 1px;
@@ -618,14 +647,12 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   color: var(--text-muted);
 }
 
+/* Valor numèric EPOC: color determinat per classe load-* */
 .epoc-value {
   font-size: 1.4rem;
   font-weight: 700;
   line-height: 1;
 }
-.epoc-value.epoc-low  { color: var(--accent); }
-.epoc-value.epoc-mid  { color: var(--orange); }
-.epoc-value.epoc-high { color: var(--red); }
 
 .epoc-bar-wrap {
   height: 5px;
@@ -634,15 +661,19 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   overflow: hidden;
   margin-bottom: 8px;
 }
+
+/* Barra EPOC: color determinat per classe load-* */
 .epoc-bar-fill {
   height: 100%;
   border-radius: 999px;
   transition: width .5s cubic-bezier(.4, 0, .2, 1);
   max-width: 100%;
 }
-.epoc-bar-fill.epoc-low  { background: var(--accent); }
-.epoc-bar-fill.epoc-mid  { background: var(--orange); }
-.epoc-bar-fill.epoc-high { background: var(--red); }
+.epoc-bar-fill.load-vlow  { background: var(--load-vlow);  }
+.epoc-bar-fill.load-low   { background: var(--load-low);   }
+.epoc-bar-fill.load-mid   { background: var(--load-mid);   }
+.epoc-bar-fill.load-high  { background: var(--load-high);  }
+.epoc-bar-fill.load-vhigh { background: var(--load-vhigh); }
 
 .epoc-label {
   font-size: .75rem;
