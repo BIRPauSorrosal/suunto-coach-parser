@@ -31,11 +31,11 @@ const SESS_TYPE_LABELS = {
   quality:  'Sessions de qualitat',
   long:     'Tirades llargues',
   testrace: 'Test i curses',
-  strength: 'Sessions de força',
+  strength: 'Sessions de for\u00e7a',
   other:    'Altres activitats',
 };
 
-// ── Punt d'entrada ─────────────────────────────────────────────────────────
+// ── Punt d'entrada ──────────────────────────────────────────────────────────────────
 function renderSessionsView(sessions) {
   _sessSessions = sessions;
   initSessFilters();
@@ -43,7 +43,7 @@ function renderSessionsView(sessions) {
   renderPMC(_sessSessions);
 }
 
-// ── Inicialitza listeners ──────────────────────────────────────────────────
+// ── Inicialitza listeners ─────────────────────────────────────────────────────────
 function initSessFilters() {
   const sel = document.getElementById('sess-type-select');
   if (sel) {
@@ -66,7 +66,7 @@ function initSessFilters() {
   });
 }
 
-// ── Render principal ──────────────────────────────────────────────────────────
+// ── Render principal ────────────────────────────────────────────────────────────────────
 function renderSessPanel() {
   const filtered = applyFilters(_sessSessions);
   renderSessKPIs(filtered);
@@ -74,7 +74,7 @@ function renderSessPanel() {
   renderSessTable(filtered);
 }
 
-// ── Filtratge ───────────────────────────────────────────────────────────────
+// ── Filtratge ───────────────────────────────────────────────────────────────────────
 function applyFilters(sessions) {
   let result = sessions;
   if (_sessPeriod === -1) {
@@ -99,7 +99,7 @@ function applyFilters(sessions) {
   return result;
 }
 
-// ── KPIs ───────────────────────────────────────────────────────────────────
+// ── KPIs ──────────────────────────────────────────────────────────────────────────
 function renderSessKPIs(sessions) {
   const totalKm   = sessions.reduce((a,s) => a + (s.distancia||0), 0);
   const totalMin  = sessions.reduce((a,s) => a + (s.durada||0), 0);
@@ -115,10 +115,10 @@ function renderSessKPIs(sessions) {
   setSessText('kpi-epoc', totalEpoc>0 ? fmtNum(totalEpoc)          : '--');
 }
 
-// ════════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════
 // PMC — Performance Management Chart (CTL / ATL / TSB)
 // Usa buildPMCData() de lib/metrics.js
-// ════════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════
 
 const PMC_GRADIENT_PLUGIN = {
   id: 'pmcTsbGradient',
@@ -183,7 +183,7 @@ function renderPMC(sessions) {
           const v = c.parsed.y;
           if (c.datasetIndex===0) return ` CTL (Forma): ${v}`;
           if (c.datasetIndex===1) return ` ATL (Fatiga): ${v}`;
-          const estat = v>5?'★ Fresc':v>-10?'≈ Neutral':'⚠️ Fatigat';
+          const estat = v>5?'\u2605 Fresc':v>-10?'\u2248 Neutral':'\u26a0\ufe0f Fatigat';
           return ` TSB (Frescor): ${v}  ${estat}`;
         }}}
       },
@@ -199,7 +199,7 @@ function renderPMC(sessions) {
   });
 }
 
-// ── Exportació PMC CSV ──────────────────────────────────────────────────────
+// ── Exportació PMC CSV ──────────────────────────────────────────────────────────────────
 function exportPMCcsv(days) {
   if (!_pmcDataCache.length) return;
   const rows   = days>0 ? _pmcDataCache.slice(-days) : _pmcDataCache;
@@ -215,7 +215,7 @@ function exportPMCcsv(days) {
     `pmc_${days>0?days+'d':'complet'}_${new Date().toISOString().slice(0,10)}.csv`);
 }
 
-// ── Exportació Sessions CSV ────────────────────────────────────────────────
+// ── Exportació Sessions CSV ─────────────────────────────────────────────────────────
 function exportSessionsCSV(days) {
   let rows = _sessSessions;
   if (days > 0) {
@@ -242,9 +242,9 @@ function triggerCsvDownload(csvContent, filename) {
   document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
-// ════════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════
 // Gràfic de tendència — usa groupByWeek() de lib/metrics.js
-// ════════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════
 
 function renderSessTrendChart(sessions) {
   const ctx = document.getElementById('chart-sess-trend');
@@ -260,9 +260,9 @@ function renderSessTrendChart(sessions) {
   _sessChart = new Chart(ctx, buildSessChartConfig(byWeek, byWeek.map(w=>w.label), sessions));
 }
 
-// ════════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════
 // buildSessChartConfig
-// ════════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════
 
 function buildSessChartConfig(byWeek, labels, sessions) {
   const C = CHART_COLORS;
@@ -304,12 +304,12 @@ function buildSessChartConfig(byWeek, labels, sessions) {
     const lbl = c.dataset.label || '';
     if (lbl.includes('Ritme'))           return `  Ritme: ${formatPace(v,'')}`;
     if (lbl.includes('FC'))              return `  FC: ${v} ppm`;
-    if (lbl.includes('Cad'))             return `  Cadència: ${v} spm`;
+    if (lbl.includes('Cad'))             return `  Cad\u00e8ncia: ${v} spm`;
     if (lbl.includes('EPOC'))            return `  EPOC: ${v}`;
-    if (lbl.includes('Càrrega'))         return `  Càrrega: ${v} TSS`;
+    if (lbl === 'TSS')                   return `  TSS: ${v}`;
     if (lbl.includes('Desnivell'))       return `  Desnivell: ${v} m`;
     if (lbl.includes('Km'))              return `  Km: ${v} km`;
-    if (lbl.includes('Temps sèries'))    return `  Temps sèries: ${v} min`;
+    if (lbl.includes('Temps s\u00e8ries')) return `  Temps s\u00e8ries: ${v} min`;
     return ` ${lbl}: ${v}`;
   }
 
@@ -324,7 +324,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
           backgroundColor:COL.km.bar, borderColor:COL.km.line,
           borderWidth:1, borderRadius:4, yAxisID:'y' },
       ];
-      if (hasLoad) datasets.push({ type:'line', label:'Càrrega TSS',
+      if (hasLoad) datasets.push({ type:'line', label:'TSS',
         data:byWeek.map(w=>w.load), borderColor:COL.load.line, backgroundColor:'transparent',
         borderWidth:2, pointRadius:3, tension:0.3, yAxisID:'y2', spanGaps:true });
       if (hasEpoc) datasets.push({ type:'line', label:'EPOC',
@@ -354,7 +354,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
       if (hasFC) datasets.push({ type:'line', label:'FC mitja (ppm)',
         data:byWeek.map(w=>w.avgFC), borderColor:COL.fc.line, backgroundColor:'transparent',
         borderWidth:2, pointRadius:4, tension:0.3, yAxisID:'y3', spanGaps:true });
-      if (hasCad) datasets.push({ type:'line', label:'Cadència (spm)',
+      if (hasCad) datasets.push({ type:'line', label:'Cad\u00e8ncia (spm)',
         data:byWeek.map(w=>w.avgCad), borderColor:COL.cad.line, backgroundColor:'transparent',
         borderWidth:2, pointRadius:4, tension:0.3, yAxisID:'y3', spanGaps:true });
       return { type:'bar', data:{labels,datasets}, options:{...baseOpts,
@@ -372,20 +372,20 @@ function buildSessChartConfig(byWeek, labels, sessions) {
       const hasCadS  = byWeek.some(w => w.avgCadSeries   !== null);
       const datasets = [];
       if (hasDurS) datasets.push({
-        type:'bar', label:'Temps sèries (min)',
+        type:'bar', label:'Temps s\u00e8ries (min)',
         data:byWeek.map(w => w.totalDurSeries > 0 ? w.totalDurSeries : null),
         backgroundColor:COL.dur.bar, borderColor:COL.dur.line,
         borderWidth:1, borderRadius:4, yAxisID:'y'
       });
-      if (hasPaceS) datasets.push({ type:'line', label:'Ritme sèries (min/km)',
+      if (hasPaceS) datasets.push({ type:'line', label:'Ritme s\u00e8ries (min/km)',
         data:byWeek.map(w=>w.avgPaceSeries), borderColor:COL.ritme.line,
         backgroundColor:'transparent', borderWidth:2, pointRadius:4,
         tension:0.3, yAxisID:'y2', spanGaps:true });
-      if (hasFCS) datasets.push({ type:'line', label:'FC sèries (ppm)',
+      if (hasFCS) datasets.push({ type:'line', label:'FC s\u00e8ries (ppm)',
         data:byWeek.map(w=>w.avgFCSeries), borderColor:COL.fc.line,
         backgroundColor:'transparent', borderWidth:2, pointRadius:4,
         tension:0.3, yAxisID:'y3', spanGaps:true });
-      if (hasCadS) datasets.push({ type:'line', label:'Cadència sèries (spm)',
+      if (hasCadS) datasets.push({ type:'line', label:'Cad\u00e8ncia s\u00e8ries (spm)',
         data:byWeek.map(w=>w.avgCadSeries), borderColor:COL.cad.line,
         backgroundColor:'transparent', borderWidth:2, pointRadius:4,
         tension:0.3, yAxisID:'y3', spanGaps:true });
@@ -468,7 +468,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
 
     case 'strength':
       return { type:'bar', data:{labels, datasets:[
-        { label:'Càrrega (TSS)', data:byWeek.map(w=>w.load),
+        { label:'TSS', data:byWeek.map(w=>w.load),
           backgroundColor:COL.load.bar, borderColor:COL.load.line, borderWidth:1, borderRadius:4 },
         { label:'EPOC', data:byWeek.map(w=>w.epoc),
           backgroundColor:COL.epoc.bar, borderColor:COL.epoc.line, borderWidth:1, borderRadius:4 },
@@ -479,7 +479,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
 
     case 'other':
       return { type:'bar', data:{labels, datasets:[
-        { label:'Càrrega (TSS)', data:byWeek.map(w=>w.load),
+        { label:'TSS', data:byWeek.map(w=>w.load),
           backgroundColor:COL.load.bar, borderColor:COL.load.line, borderWidth:1, borderRadius:4 },
         { label:'EPOC', data:byWeek.map(w=>w.epoc),
           backgroundColor:COL.epoc.bar, borderColor:COL.epoc.line, borderWidth:1, borderRadius:4 },
@@ -490,7 +490,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
   }
 }
 
-// ── Taula ─────────────────────────────────────────────────────────────────
+// ── Taula ───────────────────────────────────────────────────────────────────────────
 function renderSessTable(sessions) {
   const thead=document.getElementById('sess-thead');
   const tbody=document.getElementById('sess-tbody');
@@ -506,31 +506,29 @@ function renderSessTable(sessions) {
   const cols = getSessCols(_sessType);
   thead.innerHTML = `<tr>${cols.map(c=>`<th>${c.label}</th>`).join('')}</tr>`;
   if (!sessions.length) {
-    tbody.innerHTML = `<tr><td colspan="${cols.length}" class="empty-row">Cap sessió amb els filtres seleccionats.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${cols.length}" class="empty-row">Cap sessi\u00f3 amb els filtres seleccionats.</td></tr>`;
     return;
   }
-  // innerHTML per permetre el HTML dels load-badges i load-dots
   tbody.innerHTML = sessions.map(s=>`<tr>${cols.map(c=>`<td>${c.render(s)}</td>`).join('')}</tr>`).join('');
 }
 
 function getSessCols(type) {
   const colData       = {label:'Data',            render:s=>esc(s.displayDate)};
   const colTipus      = {label:'Tipus',            render:s=>esc(s.tipus)};
-  const colKm         = {label:'Km',               render:s=>s.distancia>0?`${fmtNum(s.distancia)} km`:'—'};
-  const colDurada     = {label:'Durada',           render:s=>s.durada>0?`${fmtNum(s.durada)} min`:'—'};
+  const colKm         = {label:'Km',               render:s=>s.distancia>0?`${fmtNum(s.distancia)} km`:'\u2014'};
+  const colDurada     = {label:'Durada',           render:s=>s.durada>0?`${fmtNum(s.durada)} min`:'\u2014'};
   const colRitme      = {label:'Ritme',            render:s=>formatPace(s.ritme)};
-  const colFC         = {label:'FC',               render:s=>typeof s.fcMitja==='number'&&s.fcMitja>0?`${Math.round(s.fcMitja)} ppm`:'—'};
+  const colFC         = {label:'FC',               render:s=>typeof s.fcMitja==='number'&&s.fcMitja>0?`${Math.round(s.fcMitja)} ppm`:'\u2014'};
 
-  // Càrrega TSS: dot de color (sense etiqueta) + valor TSS
-  // loadDotHTML — indicador visual discret, no repeteix el valor EPOC
+  // TSS: dot de color (EPOC com a indicador visual) + valor TSS numèric
   const colCarrega = {
-    label: 'Càrrega TSS',
+    label: 'TSS',
     render: s => {
       const e = toNumber(s.raw['EPOC']);
       const dot = (typeof e === 'number' && e > 0) ? loadDotHTML(e) : '';
       return (typeof s.carrega === 'number' && s.carrega > 0)
         ? `${dot} ${fmtNum(s.carrega)} TSS`
-        : '—';
+        : '\u2014';
     }
   };
 
@@ -539,24 +537,24 @@ function getSessCols(type) {
     label: 'EPOC',
     render: s => {
       const e = toNumber(s.raw['EPOC']);
-      return (typeof e === 'number' && e > 0) ? loadBadgeHTML(e) : '—';
+      return (typeof e === 'number' && e > 0) ? loadBadgeHTML(e) : '\u2014';
     }
   };
 
-  const colRecup      = {label:'Recup.',           render:s=>{const r=toNumber(s.raw['Recup(h)']);return typeof r==='number'&&r>0?`${fmtNum(r)} h`:'—';}};
-  const colZ2min      = {label:'Z2 (min)',         render:s=>s.z2min>0?`${fmtNum(s.z2min)} min`:'—'};
-  const colCad        = {label:'Cadència',         render:s=>{const c=toNumber(s.raw['Cadencia(spm)']);return typeof c==='number'&&c>0?`${Math.round(c)} spm`:'—';}};
-  const colDesnivell  = {label:'Desnivell',        render:s=>{const d=toNumber(s.raw['Desnivell(m)']);return typeof d==='number'&&d>0?`${Math.round(d)} m`:'—';}};
-  const colRitmeSeries= {label:'Ritme sèries',     render:s=>formatPace(typeof s.ritmeMitjaSeries==='number'?s.ritmeMitjaSeries:null)};
-  const colFCSeries   = {label:'FC sèries',        render:s=>typeof s.fcMitjaSeries==='number'&&s.fcMitjaSeries>0?`${Math.round(s.fcMitjaSeries)} ppm`:'—'};
-  const colSeries     = {label:'Sèries',           render:s=>{const n=toNumber(s.raw['Num_Series']);return typeof n==='number'&&n>0?String(Math.round(n)):'—';}};
-  const colPTE        = {label:'PTE',              render:s=>{const p=toNumber(s.raw['PTE']);return typeof p==='number'&&p>0?fmtNum(p):'—';}};
+  const colRecup      = {label:'Recup.',           render:s=>{const r=toNumber(s.raw['Recup(h)']);return typeof r==='number'&&r>0?`${fmtNum(r)} h`:'\u2014';}};
+  const colZ2min      = {label:'Z2 (min)',         render:s=>s.z2min>0?`${fmtNum(s.z2min)} min`:'\u2014'};
+  const colCad        = {label:'Cad\u00e8ncia',   render:s=>{const c=toNumber(s.raw['Cadencia(spm)']);return typeof c==='number'&&c>0?`${Math.round(c)} spm`:'\u2014';}};
+  const colDesnivell  = {label:'Desnivell',        render:s=>{const d=toNumber(s.raw['Desnivell(m)']);return typeof d==='number'&&d>0?`${Math.round(d)} m`:'\u2014';}};
+  const colRitmeSeries= {label:'Ritme s\u00e8ries', render:s=>formatPace(typeof s.ritmeMitjaSeries==='number'?s.ritmeMitjaSeries:null)};
+  const colFCSeries   = {label:'FC s\u00e8ries',   render:s=>typeof s.fcMitjaSeries==='number'&&s.fcMitjaSeries>0?`${Math.round(s.fcMitjaSeries)} ppm`:'\u2014'};
+  const colSeries     = {label:'S\u00e8ries',      render:s=>{const n=toNumber(s.raw['Num_Series']);return typeof n==='number'&&n>0?String(Math.round(n)):'\u2014';}};
+  const colPTE        = {label:'PTE',              render:s=>{const p=toNumber(s.raw['PTE']);return typeof p==='number'&&p>0?fmtNum(p):'\u2014';}};
   const colDurSerie   = {
-    label: 'Dur/Sèrie',
+    label: 'Dur/S\u00e8rie',
     render: s => {
       const n   = toNumber(s.raw['Num_Series']);
       const dur = parseDurSeries(s);     // ← lib/metrics.js
-      if (typeof n !== 'number' || n <= 0 || dur <= 0) return '—';
+      if (typeof n !== 'number' || n <= 0 || dur <= 0) return '\u2014';
       return `${fmtNum(Math.round((dur / n) * 10) / 10)} min`;
     }
   };
