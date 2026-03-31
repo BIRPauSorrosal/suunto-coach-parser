@@ -2,8 +2,8 @@
 // Vista Overview: hero-cards + metric-boxes + panells Test/Cursa + Altres
 // Dep: formatters.js, metrics.js, load-scale.js, app.js
 
-// ── Punt d'entrada ──────────────────────────────────────────────────────────
-function renderOverviewView(sessions, planning) {
+// ── Punt d'entrada ──────────────────────────────────────────────────────────────────
+ function renderOverviewView(sessions, planning) {
   const activeWeek     = detectActiveWeek(planning, sessions);
   const weeklySessions = activeWeek
     ? sessions.filter(s => s.date >= activeWeek.startDate && s.date <= activeWeek.endDate)
@@ -16,17 +16,21 @@ function renderOverviewView(sessions, planning) {
   renderTestRacePanel(sessions);
   renderOthersPanel(sessions);
 
+  // ② i ④ nous widgets
+  renderLoadTrend(sessions, planning);
+  renderCtlTrend(sessions);
+
   setTimeout(() => initCharts(sessions, planning), 0);
 }
 
-// ── Hero-cards ────────────────────────────────────────────────────────────────
+// ── Hero-cards ────────────────────────────────────────────────────────────────────────
 function renderOverview(activeWeek, weeklySessions) {
   const plannedKm  = activeWeek?.kmTotal ?? null;
   const realLoad   = sumNumbers(weeklySessions.map(s => s.carrega));
   const realKm     = sumNumbers(weeklySessions.map(s => s.distancia));
   const compliance = (plannedKm && plannedKm > 0) ? (realKm / plannedKm) * 100 : null;
 
-  setText('active-week-label', activeWeek ? `${activeWeek.setmana} · ${activeWeek.cicle}` : '--');
+  setText('active-week-label', activeWeek ? `${activeWeek.setmana} \u00b7 ${activeWeek.cicle}` : '--');
   setText('active-week-range', activeWeek
     ? `${formatDate(activeWeek.startDate)} \u2192 ${formatDate(activeWeek.endDate)} \u00b7 ${activeWeek.fase}`
     : "No s'ha pogut detectar cap setmana activa.");
@@ -35,7 +39,7 @@ function renderOverview(activeWeek, weeklySessions) {
   setText('compliance-value',  compliance == null ? '-- %' : `${Math.round(compliance)} %`);
 }
 
-// ── Progrés del cicle ────────────────────────────────────────────────────────
+// ── Progrés del cicle ──────────────────────────────────────────────────────────────────
 function renderCycleProgress(activeWeek, planning) {
   const barEl     = document.getElementById('cycle-bar-fill');
   const titleEl   = document.getElementById('cycle-title');
@@ -85,7 +89,7 @@ function renderCycleProgress(activeWeek, planning) {
   }).join('');
 }
 
-// ── Metric-boxes (resum setmana activa) ──────────────────────────────────────
+// ── Metric-boxes (resum setmana activa) ────────────────────────────────────────────
 function renderSummary(activeWeek, weeklySessions) {
   const quality  = weeklySessions.filter(s => QUALITY_TYPES.has(s.tipusKey));
   const llong    = weeklySessions.filter(s => LONG_TYPES.has(s.tipusKey));
@@ -96,7 +100,7 @@ function renderSummary(activeWeek, weeklySessions) {
   const longKm          = sumNumbers(llong.map(s => s.distancia));
   const strengthMin     = sumNumbers(strength.map(s => s.durada));
 
-  // ─ Qualitat ─────────────────────────────────────────────────────────────
+  // ─ Qualitat ─────────────────────────────────────────────────────────────────────
   if (quality.length) {
     const ritmeMitja = quality.map(s => s.ritmeMitjaSeries).filter(v => isFinite(v));
     const fcMitja    = quality.map(s => s.fcMitjaSeries).filter(v => isFinite(v));
@@ -112,40 +116,37 @@ function renderSummary(activeWeek, weeklySessions) {
     setText('quality-summary', '\u2014');
   }
   setText('quality-detail', activeWeek
-    ? `Pla: ${activeWeek.qSeries} sèr · ${activeWeek.qDuradaSerie}' · ${formatPace(activeWeek.qRitme)}`
+    ? `Pla: ${activeWeek.qSeries} sèr \u00b7 ${activeWeek.qDuradaSerie}' \u00b7 ${formatPace(activeWeek.qRitme)}`
     : 'Sense planning setmanal disponible');
 
-  // ─ Z1+Z2 ────────────────────────────────────────────────────────────────
+  // ─ Z1+Z2 ────────────────────────────────────────────────────────────────────────
   setText('z2-summary', z1z2Minutes ? `${formatNumber(z1z2Minutes)} min` : '\u2014');
   setText('z2-detail', activeWeek
     ? `Ritme Z2: ${formatPace(activeWeek.z2PaceMin, '')}\u2013${formatPace(activeWeek.z2PaceMax)}`
     : 'Sense rang de ritme planificat');
 
-  // ─ Tirada llarga ────────────────────────────────────────────────────────
+  // ─ Tirada llarga ──────────────────────────────────────────────────────────────────
   setText('long-summary', longKm ? `${formatNumber(longKm)} km` : '\u2014');
   setText('long-detail', activeWeek
-    ? `Pla: ${activeWeek.llTipus} · ${formatNumber(activeWeek.llKm)} km`
+    ? `Pla: ${activeWeek.llTipus} \u00b7 ${formatNumber(activeWeek.llKm)} km`
     : 'Sense tirada llarga planificada');
   if (llong.length) {
     const lastLong  = llong[0];
     const desnivell = isFinite(lastLong.desnivell) ? `${formatNumber(lastLong.desnivell)} m` : '--';
     const fc        = isFinite(lastLong.fcMitja)   ? `${Math.round(lastLong.fcMitja)} ppm`  : '--';
-    setText('long-real', `Real: ${formatNumber(longKm)} km · D+ ${desnivell} · FC ${fc}`);
+    setText('long-real', `Real: ${formatNumber(longKm)} km \u00b7 D+ ${desnivell} \u00b7 FC ${fc}`);
   } else {
     setText('long-real', '');
   }
 
-  // ─ Força ────────────────────────────────────────────────────────────────
+  // ─ Força ──────────────────────────────────────────────────────────────────────────
   setText('strength-summary', strength.length ? `${strength.length} sessions` : '\u2014');
   setText('strength-detail', activeWeek
-    ? `Pla: ${activeWeek.forcaPlan} · ${formatNumber(strengthMin)} min reals`
-    : 'Sense sessions de força aquesta setmana');
+    ? `Pla: ${activeWeek.forcaPlan} \u00b7 ${formatNumber(strengthMin)} min reals`
+    : 'Sense sessions de for\u00e7a aquesta setmana');
 }
 
-// ── Panell EPOC & Recuperació ─────────────────────────────────────────────────
-// Finestra: últims 7 dies.
-// EPOC: suma total + MITJANA per sessió (via getLoadLevelWeekly de load-scale.js)
-// Recuperació: màxim de (Recup(h) - hores_transcorregudes), mínim 0.
+// ── Panell EPOC & Recuperació ───────────────────────────────────────────────────────────
 function renderEpocPanel(sessions) {
   const container = document.getElementById('epoc-panel-content');
   if (!container) return;
@@ -157,20 +158,17 @@ function renderEpocPanel(sessions) {
 
   const recent = sessions.filter(s => s.date >= cutoff);
 
-  // ─ EPOC: total + mitjana per sessió ────────────────────────────────────
   const epocValues   = recent.map(s => s.epoc).filter(v => v !== null && isFinite(v));
   const epocTotal    = epocValues.reduce((a, b) => a + b, 0);
   const numSessions  = recent.length;
   const lvl          = getLoadLevelWeekly(epocTotal, numSessions);
 
-  // Barra visual escalada sobre el llindar "molt alta" de la sessió mitjana (150)
   const epocBarMax = 150;
   const epocPct    = Math.min(100, Math.round((lvl.avg / epocBarMax) * 100));
 
-  const avgTxt   = lvl.count > 0 ? `${Math.round(lvl.avg)} EPOC/sessió` : '--';
+  const avgTxt   = lvl.count > 0 ? `${Math.round(lvl.avg)} EPOC/sessi\u00f3` : '--';
   const countTxt = `${lvl.count} session${lvl.count !== 1 ? 's' : ''}`;
 
-  // ─ Recuperació pendent ─────────────────────────────────────────────────
   let maxPendent  = 0;
   let origenTipus = '--';
   let origenData  = '--';
@@ -192,8 +190,8 @@ function renderEpocPanel(sessions) {
     ? `${Math.round(maxPendent)}h restants`
     : 'Recuperat \u2713';
   const recuperacioOrigen = maxPendent > 0
-    ? `Origen: ${esc(origenTipus)} · ${esc(origenData)}`
-    : 'Cap sessió pendent de recuperació';
+    ? `Origen: ${esc(origenTipus)} \u00b7 ${esc(origenData)}`
+    : 'Cap sessi\u00f3 pendent de recuperaci\u00f3';
 
   container.innerHTML = `
     <div class="epoc-block">
@@ -206,13 +204,13 @@ function renderEpocPanel(sessions) {
       </div>
       <p class="epoc-label">
         <span class="load-badge load-badge--load-${lvl.key}">${esc(lvl.label)}</span>
-        <span class="epoc-avg-detail">${countTxt} · mitjana ${avgTxt}</span>
+        <span class="epoc-avg-detail">${countTxt} \u00b7 mitjana ${avgTxt}</span>
       </p>
     </div>
     <div class="epoc-divider"></div>
     <div class="epoc-block">
       <div class="epoc-block-header">
-        <span class="epoc-block-title">Recuperació pendent</span>
+        <span class="epoc-block-title">Recuperaci\u00f3 pendent</span>
         <span class="epoc-recup-value">${esc(recuperacioText)}</span>
       </div>
       <p class="epoc-label">${recuperacioOrigen}</p>
@@ -220,7 +218,7 @@ function renderEpocPanel(sessions) {
   `;
 }
 
-// ── Panell Test & Cursa ───────────────────────────────────────────────────────
+// ── Panell Test & Cursa ───────────────────────────────────────────────────────────────────
 function renderTestRacePanel(sessions) {
   const container = document.getElementById('test-race-container');
   if (!container) return;
@@ -258,11 +256,11 @@ function renderTestRacePanel(sessions) {
         <tr>
           <th>Tipus</th>
           <th>Data</th>
-          <th>Distància</th>
+          <th>Dist\u00e0ncia</th>
           <th>Ritme</th>
           <th>FC</th>
           <th>Desnivell</th>
-          <th>Càrrega</th>
+          <th>C\u00e0rrega</th>
         </tr>
       </thead>
       <tbody>
@@ -272,7 +270,7 @@ function renderTestRacePanel(sessions) {
     </table>`;
 }
 
-// ── Panell Altres activitats — últims 30 dies ─────────────────────────────────
+// ── Panell Altres activitats — \u00faltims 30 dies ───────────────────────────────────────────
 function renderOthersPanel(sessions) {
   const container = document.getElementById('others-container');
   if (!container) return;
@@ -285,13 +283,13 @@ function renderOthersPanel(sessions) {
   const totalMin = sumNumbers(others.map(s => s.durada));
 
   setText('others-count', others.length
-    ? `${others.length} sessions · ${formatNumber(totalMin)} min`
-    : 'Sense activitats els últims 30 dies');
+    ? `${others.length} sessions \u00b7 ${formatNumber(totalMin)} min`
+    : 'Sense activitats els \u00faltims 30 dies');
 
   container.innerHTML = others.length
     ? `<table class="sw-mini-table">
         <thead>
-          <tr><th>Data</th><th>Tipus</th><th>Durada</th><th>Càrrega</th></tr>
+          <tr><th>Data</th><th>Tipus</th><th>Durada</th><th>C\u00e0rrega</th></tr>
         </thead>
         <tbody>
           ${others.map(s => `
@@ -303,5 +301,333 @@ function renderOthersPanel(sessions) {
             </tr>`).join('')}
         </tbody>
       </table>`
-    : '<p class="plan-no-data">Cap activitat alternativa els últims 30 dies.</p>';
+    : '<p class="plan-no-data">Cap activitat alternativa els \u00faltims 30 dies.</p>';
+}
+
+// ============================================================
+// #P-TREND A — Tend\u00e8ncia de c\u00e0rrega (\u00faltimes 7 setmanes)
+// ============================================================
+// L\u00f2gica:
+//   1. Agrupem sessions per setmana ISO (dilluns-diumenge).
+//   2. Calculem la c\u00e0rrega total (suma de s.carrega) per a les
+//      7 setmanes anteriors + la setmana activa (= 7 barres).
+//   3. La setmana activa es pinta en --accent (verd);
+//      les anteriors en --surface-2 (gris).
+//   4. Afegim una l\u00ednia de refer\u00e8ncia horitzontal amb la mitjana
+//      de les 6 setmanes passades.
+//   5. Generem la trend-pill: ↑ pujada | \u2192 en l\u00ednia | \u2193 desc\u00e0rrega
+//      (llindar ±15 % de la mitjana).
+// ============================================================
+function renderLoadTrend(sessions, planning) {
+  const canvas = document.getElementById('chart-load-trend');
+  const pillEl = document.getElementById('load-trend-pill');
+  if (!canvas || !pillEl) return;
+
+  // Destrueix gr\u00e0fic anterior si existeix (reutilitzaci\u00f3 en reload)
+  if (canvas._chartInstance) { canvas._chartInstance.destroy(); }
+
+  // ─ Helpers de setmana ISO ────────────────────────────────────────────────────────────
+  // Retorna el dilluns (00:00:00) de la setmana que cont\u00e9 `d`.
+  function isoMonday(d) {
+    const t = new Date(d);
+    const day = t.getDay(); // 0=dg, 1=dl...
+    const diff = (day === 0) ? -6 : 1 - day;
+    t.setDate(t.getDate() + diff);
+    t.setHours(0, 0, 0, 0);
+    return t;
+  }
+
+  // Etiqueta curta: "S52" o "1 gen"
+  function weekLabel(monday) {
+    const d = new Date(monday);
+    d.setDate(d.getDate() + 3); // dijous → representa b\u00e9 la setmana ISO
+    const months = ['gen','feb','mar','abr','mai','jun','jul','ago','set','oct','nov','des'];
+    return `${d.getDate()} ${months[d.getMonth()]}`;
+  }
+
+  // ─ Dilluns de la setmana activa ────────────────────────────────────────────────────
+  const todayMonday = isoMonday(new Date());
+
+  // Construim array de 7 setmanes: [avui-6, avui-5, ..., avui-0]
+  const weeks = [];
+  for (let i = 6; i >= 0; i--) {
+    const mon = new Date(todayMonday);
+    mon.setDate(mon.getDate() - i * 7);
+    const sun = new Date(mon);
+    sun.setDate(sun.getDate() + 6);
+    sun.setHours(23, 59, 59, 999);
+    weeks.push({ mon, sun, label: weekLabel(mon), isActive: i === 0 });
+  }
+
+  // ─ Agrupa c\u00e0rrega per setmana ─────────────────────────────────────────────────────
+  const loads = weeks.map(w => {
+    const total = sessions
+      .filter(s => s.date >= w.mon && s.date <= w.sun)
+      .reduce((sum, s) => sum + (isFinite(s.carrega) ? s.carrega : 0), 0);
+    return Math.round(total);
+  });
+
+  const labels = weeks.map(w => w.label);
+
+  // Colors: l\u00faltima barra (setmana activa) en accent, la resta en gris
+  const CSS   = getComputedStyle(document.documentElement);
+  const clrAccent  = CSS.getPropertyValue('--accent').trim()  || '#22c55e';
+  const clrSurface = CSS.getPropertyValue('--surface-2').trim() || '#263349';
+  const clrMuted   = CSS.getPropertyValue('--text-muted').trim() || '#94a3b8';
+  const clrBg      = CSS.getPropertyValue('--bg').trim()         || '#0f172a';
+
+  const barColors = loads.map((_, i) =>
+    i === loads.length - 1 ? clrAccent : clrSurface
+  );
+  const borderColors = loads.map((_, i) =>
+    i === loads.length - 1
+      ? clrAccent
+      : CSS.getPropertyValue('--border').trim() || '#334155'
+  );
+
+  // ─ Mitjana de les 6 setmanes passades ───────────────────────────────────────────
+  const pastLoads  = loads.slice(0, 6).filter(v => v > 0);
+  const avgPast    = pastLoads.length
+    ? Math.round(pastLoads.reduce((a, b) => a + b, 0) / pastLoads.length)
+    : 0;
+
+  // ─ Trend-pill ───────────────────────────────────────────────────────────────────
+  const currentLoad = loads[loads.length - 1];
+  let pillClass, pillIcon, pillText;
+
+  if (avgPast === 0 || currentLoad === 0) {
+    pillClass = 'neutral'; pillIcon = '\u2192'; pillText = 'Sense dades suficients';
+  } else {
+    const diffPct = ((currentLoad - avgPast) / avgPast) * 100;
+    if (diffPct > 15) {
+      pillClass = 'up';
+      pillIcon  = '\u2191';
+      pillText  = `Pujada +${Math.round(diffPct)}% (Mij. ${avgPast})`;
+    } else if (diffPct < -15) {
+      pillClass = 'down';
+      pillIcon  = '\u2193';
+      pillText  = `Desc\u00e0rrega ${Math.round(diffPct)}% (Mij. ${avgPast})`;
+    } else {
+      pillClass = 'neutral';
+      pillIcon  = '\u2192';
+      pillText  = `En l\u00ednia ${diffPct >= 0 ? '+' : ''}${Math.round(diffPct)}% (Mij. ${avgPast})`;
+    }
+  }
+
+  pillEl.innerHTML = `
+    <span class="trend-pill trend-pill--${pillClass}">${pillIcon} ${esc(pillText)}</span>
+    <span class="trend-context">±15% = en l\u00ednia | >+15% = pujada | <-15% = desc\u00e0rrega</span>
+  `;
+
+  // ─ Chart.js ───────────────────────────────────────────────────────────────────────
+  canvas._chartInstance = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'C\u00e0rrega',
+          data: loads,
+          backgroundColor: barColors,
+          borderColor: borderColors,
+          borderWidth: 1,
+          borderRadius: 4,
+          borderSkipped: 'bottom',
+        },
+        // L\u00ednia de mitjana de les 6 setmanes passades
+        {
+          type: 'line',
+          label: `Mij. ${avgPast}`,
+          data: new Array(loads.length).fill(avgPast),
+          borderColor: clrMuted,
+          borderWidth: 1,
+          borderDash: [4, 4],
+          pointRadius: 0,
+          fill: false,
+          tension: 0,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 400 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.datasetIndex === 0
+              ? ` C\u00e0rrega: ${ctx.raw}`
+              : ` Mitjana 6s: ${avgPast}`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(51,65,85,0.4)' },
+          ticks: { color: clrMuted, font: { size: 11 } },
+        },
+        y: {
+          grid: { color: 'rgba(51,65,85,0.4)' },
+          ticks: { color: clrMuted, font: { size: 11 } },
+          beginAtZero: true,
+        },
+      },
+    },
+  });
+}
+
+// ============================================================
+// #P-TREND B — Forma actual: CTL (\u00faltims 42 dies)
+// ============================================================
+// L\u00f2gica:
+//   1. Calculem el CTL (Chronic Training Load) dia a dia
+//      sobre tots els sessions disponibles.
+//      CTL(n) = CTL(n-1) * e^(-1/42) + load(n) * (1 - e^(-1/42))
+//   2. Mostrem la l\u00ednia dels \u00faltims 42 dies fins a avui.
+//   3. Dos punts destacats: primer i \u00faltim del rang.
+//   4. Trend-pill: compara CTL avui vs CTL fa 7 dies
+//      (llindar \u00b11 punt CTL = estable).
+// ============================================================
+function renderCtlTrend(sessions) {
+  const canvas = document.getElementById('chart-ctl-trend');
+  const pillEl = document.getElementById('ctl-trend-pill');
+  if (!canvas || !pillEl) return;
+
+  if (canvas._chartInstance) { canvas._chartInstance.destroy(); }
+
+  const CSS        = getComputedStyle(document.documentElement);
+  const clrAccent  = CSS.getPropertyValue('--accent').trim()    || '#22c55e';
+  const clrMuted   = CSS.getPropertyValue('--text-muted').trim()|| '#94a3b8';
+  const clrOrange  = CSS.getPropertyValue('--orange').trim()    || '#f97316';
+
+  // ─ Rang de dates: avui - 42 dies fins a avui ───────────────────────────────────
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const rangeStart = new Date(today);
+  rangeStart.setDate(rangeStart.getDate() - 41); // 42 dies incloent avui
+
+  // Necessitem sessions anteriors per preescalfar el CTL
+  // Preescalfem des del primer dia disponible fins a rangeStart
+  const sorted = [...sessions]
+    .filter(s => s.date instanceof Date && isFinite(s.date))
+    .sort((a, b) => a.date - b.date);
+
+  // ─ Construim un mapa data -> c\u00e0rrega total ─────────────────────────────────────
+  const dayLoad = new Map(); // key: 'YYYY-MM-DD', value: sum(carrega)
+  sorted.forEach(s => {
+    const key = s.date.toISOString().slice(0, 10);
+    dayLoad.set(key, (dayLoad.get(key) || 0) + (isFinite(s.carrega) ? s.carrega : 0));
+  });
+
+  // ─ Calcul CTL des del primer dia fins a avui ───────────────────────────────────
+  const TAU_CTL = 42;
+  const k_ctl   = Math.exp(-1 / TAU_CTL);
+
+  let firstDay = sorted.length ? new Date(sorted[0].date) : new Date(rangeStart);
+  firstDay.setHours(0, 0, 0, 0);
+
+  let ctl = 0;
+  const ctlByDate = new Map(); // key: 'YYYY-MM-DD'
+
+  for (let d = new Date(firstDay); d <= today; d.setDate(d.getDate() + 1)) {
+    const key  = d.toISOString().slice(0, 10);
+    const load = dayLoad.get(key) || 0;
+    ctl = ctl * k_ctl + load * (1 - k_ctl);
+    ctlByDate.set(key, +ctl.toFixed(1));
+  }
+
+  // ─ Extraiem els 42 dies per al gr\u00e0fic ───────────────────────────────────────────
+  const labels  = [];
+  const ctlData = [];
+  const months  = ['gen','feb','mar','abr','mai','jun','jul','ago','set','oct','nov','des'];
+
+  for (let d = new Date(rangeStart); d <= today; d.setDate(d.getDate() + 1)) {
+    const key = d.toISOString().slice(0, 10);
+    // Etiqueta: només cada 7 dies i el dia d'avui
+    const diff = Math.round((today - d) / 86400000);
+    const showLabel = diff % 7 === 0;
+    labels.push(showLabel ? `${d.getDate()} ${months[d.getMonth()]}` : '');
+    ctlData.push(ctlByDate.get(key) ?? 0);
+  }
+
+  // ─ Trend-pill: CTL avui vs CTL fa 7 dies ──────────────────────────────────────
+  const ctlAvui = ctlData[ctlData.length - 1] || 0;
+  const d7ago   = new Date(today); d7ago.setDate(d7ago.getDate() - 7);
+  const ctl7ago = ctlByDate.get(d7ago.toISOString().slice(0, 10)) || 0;
+  const ctlDiff = +(ctlAvui - ctl7ago).toFixed(1);
+
+  let pillClass, pillIcon, pillText;
+  if (ctlDiff > 1) {
+    pillClass = 'up';      pillIcon = '\u2191';
+    pillText  = `Guany +${ctlDiff} pts CTL (\u2192 ${ctlAvui})`;
+  } else if (ctlDiff < -1) {
+    pillClass = 'down';    pillIcon = '\u2193';
+    pillText  = `P\u00e8rdua ${ctlDiff} pts CTL (\u2192 ${ctlAvui})`;
+  } else {
+    pillClass = 'neutral'; pillIcon = '\u2192';
+    pillText  = `Estable ${ctlDiff >= 0 ? '+' : ''}${ctlDiff} pts CTL (\u2192 ${ctlAvui})`;
+  }
+
+  pillEl.innerHTML = `
+    <span class="trend-pill trend-pill--${pillClass}">${pillIcon} ${esc(pillText)}</span>
+    <span class="trend-context">±1 pt = estable | >+1 = guany de forma | <-1 = p\u00e8rdua forma</span>
+  `;
+
+  // ─ Punts destacats: inici i avui ──────────────────────────────────────────────────
+  const pointColors = ctlData.map((_, i) => {
+    if (i === 0)                    return clrMuted;   // inici: gris
+    if (i === ctlData.length - 1)   return ctlDiff >= 0 ? clrAccent : clrOrange; // avui
+    return 'transparent';
+  });
+  const pointRadius = ctlData.map((_, i) =>
+    (i === 0 || i === ctlData.length - 1) ? 5 : 0
+  );
+
+  // ─ Chart.js ───────────────────────────────────────────────────────────────────────
+  canvas._chartInstance = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'CTL',
+        data: ctlData,
+        borderColor: clrAccent,
+        borderWidth: 2,
+        pointBackgroundColor: pointColors,
+        pointBorderColor: pointColors,
+        pointRadius,
+        pointHoverRadius: 5,
+        fill: {
+          target: 'origin',
+          above: 'rgba(34,197,94,0.07)',
+        },
+        tension: 0.35,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 400 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` CTL: ${ctx.raw} pts`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(51,65,85,0.4)' },
+          ticks: { color: clrMuted, font: { size: 11 }, maxRotation: 0 },
+        },
+        y: {
+          grid: { color: 'rgba(51,65,85,0.4)' },
+          ticks: { color: clrMuted, font: { size: 11 } },
+          beginAtZero: false,
+        },
+      },
+    },
+  });
 }
