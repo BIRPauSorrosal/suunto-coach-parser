@@ -47,6 +47,8 @@
           <div><p class="eyebrow">Dashboard web</p><h2>Seguiment d'entrenament</h2></div>
           <span class="badge badge-muted" id="load-badge">Inicialitzant...</span>
         </header>
+
+        <!-- Hero cards -->
         <div class="hero-grid">
           <article class="hero-card card-highlight">
             <p class="card-label">Setmana activa</p>
@@ -69,6 +71,26 @@
             <p class="hero-value" id="compliance-value">-- %</p>
           </article>
         </div>
+
+        <!-- ① Progrés del cicle -->
+        <article class="panel cycle-progress-panel">
+          <div class="cycle-progress-header">
+            <div>
+              <p class="eyebrow">Temporada</p>
+              <h3 id="cycle-title">--</h3>
+            </div>
+            <span class="badge badge-muted" id="cycle-week-counter">-- / --</span>
+          </div>
+          <!-- Barra de progrés -->
+          <div class="cycle-bar-wrap">
+            <div class="cycle-bar-fill" id="cycle-bar-fill" style="width:0%"></div>
+          </div>
+          <!-- Pills de fases -->
+          <div class="cycle-phases" id="cycle-phases">
+            <!-- generat per JS -->
+          </div>
+        </article>
+
         <div class="content-grid">
           <article class="panel panel-large">
             <div class="panel-header">
