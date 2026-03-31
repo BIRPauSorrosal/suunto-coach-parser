@@ -1,13 +1,6 @@
 // charts.js — Fase 3: visualitzacions Chart.js
 // Rep les dades ja processades des de app.js via initCharts()
 // DEP: app.js ha d'estar carregat abans (usa CHART_COLORS des d'aquí)
-//
-// NOTA sobre buildWeeklyData vs groupByWeek (lib/metrics.js):
-//   - buildWeeklyData (aquest fitxer): eix = setmanes del PLANNING.
-//     Usada per a Overview (Km pla vs real, càrrega).
-//   - groupByWeek (metrics.js): eix = setmanes naturals de calendari (dilluns).
-//     Usada per a la vista de Sessions.
-//   No són intercanviables: retornen grups per criteris d'agrupació diferents.
 
 const CHART_COLORS = {
   green:       '#22c55e',
@@ -34,10 +27,6 @@ function initCharts(enrichedSessions, enrichedPlanning) {
   Chart.defaults.color = CHART_COLORS.text;
   Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
 
-  const weeklyData = buildWeeklyData(enrichedSessions, enrichedPlanning);
-
-  renderKmChart(weeklyData);
-  renderLoadChart(weeklyData);
   renderZonesChart(enrichedSessions);
 }
 
@@ -46,119 +35,7 @@ function destroyAll() {
   Object.keys(chartInstances).forEach(key => delete chartInstances[key]);
 }
 
-// ── Dades setmanals (eix planning) ───────────────────────────────────────────
-// Veure nota a la capçalera sobre la diferència amb groupByWeek de metrics.js
-function buildWeeklyData(sessions, planning) {
-  return planning.map(week => {
-    const weekSessions = sessions.filter(s =>
-      s.date >= week.startDate && s.date <= week.endDate
-    );
-    const realKm   = weekSessions.reduce((acc, s) => acc + (s.distancia || 0), 0);
-    const realLoad = weekSessions.reduce((acc, s) => acc + (s.carrega   || 0), 0);
-    return {
-      label:     week.setmana,
-      plannedKm: week.kmTotal   || 0,
-      realKm:    Math.round(realKm   * 10) / 10,
-      realLoad:  Math.round(realLoad * 10) / 10,
-    };
-  });
-}
-
-// ── Gràfic 1: Km Pla vs Real ────────────────────────────────────────────────
-function renderKmChart(weeklyData) {
-  const ctx = document.getElementById('chart-km');
-  if (!ctx) return;
-
-  chartInstances['km'] = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: weeklyData.map(w => w.label),
-      datasets: [
-        {
-          label: 'Planificat',
-          data: weeklyData.map(w => w.plannedKm),
-          backgroundColor: CHART_COLORS.blueSoft,
-          borderColor:     CHART_COLORS.blue,
-          borderWidth: 1,
-          borderRadius: 6,
-        },
-        {
-          label: 'Real',
-          data: weeklyData.map(w => w.realKm),
-          backgroundColor: CHART_COLORS.greenSoft,
-          borderColor:     CHART_COLORS.green,
-          borderWidth: 1,
-          borderRadius: 6,
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'top', labels: { boxWidth: 12, padding: 16 } },
-        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} km` } }
-      },
-      scales: {
-        x: { grid: { color: CHART_COLORS.gridLine }, ticks: { font: { size: 11 } } },
-        y: {
-          grid: { color: CHART_COLORS.gridLine },
-          ticks: { callback: v => `${v} km`, font: { size: 11 } },
-          beginAtZero: true
-        }
-      }
-    }
-  });
-}
-
-// ── Gràfic 2: Càrrega setmanal ───────────────────────────────────────────────
-function renderLoadChart(weeklyData) {
-  const ctx = document.getElementById('chart-load');
-  if (!ctx) return;
-
-  const maxLoad = Math.max(...weeklyData.map(w => w.realLoad));
-
-  chartInstances['load'] = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: weeklyData.map(w => w.label),
-      datasets: [{
-        label: 'Càrrega real',
-        data: weeklyData.map(w => w.realLoad),
-        backgroundColor: weeklyData.map(w =>
-          w.realLoad === 0 ? CHART_COLORS.muted
-          : w.realLoad === maxLoad ? 'rgba(249, 115, 22, 0.7)'
-          : CHART_COLORS.greenSoft
-        ),
-        borderColor: weeklyData.map(w =>
-          w.realLoad === 0 ? 'rgba(148, 163, 184, 0.3)'
-          : w.realLoad === maxLoad ? 'rgba(249, 115, 22, 1)'
-          : CHART_COLORS.green
-        ),
-        borderWidth: 1,
-        borderRadius: 6,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: ctx => ` Càrrega: ${ctx.parsed.y}` } }
-      },
-      scales: {
-        x: { grid: { color: CHART_COLORS.gridLine }, ticks: { font: { size: 11 } } },
-        y: {
-          grid: { color: CHART_COLORS.gridLine },
-          ticks: { font: { size: 11 } },
-          beginAtZero: true
-        }
-      }
-    }
-  });
-}
-
-// ── Gràfic 3: Zones cardíaques — últims 30 dies ─────────────────────────────
+// ── Gràfic: Zones cardíaques — últims 30 dies ────────────────────────────────
 function renderZonesChart(sessions) {
   const ctx = document.getElementById('chart-zones');
   if (!ctx) return;
