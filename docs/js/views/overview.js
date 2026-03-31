@@ -158,17 +158,43 @@ function renderEpocPanel(sessions) {
 
   const recent = sessions.filter(s => s.date >= cutoff);
 
-  const epocValues   = recent.map(s => s.epoc).filter(v => v !== null && isFinite(v));
-  const epocTotal    = epocValues.reduce((a, b) => a + b, 0);
-  const numSessions  = recent.length;
-  const lvl          = getLoadLevelWeekly(epocTotal, numSessions);
+  // ── EPOC ──────────────────────────────────────────────────────────────────
+  const epocValues  = recent.map(s => s.epoc).filter(v => v !== null && isFinite(v));
+  const epocTotal   = epocValues.reduce((a, b) => a + b, 0);
+  const numSessions = recent.length;
+  const epocLvl     = getLoadLevelWeekly(epocTotal, numSessions);
 
   const epocBarMax = 150;
-  const epocPct    = Math.min(100, Math.round((lvl.avg / epocBarMax) * 100));
+  const epocPct    = Math.min(100, Math.round((epocLvl.avg / epocBarMax) * 100));
+  const epocAvgTxt = epocLvl.count > 0 ? `${Math.round(epocLvl.avg)} EPOC/sessió` : '--';
+  const countTxt = `${epocLvl.count} ${epocLvl.count !== 1 ? 'sessions' : 'sessió'}`;
 
-  const avgTxt   = lvl.count > 0 ? `${Math.round(lvl.avg)} EPOC/sessi\u00f3` : '--';
-  const countTxt = `${lvl.count} session${lvl.count !== 1 ? 's' : ''}`;
+  // ── TSS ───────────────────────────────────────────────────────────────────
+  const tssValues  = recent.map(s => s.carrega).filter(v => v !== null && isFinite(v) && v > 0);
+  const tssTotal   = tssValues.reduce((a, b) => a + b, 0);
+  const tssAvg     = tssValues.length > 0 ? tssTotal / tssValues.length : 0;
+  const tssScore   = tssAvg * Math.sqrt(tssValues.length);  // mateixa fórmula que EPOC weekly
 
+  // Barem TSS setmanal (calibrat sobre score combinat, escala ~1.5x la sessió)
+  const TSS_WEEKLY_SCALE = [
+    { max:  45, key: 'recovery', label: 'Recuperació', cls: 'tss-recovery' },
+    { max:  90, key: 'easy',     label: 'Fàcil',       cls: 'tss-easy'     },
+    { max: 150, key: 'moderate', label: 'Moderada',    cls: 'tss-moderate' },
+    { max: 225, key: 'hard',     label: 'Dura',        cls: 'tss-hard'     },
+    { max: Infinity, key: 'extreme', label: 'Extrem',  cls: 'tss-extreme'  },
+  ];
+  let tssLvl = TSS_WEEKLY_SCALE[0];
+  if (tssScore > 0) {
+    for (const tier of TSS_WEEKLY_SCALE) {
+      if (tssScore < tier.max) { tssLvl = tier; break; }
+    }
+  }
+
+  const tssBarMax = 225;
+  const tssPct    = Math.min(100, Math.round((tssScore / tssBarMax) * 100));
+  const tssAvgTxt = tssValues.length > 0 ? `${Math.round(tssAvg)} TSS/sessió` : '--';
+
+  // ── Recuperació pendent ───────────────────────────────────────────────────
   let maxPendent  = 0;
   let origenTipus = '--';
   let origenData  = '--';
@@ -188,29 +214,44 @@ function renderEpocPanel(sessions) {
 
   const recuperacioText   = maxPendent > 0
     ? `${Math.round(maxPendent)}h restants`
-    : 'Recuperat \u2713';
+    : 'Recuperat ✓';
   const recuperacioOrigen = maxPendent > 0
-    ? `Origen: ${esc(origenTipus)} \u00b7 ${esc(origenData)}`
-    : 'Cap sessi\u00f3 pendent de recuperaci\u00f3';
+    ? `Origen: ${esc(origenTipus)} · ${esc(origenData)}`
+    : 'Cap sessió pendent de recuperació';
 
+  // ── Render ────────────────────────────────────────────────────────────────
   container.innerHTML = `
     <div class="epoc-block">
       <div class="epoc-block-header">
-        <span class="epoc-block-title">EPOC acumulat</span>
-        <span class="epoc-value load-${lvl.key}">${formatNumber(epocTotal)}</span>
+        <span class="epoc-block-title">TSS acumulat</span>
+        <span class="epoc-value">${Math.round(tssTotal)}</span>
       </div>
       <div class="epoc-bar-wrap">
-        <div class="epoc-bar-fill load-${lvl.key}" style="width:${epocPct}%"></div>
+        <div class="epoc-bar-fill tss-${tssLvl.key}" style="width:${tssPct}%"></div>
       </div>
       <p class="epoc-label">
-        <span class="metric-badge metric-badge--load-${lvl.key}">${esc(lvl.label)}</span>
-        <span class="epoc-avg-detail">${countTxt} \u00b7 mitjana ${avgTxt}</span>
+        <span class="metric-badge metric-badge--${tssLvl.cls}">${esc(tssLvl.label)}</span>
+        <span class="epoc-avg-detail">${countTxt} · mitjana ${tssAvgTxt}</span>
       </p>
     </div>
     <div class="epoc-divider"></div>
     <div class="epoc-block">
       <div class="epoc-block-header">
-        <span class="epoc-block-title">Recuperaci\u00f3 pendent</span>
+        <span class="epoc-block-title">EPOC acumulat</span>
+        <span class="epoc-value">${formatNumber(epocTotal)}</span>
+      </div>
+      <div class="epoc-bar-wrap">
+        <div class="epoc-bar-fill load-${epocLvl.key}" style="width:${epocPct}%"></div>
+      </div>
+      <p class="epoc-label">
+        <span class="metric-badge metric-badge--load-${epocLvl.key}">${esc(epocLvl.label)}</span>
+        <span class="epoc-avg-detail">${countTxt} · mitjana ${epocAvgTxt}</span>
+      </p>
+    </div>
+    <div class="epoc-divider"></div>
+    <div class="epoc-block">
+      <div class="epoc-block-header">
+        <span class="epoc-block-title">Recuperació pendent</span>
         <span class="epoc-recup-value">${esc(recuperacioText)}</span>
       </div>
       <p class="epoc-label">${recuperacioOrigen}</p>

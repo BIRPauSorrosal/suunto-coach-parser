@@ -39,3 +39,10 @@
 .metric-badge--tss-moderate { background-color: var(--tss-moderate, #facc15); }
 .metric-badge--tss-hard     { background-color: var(--tss-hard,     #f97316); }
 .metric-badge--tss-extreme  { background-color: var(--tss-extreme,  #ef4444); }
+
+/* Al load-scale.css — colors de barra TSS (paral·lel a .load-*) */
+.tss-recovery { background-color: var(--tss-recovery, #86efac); }
+.tss-easy     { background-color: var(--tss-easy,     #22c55e); }
+.tss-moderate { background-color: var(--tss-moderate, #facc15); }
+.tss-hard     { background-color: var(--tss-hard,     #f97316); }
+.tss-extreme  { background-color: var(--tss-extreme,  #ef4444); }

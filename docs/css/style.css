@@ -604,8 +604,8 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 }
 
 /* ============================================================
-   #P3 — EPOC & Recuperació
-   Layout: 2 files verticals (EPOC a dalt, Recuperació a baix)
+   #P3 — Càrrega actual (TSS · EPOC · Recuperació)
+   Layout: 3 blocs verticals separats per divisor
    ============================================================ */
 
 #epoc-panel-content {
@@ -618,7 +618,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .epoc-block {
   flex: 1;
   min-width: 0;
-  padding: 12px 0;
+  padding: 7px 0;
 }
 
 .epoc-block:first-child { padding-top: 0; }
@@ -629,6 +629,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   height: 1px;
   background: var(--border);
   flex-shrink: 0;
+  margin: 2px 0;
 }
 
 .epoc-block-header {
@@ -636,7 +637,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   justify-content: space-between;
   align-items: baseline;
   gap: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .epoc-block-title {
@@ -647,7 +648,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   color: var(--text-muted);
 }
 
-/* Valor numèric EPOC: color determinat per classe load-* */
 .epoc-value {
   font-size: 1.4rem;
   font-weight: 700;
@@ -659,21 +659,29 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   background: var(--surface-2);
   border-radius: 999px;
   overflow: hidden;
-  margin-bottom: 8px;
+  margin-bottom: 5px;
 }
 
-/* Barra EPOC: color determinat per classe load-* */
 .epoc-bar-fill {
   height: 100%;
   border-radius: 999px;
   transition: width .5s cubic-bezier(.4, 0, .2, 1);
   max-width: 100%;
 }
+
+/* Barres EPOC */
 .epoc-bar-fill.load-vlow  { background: var(--load-vlow);  }
 .epoc-bar-fill.load-low   { background: var(--load-low);   }
 .epoc-bar-fill.load-mid   { background: var(--load-mid);   }
 .epoc-bar-fill.load-high  { background: var(--load-high);  }
 .epoc-bar-fill.load-vhigh { background: var(--load-vhigh); }
+
+/* Barres TSS */
+.epoc-bar-fill.tss-recovery { background: var(--tss-recovery, #86efac); }
+.epoc-bar-fill.tss-easy     { background: var(--tss-easy,     #22c55e); }
+.epoc-bar-fill.tss-moderate { background: var(--tss-moderate, #facc15); }
+.epoc-bar-fill.tss-hard     { background: var(--tss-hard,     #f97316); }
+.epoc-bar-fill.tss-extreme  { background: var(--tss-extreme,  #ef4444); }
 
 .epoc-label {
   font-size: .75rem;
