@@ -203,7 +203,7 @@ function renderEpocPanel(sessions) {
         <div class="epoc-bar-fill load-${lvl.key}" style="width:${epocPct}%"></div>
       </div>
       <p class="epoc-label">
-        <span class="load-badge load-badge--load-${lvl.key}">${esc(lvl.label)}</span>
+        <span class="metric-badge metric-badge--load-${lvl.key}">${esc(lvl.label)}</span>
         <span class="epoc-avg-detail">${countTxt} \u00b7 mitjana ${avgTxt}</span>
       </p>
     </div>
