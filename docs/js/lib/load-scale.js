@@ -68,7 +68,7 @@ function getLoadLevelWeekly(epocTotal, numSessions) {
   const score = avg * Math.sqrt(count);
 
   let level;
-  if (score <= 0)    level = { key: 'vlow',  label: 'Molt baixa', cls: 'load-vlow'  };
+  if (score <= 0)        level = { key: 'vlow',  label: 'Molt baixa', cls: 'load-vlow'  };
   else if (score <  60)  level = { key: 'vlow',  label: 'Molt baixa', cls: 'load-vlow'  };
   else if (score < 100)  level = { key: 'low',   label: 'Baixa',      cls: 'load-low'   };
   else if (score < 160)  level = { key: 'mid',   label: 'Moderada',   cls: 'load-mid'   };
@@ -79,8 +79,8 @@ function getLoadLevelWeekly(epocTotal, numSessions) {
 }
 
 /**
- * Retorna el HTML d'un badge de càrrega per a una sessió individual.
- * Requereix formatMetric() i esc() definits a formatters.js
+ * Badge complet: dot de color + valor numèric EPOC.
+ * Usat a la columna EPOC de la taula de sessions.
  * @param {number} epoc
  * @returns {string} HTML string
  */
@@ -88,4 +88,17 @@ function loadBadgeHTML(epoc) {
   const lvl = getLoadLevelSession(epoc);
   if (!lvl) return (typeof formatMetric === 'function') ? formatMetric(epoc, '') : String(epoc || '--');
   return `<span class="load-badge load-badge--${lvl.cls}" title="${lvl.label}">${(typeof formatMetric === 'function') ? formatMetric(epoc, '') : epoc}</span>`;
+}
+
+/**
+ * Dot de color sense text: indicador visual discret.
+ * Usat a la columna Càrrega TSS — mostra el color d'intensitat
+ * sense repetir el valor numèric (que ja surt com a TSS al costat).
+ * @param {number} epoc
+ * @returns {string} HTML string
+ */
+function loadDotHTML(epoc) {
+  const lvl = getLoadLevelSession(epoc);
+  if (!lvl) return '';
+  return `<span class="load-dot load-dot--${lvl.cls}" title="${lvl.label}"></span>`;
 }

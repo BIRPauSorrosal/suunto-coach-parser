@@ -1,0 +1,56 @@
+/* docs/css/load-scale.css
+   Estils per als badges i dots del barem de càrrega (EPOC).
+   Importat des de style.css o index.html.
+   Variables definides a :root de style.css:
+     --load-vlow, --load-low, --load-mid, --load-high, --load-vhigh
+*/
+
+/* ── Badge complet (dot + valor numèric) ─────────────────────────────────── */
+.load-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.15em 0.55em;
+  border-radius: 99px;
+  font-size: 0.78em;
+  font-weight: 600;
+  white-space: nowrap;
+  vertical-align: middle;
+  color: #fff;
+}
+
+.load-badge::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  flex-shrink: 0;
+}
+
+/* ── Dot sol (sense text) ────────────────────────────────────────────────── */
+.load-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* ── Colors compartits badge i dot ──────────────────────────────────────── */
+.load-badge--load-vlow,
+.load-dot--load-vlow  { background-color: var(--load-vlow,  #64748b); }
+
+.load-badge--load-low,
+.load-dot--load-low   { background-color: var(--load-low,   #22c55e); }
+
+.load-badge--load-mid,
+.load-dot--load-mid   { background-color: var(--load-mid,   #eab308); }
+
+.load-badge--load-high,
+.load-dot--load-high  { background-color: var(--load-high,  #f97316); }
+
+.load-badge--load-vhigh,
+.load-dot--load-vhigh { background-color: var(--load-vhigh, #ef4444); }
