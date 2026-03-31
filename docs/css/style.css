@@ -376,19 +376,9 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .sw-real-summary  { font-size: .82rem; color: var(--text-muted); margin-bottom: 10px; }
 
 /* ── sw-htable: taula horitzontal Pla / Real ───────────────────────────── */
-/*
-  Estructura:
-    .sw-htable-wrap   → contenidor amb overflow-x per mòbil
-      .sw-htable      → taula 2 files (Pla + Real) × N columnes de mètriques
-        thead th      → capçaleres de mètriques (text muted uppercase)
-        .sw-row--plan → fila de valors planificats (text normal)
-        .sw-row--real → fila de valors reals (color blau --blue)
-        .sw-row-lbl   → primera cel·la de cada fila (etiqueta Pla/Real)
-*/
 .sw-htable-wrap {
   overflow-x: auto;
   margin-bottom: 16px;
-  /* Barra de scroll subtil */
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 }
@@ -396,10 +386,8 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   width: 100%;
   border-collapse: collapse;
   font-size: .82rem;
-  /* Amplada mínima per evitar compressió excessiva en mòbil */
   min-width: 320px;
 }
-/* Capçaleres de columna */
 .sw-htable thead th {
   padding: 0 12px 8px 12px;
   text-align: left;
@@ -411,7 +399,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
-/* Primera columna (etiqueta Pla/Real): estreta i fixada visualment */
 .sw-htable thead th:first-child,
 .sw-htable .sw-row-lbl {
   width: 44px;
@@ -423,7 +410,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   letter-spacing: .06em;
   white-space: nowrap;
 }
-/* Fila Pla */
 .sw-htable .sw-row--plan td {
   padding: 10px 12px 6px 12px;
   color: var(--text);
@@ -434,7 +420,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   color: var(--text-muted);
   padding-left: 0;
 }
-/* Fila Real */
 .sw-htable .sw-row--real td {
   padding: 6px 12px 10px 12px;
   color: var(--blue);
@@ -446,7 +431,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   color: var(--text-muted);
   padding-left: 0;
 }
-/* Separació visual entre fila Pla i Real */
 .sw-htable .sw-row--plan td {
   border-top: 1px solid rgba(51,65,85,.35);
 }
@@ -480,3 +464,104 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
                     letter-spacing: .06em; color: var(--text-muted); margin-bottom: 6px; }
 .other-card-count { font-size: 1.4rem; font-weight: 700; color: var(--text); }
 .other-card-meta  { font-size: .72rem; color: var(--text-muted); margin-top: 3px; }
+
+/* ============================================================
+   #P2 — Progrés del cicle
+   ============================================================ */
+
+/*
+  Estructura HTML:
+    .cycle-progress-panel         → .panel base (ja aplica fons/borde/radius)
+      .cycle-progress-header      → fila títol + badge comptador
+        h3#cycle-title            → nom del cicle (ex: "Bloc Específic")
+        .badge#cycle-week-counter → "Setmana 5 / 8"
+      .cycle-bar-wrap             → track de la barra
+        .cycle-bar-fill           → farciment (width% via JS)
+      .cycle-phases               → fila de pills de fases
+        .cycle-phase-pill         → una fase (ex: "Acumulació 3s")
+        .cycle-phase-pill--active → fase actual (ressaltada)
+*/
+
+/* Header del panell: títol a l'esquerra, comptador a la dreta */
+.cycle-progress-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.cycle-progress-header .eyebrow {
+  font-size: .65rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+.cycle-progress-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* Track de la barra de progrés */
+.cycle-bar-wrap {
+  height: 6px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+/* Farciment animat: el JS escriu width via style inline */
+.cycle-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+  transition: width .5s cubic-bezier(.4, 0, .2, 1);
+  max-width: 100%;
+}
+
+/* Contenidor de pills de fases */
+.cycle-phases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+/*
+  Pill base: fase inactiva
+  - Fons subtil (surface-2), text muted
+  - <em> per al comptador de setmanes (ex: "3s") a la dreta
+*/
+.cycle-phase-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 600;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  white-space: nowrap;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.cycle-phase-pill em {
+  font-style: normal;
+  font-weight: 400;
+  font-size: .68rem;
+  opacity: .7;
+}
+
+/* Pill activa: accent verd, igual que el badge de setmana activa */
+.cycle-phase-pill--active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.cycle-phase-pill--active em {
+  opacity: .85;
+}
