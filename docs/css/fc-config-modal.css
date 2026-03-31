@@ -1,0 +1,234 @@
+/* docs/css/fc-config-modal.css
+   Modal de configuració de zones FC.
+   Usa les CSS variables de style.css: --bg, --surface, --surface-2,
+   --border, --text, --text-muted, --accent, --radius, --radius-lg, --shadow, --font
+*/
+
+/* ── Overlay ───────────────────────────────────────────────────────────────── */
+.fc-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+
+  /* Transició d'entrada/sortida */
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+.fc-modal-overlay--visible {
+  opacity: 1;
+}
+
+/* ── Caixa del modal ────────────────────────────────────────────────────────── */
+.fc-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+
+  transform: translateY(12px);
+  transition: transform 0.18s ease;
+}
+.fc-modal-overlay--visible .fc-modal {
+  transform: translateY(0);
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────────── */
+.fc-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.fc-modal-eyebrow {
+  font-size: .65rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+.fc-modal-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.fc-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  line-height: 1;
+  flex-shrink: 0;
+  font-family: var(--font);
+  transition: color .15s, background .15s;
+}
+.fc-modal-close:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+/* ── Body ───────────────────────────────────────────────────────────────────── */
+.fc-modal-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Fila FCMax */
+.fc-modal-fcmax-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fc-modal-label {
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.fc-modal-hint {
+  font-size: .72rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.fc-modal-fcmax-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Divider */
+.fc-modal-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0 -24px;  /* s'estén fins als marges del body */
+}
+
+/* Títol de la secció de zones */
+.fc-modal-zones-title {
+  font-size: .72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--text-muted);
+}
+
+/* Llista de zones */
+.fc-modal-zones {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.fc-zone-row {
+  display: grid;
+  grid-template-columns: 10px 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+}
+.fc-zone-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.fc-zone-label {
+  font-size: .85rem;
+  color: var(--text);
+  white-space: nowrap;
+}
+.fc-zone-unit {
+  font-size: .75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ── Inputs ─────────────────────────────────────────────────────────────────── */
+.fc-modal-input {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: .9rem;
+  font-weight: 600;
+  padding: 7px 10px;
+  text-align: center;
+  transition: border-color .15s, box-shadow .15s;
+  outline: none;
+  /* Amaga les fletxes dels inputs numèrics */
+  -moz-appearance: textfield;
+}
+.fc-modal-input::-webkit-outer-spin-button,
+.fc-modal-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+.fc-modal-input--fcmax {
+  width: 80px;
+}
+.fc-modal-input--zone {
+  width: 68px;
+}
+
+.fc-modal-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
+}
+.fc-modal-input--error {
+  border-color: var(--red) !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18) !important;
+}
+
+/* ── Missatge d'error ────────────────────────────────────────────────────────── */
+.fc-modal-error {
+  font-size: .78rem;
+  color: var(--red);
+  background: rgba(239, 68, 68, 0.10);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────────────── */
+.fc-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid var(--border);
+}
+.fc-modal-footer-right {
+  display: flex;
+  gap: 8px;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .fc-modal { max-width: 100%; }
+  .fc-modal-header,
+  .fc-modal-body,
+  .fc-modal-footer { padding-left: 16px; padding-right: 16px; }
+  .fc-modal-divider { margin: 0 -16px; }
+}
+
+/* Botó configuració zones FC al panel-header */
+.btn-fc-config {
+  margin-left: 8px;
+}

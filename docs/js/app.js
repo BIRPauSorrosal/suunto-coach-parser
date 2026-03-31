@@ -305,3 +305,12 @@ function firstFinite(values) {
 
 function setBadge(text)     { setText('load-badge', text); }
 function setText(id, value) { const el = document.getElementById(id); if (el) el.textContent = value; }
+
+// Re-renderitza tot quan l'usuari canvia la configuració de FC
+// PER AIXÒ:
+window.addEventListener('fc-config-changed', () => {
+  if (!window._chartData) return;          // ✅
+  const { sessions, planning } = window._chartData;
+  renderOverviewView(sessions, planning);
+  renderSetmanalView(sessions, planning);
+});

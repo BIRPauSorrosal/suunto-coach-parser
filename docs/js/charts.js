@@ -34,18 +34,53 @@ const CHART_COLORS = {
 
 const chartInstances = {};
 
+// Referència a les sessions actuals per poder re-renderitzar sense recarregar dades
+let _lastSessions  = null;
+let _lastPlanning  = null;
+
 // ── Punt d'entrada ───────────────────────────────────────────────────────────
 function initCharts(enrichedSessions, enrichedPlanning) {
+  _lastSessions = enrichedSessions;
+  _lastPlanning = enrichedPlanning;
+
   destroyAll();
   Chart.defaults.color = CHART_COLORS.text;
   Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
 
   renderZonesChart(enrichedSessions);
+  _injectZonesConfigButton();
 }
 
 function destroyAll() {
   Object.values(chartInstances).forEach(chart => chart.destroy());
   Object.keys(chartInstances).forEach(key => delete chartInstances[key]);
+}
+
+// ── Botó ⚙ al panell de zones ────────────────────────────────────────────────
+function _injectZonesConfigButton() {
+  // Evita duplicats si initCharts es crida diverses vegades
+  if (document.getElementById('btn-fc-config')) return;
+
+  // Troba el panel-header del panell de zones (el que conté #chart-zones)
+  const canvas = document.getElementById('chart-zones');
+  if (!canvas) return;
+  const panelHeader = canvas.closest('.panel')?.querySelector('.panel-header');
+  if (!panelHeader) return;
+
+  const btn = document.createElement('button');
+  btn.id        = 'btn-fc-config';
+  btn.className = 'btn btn-ghost btn-sm btn-fc-config';
+  btn.title     = 'Configurar zones de FC';
+  btn.innerHTML = '⚙ Zones FC';
+  btn.addEventListener('click', () => openFCConfigModal());
+
+  // Insereix el botó dins del badge existent (al costat del "Últims 30 dies")
+  const badgeEl = panelHeader.querySelector('.badge');
+  if (badgeEl) {
+    badgeEl.insertAdjacentElement('afterend', btn);
+  } else {
+    panelHeader.appendChild(btn);
+  }
 }
 
 // ── Gràfic: Zones cardíaques — últims 30 dies ────────────────────────────────
@@ -60,7 +95,7 @@ function renderZonesChart(sessions) {
   const recent = sessions.filter(s => s.date >= cutoff);
 
   const zoneKeys   = ['Z1(min)', 'Z2(min)', 'Z3(min)', 'Z4(min)', 'Z5(min)'];
-  const zoneLabels = ['Z1', 'Z2', 'Z3', 'Z4', 'Z5'];
+  const zoneLabels = FC_SCALE.map((z, i) => `${z.label.split('·')[0].trim()} · ${FC_CONFIG.zones[i]} bpm`);
 
   const totals = zoneKeys.map(key =>
     recent.reduce((acc, s) => {
