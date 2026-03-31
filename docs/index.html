@@ -81,31 +81,16 @@
             </div>
             <span class="badge badge-muted" id="cycle-week-counter">-- / --</span>
           </div>
-          <!-- Barra de progrés -->
           <div class="cycle-bar-wrap">
             <div class="cycle-bar-fill" id="cycle-bar-fill" style="width:0%"></div>
           </div>
-          <!-- Pills de fases -->
-          <div class="cycle-phases" id="cycle-phases">
-            <!-- generat per JS -->
-          </div>
+          <div class="cycle-phases" id="cycle-phases"></div>
         </article>
 
-        <!-- ③ EPOC & Recuperació -->
-        <article class="panel epoc-panel">
-          <div class="panel-header">
-            <div>
-              <p class="eyebrow">Últims 7 dies</p>
-              <h3>EPOC &amp; Recuperació</h3>
-            </div>
-            <span class="badge badge-muted">Setmana activa</span>
-          </div>
-          <div id="epoc-panel-content">
-            <!-- generat per JS: renderEpocPanel() -->
-          </div>
-        </article>
-
+        <!-- Resum setmanal + Zones cardíaques + EPOC -->
         <div class="content-grid">
+
+          <!-- Columna esquerra (2fr): Resum setmanal -->
           <article class="panel panel-large">
             <div class="panel-header">
               <div><p class="eyebrow">Bloc principal</p><h3>Resum setmanal</h3></div>
@@ -118,14 +103,37 @@
               <div class="metric-box"><span>Força</span><strong id="strength-summary">--</strong><small id="strength-detail">Sessions de gimnàs</small></div>
             </div>
           </article>
-          <article class="panel">
-            <div class="panel-header">
-              <div><p class="eyebrow">Zones cardíaques</p><h3>Distribució Z1–Z5</h3></div>
-              <span class="badge badge-muted">Últims 30 dies</span>
-            </div>
-            <div class="chart-wrap"><canvas id="chart-zones"></canvas></div>
-          </article>
-        </div>
+
+          <!-- Columna dreta (1fr): Zones cardíaques + EPOC apilats -->
+          <div class="overview-right-col">
+
+            <!-- Zones cardíaques -->
+            <article class="panel">
+              <div class="panel-header">
+                <div><p class="eyebrow">Zones cardíaques</p><h3>Distribució Z1–Z5</h3></div>
+                <span class="badge badge-muted">Últims 30 dies</span>
+              </div>
+              <div class="chart-wrap chart-wrap--zones"><canvas id="chart-zones"></canvas></div>
+            </article>
+
+            <!-- ③ EPOC & Recuperació -->
+            <article class="panel epoc-panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Últims 7 dies</p>
+                  <h3>EPOC &amp; Recuperació</h3>
+                </div>
+                <span class="badge badge-muted">Setmana activa</span>
+              </div>
+              <div id="epoc-panel-content">
+                <!-- generat per JS: renderEpocPanel() -->
+              </div>
+            </article>
+
+          </div><!-- /overview-right-col -->
+        </div><!-- /content-grid -->
+
+        <!-- Test & Cursa -->
         <article class="panel">
           <div class="panel-header">
             <div><p class="eyebrow">Rendiment</p><h3>Test &amp; Cursa</h3></div>
@@ -133,6 +141,8 @@
           </div>
           <div id="test-race-container"><p class="plan-no-data">Carregant...</p></div>
         </article>
+
+        <!-- Gràfics Km + Càrrega -->
         <div class="charts-grid">
           <article class="panel">
             <div class="panel-header">
@@ -149,6 +159,8 @@
             <div class="chart-wrap chart-wrap--tall"><canvas id="chart-load"></canvas></div>
           </article>
         </div>
+
+        <!-- Altres activitats -->
         <article class="panel">
           <div class="panel-header">
             <div><p class="eyebrow">Activitats complementàries</p><h3>Altres activitats</h3></div>
@@ -173,7 +185,6 @@
           </div>
         </header>
 
-        <!-- Barra de progrés total -->
         <article class="panel progress-panel">
           <div class="progress-header">
             <span>Km totals setmanals</span>
@@ -183,39 +194,14 @@
         </article>
 
         <div class="sw-grid">
-
-          <!-- 1 · Qualitat -->
           <article class="panel sw-block" id="sw-q-block">
             <div class="sw-block-header"><h3>🎯 Qualitat</h3><span class="sw-status-dot"></span></div>
             <div class="sw-htable-wrap">
               <table class="sw-htable">
-                <thead>
-                  <tr>
-                    <th></th>
-                    <th>Sèries</th>
-                    <th>Ritme</th>
-                    <th>Rec.</th>
-                    <th>FC</th>
-                    <th>Km</th>
-                  </tr>
-                </thead>
+                <thead><tr><th></th><th>Sèries</th><th>Ritme</th><th>Rec.</th><th>FC</th><th>Km</th></tr></thead>
                 <tbody>
-                  <tr class="sw-row--plan">
-                    <td class="sw-row-lbl">Pla</td>
-                    <td id="sw-q-series">--</td>
-                    <td id="sw-q-ritme">--</td>
-                    <td id="sw-q-rec">--</td>
-                    <td id="sw-q-fc">--</td>
-                    <td id="sw-q-km-plan">--</td>
-                  </tr>
-                  <tr class="sw-row--real">
-                    <td class="sw-row-lbl">Real</td>
-                    <td id="sw-q-sessions-real">—</td>
-                    <td id="sw-q-ritme-real">—</td>
-                    <td>—</td>
-                    <td id="sw-q-fc-real">—</td>
-                    <td id="sw-q-km-real">—</td>
-                  </tr>
+                  <tr class="sw-row--plan"><td class="sw-row-lbl">Pla</td><td id="sw-q-series">--</td><td id="sw-q-ritme">--</td><td id="sw-q-rec">--</td><td id="sw-q-fc">--</td><td id="sw-q-km-plan">--</td></tr>
+                  <tr class="sw-row--real"><td class="sw-row-lbl">Real</td><td id="sw-q-sessions-real">—</td><td id="sw-q-ritme-real">—</td><td>—</td><td id="sw-q-fc-real">—</td><td id="sw-q-km-real">—</td></tr>
                 </tbody>
               </table>
             </div>
@@ -225,35 +211,14 @@
             </table>
           </article>
 
-          <!-- 2 · Z2 -->
           <article class="panel sw-block" id="sw-z2-block">
             <div class="sw-block-header"><h3>🫁 Z2</h3><span class="sw-status-dot"></span></div>
             <div class="sw-htable-wrap">
               <table class="sw-htable">
-                <thead>
-                  <tr>
-                    <th></th>
-                    <th>Durada</th>
-                    <th>Ritme</th>
-                    <th>FC</th>
-                    <th>Km</th>
-                  </tr>
-                </thead>
+                <thead><tr><th></th><th>Durada</th><th>Ritme</th><th>FC</th><th>Km</th></tr></thead>
                 <tbody>
-                  <tr class="sw-row--plan">
-                    <td class="sw-row-lbl">Pla</td>
-                    <td id="sw-z2-durada-plan">--</td>
-                    <td id="sw-z2-ritme-plan">--</td>
-                    <td id="sw-z2-fc-plan">--</td>
-                    <td id="sw-z2-km-plan">--</td>
-                  </tr>
-                  <tr class="sw-row--real">
-                    <td class="sw-row-lbl">Real</td>
-                    <td id="sw-z2-durada-real">—</td>
-                    <td id="sw-z2-ritme-real">—</td>
-                    <td id="sw-z2-fc-real">—</td>
-                    <td id="sw-z2-km-real">—</td>
-                  </tr>
+                  <tr class="sw-row--plan"><td class="sw-row-lbl">Pla</td><td id="sw-z2-durada-plan">--</td><td id="sw-z2-ritme-plan">--</td><td id="sw-z2-fc-plan">--</td><td id="sw-z2-km-plan">--</td></tr>
+                  <tr class="sw-row--real"><td class="sw-row-lbl">Real</td><td id="sw-z2-durada-real">—</td><td id="sw-z2-ritme-real">—</td><td id="sw-z2-fc-real">—</td><td id="sw-z2-km-real">—</td></tr>
                 </tbody>
               </table>
             </div>
@@ -263,35 +228,14 @@
             </table>
           </article>
 
-          <!-- 3 · Tirada llarga -->
           <article class="panel sw-block" id="sw-ll-block">
             <div class="sw-block-header"><h3>🏃 Tirada llarga</h3><span class="sw-status-dot"></span></div>
             <div class="sw-htable-wrap">
               <table class="sw-htable">
-                <thead>
-                  <tr>
-                    <th></th>
-                    <th>Tipus</th>
-                    <th>Durada</th>
-                    <th>Ritme</th>
-                    <th>Km</th>
-                  </tr>
-                </thead>
+                <thead><tr><th></th><th>Tipus</th><th>Durada</th><th>Ritme</th><th>Km</th></tr></thead>
                 <tbody>
-                  <tr class="sw-row--plan">
-                    <td class="sw-row-lbl">Pla</td>
-                    <td id="sw-ll-tipus-plan">--</td>
-                    <td id="sw-ll-durada-plan">--</td>
-                    <td>—</td>
-                    <td id="sw-ll-km-plan">--</td>
-                  </tr>
-                  <tr class="sw-row--real">
-                    <td class="sw-row-lbl">Real</td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td id="sw-ll-ritme-real">—</td>
-                    <td id="sw-ll-km-real">—</td>
-                  </tr>
+                  <tr class="sw-row--plan"><td class="sw-row-lbl">Pla</td><td id="sw-ll-tipus-plan">--</td><td id="sw-ll-durada-plan">--</td><td>—</td><td id="sw-ll-km-plan">--</td></tr>
+                  <tr class="sw-row--real"><td class="sw-row-lbl">Real</td><td>—</td><td>—</td><td id="sw-ll-ritme-real">—</td><td id="sw-ll-km-real">—</td></tr>
                 </tbody>
               </table>
             </div>
@@ -301,25 +245,14 @@
             </table>
           </article>
 
-          <!-- 4 · Força -->
           <article class="panel sw-block" id="sw-forca-block">
             <div class="sw-block-header"><h3>💪 Força</h3><span class="sw-status-dot"></span></div>
             <div class="sw-htable-wrap">
               <table class="sw-htable">
-                <thead>
-                  <tr><th></th><th>Sessions pla</th><th>Sessions fetes</th></tr>
-                </thead>
+                <thead><tr><th></th><th>Sessions pla</th><th>Sessions fetes</th></tr></thead>
                 <tbody>
-                  <tr class="sw-row--plan">
-                    <td class="sw-row-lbl">Pla</td>
-                    <td id="sw-forca-plan">--</td>
-                    <td>—</td>
-                  </tr>
-                  <tr class="sw-row--real">
-                    <td class="sw-row-lbl">Real</td>
-                    <td>—</td>
-                    <td id="sw-forca-real">—</td>
-                  </tr>
+                  <tr class="sw-row--plan"><td class="sw-row-lbl">Pla</td><td id="sw-forca-plan">--</td><td>—</td></tr>
+                  <tr class="sw-row--real"><td class="sw-row-lbl">Real</td><td>—</td><td id="sw-forca-real">—</td></tr>
                 </tbody>
               </table>
             </div>
@@ -329,27 +262,14 @@
             </table>
           </article>
 
-          <!-- 5 · Altres (Pàdel / Tennis / ...) -->
           <article class="panel sw-block" id="sw-altres-block">
             <div class="sw-block-header"><h3>🎾 Altres</h3><span class="sw-status-dot"></span></div>
             <div class="sw-htable-wrap">
               <table class="sw-htable">
-                <thead>
-                  <tr><th></th><th>Pàdel pla</th><th>Partides fetes</th><th>Durada total</th></tr>
-                </thead>
+                <thead><tr><th></th><th>Pàdel pla</th><th>Partides fetes</th><th>Durada total</th></tr></thead>
                 <tbody>
-                  <tr class="sw-row--plan">
-                    <td class="sw-row-lbl">Pla</td>
-                    <td id="sw-altres-padel-plan">--</td>
-                    <td>—</td>
-                    <td>—</td>
-                  </tr>
-                  <tr class="sw-row--real">
-                    <td class="sw-row-lbl">Real</td>
-                    <td>—</td>
-                    <td id="sw-altres-sessions-real">—</td>
-                    <td id="sw-altres-durada-real">—</td>
-                  </tr>
+                  <tr class="sw-row--plan"><td class="sw-row-lbl">Pla</td><td id="sw-altres-padel-plan">--</td><td>—</td><td>—</td></tr>
+                  <tr class="sw-row--real"><td class="sw-row-lbl">Real</td><td>—</td><td id="sw-altres-sessions-real">—</td><td id="sw-altres-durada-real">—</td></tr>
                 </tbody>
               </table>
             </div>
@@ -358,7 +278,6 @@
               <tbody id="sw-altres-sessions-list"></tbody>
             </table>
           </article>
-
         </div>
       </section>
 
@@ -376,12 +295,9 @@
 
       <!-- Vista: Sessions -->
       <section class="view" data-view="sessions">
-
         <header class="page-header">
           <div><p class="eyebrow">Historial</p><h2>Sessions</h2></div>
         </header>
-
-        <!-- Filtres -->
         <div class="sess-filters">
           <div class="sess-filter-group">
             <label class="sess-filter-label" for="sess-type-select">Tipus</label>
@@ -408,16 +324,12 @@
             </div>
           </div>
         </div>
-
-        <!-- KPIs -->
         <div class="sess-kpis" id="sess-kpis">
           <div class="sess-kpi"><span class="sess-kpi-label">Km totals</span><strong class="sess-kpi-value" id="kpi-km">--</strong></div>
           <div class="sess-kpi"><span class="sess-kpi-label">Temps total</span><strong class="sess-kpi-value" id="kpi-time">--</strong></div>
           <div class="sess-kpi"><span class="sess-kpi-label">Càrrega total</span><strong class="sess-kpi-value" id="kpi-load">--</strong></div>
           <div class="sess-kpi"><span class="sess-kpi-label">EPOC total</span><strong class="sess-kpi-value" id="kpi-epoc">--</strong></div>
         </div>
-
-        <!-- Gràfic de tendència -->
         <article class="panel sess-trend-panel">
           <div class="panel-header">
             <div><p class="eyebrow">Tendència</p><h3 id="sess-chart-title">Volum setmanal</h3></div>
@@ -425,53 +337,30 @@
           </div>
           <div class="chart-wrap chart-wrap--tall"><canvas id="chart-sess-trend"></canvas></div>
         </article>
-
-        <!-- PMC -->
         <article class="panel">
           <div class="panel-header">
-            <div>
-              <p class="eyebrow">Forma &middot; Fatiga &middot; Frescor</p>
-              <h3>Performance Management Chart</h3>
-            </div>
+            <div><p class="eyebrow">Forma · Fatiga · Frescor</p><h3>Performance Management Chart</h3></div>
             <div class="pmc-export-btns">
-              <button id="pmc-export-7" class="btn btn-ghost btn-sm" disabled
-                      onclick="exportPMCcsv(7)"
-                      title="Exporta els darrers 7 dies com a CSV per enviar a la IA">
-                ↓ CSV 7 dies
-              </button>
-              <button id="pmc-export-90" class="btn btn-ghost btn-sm" disabled
-                      onclick="exportPMCcsv(90)"
-                      title="Exporta els darrers 90 dies com a CSV per enviar a la IA">
-                ↓ CSV 90 dies
-              </button>
+              <button id="pmc-export-7" class="btn btn-ghost btn-sm" disabled onclick="exportPMCcsv(7)" title="Exporta els darrers 7 dies com a CSV per enviar a la IA">↓ CSV 7 dies</button>
+              <button id="pmc-export-90" class="btn btn-ghost btn-sm" disabled onclick="exportPMCcsv(90)" title="Exporta els darrers 90 dies com a CSV per enviar a la IA">↓ CSV 90 dies</button>
             </div>
           </div>
           <div class="pmc-legend">
             <span class="pmc-leg-item pmc-ctl">&#9644; CTL (Forma crònica, τ=42d)</span>
             <span class="pmc-leg-item pmc-atl">&#9644; ATL (Fatiga aguda, τ=7d)</span>
-            <span class="pmc-leg-item pmc-tsb">&#9644; TSB (Frescor = CTL &minus; ATL)</span>
+            <span class="pmc-leg-item pmc-tsb">&#9644; TSB (Frescor = CTL − ATL)</span>
             <span class="pmc-leg-sep">&middot;</span>
-            <span class="pmc-leg-hint">TSB &gt; +5 fresc &nbsp;|&nbsp; TSB &lt; &minus;10 fatigat</span>
+            <span class="pmc-leg-hint">TSB &gt; +5 fresc &nbsp;|&nbsp; TSB &lt; −10 fatigat</span>
           </div>
           <div class="chart-wrap pmc-chart-wrap"><canvas id="chart-pmc"></canvas></div>
         </article>
-
-        <!-- Taula Sessions -->
         <article class="panel">
           <div class="panel-header">
             <div><p class="eyebrow">Llistat</p><h3 id="sess-table-title">Totes les sessions</h3></div>
             <div class="pmc-export-btns">
               <span class="badge badge-muted" id="sess-count-badge">--</span>
-              <button id="sess-export-7" class="btn btn-ghost btn-sm" disabled
-                      onclick="exportSessionsCSV(7)"
-                      title="Exporta els darrers 7 dies de sessions com a CSV per enviar a la IA">
-                ↓ CSV 7 dies
-              </button>
-              <button id="sess-export-90" class="btn btn-ghost btn-sm" disabled
-                      onclick="exportSessionsCSV(90)"
-                      title="Exporta els darrers 90 dies de sessions com a CSV per enviar a la IA">
-                ↓ CSV 90 dies
-              </button>
+              <button id="sess-export-7" class="btn btn-ghost btn-sm" disabled onclick="exportSessionsCSV(7)" title="Exporta els darrers 7 dies de sessions com a CSV per enviar a la IA">↓ CSV 7 dies</button>
+              <button id="sess-export-90" class="btn btn-ghost btn-sm" disabled onclick="exportSessionsCSV(90)" title="Exporta els darrers 90 dies de sessions com a CSV per enviar a la IA">↓ CSV 90 dies</button>
             </div>
           </div>
           <div class="table-shell">
@@ -481,7 +370,6 @@
             </table>
           </div>
         </article>
-
       </section>
     </main>
   </div>
