@@ -2,7 +2,7 @@
    style.css — Suunto Coach Dashboard
    ============================================================ */
 
-/* ── Reset & tokens ──────────────────────────────────────────── */
+/* ── Reset & tokens ─────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -29,7 +29,7 @@ html { font-size: 16px; }
 body { font-family: var(--font); background: var(--bg); color: var(--text);
        line-height: 1.5; min-height: 100vh; }
 
-/* ── Layout shell ──────────────────────────────────────────────── */
+/* ── Layout shell ────────────────────────────────────────────────── */
 .app-shell   { display: flex; min-height: 100vh; }
 .sidebar     { width: var(--sidebar-w); background: var(--surface);
                border-right: 1px solid var(--border); display: flex;
@@ -38,12 +38,12 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .main-content { flex: 1; padding: 32px 36px; overflow-x: hidden;
                 max-width: calc(100vw - var(--sidebar-w)); }
 
-/* ── Brand ───────────────────────────────────────────────────────────── */
+/* ── Brand ────────────────────────────────────────────────────────────── */
 .brand-block .eyebrow { font-size:.7rem; font-weight:600; letter-spacing:.1em;
                          text-transform:uppercase; color:var(--accent); }
 .brand-block h1       { font-size:1.05rem; font-weight:700; line-height:1.2; margin-top:4px; }
 
-/* ── Nav ───────────────────────────────────────────────────────────────── */
+/* ── Nav ─────────────────────────────────────────────────────────────────── */
 .sidebar-nav { display:flex; flex-direction:column; gap:4px; }
 .nav-link    { display:flex; align-items:center; gap:8px; padding:9px 12px;
                border-radius:var(--radius); color:var(--text-muted); text-decoration:none;
@@ -52,7 +52,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .nav-link.active { background:var(--accent-soft); color:var(--accent); }
 .nav-icon        { font-size:1rem; width:20px; text-align:center; }
 
-/* ── Sidebar panel ────────────────────────────────────────────────────── */
+/* ── Sidebar panel ─────────────────────────────────────────────────────── */
 .sidebar-panel         { border-top:1px solid var(--border); padding-top:20px; }
 .sidebar-panel h2      { font-size:.7rem; font-weight:600; letter-spacing:.08em;
                           text-transform:uppercase; color:var(--text-muted); margin-bottom:12px; }
@@ -63,12 +63,12 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
                           background:var(--border); flex-shrink:0; }
 .dot.dot-live          { background:var(--accent); box-shadow:0 0 6px var(--accent); }
 
-/* ── Notice bar ─────────────────────────────────────────────────────── */
+/* ── Notice bar ───────────────────────────────────────────────────── */
 .notice-bar   { background:var(--surface-2); border:1px solid var(--border);
                 border-radius:var(--radius); padding:10px 16px; margin-bottom:24px; }
 .notice-bar p { font-size:.8rem; color:var(--text-muted); }
 
-/* ── Buttons ───────────────────────────────────────────────────────────── */
+/* ── Buttons ────────────────────────────────────────────────────────────────── */
 .btn          { display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
                 border-radius:var(--radius); font-size:.85rem; font-weight:500;
                 cursor:pointer; border:none; transition:background .15s,color .15s; font-family:var(--font); }
@@ -81,11 +81,11 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .btn-sm       { padding:5px 11px; font-size:.78rem; }
 .btn-sidebar  { margin-top:auto; width:100%; justify-content:center; }
 
-/* ── Views ─────────────────────────────────────────────────────────────────── */
+/* ── Views ──────────────────────────────────────────────────────────────────────── */
 .view          { display:none; }
 .view--active  { display:block; }
 
-/* ── Page header ─────────────────────────────────────────────────────────── */
+/* ── Page header ────────────────────────────────────────────────────────── */
 .page-header  { display:flex; align-items:flex-start; justify-content:space-between;
                 gap:16px; margin-bottom:28px; flex-wrap:wrap; }
 .page-header .eyebrow { font-size:.7rem; font-weight:600; letter-spacing:.1em;
@@ -94,13 +94,13 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .page-subtitle        { font-size:.85rem; color:var(--text-muted); margin-top:4px; }
 .header-actions       { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 
-/* ── Badges ──────────────────────────────────────────────────────────────── */
+/* ── Badges ─────────────────────────────────────────────────────────────────── */
 .badge        { display:inline-block; padding:3px 10px; border-radius:20px;
                 font-size:.72rem; font-weight:600; background:var(--accent-soft);
                 color:var(--accent); }
 .badge-muted  { background:var(--surface-2); color:var(--text-muted); }
 
-/* ── Panels ──────────────────────────────────────────────────────────────── */
+/* ── Panels ─────────────────────────────────────────────────────────────────── */
 .panel        { background:var(--surface); border:1px solid var(--border);
                 border-radius:var(--radius-lg); padding:24px; margin-bottom:20px; }
 .panel-header { display:flex; align-items:flex-start; justify-content:space-between;
@@ -110,7 +110,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .panel-header h3       { font-size:1rem; font-weight:600; }
 .panel-large           { grid-column: span 2; }
 
-/* ── Hero grid ───────────────────────────────────────────────────────────── */
+/* ── Hero grid ────────────────────────────────────────────────────────────────── */
 .hero-grid    { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
                 gap:16px; margin-bottom:20px; }
 .hero-card    { background:var(--surface); border:1px solid var(--border);
@@ -121,13 +121,13 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .card-note    { font-size:.78rem; color:var(--text-muted); margin-top:6px; }
 .hero-value   { font-size:1.8rem; font-weight:700; color:var(--accent); margin-top:8px; }
 
-/* ── Content grids ───────────────────────────────────────────────────────── */
+/* ── Content grids ────────────────────────────────────────────────────────────── */
 .content-grid { display:grid; grid-template-columns:2fr 1fr; gap:20px; margin-bottom:20px; }
 .charts-grid  { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; }
 @media(max-width:900px) { .content-grid,.charts-grid { grid-template-columns:1fr; }
                           .panel-large { grid-column:span 1; } }
 
-/* ── Metrics grid ──────────────────────────────────────────────────────────── */
+/* ── Metrics grid ──────────────────────────────────────────────────────────────── */
 .metrics-grid   { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; }
 .metric-box     { background:var(--surface-2); border-radius:var(--radius);
                   padding:14px; display:flex; flex-direction:column; gap:4px; }
@@ -137,12 +137,12 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .metric-box small  { font-size:.72rem; color:var(--text-muted); }
 .metric-real       { color:var(--blue) !important; }
 
-/* ── Chart wraps ──────────────────────────────────────────────────────────── */
+/* ── Chart wraps ──────────────────────────────────────────────────────────────── */
 .chart-wrap         { position:relative; height:220px; }
 .chart-wrap--tall   { height:280px; }
 .pmc-chart-wrap     { height:320px; }
 
-/* ── Sessions — filtres ──────────────────────────────────────────────────── */
+/* ── Sessions — filtres ────────────────────────────────────────────────── */
 .sess-filters     { display:flex; align-items:center; gap:16px; flex-wrap:wrap;
                     margin-bottom:20px; padding:14px 18px;
                     background:var(--surface); border:1px solid var(--border);
@@ -156,7 +156,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
                      padding:6px 10px; font-size:.85rem; font-family:var(--font); cursor:pointer; }
 .sess-period-btns  { display:flex; gap:6px; flex-wrap:wrap; }
 
-/* ── Sessions — KPIs ────────────────────────────────────────────────────────── */
+/* ── Sessions — KPIs ──────────────────────────────────────────────────────────────── */
 .sess-kpis        { display:grid; grid-template-columns:repeat(4,1fr);
                     gap:12px; margin-bottom:20px; }
 @media(max-width:700px){ .sess-kpis { grid-template-columns:repeat(2,1fr); } }
@@ -167,7 +167,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
                     letter-spacing:.07em; color:var(--text-muted); }
 .sess-kpi-value   { font-size:1.4rem; font-weight:700; color:var(--accent); }
 
-/* ── Sessions — taula ─────────────────────────────────────────────────────────── */
+/* ── Sessions — taula ───────────────────────────────────────────────────────────────────────── */
 .table-shell      { overflow-x:auto; border-radius:var(--radius); }
 #sess-table       { width:100%; border-collapse:collapse; font-size:.82rem; }
 #sess-table th    { padding:10px 12px; text-align:left; font-size:.7rem; font-weight:600;
@@ -179,7 +179,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .empty-row        { text-align:center; color:var(--text-muted); padding:24px !important; }
 .sess-trend-panel { margin-bottom:20px; }
 
-/* ── PMC legend ───────────────────────────────────────────────────────────── */
+/* ── PMC legend ─────────────────────────────────────────────────────────────────── */
 .pmc-legend       { display:flex; align-items:center; gap:14px; flex-wrap:wrap;
                     margin-bottom:16px; font-size:.75rem; }
 .pmc-leg-item     { display:flex; align-items:center; gap:5px; color:var(--text-muted); }
@@ -189,7 +189,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .pmc-leg-sep      { color:var(--border); }
 .pmc-leg-hint     { color:var(--text-muted); font-style:italic; }
 
-/* ── Planning ─────────────────────────────────────────────────────────────────── */
+/* ── Planning ─────────────────────────────────────────────────────────────────────────── */
 .plan-tabs        { display:flex; gap:8px; margin-bottom:20px; }
 .plan-no-data     { color:var(--text-muted); font-size:.85rem; padding:16px 0; }
 .muted-msg        { color:var(--text-muted); font-size:.85rem; }
@@ -212,7 +212,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .legend-dot       { display:inline-block; width:10px; height:10px; border-radius:50%; flex-shrink:0; }
 .legend-dot--phase { border-radius:3px; }
 
-/* ── Planning anual: calendari 3x4 targetes de mes (".pcy-*") ─────────────── */
+/* ── Planning anual: calendari 3x4 targetes de mes (".pcy-*") ─────────────────── */
 .pcy-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -287,7 +287,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .pcy-cell:not(.pcy-cell--empty):hover { opacity: 1; transform: translateY(-2px); }
 .pcy-cell--active:not(.pcy-cell--empty) { opacity: 1; outline-offset: 3px; }
 
-/* ── Planning mensual ─────────────────────────────────────────────────────── */
+/* ── Planning mensual ───────────────────────────────────────────────────────── */
 .plan-month-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -340,7 +340,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   font-size: .78rem; font-weight: 700; color: #0f172a; letter-spacing: .03em;
 }
 
-/* ── Planning setmanal ─────────────────────────────────────────────────────── */
+/* ── Planning setmanal ───────────────────────────────────────────────────────── */
 .pwv-header     { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 20px; }
 .pwv-km-total   { text-align: right; }
 .pwv-real-val   { display: block; font-size: .82rem; color: var(--blue); margin-top: 4px; }
@@ -350,7 +350,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .sw-plan-real   { color: var(--blue); }
 .sw-plan-real span { color: var(--blue) !important; }
 
-/* ── Setmana actual ──────────────────────────────────────────────────────────── */
+/* ── Setmana actual ──────────────────────────────────────────────────────────────── */
 .progress-panel   { margin-bottom: 20px; }
 .progress-header  { display: flex; justify-content: space-between; align-items: center;
                     margin-bottom: 10px; font-size: .85rem; color: var(--text-muted); }
@@ -375,7 +375,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .sw-plan-list li strong { font-weight: 600; }
 .sw-real-summary  { font-size: .82rem; color: var(--text-muted); margin-bottom: 10px; }
 
-/* ── sw-htable: taula horitzontal Pla / Real ───────────────────────────── */
+/* ── sw-htable: taula horitzontal Pla / Real ────────────────────────────── */
 .sw-htable-wrap {
   overflow-x: auto;
   margin-bottom: 16px;
@@ -435,7 +435,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   border-top: 1px solid rgba(51,65,85,.35);
 }
 
-/* ── Mini-taula de sessions individuals ────────────────────────────── */
+/* ── Mini-taula de sessions individuals ───────────────────────────────── */
 .sw-mini-table    { width: 100%; border-collapse: collapse; font-size: .78rem; }
 .sw-mini-table th { padding: 5px 6px; text-align: left; font-size: .65rem; font-weight: 600;
                     text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted);
@@ -443,11 +443,11 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .sw-mini-table td { padding: 5px 6px; border-bottom: 1px solid rgba(51,65,85,.4); }
 .sw-mini-table tbody tr:last-child td { border-bottom: none; }
 
-/* ── 5è panell (Altres): ocupa les 2 columnes del sw-grid ─────────── */
+/* ── 5è panell (Altres): ocupa les 2 columnes del sw-grid ───────────────── */
 .sw-block--wide { grid-column: span 2; }
 @media(max-width:860px){ .sw-block--wide { grid-column: span 1; } }
 
-/* ── Test & Cursa cards ───────────────────────────────────────────────────────── */
+/* ── Test & Cursa cards ───────────────────────────────────────────────────────────────── */
 .test-race-grid   { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 12px; }
 .tr-card          { background: var(--surface-2); border: 1px solid var(--border);
                     border-radius: var(--radius); padding: 14px 16px; }
@@ -456,7 +456,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .tr-card-value    { font-size: 1.3rem; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
 .tr-card-meta     { font-size: .75rem; color: var(--text-muted); }
 
-/* ── Others cards ──────────────────────────────────────────────────────────────── */
+/* ── Others cards ─────────────────────────────────────────────────────────────────────────── */
 .others-grid      { display: grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap: 12px; }
 .other-card       { background: var(--surface-2); border: 1px solid var(--border);
                     border-radius: var(--radius); padding: 12px 14px; }
@@ -469,20 +469,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
    #P2 — Progrés del cicle
    ============================================================ */
 
-/*
-  Estructura HTML:
-    .cycle-progress-panel         → .panel base (ja aplica fons/borde/radius)
-      .cycle-progress-header      → fila títol + badge comptador
-        h3#cycle-title            → nom del cicle (ex: "Bloc Específic")
-        .badge#cycle-week-counter → "Setmana 5 / 8"
-      .cycle-bar-wrap             → track de la barra
-        .cycle-bar-fill           → farciment (width% via JS)
-      .cycle-phases               → fila de pills de fases
-        .cycle-phase-pill         → una fase (ex: "Acumulació 3s")
-        .cycle-phase-pill--active → fase actual (ressaltada)
-*/
-
-/* Header del panell: títol a l'esquerra, comptador a la dreta */
 .cycle-progress-header {
   display: flex;
   align-items: flex-start;
@@ -504,7 +490,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   font-weight: 600;
 }
 
-/* Track de la barra de progrés */
 .cycle-bar-wrap {
   height: 6px;
   background: var(--surface-2);
@@ -513,7 +498,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   margin-bottom: 16px;
 }
 
-/* Farciment animat: el JS escriu width via style inline */
 .cycle-bar-fill {
   height: 100%;
   background: var(--accent);
@@ -522,7 +506,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   max-width: 100%;
 }
 
-/* Contenidor de pills de fases */
 .cycle-phases {
   display: flex;
   flex-wrap: wrap;
@@ -530,11 +513,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   align-items: center;
 }
 
-/*
-  Pill base: fase inactiva
-  - Fons subtil (surface-2), text muted
-  - <em> per al comptador de setmanes (ex: "3s") a la dreta
-*/
 .cycle-phase-pill {
   display: inline-flex;
   align-items: center;
@@ -556,12 +534,114 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   opacity: .7;
 }
 
-/* Pill activa: accent verd, igual que el badge de setmana activa */
 .cycle-phase-pill--active {
   background: var(--accent-soft);
   color: var(--accent);
   border-color: var(--accent);
 }
-.cycle-phase-pill--active em {
-  opacity: .85;
+
+/* ============================================================
+   #P3 — EPOC & Recuperació
+   ============================================================
+
+  Estructura HTML (generada per renderEpocPanel):
+    #epoc-panel-content           → container dins .panel.epoc-panel
+      .epoc-block                 → bloc EPOC
+        .epoc-block-header        → títol + valor numèric
+          .epoc-block-title
+          .epoc-value             → + classe .epoc-low / .epoc-mid / .epoc-high
+        .epoc-bar-wrap            → track de la barra
+          .epoc-bar-fill          → farciment + classe de color
+        .epoc-label               → etiqueta de nivell
+      .epoc-divider               → separador vertical/horitzontal
+      .epoc-block                 → bloc recuperació
+        .epoc-block-header
+          .epoc-block-title
+          .epoc-recup-value       → hores restants o ✓
+        .epoc-label
+*/
+
+/* Contenidor dels dos blocs: en fila a desktop, columna a mòbil */
+#epoc-panel-content {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+@media (max-width: 640px) {
+  #epoc-panel-content { flex-direction: column; }
+  .epoc-divider { width: 100%; height: 1px; flex-shrink: 0; }
+}
+
+/* Cada bloc ocupa la meitat de l'espai disponible */
+.epoc-block {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Separador: vertical a desktop, horitzontal a mòbil */
+.epoc-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+/* Header de cada bloc: títol esquerra, valor dreta */
+.epoc-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.epoc-block-title {
+  font-size: .72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-muted);
+}
+
+/* Valor EPOC numèric: gran i amb color según intensitat */
+.epoc-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.epoc-value.epoc-low  { color: var(--accent); }   /* verd: càrrega lleugera */
+.epoc-value.epoc-mid  { color: var(--orange); }   /* taronja: moderada     */
+.epoc-value.epoc-high { color: var(--red); }      /* vermell: alta         */
+
+/* Barra de progrés EPOC */
+.epoc-bar-wrap {
+  height: 5px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.epoc-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width .5s cubic-bezier(.4, 0, .2, 1);
+  max-width: 100%;
+}
+.epoc-bar-fill.epoc-low  { background: var(--accent); }
+.epoc-bar-fill.epoc-mid  { background: var(--orange); }
+.epoc-bar-fill.epoc-high { background: var(--red); }
+
+/* Etiqueta de nivell de càrrega */
+.epoc-label {
+  font-size: .75rem;
+  color: var(--text-muted);
+}
+
+/* Valor de recuperació pendent */
+.epoc-recup-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--blue);
+  line-height: 1;
+  white-space: nowrap;
 }
