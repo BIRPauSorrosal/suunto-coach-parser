@@ -96,10 +96,39 @@ async function loadDashboardData() {
 
 // ── Fetch ─────────────────────────────────────────────────────────────────────
 async function fetchFirstAvailable(paths) {
+  const token = window.getGitHubToken ? window.getGitHubToken() : '';
+
+  // Si hi ha token → llegeix directament de l'API de GitHub (sempre fresc)
+  if (token) {
+    for (const path of paths) {
+      try {
+        // Converteix './data/sessions.csv' → 'docs/data/sessions.csv'
+        const repoPath = path.replace(/^\.\//, 'docs/');
+        const apiUrl   = `https://api.github.com/repos/BIRPauSorrosal/suunto-coach-parser/contents/${repoPath}?ref=main`;
+
+        const res = await fetch(apiUrl, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept':        'application/vnd.github+json',
+          }
+        });
+        if (!res.ok) throw new Error(`API GitHub: ${res.status}`);
+
+        const json = await res.json();
+        const text = atob(json.content.replace(/\n/g, ''));
+        if (!text.trim()) throw new Error(`Fitxer buit: ${repoPath}`);
+        return { path, text };
+      } catch (error) {
+        console.warn('[fetchFirstAvailable] API fallback a Pages:', error.message);
+      }
+    }
+  }
+
+  // Sense token (o si l'API falla) → GitHub Pages amb cache-bust
   let lastError = null;
   for (const path of paths) {
     try {
-      const response = await fetch(path, { cache: 'no-store' });
+      const response = await fetch(`${path}?t=${Date.now()}`, { cache: 'no-store' });
       if (!response.ok) throw new Error(`HTTP ${response.status} a ${path}`);
       const text = await response.text();
       if (!text.trim()) throw new Error(`Fitxer buit a ${path}`);
