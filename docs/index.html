@@ -101,8 +101,8 @@
           </div>
         </article>
 
-        <!-- ② Tendència càrrega + ④ Forma actual (CTL) -->
-        <div class="overview-trend-grid">
+        <!-- ② Tendència càrrega + ④ Forma actual (CTL) — 2 columnes -->
+        <div class="overview-trend-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
 
           <!-- ② Tendència de càrrega -->
           <article class="panel" id="panel-load-trend">
@@ -116,7 +116,6 @@
             <div class="chart-wrap chart-wrap--trend">
               <canvas id="chart-load-trend"></canvas>
             </div>
-            <!-- pill generada per JS: renderLoadTrendPanel() -->
             <div id="load-trend-pill"></div>
           </article>
 
@@ -132,7 +131,6 @@
             <div class="chart-wrap chart-wrap--trend">
               <canvas id="chart-ctl-trend"></canvas>
             </div>
-            <!-- pill generada per JS: renderCTLPanel() -->
             <div id="ctl-trend-pill"></div>
           </article>
 
@@ -166,15 +164,6 @@
 
         </div><!-- /overview-bottom-grid -->
 
-        <!-- Test & Cursa -->
-        <article class="panel">
-          <div class="panel-header">
-            <div><p class="eyebrow">Rendiment</p><h3>Test &amp; Cursa</h3></div>
-            <span class="badge badge-muted">Darrera activitat de cada tipus</span>
-          </div>
-          <div id="test-race-container"><p class="plan-no-data">Carregant...</p></div>
-        </article>
-
         <!-- Gràfics Km + Càrrega -->
         <div class="charts-grid">
           <article class="panel">
@@ -192,6 +181,15 @@
             <div class="chart-wrap chart-wrap--tall"><canvas id="chart-load"></canvas></div>
           </article>
         </div>
+
+        <!-- Test & Cursa (sota els gràfics de km/càrrega) -->
+        <article class="panel">
+          <div class="panel-header">
+            <div><p class="eyebrow">Rendiment</p><h3>Test &amp; Cursa</h3></div>
+            <span class="badge badge-muted">Darrera activitat de cada tipus</span>
+          </div>
+          <div id="test-race-container"><p class="plan-no-data">Carregant...</p></div>
+        </article>
 
         <!-- Altres activitats -->
         <article class="panel">
