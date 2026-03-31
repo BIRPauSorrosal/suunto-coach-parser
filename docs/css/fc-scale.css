@@ -6,7 +6,7 @@
 
 /* ── Colors FC per zona ──────────────────────────────────────────────────── */
 .metric-badge--fc-z1 { background-color: #38bdf8; color: #0f172a; }  /* blau cel → text fosc */
-.metric-badge--fc-z2 { background-color: #22c55e; color: #fff;    }  /* verd     → text blanc */
+.metric-badge--fc-z2 { background-color: #22c55e; color: #0f172a;    }  /* verd     → text blanc */
 .metric-badge--fc-z3 { background-color: #facc15; color: #0f172a; }  /* groc     → text fosc */
-.metric-badge--fc-z4 { background-color: #f97316; color: #fff;    }  /* taronja  → text blanc */
-.metric-badge--fc-z5 { background-color: #ef4444; color: #fff;    }  /* vermell  → text blanc */
+.metric-badge--fc-z4 { background-color: #f97316; color: #0f172a;    }  /* taronja  → text blanc */
+.metric-badge--fc-z5 { background-color: #ef4444; color: #0f172a;    }  /* vermell  → text blanc */

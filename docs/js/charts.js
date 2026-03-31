@@ -2,21 +2,34 @@
 // Rep les dades ja processades des de app.js via initCharts()
 // DEP: app.js ha d'estar carregat abans (usa CHART_COLORS des d'aquí)
 
+// FC_SCALE ve de fc-scale.js (carregat abans a index.html)
+// Genera els colors del gràfic dinàmicament des de la mateixa font que els badges.
+function _fcZoneColors(alpha = 0.85) {
+  const HEX = {
+    'fc-z1': '#38bdf8',
+    'fc-z2': '#22c55e',
+    'fc-z3': '#facc15',
+    'fc-z4': '#f97316',
+    'fc-z5': '#ef4444',
+  };
+  return FC_SCALE.map(tier => {
+    const hex = HEX[tier.cls];
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  });
+}
+
 const CHART_COLORS = {
-  green:       '#22c55e',
-  greenSoft:   'rgba(34, 197, 94, 0.25)',
-  blue:        '#38bdf8',
-  blueSoft:    'rgba(56, 189, 248, 0.25)',
-  muted:       'rgba(148, 163, 184, 0.15)',
-  gridLine:    'rgba(148, 163, 184, 0.1)',
-  text:        '#94a3b8',
-  zones: [
-    'rgba(56, 189, 248, 0.85)',
-    'rgba(34, 197, 94, 0.85)',
-    'rgba(250, 204, 21, 0.85)',
-    'rgba(249, 115, 22, 0.85)',
-    'rgba(239, 68, 68, 0.85)',
-  ]
+  green:    '#22c55e',
+  greenSoft:'rgba(34, 197, 94, 0.25)',
+  blue:     '#38bdf8',
+  blueSoft: 'rgba(56, 189, 248, 0.25)',
+  muted:    'rgba(148, 163, 184, 0.15)',
+  gridLine: 'rgba(148, 163, 184, 0.1)',
+  text:     '#94a3b8',
+  get zones() { return _fcZoneColors(0.85); },
 };
 
 const chartInstances = {};

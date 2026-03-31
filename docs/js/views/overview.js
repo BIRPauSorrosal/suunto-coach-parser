@@ -259,92 +259,6 @@ function renderEpocPanel(sessions) {
   `;
 }
 
-// ── Panell Test & Cursa ───────────────────────────────────────────────────────────────────
-function renderTestRacePanel(sessions) {
-  const container = document.getElementById('test-race-container');
-  if (!container) return;
-
-  const lastTest  = sessions.find(s => s.tipusKey === 'TEST');
-  const lastCursa = sessions.find(s => s.tipusKey === 'CURSA');
-
-  function rowHTML(label, s) {
-    if (!s) return `
-      <tr class="tr-empty">
-        <td colspan="7"><span class="eyebrow">${label}</span> \u2014 Sense registre</td>
-      </tr>`;
-
-    const isTest = s.tipusKey === 'TEST';
-    const ritme  = isTest ? s.ritmeMitjaSeries : s.ritme;
-    const fc     = isTest ? s.fcMitjaSeries    : s.fcMitja;
-    const fcTxt  = isFinite(fc) ? `${Math.round(fc)} ppm` : '--';
-    const desTxt = isFinite(s.desnivell) ? `${formatNumber(s.desnivell)} m` : '--';
-
-    return `
-      <tr>
-        <td><span class="eyebrow">${label}</span></td>
-        <td>${esc(s.displayDate)}</td>
-        <td>${formatMetric(s.distancia, 'km')}</td>
-        <td>${formatPace(ritme)}</td>
-        <td>${fcTxt}</td>
-        <td>${desTxt}</td>
-        <td>${tssDotHTML(s.carrega)}</td>
-      </tr>`;
-  }
-
-  container.innerHTML = `
-    <table class="sw-mini-table">
-      <thead>
-        <tr>
-          <th>Tipus</th>
-          <th>Data</th>
-          <th>Dist\u00e0ncia</th>
-          <th>Ritme</th>
-          <th>FC</th>
-          <th>Desnivell</th>
-          <th>TSS</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${rowHTML('Test', lastTest)}
-        ${rowHTML('Cursa', lastCursa)}
-      </tbody>
-    </table>`;
-}
-
-// ── Panell Altres activitats — últims 30 dies ───────────────────────────────────────────
-function renderOthersPanel(sessions) {
-  const container = document.getElementById('others-container');
-  if (!container) return;
-
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - 30);
-  cutoff.setHours(0, 0, 0, 0);
-
-  const others   = sessions.filter(s => isOther(s) && s.date >= cutoff);
-  const totalMin = sumNumbers(others.map(s => s.durada));
-
-  setText('others-count', others.length
-    ? `${others.length} sessions \u00b7 ${formatNumber(totalMin)} min`
-    : 'Sense activitats els \u00faltims 30 dies');
-
-  container.innerHTML = others.length
-    ? `<table class="sw-mini-table">
-        <thead>
-          <tr><th>Data</th><th>Tipus</th><th>Durada</th><th>TSS</th></tr>
-        </thead>
-        <tbody>
-          ${others.map(s => `
-            <tr>
-              <td>${esc(s.displayDate)}</td>
-              <td>${esc(s.tipus)}</td>
-              <td>${formatMetric(s.durada, 'min')}</td>
-              <td>${tssDotHTML(s.carrega)}</td>
-            </tr>`).join('')}
-        </tbody>
-      </table>`
-    : '<p class="plan-no-data">Cap activitat alternativa els \u00faltims 30 dies.</p>';
-}
-
 // ============================================================
 // #P-TREND A — Tendència de càrrega (últimes 7 setmanes)
 // ============================================================
@@ -619,4 +533,96 @@ function renderCtlTrend(sessions) {
       },
     },
   });
+}
+
+// ── Panell Test & Cursa ───────────────────────────────────────────────────────────────────
+function renderTestRacePanel(sessions) {
+  const container = document.getElementById('test-race-container');
+  if (!container) return;
+
+  const lastTest  = sessions.find(s => s.tipusKey === 'TEST');
+  const lastCursa = sessions.find(s => s.tipusKey === 'CURSA');
+
+  function rowHTML(label, s) {
+    if (!s) return `
+      <tr class="tr-empty">
+        <td colspan="7"><span class="eyebrow">${label}</span> — Sense registre</td>
+      </tr>`;
+
+    const isTest = s.tipusKey === 'TEST';
+    const ritme  = isTest ? s.ritmeMitjaSeries : s.ritme;
+    const fc     = isTest ? s.fcMitjaSeries    : s.fcMitja;
+    const desTxt = isFinite(s.desnivell) ? `${formatNumber(s.desnivell)} m` : '--';
+
+    return `
+      <tr>
+        <td><span class="eyebrow">${label}</span></td>
+        <td>${esc(s.displayDate)}</td>
+        <td>${formatMetric(s.distancia, 'km')}</td>
+        <td>${formatPace(ritme)}</td>
+        <td>${fcBadgeHTML(fc)}</td>
+        <td>${desTxt}</td>
+        <td>${tssDotHTML(s.carrega)}</td>
+      </tr>`;
+  }
+
+  container.innerHTML = `
+    <table class="sw-mini-table">
+      <thead>
+        <tr>
+          <th>Tipus</th>
+          <th>Data</th>
+          <th>Distància</th>
+          <th>Ritme</th>
+          <th>FC</th>
+          <th>Desnivell</th>
+          <th>TSS</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rowHTML('Test', lastTest)}
+        ${rowHTML('Cursa', lastCursa)}
+      </tbody>
+    </table>`;
+}
+
+// ── Panell Altres activitats — últims 30 dies ───────────────────────────────────────────
+function renderOthersPanel(sessions) {
+  const container = document.getElementById('others-container');
+  if (!container) return;
+
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 30);
+  cutoff.setHours(0, 0, 0, 0);
+
+  const others   = sessions.filter(s => isOther(s) && s.date >= cutoff);
+  const totalMin = sumNumbers(others.map(s => s.durada));
+
+  setText('others-count', others.length
+    ? `${others.length} sessions · ${formatNumber(totalMin)} min`
+    : 'Sense activitats els últims 30 dies');
+
+  container.innerHTML = others.length
+    ? `<table class="sw-mini-table">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Tipus</th>
+            <th>Durada</th>
+            <th>FC</th>
+            <th>TSS</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${others.map(s => `
+            <tr>
+              <td>${esc(s.displayDate)}</td>
+              <td>${esc(s.tipus)}</td>
+              <td>${formatMetric(s.durada, 'min')}</td>
+              <td>${fcBadgeHTML(s.fcMitja)}</td>
+              <td>${tssDotHTML(s.carrega)}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`
+    : '<p class="plan-no-data">Cap activitat alternativa els últims 30 dies.</p>';
 }
