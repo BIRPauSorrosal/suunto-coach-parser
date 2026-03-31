@@ -6,7 +6,7 @@ DATA_DIR = BASE_DIR / "data"
 
 RAW_DIR = DATA_DIR / "raw"
 ARCHIVE_DIR = DATA_DIR / "archive"
-OUTPUT_DIR = DATA_DIR / "output"
+OUTPUT_DIR = "docs/data"
 
 # Nom de l'arxiu CSV on anirem afegint les files de cada entrenament
 CSV_FILENAME = "sessions.csv"

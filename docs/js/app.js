@@ -3,8 +3,8 @@
 // Dep: lib/formatters.js, lib/metrics.js (carregats abans via index.html)
 
 const DATA_SOURCES = {
-  sessions: ['../data/output/sessions.csv'],
-  planning: ['../data/output/planning.csv']
+  sessions: ['./data/sessions.csv'],
+  planning: ['./data/planning.csv']
 };
 
 // ── Constants de classificació de sessions ────────────────────────────────────
