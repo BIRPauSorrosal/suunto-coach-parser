@@ -2,7 +2,7 @@
 // Panell Sessions: filtres, KPIs, gràfic tendència, PMC + exportació CSV, taula
 // Dep: lib/formatters.js (formatPace, fmtNum, toNumber, esc)
 //      lib/metrics.js    (buildPMCData, groupByWeek, parseDurSeries)
-//      lib/load-scale.js (loadBadgeHTML, getLoadLevelSession)
+//      lib/load-scale.js (loadBadgeHTML, loadDotHTML, getLoadLevelSession)
 //      app.js            (CHART_COLORS via charts.js, STRENGTH_RE, PADEL_TYPES,
 //                         QUALITY_TYPES, LONG_TYPES, TEST_RACE_TYPES)
 // NOTA: No declarar aquí constants de tipus — usar les de app.js
@@ -509,7 +509,7 @@ function renderSessTable(sessions) {
     tbody.innerHTML = `<tr><td colspan="${cols.length}" class="empty-row">Cap sessió amb els filtres seleccionats.</td></tr>`;
     return;
   }
-  // innerHTML per permetre el HTML dels load-badges
+  // innerHTML per permetre el HTML dels load-badges i load-dots
   tbody.innerHTML = sessions.map(s=>`<tr>${cols.map(c=>`<td>${c.render(s)}</td>`).join('')}</tr>`).join('');
 }
 
@@ -521,19 +521,20 @@ function getSessCols(type) {
   const colRitme      = {label:'Ritme',            render:s=>formatPace(s.ritme)};
   const colFC         = {label:'FC',               render:s=>typeof s.fcMitja==='number'&&s.fcMitja>0?`${Math.round(s.fcMitja)} ppm`:'—'};
 
-  // Càrrega TSS: mostra badge de color basat en EPOC + valor TSS
+  // Càrrega TSS: dot de color (sense etiqueta) + valor TSS
+  // loadDotHTML — indicador visual discret, no repeteix el valor EPOC
   const colCarrega = {
     label: 'Càrrega TSS',
     render: s => {
       const e = toNumber(s.raw['EPOC']);
-      const badge = (typeof e === 'number' && e > 0) ? loadBadgeHTML(e) : '';
+      const dot = (typeof e === 'number' && e > 0) ? loadDotHTML(e) : '';
       return (typeof s.carrega === 'number' && s.carrega > 0)
-        ? `${badge} ${fmtNum(s.carrega)} TSS`
+        ? `${dot} ${fmtNum(s.carrega)} TSS`
         : '—';
     }
   };
 
-  // EPOC: badge de color complet
+  // EPOC: badge complet (dot + valor numèric EPOC)
   const colEpoc = {
     label: 'EPOC',
     render: s => {
