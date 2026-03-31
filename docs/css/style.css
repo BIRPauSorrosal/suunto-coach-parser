@@ -687,3 +687,78 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   line-height: 1;
   white-space: nowrap;
 }
+
+/* ============================================================
+   #P-TREND — Tendència càrrega + Forma actual (CTL)
+   Nous widgets de l'overview (millora-overview)
+   ============================================================ */
+
+/*
+  Grid 2 columnes: Tendència càrrega (esquerra) + CTL (dreta).
+  Per sota de 900px col·lapsa a 1 columna igual que la resta de grids.
+*/
+.overview-trend-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+  align-items: stretch;
+}
+.overview-trend-grid .panel {
+  margin-bottom: 0;
+}
+@media (max-width: 900px) {
+  .overview-trend-grid { grid-template-columns: 1fr; }
+}
+
+/* Canvas dels nous gràfics: mateixa alçada que chart-wrap--zones */
+.chart-wrap--trend {
+  position: relative;
+  height: 200px;
+}
+
+/*
+  Pills de tendència (generades per JS sota cada gràfic).
+  3 variants semàntiques: up (pujada) | neutral (en línia) | down (descàrrega / pèrdua forma).
+*/
+.trend-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 600;
+  margin-top: 14px;
+  border: 1px solid transparent;
+}
+
+/* Pujada de càrrega / guany de forma */
+.trend-pill--up {
+  background: rgba(249,115,22,.12);
+  color: var(--orange);
+  border-color: rgba(249,115,22,.35);
+}
+
+/* En línia / estable */
+.trend-pill--neutral {
+  background: rgba(148,163,184,.10);
+  color: var(--text-muted);
+  border-color: rgba(148,163,184,.25);
+}
+
+/* Descàrrega / pèrdua de forma */
+.trend-pill--down {
+  background: rgba(34,197,94,.12);
+  color: var(--accent);
+  border-color: rgba(34,197,94,.40);
+}
+
+/* Nota de context sota la pill (ex: «±15% = en línia») */
+.trend-context {
+  display: block;
+  font-size: .70rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+  line-height: 1.4;
+}
