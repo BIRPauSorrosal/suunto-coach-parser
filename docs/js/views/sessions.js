@@ -2,6 +2,7 @@
 // Panell Sessions: filtres, KPIs, gràfic tendència, PMC + exportació CSV, taula
 // Dep: lib/formatters.js (formatPace, fmtNum, toNumber, esc)
 //      lib/metrics.js    (buildPMCData, groupByWeek, parseDurSeries)
+//      lib/load-scale.js (loadBadgeHTML, getLoadLevelSession)
 //      app.js            (CHART_COLORS via charts.js, STRENGTH_RE, PADEL_TYPES,
 //                         QUALITY_TYPES, LONG_TYPES, TEST_RACE_TYPES)
 // NOTA: No declarar aquí constants de tipus — usar les de app.js
@@ -508,6 +509,7 @@ function renderSessTable(sessions) {
     tbody.innerHTML = `<tr><td colspan="${cols.length}" class="empty-row">Cap sessió amb els filtres seleccionats.</td></tr>`;
     return;
   }
+  // innerHTML per permetre el HTML dels load-badges
   tbody.innerHTML = sessions.map(s=>`<tr>${cols.map(c=>`<td>${c.render(s)}</td>`).join('')}</tr>`).join('');
 }
 
@@ -518,12 +520,32 @@ function getSessCols(type) {
   const colDurada     = {label:'Durada',           render:s=>s.durada>0?`${fmtNum(s.durada)} min`:'—'};
   const colRitme      = {label:'Ritme',            render:s=>formatPace(s.ritme)};
   const colFC         = {label:'FC',               render:s=>typeof s.fcMitja==='number'&&s.fcMitja>0?`${Math.round(s.fcMitja)} ppm`:'—'};
-  const colCarrega    = {label:'Càrrega TSS',      render:s=>typeof s.carrega==='number'&&s.carrega>0?`${fmtNum(s.carrega)} TSS`:'—'};
+
+  // Càrrega TSS: mostra badge de color basat en EPOC + valor TSS
+  const colCarrega = {
+    label: 'Càrrega TSS',
+    render: s => {
+      const e = toNumber(s.raw['EPOC']);
+      const badge = (typeof e === 'number' && e > 0) ? loadBadgeHTML(e) : '';
+      return (typeof s.carrega === 'number' && s.carrega > 0)
+        ? `${badge} ${fmtNum(s.carrega)} TSS`
+        : '—';
+    }
+  };
+
+  // EPOC: badge de color complet
+  const colEpoc = {
+    label: 'EPOC',
+    render: s => {
+      const e = toNumber(s.raw['EPOC']);
+      return (typeof e === 'number' && e > 0) ? loadBadgeHTML(e) : '—';
+    }
+  };
+
+  const colRecup      = {label:'Recup.',           render:s=>{const r=toNumber(s.raw['Recup(h)']);return typeof r==='number'&&r>0?`${fmtNum(r)} h`:'—';}};
   const colZ2min      = {label:'Z2 (min)',         render:s=>s.z2min>0?`${fmtNum(s.z2min)} min`:'—'};
   const colCad        = {label:'Cadència',         render:s=>{const c=toNumber(s.raw['Cadencia(spm)']);return typeof c==='number'&&c>0?`${Math.round(c)} spm`:'—';}};
   const colDesnivell  = {label:'Desnivell',        render:s=>{const d=toNumber(s.raw['Desnivell(m)']);return typeof d==='number'&&d>0?`${Math.round(d)} m`:'—';}};
-  const colEpoc       = {label:'EPOC',             render:s=>{const e=toNumber(s.raw['EPOC']);return typeof e==='number'&&e>0?fmtNum(e):'—';}};
-  const colRecup      = {label:'Recup.',           render:s=>{const r=toNumber(s.raw['Recup(h)']);return typeof r==='number'&&r>0?`${fmtNum(r)} h`:'—';}};
   const colRitmeSeries= {label:'Ritme sèries',     render:s=>formatPace(typeof s.ritmeMitjaSeries==='number'?s.ritmeMitjaSeries:null)};
   const colFCSeries   = {label:'FC sèries',        render:s=>typeof s.fcMitjaSeries==='number'&&s.fcMitjaSeries>0?`${Math.round(s.fcMitjaSeries)} ppm`:'—'};
   const colSeries     = {label:'Sèries',           render:s=>{const n=toNumber(s.raw['Num_Series']);return typeof n==='number'&&n>0?String(Math.round(n)):'—';}};
