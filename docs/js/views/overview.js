@@ -246,7 +246,7 @@ function renderTestRacePanel(sessions) {
         <td>${formatPace(ritme)}</td>
         <td>${fcTxt}</td>
         <td>${desTxt}</td>
-        <td>${loadBadgeHTML(s.carrega)}</td>
+        <td>${tssDotHTML(s.carrega)}</td>
       </tr>`;
   }
 
@@ -297,7 +297,7 @@ function renderOthersPanel(sessions) {
               <td>${esc(s.displayDate)}</td>
               <td>${esc(s.tipus)}</td>
               <td>${formatMetric(s.durada, 'min')}</td>
-              <td>${loadBadgeHTML(s.carrega)}</td>
+              <td>${tssDotHTML(s.carrega)}</td>
             </tr>`).join('')}
         </tbody>
       </table>`
