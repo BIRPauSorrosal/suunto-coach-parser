@@ -1,0 +1,199 @@
+/* docs/css/uploader.css
+   Modal d'importació d'activitats Suunto.
+   Usa les mateixes CSS variables que fc-config-modal.css:
+   --bg, --surface, --surface-2, --border, --text, --text-muted,
+   --accent, --radius, --radius-lg, --shadow, --font
+*/
+
+
+/* ── Element <dialog> natiu ────────────────────────────────── */
+/* Reset dels estils per defecte del navegador */
+.uploader-dialog {
+  background:    transparent;
+  border:        none;
+  padding:       0;
+  max-width:     100vw;
+  max-height:    100dvh;
+  overflow:      visible;
+}
+
+/* Backdrop natiu del <dialog> (::backdrop) */
+.uploader-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+
+/* ── Caixa interior ─────────────────────────────────────────── */
+.uploader-inner {
+  background:    var(--surface);
+  border:        1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:    var(--shadow);
+  width:         480px;
+  max-width:     calc(100vw - 32px);
+  display:       flex;
+  flex-direction: column;
+  gap:           0;
+  font-family:   var(--font);
+}
+
+
+/* ── Header ─────────────────────────────────────────────────── */
+.uploader-header {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  padding:         20px 24px 16px;
+  border-bottom:   1px solid var(--border);
+}
+.uploader-header h3 {
+  font-size:   1rem;
+  font-weight: 600;
+  color:       var(--text);
+  margin:      0;
+}
+.uploader-close {
+  background:    none;
+  border:        none;
+  color:         var(--text-muted);
+  font-size:     1rem;
+  cursor:        pointer;
+  padding:       2px 6px;
+  border-radius: 6px;
+  line-height:   1;
+  font-family:   var(--font);
+  transition:    color .15s, background .15s;
+}
+.uploader-close:hover {
+  color:      var(--text);
+  background: var(--surface-2);
+}
+
+
+/* ── Dropzone ───────────────────────────────────────────────── */
+.uploader-dropzone {
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  gap:             8px;
+  margin:          20px 24px;
+  padding:         28px 20px;
+  border:          2px dashed var(--border);
+  border-radius:   var(--radius);
+  text-align:      center;
+  transition:      border-color .15s, background .15s;
+  cursor:          default;
+}
+.uploader-dropzone--over {
+  border-color: var(--accent);
+  background:   rgba(34, 197, 94, 0.06);
+}
+.uploader-dropzone-title {
+  font-size:   .9rem;
+  font-weight: 500;
+  color:       var(--text);
+  margin:      0;
+}
+.uploader-dropzone-sub {
+  font-size: .78rem;
+  color:     var(--text-muted);
+  margin:    0;
+}
+
+
+/* ── Resultats ──────────────────────────────────────────────── */
+.uploader-results {
+  padding:       0 24px 4px;
+  display:       flex;
+  flex-direction: column;
+  gap:           12px;
+  max-height:    260px;
+  overflow-y:    auto;
+}
+
+.uploader-section-title {
+  font-size:      .72rem;
+  font-weight:    600;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  margin:         0 0 6px;
+}
+.uploader-section-title--ok  { color: var(--accent); }
+.uploader-section-title--err { color: var(--red, #ef4444); }
+
+
+/* ── Llista de fitxers ──────────────────────────────────────── */
+.uploader-list {
+  list-style: none;
+  padding:    0;
+  margin:     0;
+  display:    flex;
+  flex-direction: column;
+  gap:        4px;
+}
+
+.uploader-list-item {
+  display:       grid;
+  grid-template-columns: 20px 1fr auto auto;
+  align-items:   center;
+  gap:           8px;
+  padding:       6px 10px;
+  border-radius: var(--radius);
+  background:    var(--surface-2);
+  font-size:     .82rem;
+}
+.uploader-list-item--err {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.uploader-item-icon  { font-size: .85rem; }
+.uploader-item-name  { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.uploader-item-badge {
+  font-size:      .7rem;
+  font-weight:    600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color:          var(--accent);
+  background:     rgba(34, 197, 94, 0.12);
+  padding:        2px 6px;
+  border-radius:  4px;
+  white-space:    nowrap;
+}
+.uploader-item-date   { font-size: .75rem; color: var(--text-muted); white-space: nowrap; }
+.uploader-item-reason {
+  font-size:   .75rem;
+  color:       var(--red, #ef4444);
+  grid-column: 2 / -1;
+}
+
+/* Error: nom + raó en columna */
+.uploader-list-item--err {
+  grid-template-columns: 20px 1fr;
+  grid-template-rows:    auto auto;
+}
+.uploader-list-item--err .uploader-item-name   { grid-column: 2; }
+.uploader-list-item--err .uploader-item-reason { grid-column: 2; }
+
+
+/* ── Footer ─────────────────────────────────────────────────── */
+.uploader-footer {
+  display:         flex;
+  justify-content: flex-end;
+  gap:             8px;
+  padding:         16px 24px 20px;
+  border-top:      1px solid var(--border);
+  margin-top:      8px;
+}
+
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 520px) {
+  .uploader-inner          { width: 100%; }
+  .uploader-header,
+  .uploader-footer         { padding-left: 16px; padding-right: 16px; }
+  .uploader-dropzone       { margin: 16px; }
+  .uploader-results        { padding: 0 16px 4px; }
+  .uploader-list-item      { grid-template-columns: 20px 1fr; }
+  .uploader-item-badge,
+  .uploader-item-date      { display: none; }
+}
