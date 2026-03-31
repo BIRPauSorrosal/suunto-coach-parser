@@ -132,7 +132,7 @@ function parseRunningBase(filename, data) {
 
 // ─── LONG RUN PARSER (equivalent a long_run_parser.py) ────────
 
-const LONG_RUN_TYPES = {
+const PARSER_LONG_RUN_TYPES = {
   "llarga":  "LLARGA",
   "longrun": "LLARGA",
   "marat":   "MARATÓ",
@@ -144,7 +144,7 @@ const LONG_RUN_TYPES = {
 function parseLongRun(filename, data) {
   const row      = parseRunningBase(filename, data);
   const nameLower = filename.toLowerCase();
-  row.Tipus = Object.entries(LONG_RUN_TYPES).find(
+  row.Tipus = Object.entries(PARSER_LONG_RUN_TYPES).find(
     ([k]) => nameLower.includes(k)
   )?.[1] ?? "LLARGA";
   return row;
@@ -153,7 +153,7 @@ function parseLongRun(filename, data) {
 
 // ─── QUALITY PARSER (equivalent a quality_parser.py) ──────────
 
-const QUALITY_TYPES = {
+const PARSER_QUALITY_TYPES = {
   "tempo":     "TEMPO",
   "test":      "TEST",
   "intervals": "INTERVALS",
@@ -179,7 +179,7 @@ function parseQuality(filename, data) {
   const windows = data?.DeviceLog?.Windows ?? [];
   const nameLower = filename.toLowerCase();
 
-  row.Tipus = Object.entries(QUALITY_TYPES).find(
+  row.Tipus = Object.entries(PARSER_QUALITY_TYPES).find(
     ([k]) => nameLower.includes(k)
   )?.[1] ?? "QUALITAT";
 
@@ -246,7 +246,7 @@ function parseStrength(filename, data) {
 
 // ─── GENERIC PARSER (equivalent a generic_parser.py) ──────────
 
-const GENERIC_TYPES = {
+const PARSER_GENERIC_TYPES = {
   "padel":         "PADEL",
   "tennis":        "TENNIS",
   "hiking":        "HIKING",
@@ -258,7 +258,7 @@ const GENERIC_TYPES = {
 function parseGeneric(filename, data) {
   const row      = parseBase(filename, data);
   const nameLower = filename.toLowerCase();
-  row.Tipus = Object.entries(GENERIC_TYPES).find(
+  row.Tipus = Object.entries(PARSER_GENERIC_TYPES).find(
     ([k]) => nameLower.includes(k)
   )?.[1] ?? "ALTRES";
   return row;
