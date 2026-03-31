@@ -1,42 +1,6 @@
 // docs/js/views/overview.js
 // Vista Overview: hero-cards + metric-boxes + panells Test/Cursa + Altres
-// Dep: app.js (constants, helpers, detectActiveWeek, formatPace)
-
-// ── Barems de càrrega (Firstbeat/EPOC) ──────────────────────────────────────
-// Basats en el model EPOC de Firstbeat per a atletes aficionats consistents
-// (~20-30 km/setmana, cicle de construcció aeròbica).
-//
-// NIVELL         SESSIÓ        SETMANAL     COLOR CSS
-// Molt baixa     < 20          < 60         --load-vlow
-// Baixa          20 – 50       60 – 120     --load-low
-// Moderada       50 – 90       120 – 200    --load-mid
-// Alta           90 – 150      200 – 280    --load-high
-// Molt alta      > 150         > 280        --load-vhigh
-
-function getLoadLevelSession(epoc) {
-  if (!isFinite(epoc) || epoc <= 0) return null;
-  if (epoc < 20)  return { key: 'vlow',  label: 'Mínima',     cls: 'load-vlow'  };
-  if (epoc < 50)  return { key: 'low',   label: 'Baixa',      cls: 'load-low'   };
-  if (epoc < 90)  return { key: 'mid',   label: 'Moderada',   cls: 'load-mid'   };
-  if (epoc < 150) return { key: 'high',  label: 'Alta',       cls: 'load-high'  };
-  return              { key: 'vhigh', label: 'Molt alta',  cls: 'load-vhigh' };
-}
-
-function getLoadLevelWeekly(epoc) {
-  if (!isFinite(epoc) || epoc <= 0) return { key: 'vlow', label: 'Molt baixa', cls: 'load-vlow' };
-  if (epoc < 60)  return { key: 'vlow',  label: 'Molt baixa',  cls: 'load-vlow'  };
-  if (epoc < 120) return { key: 'low',   label: 'Baixa',       cls: 'load-low'   };
-  if (epoc < 200) return { key: 'mid',   label: 'Moderada',    cls: 'load-mid'   };
-  if (epoc < 280) return { key: 'high',  label: 'Alta',        cls: 'load-high'  };
-  return              { key: 'vhigh', label: 'Molt alta',   cls: 'load-vhigh' };
-}
-
-// Retorna el HTML d'un badge de càrrega per a una sessió individual
-function loadBadgeHTML(epoc) {
-  const lvl = getLoadLevelSession(epoc);
-  if (!lvl) return formatMetric(epoc, '');
-  return `<span class="load-badge load-badge--${lvl.cls}" title="${lvl.label}">${formatMetric(epoc, '')}</span>`;
-}
+// Dep: formatters.js, metrics.js, load-scale.js, app.js
 
 // ── Punt d'entrada ──────────────────────────────────────────────────────────
 function renderOverviewView(sessions, planning) {
@@ -71,7 +35,7 @@ function renderOverview(activeWeek, weeklySessions) {
   setText('compliance-value',  compliance == null ? '-- %' : `${Math.round(compliance)} %`);
 }
 
-// ── Progrés del cicle (#P2) ─────────────────────────────────────────────────────
+// ── Progrés del cicle ────────────────────────────────────────────────────────
 function renderCycleProgress(activeWeek, planning) {
   const barEl     = document.getElementById('cycle-bar-fill');
   const titleEl   = document.getElementById('cycle-title');
@@ -121,7 +85,7 @@ function renderCycleProgress(activeWeek, planning) {
   }).join('');
 }
 
-// ── Metric-boxes (resum setmana activa) ────────────────────────────────────────────
+// ── Metric-boxes (resum setmana activa) ──────────────────────────────────────
 function renderSummary(activeWeek, weeklySessions) {
   const quality  = weeklySessions.filter(s => QUALITY_TYPES.has(s.tipusKey));
   const llong    = weeklySessions.filter(s => LONG_TYPES.has(s.tipusKey));
@@ -132,7 +96,7 @@ function renderSummary(activeWeek, weeklySessions) {
   const longKm          = sumNumbers(llong.map(s => s.distancia));
   const strengthMin     = sumNumbers(strength.map(s => s.durada));
 
-  // ─ Qualitat ──────────────────────────────────────────────────────────────────
+  // ─ Qualitat ─────────────────────────────────────────────────────────────
   if (quality.length) {
     const ritmeMitja = quality.map(s => s.ritmeMitjaSeries).filter(v => isFinite(v));
     const fcMitja    = quality.map(s => s.fcMitjaSeries).filter(v => isFinite(v));
@@ -148,41 +112,40 @@ function renderSummary(activeWeek, weeklySessions) {
     setText('quality-summary', '\u2014');
   }
   setText('quality-detail', activeWeek
-    ? `Pla: ${activeWeek.qSeries} s\u00e8r \u00b7 ${activeWeek.qDuradaSerie}' \u00b7 ${formatPace(activeWeek.qRitme)}`
+    ? `Pla: ${activeWeek.qSeries} sèr · ${activeWeek.qDuradaSerie}' · ${formatPace(activeWeek.qRitme)}`
     : 'Sense planning setmanal disponible');
 
-  // ─ Z1+Z2 ─────────────────────────────────────────────────────────────────────
+  // ─ Z1+Z2 ────────────────────────────────────────────────────────────────
   setText('z2-summary', z1z2Minutes ? `${formatNumber(z1z2Minutes)} min` : '\u2014');
   setText('z2-detail', activeWeek
     ? `Ritme Z2: ${formatPace(activeWeek.z2PaceMin, '')}\u2013${formatPace(activeWeek.z2PaceMax)}`
     : 'Sense rang de ritme planificat');
 
-  // ─ Tirada llarga ───────────────────────────────────────────────────────────
+  // ─ Tirada llarga ────────────────────────────────────────────────────────
   setText('long-summary', longKm ? `${formatNumber(longKm)} km` : '\u2014');
   setText('long-detail', activeWeek
-    ? `Pla: ${activeWeek.llTipus} \u00b7 ${formatNumber(activeWeek.llKm)} km`
+    ? `Pla: ${activeWeek.llTipus} · ${formatNumber(activeWeek.llKm)} km`
     : 'Sense tirada llarga planificada');
   if (llong.length) {
     const lastLong  = llong[0];
     const desnivell = isFinite(lastLong.desnivell) ? `${formatNumber(lastLong.desnivell)} m` : '--';
     const fc        = isFinite(lastLong.fcMitja)   ? `${Math.round(lastLong.fcMitja)} ppm`  : '--';
-    setText('long-real', `Real: ${formatNumber(longKm)} km \u00b7 D+ ${desnivell} \u00b7 FC ${fc}`);
+    setText('long-real', `Real: ${formatNumber(longKm)} km · D+ ${desnivell} · FC ${fc}`);
   } else {
     setText('long-real', '');
   }
 
-  // ─ For\u00e7a ───────────────────────────────────────────────────────────────────
+  // ─ Força ────────────────────────────────────────────────────────────────
   setText('strength-summary', strength.length ? `${strength.length} sessions` : '\u2014');
   setText('strength-detail', activeWeek
-    ? `Pla: ${activeWeek.forcaPlan} \u00b7 ${formatNumber(strengthMin)} min reals`
-    : 'Sense sessions de for\u00e7a aquesta setmana');
+    ? `Pla: ${activeWeek.forcaPlan} · ${formatNumber(strengthMin)} min reals`
+    : 'Sense sessions de força aquesta setmana');
 }
 
-// ── Panell EPOC & Recuperació (#P3) ──────────────────────────────────────────────
-// Finestra: últims 7 dies. Sessions assumides finalitzades a les 20:00h.
-// EPOC: suma de tots els valors EPOC dels últims 7 dies.
-// Recuperació: màxim de (Recup(h) - hores_transcorregudes) per sessió, mínim 0.
-// Barem setmanal: <60 molt baixa | 60-120 baixa | 120-200 moderada | 200-280 alta | >280 molt alta
+// ── Panell EPOC & Recuperació ─────────────────────────────────────────────────
+// Finestra: últims 7 dies.
+// EPOC: suma total + MITJANA per sessió (via getLoadLevelWeekly de load-scale.js)
+// Recuperació: màxim de (Recup(h) - hores_transcorregudes), mínim 0.
 function renderEpocPanel(sessions) {
   const container = document.getElementById('epoc-panel-content');
   if (!container) return;
@@ -194,22 +157,27 @@ function renderEpocPanel(sessions) {
 
   const recent = sessions.filter(s => s.date >= cutoff);
 
-  // ─ EPOC acumulat ───────────────────────────────────────────────────────
-  const epocTotal = sumNumbers(recent.map(s => s.epoc).filter(v => v !== null));
-  const lvl       = getLoadLevelWeekly(epocTotal);
+  // ─ EPOC: total + mitjana per sessió ────────────────────────────────────
+  const epocValues   = recent.map(s => s.epoc).filter(v => v !== null && isFinite(v));
+  const epocTotal    = epocValues.reduce((a, b) => a + b, 0);
+  const numSessions  = recent.length;
+  const lvl          = getLoadLevelWeekly(epocTotal, numSessions);
 
-  // Escala visual: 280 = llindar màxim recomanat (zona "molt alta")
-  const epocMax = 280;
-  const epocPct = Math.min(100, Math.round((epocTotal / epocMax) * 100));
+  // Barra visual escalada sobre el llindar "molt alta" de la sessió mitjana (150)
+  const epocBarMax = 150;
+  const epocPct    = Math.min(100, Math.round((lvl.avg / epocBarMax) * 100));
 
-  // ─ Recuperació pendent ────────────────────────────────────────────────
-  let maxPendent = 0;
+  const avgTxt   = lvl.count > 0 ? `${Math.round(lvl.avg)} EPOC/sessió` : '--';
+  const countTxt = `${lvl.count} session${lvl.count !== 1 ? 's' : ''}`;
+
+  // ─ Recuperació pendent ─────────────────────────────────────────────────
+  let maxPendent  = 0;
   let origenTipus = '--';
   let origenData  = '--';
 
   recent.forEach(s => {
     if (s.recuperacio == null || !isFinite(s.recuperacio)) return;
-    const sessionEnd = new Date(s.date);
+    const sessionEnd   = new Date(s.date);
     sessionEnd.setHours(20, 0, 0, 0);
     const horaPassades = (now - sessionEnd) / (1000 * 60 * 60);
     const pendent      = Math.max(0, s.recuperacio - horaPassades);
@@ -224,8 +192,8 @@ function renderEpocPanel(sessions) {
     ? `${Math.round(maxPendent)}h restants`
     : 'Recuperat \u2713';
   const recuperacioOrigen = maxPendent > 0
-    ? `Origen: ${esc(origenTipus)} \u00b7 ${esc(origenData)}`
-    : 'Cap sessi\u00f3 pendent de recuperaci\u00f3';
+    ? `Origen: ${esc(origenTipus)} · ${esc(origenData)}`
+    : 'Cap sessió pendent de recuperació';
 
   container.innerHTML = `
     <div class="epoc-block">
@@ -238,12 +206,13 @@ function renderEpocPanel(sessions) {
       </div>
       <p class="epoc-label">
         <span class="load-badge load-badge--load-${lvl.key}">${esc(lvl.label)}</span>
+        <span class="epoc-avg-detail">${countTxt} · mitjana ${avgTxt}</span>
       </p>
     </div>
     <div class="epoc-divider"></div>
     <div class="epoc-block">
       <div class="epoc-block-header">
-        <span class="epoc-block-title">Recuperaci\u00f3 pendent</span>
+        <span class="epoc-block-title">Recuperació pendent</span>
         <span class="epoc-recup-value">${esc(recuperacioText)}</span>
       </div>
       <p class="epoc-label">${recuperacioOrigen}</p>
@@ -251,7 +220,7 @@ function renderEpocPanel(sessions) {
   `;
 }
 
-// ── Panell Test & Cursa ────────────────────────────────────────────────────────────
+// ── Panell Test & Cursa ───────────────────────────────────────────────────────
 function renderTestRacePanel(sessions) {
   const container = document.getElementById('test-race-container');
   if (!container) return;
@@ -289,11 +258,11 @@ function renderTestRacePanel(sessions) {
         <tr>
           <th>Tipus</th>
           <th>Data</th>
-          <th>Dist\u00e0ncia</th>
+          <th>Distància</th>
           <th>Ritme</th>
           <th>FC</th>
           <th>Desnivell</th>
-          <th>C\u00e0rrega</th>
+          <th>Càrrega</th>
         </tr>
       </thead>
       <tbody>
@@ -303,7 +272,7 @@ function renderTestRacePanel(sessions) {
     </table>`;
 }
 
-// ── Panell Altres activitats — últims 30 dies ───────────────────────────────────
+// ── Panell Altres activitats — últims 30 dies ─────────────────────────────────
 function renderOthersPanel(sessions) {
   const container = document.getElementById('others-container');
   if (!container) return;
@@ -316,13 +285,13 @@ function renderOthersPanel(sessions) {
   const totalMin = sumNumbers(others.map(s => s.durada));
 
   setText('others-count', others.length
-    ? `${others.length} sessions \u00b7 ${formatNumber(totalMin)} min`
-    : 'Sense activitats els \u00faltims 30 dies');
+    ? `${others.length} sessions · ${formatNumber(totalMin)} min`
+    : 'Sense activitats els últims 30 dies');
 
   container.innerHTML = others.length
     ? `<table class="sw-mini-table">
         <thead>
-          <tr><th>Data</th><th>Tipus</th><th>Durada</th><th>C\u00e0rrega</th></tr>
+          <tr><th>Data</th><th>Tipus</th><th>Durada</th><th>Càrrega</th></tr>
         </thead>
         <tbody>
           ${others.map(s => `
@@ -334,5 +303,5 @@ function renderOthersPanel(sessions) {
             </tr>`).join('')}
         </tbody>
       </table>`
-    : '<p class="plan-no-data">Cap activitat alternativa els \u00faltims 30 dies.</p>';
+    : '<p class="plan-no-data">Cap activitat alternativa els últims 30 dies.</p>';
 }
