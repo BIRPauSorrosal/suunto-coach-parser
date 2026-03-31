@@ -224,7 +224,9 @@ function enrichSessionRow(row) {
     fcMitja:          toNumber(row['FCMitja']),
     ritme:            toNumber(row['Ritme(min/km)']),
     ritmeMitjaSeries: toNumber(row['Ritme_Mitja_Series']),
-    fcMitjaSeries:    toNumber(row['FC_Mitja_Series'])
+    fcMitjaSeries:    toNumber(row['FC_Mitja_Series']),
+    epoc:             toNumber(row['EPOC']),
+    recuperacio:      toNumber(row['Recup(h)'])
   };
 }
 
