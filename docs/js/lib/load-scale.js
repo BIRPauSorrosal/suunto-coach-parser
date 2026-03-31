@@ -1,42 +1,47 @@
 // docs/js/lib/load-scale.js
-// Lògica de barems de càrrega basada en model EPOC (Firstbeat)
-// Reutilitzable per totes les vistes: overview, sessions, setmanal...
+// Lògica de barems de càrrega:
+//   · EPOC (model Firstbeat) — per a intensitat fisiològica
+//   · TSS  (model Coggan)    — per a càrrega de sessió/setmana
 //
-// ─ Barem sessió individual ───────────────────────────────────────────────────
+// ─ Barem EPOC · sessió individual ────────────────────────────────────────────
 //
-// NIVELL       EPOC sessió    COLOR CSS
-// Mínima       < 20           --load-vlow
-// Baixa        20 – 50        --load-low
-// Moderada     50 – 90        --load-mid
-// Alta         90 – 150       --load-high
-// Molt alta    > 150          --load-vhigh
+// NIVELL       EPOC sessió    CLASSE CSS
+// Mínima       < 20           load-vlow
+// Baixa        20 – 49        load-low
+// Moderada     50 – 89        load-mid
+// Alta         90 – 149       load-high
+// Molt alta    ≥ 150          load-vhigh
 //
-// ─ Barem setmanal (score combinat) ──────────────────────────────────────────
+// ─ Barem EPOC · setmanal (score combinat) ─────────────────────────────────────
 //
 // score = avg_epoc × sqrt(num_sessions)
 //
-// Pondera intensitat (avg) i volum (nº sessions) simultàniament.
-// sqrt evita que el volum domini: 10 sessions no val el doble que 5.
+// NIVELL       SCORE
+// Molt baixa   < 60
+// Baixa        60 – 99
+// Moderada     100 – 159
+// Alta         160 – 239
+// Molt alta    ≥ 240
 //
-// NIVELL       SCORE          EXEMPLE TÍPIC
-// Molt baixa   < 60           1 sess lleugera
-// Baixa        60 – 100       2 sess moderades
-// Moderada     100 – 160      3-4 sess moderades
-// Alta         160 – 240      setmana carregada normal
-// Molt alta    > 240          setmana de màxim volum/intensitat
+// ─ Barem TSS · sessió individual ─────────────────────────────────────────────
 //
-// Exemples de calibració:
-//   2 sess × 59 avg  → score  83 → Baixa
-//   3 sess × 59 avg  → score 102 → Moderada
-//   4 sess × 70 avg  → score 140 → Moderada
-//   5 sess × 90 avg  → score 202 → Alta
-//   6 sess × 120 avg → score 294 → Molt alta
-//   2 sess × 130 avg → score 184 → Alta  (setmana curta intensa)
-//   1 sess × 160 avg → score 160 → Alta  (1 sessió molt dura)
+// Referència: 1h a llindar (LTHR/FTP) = 100 TSS  (Coggan & Allen)
+// Ajustat per hrTSS de Suunto (lleugerament inferior al TSS de potència)
+//
+// NIVELL       TSS sessió     CLASSE CSS         COLOR
+// Recuperació  < 30           tss-recovery       #86efac  verd suau
+// Fàcil        30 – 59        tss-easy           #22c55e  verd
+// Moderada     60 – 99        tss-moderate       #facc15  groc
+// Dura         100 – 149      tss-hard           #f97316  taronja
+// Extrem       ≥ 150          tss-extreme        #ef4444  vermell
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ═════════════════════════════════════════════════════════════════════════════
+// BAREM EPOC
+// ═════════════════════════════════════════════════════════════════════════════
+
 /**
- * Barem per a una sessió individual.
+ * Barem EPOC per a una sessió individual.
  * @param {number} epoc  Valor EPOC de la sessió
  * @returns {{ key, label, cls } | null}
  */
@@ -50,11 +55,8 @@ function getLoadLevelSession(epoc) {
 }
 
 /**
- * Barem setmanal basat en un score combinat:
+ * Barem setmanal EPOC basat en score combinat:
  *   score = avg_epoc × sqrt(num_sessions)
- *
- * Combina intensitat mitjana per sessió i volum setmanal (nº sessions)
- * sense que cap dels dos factors domini l'altre completament.
  *
  * @param {number} epocTotal    Suma EPOC dels últims 7 dies
  * @param {number} numSessions  Nombre de sessions de la finestra
@@ -79,7 +81,7 @@ function getLoadLevelWeekly(epocTotal, numSessions) {
 }
 
 /**
- * Badge complet: dot de color + valor numèric EPOC.
+ * Badge EPOC complet: dot de color + valor numèric.
  * Usat a la columna EPOC de la taula de sessions.
  * @param {number} epoc
  * @returns {string} HTML string
@@ -91,9 +93,8 @@ function loadBadgeHTML(epoc) {
 }
 
 /**
- * Dot de color sense text: indicador visual discret.
- * Usat a la columna Càrrega TSS — mostra el color d'intensitat
- * sense repetir el valor numèric (que ja surt com a TSS al costat).
+ * Dot EPOC sol (sense text): indicador visual discret.
+ * Usat al costat del valor TSS a la columna TSS.
  * @param {number} epoc
  * @returns {string} HTML string
  */
@@ -101,4 +102,52 @@ function loadDotHTML(epoc) {
   const lvl = getLoadLevelSession(epoc);
   if (!lvl) return '';
   return `<span class="load-dot load-dot--${lvl.cls}" title="${lvl.label}"></span>`;
+}
+
+
+// ═════════════════════════════════════════════════════════════════════════════
+// BAREM TSS
+// ═════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Barem TSS per a una sessió individual.
+ * Referència: 100 TSS = 1h a llindar (Coggan & Allen).
+ * Calibrat per a hrTSS de Suunto.
+ *
+ * @param {number} tss  Valor TSS de la sessió (columna Carrega)
+ * @returns {{ key, label, cls } | null}
+ */
+function getTSSLevel(tss) {
+  if (!isFinite(tss) || tss <= 0) return null;
+  if (tss <  30) return { key: 'recovery', label: 'Recuperació', cls: 'tss-recovery' };
+  if (tss <  60) return { key: 'easy',     label: 'Fàcil',       cls: 'tss-easy'     };
+  if (tss < 100) return { key: 'moderate', label: 'Moderada',    cls: 'tss-moderate' };
+  if (tss < 150) return { key: 'hard',     label: 'Dura',        cls: 'tss-hard'     };
+  return             { key: 'extreme',  label: 'Extrem',      cls: 'tss-extreme'  };
+}
+
+/**
+ * Badge TSS complet: dot de color + valor numèric TSS.
+ * Ús opcional per a panels que mostrin el TSS com a indicador principal.
+ * @param {number} tss
+ * @returns {string} HTML string
+ */
+function tssBadgeHTML(tss) {
+  const lvl = getTSSLevel(tss);
+  const val = (typeof fmtNum === 'function') ? fmtNum(tss) : String(tss || '--');
+  if (!lvl) return val;
+  return `<span class="tss-badge tss-badge--${lvl.cls}" title="${lvl.label}">${val} TSS</span>`;
+}
+
+/**
+ * Dot TSS sol (sense text): indicador visual discret.
+ * Usat a la columna TSS de la taula — mostra la intensitat de la sessió
+ * sense repetir el valor numèric (que ja surt com a TSS al costat).
+ * @param {number} tss
+ * @returns {string} HTML string
+ */
+function tssDotHTML(tss) {
+  const lvl = getTSSLevel(tss);
+  if (!lvl) return '';
+  return `<span class="tss-dot tss-dot--${lvl.cls}" title="${lvl.label}"></span>`;
 }
