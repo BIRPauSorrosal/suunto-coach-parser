@@ -129,7 +129,7 @@ function renderQualityBlock(week, weekSessions) {
   if (tbody) {
     tbody.innerHTML = sess.length
       ? sess.map(s => sessionRowQuality(s)).join('')
-      : `<tr><td colspan="4" class="empty-row muted-msg">Sense sessions de qualitat</td></tr>`;
+      : `<tr><td colspan="5" class="empty-row muted-msg">Sense sessions de qualitat</td></tr>`;
   }
   setBlockStatus('sw-q-block', sess.length > 0);
 }
@@ -173,7 +173,7 @@ function renderZ2Block(week, weekSessions) {
   if (tbody) {
     tbody.innerHTML = sess.length
       ? sess.map(s => sessionRowZ2(s)).join('')
-      : `<tr><td colspan="4" class="empty-row muted-msg">Sense sessions Z2</td></tr>`;
+      : `<tr><td colspan="5" class="empty-row muted-msg">Sense sessions Z2</td></tr>`;
   }
   setBlockStatus('sw-z2-block', realDuradaTotal >= (week.z2Durada || 0) * 0.8);
 }
@@ -198,7 +198,7 @@ function renderLongBlock(week, weekSessions) {
   if (tbody) {
     tbody.innerHTML = sess.length
       ? sess.map(s => sessionRowLong(s)).join('')
-      : `<tr><td colspan="5" class="empty-row muted-msg">Sense tirada llarga</td></tr>`;
+      : `<tr><td colspan="6" class="empty-row muted-msg">Sense tirada llarga</td></tr>`;
   }
   setBlockStatus('sw-ll-block', sess.length > 0);
 }
@@ -214,7 +214,7 @@ function renderForcaBlock(week, weekSessions) {
   if (tbody) {
     tbody.innerHTML = sess.length
       ? sess.map(s => sessionRowExtra(s)).join('')
-      : `<tr><td colspan="4" class="empty-row muted-msg">Sense sessions de força</td></tr>`;
+      : `<tr><td colspan="5" class="empty-row muted-msg">Sense sessions de força</td></tr>`;
   }
   setBlockStatus('sw-forca-block', sess.length > 0);
 }
@@ -232,45 +232,43 @@ function renderAltresBlock(week, weekSessions) {
   if (tbody) {
     tbody.innerHTML = sess.length
       ? sess.map(s => sessionRowExtra(s)).join('')
-      : `<tr><td colspan="4" class="empty-row muted-msg">Sense activitats complementàries</td></tr>`;
+      : `<tr><td colspan="5" class="empty-row muted-msg">Sense activitats complementàries</td></tr>`;
   }
   setBlockStatus('sw-altres-block', sess.length > 0);
 }
 
 // ── Rows de taula ─────────────────────────────────────────────────────────────
-// Totes les columnes TSS usen tssDotHTML(s.carrega) per coherència visual
-// amb la pestanya Sessions. El dot de color indica la intensitat relativa
-// (Recuperació / Fàcil / Moderada / Dura / Extrem) del barem TSS.
 
 function tssCell(carrega) {
   if (!(typeof carrega === 'number' && carrega > 0)) return '—';
   return tssDotHTML(carrega);
 }
 
-// Qualitat: Data | Ritme sèries | FC sèries | TSS
+// Qualitat: Data | Ritme sèries | FC sèries | FC | TSS
 function sessionRowQuality(s) {
   const ritme = isFinite(s.ritmeMitjaSeries) ? s.ritmeMitjaSeries : s.ritme;
   const fc    = isFinite(s.fcMitjaSeries)    ? s.fcMitjaSeries    : s.fcMitja;
   return `<tr>
     <td>${esc(s.displayDate)}</td>
     <td>${formatPace(ritme)}</td>
-    <td>${isFinite(fc) && fc > 0 ? Math.round(fc) + ' bpm' : '—'}</td>
+    <td>${fcBadgeHTML(fc)}</td>
     <td>${tssCell(s.carrega)}</td>
   </tr>`;
 }
 
-// Z2: Data | Ritme | Cadència | TSS
+// Z2: Data | Ritme | Cadència | FC | TSS
 function sessionRowZ2(s) {
   const cadencia = toNumber(s.raw['Cadencia(spm)']);
   return `<tr>
     <td>${esc(s.displayDate)}</td>
     <td>${formatPace(s.ritme)}</td>
     <td>${isFinite(cadencia) && cadencia > 0 ? Math.round(cadencia) + ' spm' : '—'}</td>
+    <td>${fcBadgeHTML(s.fcMitja)}</td>
     <td>${tssCell(s.carrega)}</td>
   </tr>`;
 }
 
-// Llarga: Data | Ritme | Z2 | Desnivell | TSS
+// Llarga: Data | Ritme | Z2 | Desnivell | FC | TSS
 function sessionRowLong(s) {
   const desnivell = toNumber(s.raw['Desnivell(m)']);
   return `<tr>
@@ -278,16 +276,18 @@ function sessionRowLong(s) {
     <td>${formatPace(s.ritme)}</td>
     <td>${s.z2min > 0 ? fmtNum(s.z2min) + ' min Z2' : '—'}</td>
     <td>${isFinite(desnivell) && desnivell > 0 ? Math.round(desnivell) + ' m' : '—'}</td>
+    <td>${fcBadgeHTML(s.fcMitja)}</td>
     <td>${tssCell(s.carrega)}</td>
   </tr>`;
 }
 
-// Força / Altres: Data | Tipus | Durada | TSS
+// Força / Altres: Data | Tipus | Durada | FC | TSS
 function sessionRowExtra(s) {
   return `<tr>
     <td>${esc(s.displayDate)}</td>
     <td>${esc(s.tipus)}</td>
     <td>${s.durada > 0 ? fmtNum(s.durada) + ' min' : '—'}</td>
+    <td>${fcBadgeHTML(s.fcMitja)}</td>
     <td>${tssCell(s.carrega)}</td>
   </tr>`;
 }
