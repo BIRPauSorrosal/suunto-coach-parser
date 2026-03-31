@@ -87,51 +87,47 @@
           <div class="cycle-phases" id="cycle-phases"></div>
         </article>
 
-        <!-- Resum setmanal + Zones cardíaques + EPOC -->
-        <div class="content-grid">
+        <!-- Fila 1: Resum setmanal (ample complet) -->
+        <article class="panel">
+          <div class="panel-header">
+            <div><p class="eyebrow">Bloc principal</p><h3>Resum setmanal</h3></div>
+            <span class="badge">Setmana activa</span>
+          </div>
+          <div class="metrics-grid">
+            <div class="metric-box"><span>Qualitat</span><strong id="quality-summary">--</strong><small id="quality-detail">Tempo i intervals</small><small id="quality-real" class="metric-real"></small></div>
+            <div class="metric-box"><span>Z1+Z2 running</span><strong id="z2-summary">--</strong><small id="z2-detail">Minuts en zona aeròbica</small></div>
+            <div class="metric-box"><span>Tirada llarga</span><strong id="long-summary">--</strong><small id="long-detail">Tipus i volum setmanal</small><small id="long-real" class="metric-real"></small></div>
+            <div class="metric-box"><span>Força</span><strong id="strength-summary">--</strong><small id="strength-detail">Sessions de gimnàs</small></div>
+          </div>
+        </article>
 
-          <!-- Columna esquerra (2fr): Resum setmanal -->
-          <article class="panel panel-large">
+        <!-- Fila 2: Zones cardíaques + EPOC costat a costat -->
+        <div class="overview-bottom-grid">
+
+          <!-- Zones cardíaques -->
+          <article class="panel">
             <div class="panel-header">
-              <div><p class="eyebrow">Bloc principal</p><h3>Resum setmanal</h3></div>
-              <span class="badge">Setmana activa</span>
+              <div><p class="eyebrow">Zones cardíaques</p><h3>Distribució Z1–Z5</h3></div>
+              <span class="badge badge-muted">Últims 30 dies</span>
             </div>
-            <div class="metrics-grid">
-              <div class="metric-box"><span>Qualitat</span><strong id="quality-summary">--</strong><small id="quality-detail">Tempo i intervals</small><small id="quality-real" class="metric-real"></small></div>
-              <div class="metric-box"><span>Z1+Z2 running</span><strong id="z2-summary">--</strong><small id="z2-detail">Minuts en zona aeròbica</small></div>
-              <div class="metric-box"><span>Tirada llarga</span><strong id="long-summary">--</strong><small id="long-detail">Tipus i volum setmanal</small><small id="long-real" class="metric-real"></small></div>
-              <div class="metric-box"><span>Força</span><strong id="strength-summary">--</strong><small id="strength-detail">Sessions de gimnàs</small></div>
+            <div class="chart-wrap chart-wrap--zones"><canvas id="chart-zones"></canvas></div>
+          </article>
+
+          <!-- ③ EPOC & Recuperació -->
+          <article class="panel epoc-panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Últims 7 dies</p>
+                <h3>EPOC &amp; Recuperació</h3>
+              </div>
+              <span class="badge badge-muted">Setmana activa</span>
+            </div>
+            <div id="epoc-panel-content">
+              <!-- generat per JS: renderEpocPanel() -->
             </div>
           </article>
 
-          <!-- Columna dreta (1fr): Zones cardíaques + EPOC apilats -->
-          <div class="overview-right-col">
-
-            <!-- Zones cardíaques -->
-            <article class="panel">
-              <div class="panel-header">
-                <div><p class="eyebrow">Zones cardíaques</p><h3>Distribució Z1–Z5</h3></div>
-                <span class="badge badge-muted">Últims 30 dies</span>
-              </div>
-              <div class="chart-wrap chart-wrap--zones"><canvas id="chart-zones"></canvas></div>
-            </article>
-
-            <!-- ③ EPOC & Recuperació -->
-            <article class="panel epoc-panel">
-              <div class="panel-header">
-                <div>
-                  <p class="eyebrow">Últims 7 dies</p>
-                  <h3>EPOC &amp; Recuperació</h3>
-                </div>
-                <span class="badge badge-muted">Setmana activa</span>
-              </div>
-              <div id="epoc-panel-content">
-                <!-- generat per JS: renderEpocPanel() -->
-              </div>
-            </article>
-
-          </div><!-- /overview-right-col -->
-        </div><!-- /content-grid -->
+        </div><!-- /overview-bottom-grid -->
 
         <!-- Test & Cursa -->
         <article class="panel">

@@ -127,31 +127,29 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 @media(max-width:900px) { .content-grid,.charts-grid { grid-template-columns:1fr; }
                           .panel-large { grid-column:span 1; } }
 
-/* ── Overview: columna dreta (Zones + EPOC apilats) ── */
 /*
-  .overview-right-col és el segon fill del .content-grid.
-  Conté dos .panel apilats verticalmaent.
-  Eliminem el margin-bottom de l'últim .panel per evitar espai sobrant.
+  .overview-bottom-grid — 2a fila de l'overview:
+  Zones cardíaques (1fr) + EPOC & Recuperació (1fr) costat a costat.
+  El gràfic de zones s'adapta a l'alçada disponible.
 */
-.overview-right-col {
-  display: flex;
-  flex-direction: column;
+.overview-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 20px;
-  /* Alinea l'alçada amb la columna esquerra: cap estirament forçat */
-  align-self: start;
+  margin-bottom: 20px;
+  align-items: start; /* cada panell pren la seva alçada natural */
 }
-.overview-right-col .panel {
-  margin-bottom: 0; /* el gap del flex ja gestiona l'espai */
+.overview-bottom-grid .panel {
+  margin-bottom: 0;
+}
+@media (max-width: 900px) {
+  .overview-bottom-grid { grid-template-columns: 1fr; }
 }
 
-/*
-  .chart-wrap--zones: versió compacta del gràfic de zones.
-  El gràfic original té 220px; aquí el reduim per deixar espai
-  al panell EPOC que va just a sota.
-*/
+/* Gràfic de zones en context bottom-grid: alçada estàndard */
 .chart-wrap--zones {
   position: relative;
-  height: 160px; /* més compacte que els 220px per defecte */
+  height: 200px;
 }
 
 /* ── Metrics grid ────────────────────────────────────────────────────────────── */
