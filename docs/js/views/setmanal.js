@@ -244,7 +244,7 @@ function renderAltresBlock(week, weekSessions) {
 
 function tssCell(carrega) {
   if (!(typeof carrega === 'number' && carrega > 0)) return '—';
-  return `${tssDotHTML(carrega)} ${fmtNum(carrega)}`;
+  return tssDotHTML(carrega);
 }
 
 // Qualitat: Data | Ritme sèries | FC sèries | TSS

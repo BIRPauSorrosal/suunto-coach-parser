@@ -1,120 +1,41 @@
 /* docs/css/load-scale.css
-   Estils per als badges i dots dels barems de càrrega.
-   · Barem EPOC  — .load-badge / .load-dot
-   · Barem TSS   — .tss-badge  / .tss-dot
+   Badges de mètriques: EPOC (barem EPOC) i TSS (barem TSS).
+   Classe base compartida: .metric-badge
+   Modificadors de color per EPOC: .metric-badge--load-*
+   Modificadors de color per TSS:  .metric-badge--tss-*
 */
 
-/* ── EPOC · Badge complet (dot + valor numèric) ──────────────────────────────── */
-.load-badge {
+/* ── Base compartida ─────────────────────────────────────────────────────── */
+.metric-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.3em;
   padding: 0.15em 0.55em;
   border-radius: 99px;
   font-size: 0.78em;
-  font-weight: 600;
+  font-weight: 800;
   white-space: nowrap;
   vertical-align: middle;
-  color: #fff;
+  color: #0f172a;
 }
 
-.load-badge::before {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.6);
-  flex-shrink: 0;
-}
+/* ── Colors EPOC ─────────────────────────────────────────────────────────── */
+.metric-badge--load-vlow  { background-color: var(--load-vlow,  #64748b); }
+.metric-badge--load-low   { background-color: var(--load-low,   #22c55e); }
+.metric-badge--load-mid   { background-color: var(--load-mid,   #eab308); }
+.metric-badge--load-high  { background-color: var(--load-high,  #f97316); }
+.metric-badge--load-vhigh { background-color: var(--load-vhigh, #ef4444); }
 
-/* ── EPOC · Dot sol (sense text) ──────────────────────────────────────────── */
-.load-dot {
-  display: inline-block;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  vertical-align: middle;
-  flex-shrink: 0;
-}
-
-/* ── EPOC · Colors compartits badge i dot ─────────────────────────────────── */
-.load-badge--load-vlow,
-.load-dot--load-vlow  { background-color: var(--load-vlow,  #64748b); }
-
-.load-badge--load-low,
-.load-dot--load-low   { background-color: var(--load-low,   #22c55e); }
-
-.load-badge--load-mid,
-.load-dot--load-mid   { background-color: var(--load-mid,   #eab308); }
-
-.load-badge--load-high,
-.load-dot--load-high  { background-color: var(--load-high,  #f97316); }
-
-.load-badge--load-vhigh,
-.load-dot--load-vhigh { background-color: var(--load-vhigh, #ef4444); }
-
-
-/* ── TSS · Badge complet (dot + valor numèric + "TSS") ──────────────────────── */
+/* ── Colors TSS ──────────────────────────────────────────────────────────── */
 /*
   Escala TSS (Coggan & Allen, calibrat per hrTSS Suunto):
-    Recuperació  < 30   #86efac  verd suau
-    Fàcil        30–59  #22c55e  verd
-    Moderada     60–99  #facc15  groc
-    Dura        100–149  #f97316  taronja
-    Extrem       ≥150   #ef4444  vermell
+    Recuperació  < 30    #86efac  verd suau
+    Fàcil        30–59   #22c55e  verd
+    Moderada     60–99   #facc15  groc
+    Dura         100–149 #f97316  taronja
+    Extrem       ≥ 150   #ef4444  vermell
 */
-.tss-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3em;
-  padding: 0.15em 0.55em;
-  border-radius: 99px;
-  font-size: 0.78em;
-  font-weight: 600;
-  white-space: nowrap;
-  vertical-align: middle;
-  color: #0f172a; /* text fosc sobre colors clars (recovery/easy/moderate) */
-}
-
-.tss-badge::before {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.2);
-  flex-shrink: 0;
-}
-
-/* hard i extreme: text blanc per contrast */
-.tss-badge--tss-hard,
-.tss-badge--tss-extreme { color: #fff; }
-.tss-badge--tss-hard::before,
-.tss-badge--tss-extreme::before { background: rgba(255, 255, 255, 0.5); }
-
-/* ── TSS · Dot sol (sense text) ───────────────────────────────────────────── */
-.tss-dot {
-  display: inline-block;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  vertical-align: middle;
-  flex-shrink: 0;
-}
-
-/* ── TSS · Colors compartits badge i dot ─────────────────────────────────── */
-.tss-badge--tss-recovery,
-.tss-dot--tss-recovery  { background-color: var(--tss-recovery, #86efac); }
-
-.tss-badge--tss-easy,
-.tss-dot--tss-easy      { background-color: var(--tss-easy,     #22c55e); }
-
-.tss-badge--tss-moderate,
-.tss-dot--tss-moderate  { background-color: var(--tss-moderate, #facc15); }
-
-.tss-badge--tss-hard,
-.tss-dot--tss-hard      { background-color: var(--tss-hard,     #f97316); }
-
-.tss-badge--tss-extreme,
-.tss-dot--tss-extreme   { background-color: var(--tss-extreme,  #ef4444); }
+.metric-badge--tss-recovery { background-color: var(--tss-recovery, #86efac); }
+.metric-badge--tss-easy     { background-color: var(--tss-easy,     #22c55e); }
+.metric-badge--tss-moderate { background-color: var(--tss-moderate, #facc15); }
+.metric-badge--tss-hard     { background-color: var(--tss-hard,     #f97316); }
+.metric-badge--tss-extreme  { background-color: var(--tss-extreme,  #ef4444); }

@@ -526,12 +526,9 @@ function getSessCols(type) {
   const colCarrega = {
     label: 'TSS',
     render: s => {
-      const dot = (typeof s.carrega === 'number' && s.carrega > 0)
-        ? tssDotHTML(s.carrega)
-        : '';
       return (typeof s.carrega === 'number' && s.carrega > 0)
-        ? `${dot} ${fmtNum(s.carrega)}`
-        : '\u2014';
+        ? tssDotHTML(s.carrega)
+        : '—';
     }
   };
 
