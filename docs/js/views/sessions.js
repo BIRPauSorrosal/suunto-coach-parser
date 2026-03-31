@@ -2,7 +2,8 @@
 // Panell Sessions: filtres, KPIs, gràfic tendència, PMC + exportació CSV, taula
 // Dep: lib/formatters.js (formatPace, fmtNum, toNumber, esc)
 //      lib/metrics.js    (buildPMCData, groupByWeek, parseDurSeries)
-//      lib/load-scale.js (loadBadgeHTML, loadDotHTML, getLoadLevelSession)
+//      lib/load-scale.js (loadBadgeHTML, loadDotHTML, getLoadLevelSession,
+//                         getTSSLevel, tssBadgeHTML, tssDotHTML)
 //      app.js            (CHART_COLORS via charts.js, STRENGTH_RE, PADEL_TYPES,
 //                         QUALITY_TYPES, LONG_TYPES, TEST_RACE_TYPES)
 // NOTA: No declarar aquí constants de tipus — usar les de app.js
@@ -302,13 +303,13 @@ function buildSessChartConfig(byWeek, labels, sessions) {
   function tooltipLabel(c) {
     const v = c.parsed.y; if (v == null) return null;
     const lbl = c.dataset.label || '';
-    if (lbl.includes('Ritme'))           return `  Ritme: ${formatPace(v,'')}`;
-    if (lbl.includes('FC'))              return `  FC: ${v} ppm`;
-    if (lbl.includes('Cad'))             return `  Cad\u00e8ncia: ${v} spm`;
-    if (lbl.includes('EPOC'))            return `  EPOC: ${v}`;
-    if (lbl === 'TSS')                   return `  TSS: ${v}`;
-    if (lbl.includes('Desnivell'))       return `  Desnivell: ${v} m`;
-    if (lbl.includes('Km'))              return `  Km: ${v} km`;
+    if (lbl.includes('Ritme'))             return `  Ritme: ${formatPace(v,'')}`;
+    if (lbl.includes('FC'))                return `  FC: ${v} ppm`;
+    if (lbl.includes('Cad'))               return `  Cad\u00e8ncia: ${v} spm`;
+    if (lbl.includes('EPOC'))              return `  EPOC: ${v}`;
+    if (lbl === 'TSS')                     return `  TSS: ${v}`;
+    if (lbl.includes('Desnivell'))         return `  Desnivell: ${v} m`;
+    if (lbl.includes('Km'))               return `  Km: ${v} km`;
     if (lbl.includes('Temps s\u00e8ries')) return `  Temps s\u00e8ries: ${v} min`;
     return ` ${lbl}: ${v}`;
   }
@@ -520,19 +521,21 @@ function getSessCols(type) {
   const colRitme      = {label:'Ritme',            render:s=>formatPace(s.ritme)};
   const colFC         = {label:'FC',               render:s=>typeof s.fcMitja==='number'&&s.fcMitja>0?`${Math.round(s.fcMitja)} ppm`:'\u2014'};
 
-  // TSS: dot de color (EPOC com a indicador visual) + valor TSS numèric
+  // TSS: dot de color del BAREM TSS (tssDotHTML) + valor numèric TSS
+  // El color indica la intensitat relativa de la sessió (Recuperació/Fàcil/Moderada/Dura/Extrem)
   const colCarrega = {
     label: 'TSS',
     render: s => {
-      const e = toNumber(s.raw['EPOC']);
-      const dot = (typeof e === 'number' && e > 0) ? loadDotHTML(e) : '';
+      const dot = (typeof s.carrega === 'number' && s.carrega > 0)
+        ? tssDotHTML(s.carrega)
+        : '';
       return (typeof s.carrega === 'number' && s.carrega > 0)
         ? `${dot} ${fmtNum(s.carrega)}`
         : '\u2014';
     }
   };
 
-  // EPOC: badge complet (dot + valor numèric EPOC)
+  // EPOC: badge complet EPOC (dot + valor numèric EPOC) — barem EPOC independent
   const colEpoc = {
     label: 'EPOC',
     render: s => {
