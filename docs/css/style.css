@@ -127,7 +127,34 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 @media(max-width:900px) { .content-grid,.charts-grid { grid-template-columns:1fr; }
                           .panel-large { grid-column:span 1; } }
 
-/* ── Metrics grid ──────────────────────────────────────────────────────────────── */
+/* ── Overview: columna dreta (Zones + EPOC apilats) ── */
+/*
+  .overview-right-col és el segon fill del .content-grid.
+  Conté dos .panel apilats verticalmaent.
+  Eliminem el margin-bottom de l'últim .panel per evitar espai sobrant.
+*/
+.overview-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  /* Alinea l'alçada amb la columna esquerra: cap estirament forçat */
+  align-self: start;
+}
+.overview-right-col .panel {
+  margin-bottom: 0; /* el gap del flex ja gestiona l'espai */
+}
+
+/*
+  .chart-wrap--zones: versió compacta del gràfic de zones.
+  El gràfic original té 220px; aquí el reduim per deixar espai
+  al panell EPOC que va just a sota.
+*/
+.chart-wrap--zones {
+  position: relative;
+  height: 160px; /* més compacte que els 220px per defecte */
+}
+
+/* ── Metrics grid ────────────────────────────────────────────────────────────── */
 .metrics-grid   { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; }
 .metric-box     { background:var(--surface-2); border-radius:var(--radius);
                   padding:14px; display:flex; flex-direction:column; gap:4px; }
@@ -542,26 +569,8 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 
 /* ============================================================
    #P3 — EPOC & Recuperació
-   ============================================================
+   ============================================================ */
 
-  Estructura HTML (generada per renderEpocPanel):
-    #epoc-panel-content           → container dins .panel.epoc-panel
-      .epoc-block                 → bloc EPOC
-        .epoc-block-header        → títol + valor numèric
-          .epoc-block-title
-          .epoc-value             → + classe .epoc-low / .epoc-mid / .epoc-high
-        .epoc-bar-wrap            → track de la barra
-          .epoc-bar-fill          → farciment + classe de color
-        .epoc-label               → etiqueta de nivell
-      .epoc-divider               → separador vertical/horitzontal
-      .epoc-block                 → bloc recuperació
-        .epoc-block-header
-          .epoc-block-title
-          .epoc-recup-value       → hores restants o ✓
-        .epoc-label
-*/
-
-/* Contenidor dels dos blocs: en fila a desktop, columna a mòbil */
 #epoc-panel-content {
   display: flex;
   gap: 24px;
@@ -572,13 +581,11 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   .epoc-divider { width: 100%; height: 1px; flex-shrink: 0; }
 }
 
-/* Cada bloc ocupa la meitat de l'espai disponible */
 .epoc-block {
   flex: 1;
   min-width: 0;
 }
 
-/* Separador: vertical a desktop, horitzontal a mòbil */
 .epoc-divider {
   width: 1px;
   align-self: stretch;
@@ -586,7 +593,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   flex-shrink: 0;
 }
 
-/* Header de cada bloc: títol esquerra, valor dreta */
 .epoc-block-header {
   display: flex;
   justify-content: space-between;
@@ -603,17 +609,15 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   color: var(--text-muted);
 }
 
-/* Valor EPOC numèric: gran i amb color según intensitat */
 .epoc-value {
   font-size: 1.4rem;
   font-weight: 700;
   line-height: 1;
 }
-.epoc-value.epoc-low  { color: var(--accent); }   /* verd: càrrega lleugera */
-.epoc-value.epoc-mid  { color: var(--orange); }   /* taronja: moderada     */
-.epoc-value.epoc-high { color: var(--red); }      /* vermell: alta         */
+.epoc-value.epoc-low  { color: var(--accent); }
+.epoc-value.epoc-mid  { color: var(--orange); }
+.epoc-value.epoc-high { color: var(--red); }
 
-/* Barra de progrés EPOC */
 .epoc-bar-wrap {
   height: 5px;
   background: var(--surface-2);
@@ -631,13 +635,11 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .epoc-bar-fill.epoc-mid  { background: var(--orange); }
 .epoc-bar-fill.epoc-high { background: var(--red); }
 
-/* Etiqueta de nivell de càrrega */
 .epoc-label {
   font-size: .75rem;
   color: var(--text-muted);
 }
 
-/* Valor de recuperació pendent */
 .epoc-recup-value {
   font-size: 1.15rem;
   font-weight: 700;
