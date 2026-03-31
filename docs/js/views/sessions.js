@@ -519,10 +519,8 @@ function getSessCols(type) {
   const colKm         = {label:'Km',               render:s=>s.distancia>0?`${fmtNum(s.distancia)} km`:'\u2014'};
   const colDurada     = {label:'Durada',           render:s=>s.durada>0?`${fmtNum(s.durada)} min`:'\u2014'};
   const colRitme      = {label:'Ritme',            render:s=>formatPace(s.ritme)};
-  const colFC         = {label:'FC',               render:s=>typeof s.fcMitja==='number'&&s.fcMitja>0?`${Math.round(s.fcMitja)} ppm`:'\u2014'};
+  const colFC         = {label:'FC',               render:s=>fcBadgeHTML(s.fcMitja)};
 
-  // TSS: dot de color del BAREM TSS (tssDotHTML) + valor numèric TSS
-  // El color indica la intensitat relativa de la sessió (Recuperació/Fàcil/Moderada/Dura/Extrem)
   const colCarrega = {
     label: 'TSS',
     render: s => {
@@ -532,7 +530,6 @@ function getSessCols(type) {
     }
   };
 
-  // EPOC: badge complet EPOC (dot + valor numèric EPOC) — barem EPOC independent
   const colEpoc = {
     label: 'EPOC',
     render: s => {
@@ -541,30 +538,31 @@ function getSessCols(type) {
     }
   };
 
-  const colRecup      = {label:'Recup.',           render:s=>{const r=toNumber(s.raw['Recup(h)']);return typeof r==='number'&&r>0?`${fmtNum(r)} h`:'\u2014';}};
-  const colZ2min      = {label:'Z2 (min)',         render:s=>s.z2min>0?`${fmtNum(s.z2min)} min`:'\u2014'};
-  const colCad        = {label:'Cad\u00e8ncia',   render:s=>{const c=toNumber(s.raw['Cadencia(spm)']);return typeof c==='number'&&c>0?`${Math.round(c)} spm`:'\u2014';}};
-  const colDesnivell  = {label:'Desnivell',        render:s=>{const d=toNumber(s.raw['Desnivell(m)']);return typeof d==='number'&&d>0?`${Math.round(d)} m`:'\u2014';}};
+  const colRecup      = {label:'Recup.',            render:s=>{const r=toNumber(s.raw['Recup(h)']);return typeof r==='number'&&r>0?`${fmtNum(r)} h`:'\u2014';}};
+  const colZ2min      = {label:'Z2 (min)',          render:s=>s.z2min>0?`${fmtNum(s.z2min)} min`:'\u2014'};
+  const colCad        = {label:'Cad\u00e8ncia',    render:s=>{const c=toNumber(s.raw['Cadencia(spm)']);return typeof c==='number'&&c>0?`${Math.round(c)} spm`:'\u2014';}};
+  const colDesnivell  = {label:'Desnivell',         render:s=>{const d=toNumber(s.raw['Desnivell(m)']);return typeof d==='number'&&d>0?`${Math.round(d)} m`:'\u2014';}};
   const colRitmeSeries= {label:'Ritme s\u00e8ries', render:s=>formatPace(typeof s.ritmeMitjaSeries==='number'?s.ritmeMitjaSeries:null)};
-  const colFCSeries   = {label:'FC s\u00e8ries',   render:s=>typeof s.fcMitjaSeries==='number'&&s.fcMitjaSeries>0?`${Math.round(s.fcMitjaSeries)} ppm`:'\u2014'};
-  const colSeries     = {label:'S\u00e8ries',      render:s=>{const n=toNumber(s.raw['Num_Series']);return typeof n==='number'&&n>0?String(Math.round(n)):'\u2014';}};
-  const colPTE        = {label:'PTE',              render:s=>{const p=toNumber(s.raw['PTE']);return typeof p==='number'&&p>0?fmtNum(p):'\u2014';}};
+  const colFCSeries   = {label:'FC s\u00e8ries',    render:s=>fcBadgeHTML(s.fcMitjaSeries)};
+  const colSeries     = {label:'S\u00e8ries',       render:s=>{const n=toNumber(s.raw['Num_Series']);return typeof n==='number'&&n>0?String(Math.round(n)):'\u2014';}};
+  const colPTE        = {label:'PTE',               render:s=>{const p=toNumber(s.raw['PTE']);return typeof p==='number'&&p>0?fmtNum(p):'\u2014';}};
   const colDurSerie   = {
     label: 'Dur/S\u00e8rie',
     render: s => {
       const n   = toNumber(s.raw['Num_Series']);
-      const dur = parseDurSeries(s);     // ← lib/metrics.js
+      const dur = parseDurSeries(s);
       if (typeof n !== 'number' || n <= 0 || dur <= 0) return '\u2014';
       return `${fmtNum(Math.round((dur / n) * 10) / 10)} min`;
     }
   };
+
   switch (type) {
     case 'z2':       return [colData,colKm,colDurada,colRitme,colCad,colFC,colZ2min,colEpoc,colCarrega];
     case 'quality':  return [colData,colTipus,colSeries,colDurSerie,colRitmeSeries,colFCSeries,colKm,colCarrega,colPTE];
     case 'long':     return [colData,colTipus,colKm,colDurada,colRitme,colFC,colDesnivell,colZ2min,colCarrega];
     case 'testrace': return [colData,colTipus,colKm,colDurada,colRitme,colFC,colDesnivell,colCarrega];
-    case 'strength': return [colData,colTipus,colDurada,colCarrega,colEpoc,colRecup];
-    case 'other':    return [colData,colTipus,colDurada,colCarrega,colEpoc];
+    case 'strength': return [colData,colTipus,colDurada,colFC,colCarrega,colEpoc,colRecup];
+    case 'other':    return [colData,colTipus,colDurada,colFC,colCarrega,colEpoc];
     default:         return [colData,colTipus,colKm,colDurada,colRitme,colFC,colCarrega,colEpoc];
   }
 }
