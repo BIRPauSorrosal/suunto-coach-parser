@@ -94,6 +94,18 @@ async function loadDashboardData() {
   }
 }
 
+// ── 🔧 FIX UTF-8: decodifica Base64 de l'API GitHub respectant UTF-8 ──────────
+// atob() retorna Latin-1 i trenca accents (à, è, ç, etc.).
+// Aquesta funció converteix correctament Base64 → UTF-8.
+function base64ToUtf8(base64) {
+  const binary = atob(base64.replace(/\n/g, ''));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
 // ── Fetch ─────────────────────────────────────────────────────────────────────
 async function fetchFirstAvailable(paths) {
   const token = window.getGitHubToken ? window.getGitHubToken() : '';
@@ -115,7 +127,8 @@ async function fetchFirstAvailable(paths) {
         if (!res.ok) throw new Error(`API GitHub: ${res.status}`);
 
         const json = await res.json();
-        const text = atob(json.content.replace(/\n/g, ''));
+        // 🔧 FIX UTF-8: substituïm atob() per base64ToUtf8()
+        const text = base64ToUtf8(json.content);
         if (!text.trim()) throw new Error(`Fitxer buit: ${repoPath}`);
         return { path, text };
       } catch (error) {
@@ -130,7 +143,10 @@ async function fetchFirstAvailable(paths) {
     try {
       const response = await fetch(`${path}?t=${Date.now()}`, { cache: 'no-store' });
       if (!response.ok) throw new Error(`HTTP ${response.status} a ${path}`);
-      const text = await response.text();
+      // 🔧 FIX UTF-8: llegim com a ArrayBuffer i decodifiquem explícitament en UTF-8
+      // response.text() pot usar la codificació del servidor; TextDecoder garanteix UTF-8.
+      const buffer = await response.arrayBuffer();
+      const text = new TextDecoder('utf-8').decode(buffer);
       if (!text.trim()) throw new Error(`Fitxer buit a ${path}`);
       return { path, text };
     } catch (error) {
@@ -168,6 +184,7 @@ function parseCSV(text) {
   const cleanRows = rows.filter(cols => cols.some(cell => String(cell).trim() !== ''));
   if (!cleanRows.length) return [];
 
+  // 🔧 FIX UTF-8: el .replace(/^\uFEFF/, '') ja estava — elimina BOM si el Java l'afegeix
   const headers = cleanRows[0].map(h => String(h || '').replace(/^\uFEFF/, '').trim());
   return cleanRows.slice(1).map(cols => {
     const entry = {};
@@ -329,9 +346,8 @@ function setBadge(text)     { setText('load-badge', text); }
 function setText(id, value) { const el = document.getElementById(id); if (el) el.textContent = value; }
 
 // Re-renderitza tot quan l'usuari canvia la configuració de FC
-// PER AIXÒ:
 window.addEventListener('fc-config-changed', () => {
-  if (!window._chartData) return;          // ✅
+  if (!window._chartData) return;
   const { sessions, planning } = window._chartData;
   renderOverviewView(sessions, planning);
   renderSetmanalView(sessions, planning);
