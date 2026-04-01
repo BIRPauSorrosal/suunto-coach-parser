@@ -6,19 +6,43 @@
 
 
 // ─── CONFIGURACIÓ GITHUB API ─────────────────────────────────
-// Omple aquests valors amb el teu repo i token.
-// El token mai ha d'anar a un repo públic — aquí és segur
-// perquè el repo és privat.
-
 const GITHUB_CONFIG = {
   owner:  "BIRPauSorrosal",
   repo:   "suunto-coach-parser",
   branch: "main",
   path:   "docs/data/sessions.csv",
-  // Personal Access Token amb permís: Contents → Read & Write
-  // Genera'l a: GitHub → Settings → Developer settings → PAT (classic)
   get token() { return window.getGitHubToken ? window.getGitHubToken() : ''; },
 };
+
+
+// ─── 🔧 FIX UTF-8: helpers de codificació ────────────────────
+
+/**
+ * Base64 (GitHub API) → string UTF-8 correcte.
+ * atob() retorna Latin-1 i trenca accents (à, è, ç...).
+ */
+function base64ToUtf8(base64) {
+  const binary = atob(base64.replace(/\n/g, ''));
+  const bytes  = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
+/**
+ * String UTF-8 → Base64 per pujar a la GitHub API.
+ * btoa() només suporta Latin-1; TextEncoder + Uint8Array ho fa bé.
+ */
+function utf8ToBase64(str) {
+  const bytes  = new TextEncoder().encode(str);
+  let binary   = '';
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
 
 // ─── CSV PARSER (text → array de objectes) ───────────────────
 
@@ -33,7 +57,7 @@ function csvToObjects(csvText) {
   const headers = lines[0].split(",").map(h => h.trim());
   return lines.slice(1).map(line => {
     const values = splitCsvLine(line);
-    const obj = {};
+    const obj    = {};
     headers.forEach((h, i) => { obj[h] = (values[i] ?? "").trim(); });
     return obj;
   });
@@ -109,9 +133,6 @@ function mergeRows(existingRows, newRows) {
     }
   }
 
-  // Normalitza les claus: les files noves poden tenir més columnes
-  // que el CSV existent (ex: Sessions_Detall en un CSV sense sessions de qualitat).
-  // Unifiquem totes les columnes possibles.
   const allKeys = Array.from(new Set([
     ...Object.keys(existingRows[0] ?? {}),
     ...Object.keys(newRows[0]      ?? {}),
@@ -136,8 +157,7 @@ function mergeRows(existingRows, newRows) {
 
 /**
  * Llegeix el sessions.csv actual del repositori via GitHub API.
- * Retorna { content: string (base64 decoded), sha: string }
- * El SHA és necessari per fer el PUT posterior.
+ * Retorna { content: string UTF-8, sha: string }
  */
 async function fetchCurrentCSV() {
   const { owner, repo, branch, path, token } = GITHUB_CONFIG;
@@ -151,7 +171,6 @@ async function fetchCurrentCSV() {
   });
 
   if (res.status === 404) {
-    // El CSV encara no existeix — primera execució
     return { content: "", sha: null };
   }
 
@@ -160,7 +179,8 @@ async function fetchCurrentCSV() {
   }
 
   const json    = await res.json();
-  const decoded = atob(json.content.replace(/\n/g, ""));
+  // 🔧 FIX UTF-8: substituïm atob() per base64ToUtf8()
+  const decoded = base64ToUtf8(json.content);
   return { content: decoded, sha: json.sha };
 }
 
@@ -177,7 +197,8 @@ async function pushCSVToGitHub(csvText, sha) {
 
   const body = {
     message: `[dashboard] Afegides ${new Date().toLocaleDateString("ca-ES")} sessions via uploader`,
-    content: btoa(unescape(encodeURIComponent(csvText))),  // UTF-8 → base64
+    // 🔧 FIX UTF-8: substituïm btoa(unescape(encodeURIComponent(...))) per utf8ToBase64()
+    content: utf8ToBase64(csvText),
     branch,
     ...(sha ? { sha } : {}),
   };
@@ -206,7 +227,8 @@ async function pushCSVToGitHub(csvText, sha) {
  * Útil per testejar sense token de GitHub configurat.
  */
 function downloadCSV(csvText) {
-  const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
+  // 🔧 FIX UTF-8: Blob amb BOM (\uFEFF) garanteix que Excel/editors obrin bé el fitxer
+  const blob = new Blob(['\uFEFF' + csvText], { type: "text/csv;charset=utf-8;" });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement("a");
   a.href     = url;
@@ -222,7 +244,7 @@ function showNotice(msg, isError = false) {
   const bar  = document.getElementById("notice-bar");
   const text = document.getElementById("notice-text");
   if (!bar || !text) return;
-  text.textContent = msg;
+  text.textContent      = msg;
   bar.style.display     = "block";
   bar.style.background  = isError ? "var(--color-error, #c0392b)" : "";
   setTimeout(() => { bar.style.display = "none"; }, 5000);
@@ -249,8 +271,8 @@ async function appendRowsToCSV(newRows) {
 
     let existingRows = [];
     let sha          = null;
-    const token     = window.getGitHubToken ? window.getGitHubToken() : '';
-    const useGitHub = !!token;
+    const token      = window.getGitHubToken ? window.getGitHubToken() : '';
+    const useGitHub  = !!token;
 
     if (useGitHub) {
       const { content, sha: fileSha } = await fetchCurrentCSV();
@@ -275,7 +297,6 @@ async function appendRowsToCSV(newRows) {
       showNotice(`✅ CSV descarregat. ${duplicats.length ? `(${duplicats.length} duplicats ignorats)` : ""}`);
     }
 
-    // Recarrega les dades del dashboard
     if (typeof loadData === "function") loadData();
 
   } catch (err) {
@@ -283,6 +304,7 @@ async function appendRowsToCSV(newRows) {
     showNotice(`❌ Error: ${err.message}`, true);
   }
 }
+
 
 window.addEventListener('gh-token-changed', () => {
   GITHUB_CONFIG.token = window.getGitHubToken();
