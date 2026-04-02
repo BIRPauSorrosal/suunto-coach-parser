@@ -33,7 +33,7 @@ const SESS_TYPE_LABELS = {
   quality:  'Sessions de qualitat',
   long:     'Tirades llargues',
   testrace: 'Test i curses',
-  strength: 'Sessions de for\u00e7a',
+  strength: 'Sessions de força',
   other:    'Altres activitats',
 };
 
@@ -306,12 +306,12 @@ function buildSessChartConfig(byWeek, labels, sessions) {
     const lbl = c.dataset.label || '';
     if (lbl.includes('Ritme'))             return `  Ritme: ${formatPace(v,'')}`;
     if (lbl.includes('FC'))                return `  FC: ${v} ppm`;
-    if (lbl.includes('Cad'))               return `  Cad\u00e8ncia: ${v} spm`;
+    if (lbl.includes('Cad'))               return `  Cadència: ${v} spm`;
     if (lbl.includes('EPOC'))              return `  EPOC: ${v}`;
     if (lbl === 'TSS')                     return `  TSS: ${v}`;
     if (lbl.includes('Desnivell'))         return `  Desnivell: ${v} m`;
     if (lbl.includes('Km'))               return `  Km: ${v} km`;
-    if (lbl.includes('Temps s\u00e8ries')) return `  Temps s\u00e8ries: ${v} min`;
+    if (lbl.includes('Temps sèries'))      return `  Temps sèries: ${v} min`;
     return ` ${lbl}: ${v}`;
   }
 
@@ -356,7 +356,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
       if (hasFC) datasets.push({ type:'line', label:'FC mitja (ppm)',
         data:byWeek.map(w=>w.avgFC), borderColor:COL.fc.line, backgroundColor:'transparent',
         borderWidth:2, pointRadius:4, tension:0.3, yAxisID:'y3', spanGaps:true });
-      if (hasCad) datasets.push({ type:'line', label:'Cad\u00e8ncia (spm)',
+      if (hasCad) datasets.push({ type:'line', label:'Cadència (spm)',
         data:byWeek.map(w=>w.avgCad), borderColor:COL.cad.line, backgroundColor:'transparent',
         borderWidth:2, pointRadius:4, tension:0.3, yAxisID:'y3', spanGaps:true });
       return { type:'bar', data:{labels,datasets}, options:{...baseOpts,
@@ -374,20 +374,20 @@ function buildSessChartConfig(byWeek, labels, sessions) {
       const hasCadS  = byWeek.some(w => w.avgCadSeries   !== null);
       const datasets = [];
       if (hasDurS) datasets.push({
-        type:'bar', label:'Temps s\u00e8ries (min)',
+        type:'bar', label:'Temps sèries (min)',
         data:byWeek.map(w => w.totalDurSeries > 0 ? w.totalDurSeries : null),
         backgroundColor:COL.dur.bar, borderColor:COL.dur.line,
         borderWidth:1, borderRadius:4, yAxisID:'y'
       });
-      if (hasPaceS) datasets.push({ type:'line', label:'Ritme s\u00e8ries (min/km)',
+      if (hasPaceS) datasets.push({ type:'line', label:'Ritme sèries (min/km)',
         data:byWeek.map(w=>w.avgPaceSeries), borderColor:COL.ritme.line,
         backgroundColor:'transparent', borderWidth:2, pointRadius:4,
         tension:0.3, yAxisID:'y2', spanGaps:true });
-      if (hasFCS) datasets.push({ type:'line', label:'FC s\u00e8ries (ppm)',
+      if (hasFCS) datasets.push({ type:'line', label:'FC sèries (ppm)',
         data:byWeek.map(w=>w.avgFCSeries), borderColor:COL.fc.line,
         backgroundColor:'transparent', borderWidth:2, pointRadius:4,
         tension:0.3, yAxisID:'y3', spanGaps:true });
-      if (hasCadS) datasets.push({ type:'line', label:'Cad\u00e8ncia s\u00e8ries (spm)',
+      if (hasCadS) datasets.push({ type:'line', label:'Cadència sèries (spm)',
         data:byWeek.map(w=>w.avgCadSeries), borderColor:COL.cad.line,
         backgroundColor:'transparent', borderWidth:2, pointRadius:4,
         tension:0.3, yAxisID:'y3', spanGaps:true });
@@ -508,19 +508,21 @@ function renderSessTable(sessions) {
   const cols = getSessCols(_sessType);
   thead.innerHTML = `<tr>${cols.map(c=>`<th${c.cls?` class="${c.cls}"`:''}>${c.label}</th>`).join('')}</tr>`;
   if (!sessions.length) {
-    tbody.innerHTML = `<tr><td colspan="${cols.length}" class="empty-row">Cap sessi\u00f3 amb els filtres seleccionats.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${cols.length}" class="empty-row">Cap sessió amb els filtres seleccionats.</td></tr>`;
     return;
   }
   tbody.innerHTML = sessions
     .map(s => `<tr>${cols.map(c=>`<td${c.cls?` class="${c.cls}"`:''}>${c.render(s)}</td>`).join('')}</tr>`)
     .join('');
+
+  bindSessCommentButtons(); // ← NOU
 }
 
 // ── Columna comentari (shared entre tots els tipus) ──────────────────────────────
 function makeColComentari() {
   return {
-    label: '&#x270F;',          // icò llapis al capçal
-    cls:   'sess-col-comment',  // alineació centrada (comment-editor.css)
+    label: '&#x270F;',
+    cls:   'sess-col-comment',
     render: s => {
       const comentari  = s.raw['Comentari'] || '';
       const hasComment = !!comentari;
@@ -553,34 +555,24 @@ function getSessCols(type) {
   const colDurada     = {label:'Durada',           render:s=>s.durada>0?`${fmtNum(s.durada)} min`:'\u2014'};
   const colRitme      = {label:'Ritme',            render:s=>formatPace(s.ritme)};
   const colFC         = {label:'FC',               render:s=>fcBadgeHTML(s.fcMitja)};
-
   const colCarrega = {
     label: 'TSS',
-    render: s => {
-      return (typeof s.carrega === 'number' && s.carrega > 0)
-        ? tssDotHTML(s.carrega)
-        : '\u2014';
-    }
+    render: s => (typeof s.carrega === 'number' && s.carrega > 0) ? tssDotHTML(s.carrega) : '\u2014'
   };
-
   const colEpoc = {
     label: 'EPOC',
-    render: s => {
-      const e = toNumber(s.raw['EPOC']);
-      return (typeof e === 'number' && e > 0) ? loadBadgeHTML(e) : '\u2014';
-    }
+    render: s => { const e = toNumber(s.raw['EPOC']); return (typeof e === 'number' && e > 0) ? loadBadgeHTML(e) : '\u2014'; }
   };
-
   const colRecup      = {label:'Recup.',            render:s=>{const r=toNumber(s.raw['Recup(h)']);return typeof r==='number'&&r>0?`${fmtNum(r)} h`:'\u2014';}};
   const colZ2min      = {label:'Z2 (min)',          render:s=>s.z2min>0?`${fmtNum(s.z2min)} min`:'\u2014'};
-  const colCad        = {label:'Cad\u00e8ncia',    render:s=>{const c=toNumber(s.raw['Cadencia(spm)']);return typeof c==='number'&&c>0?`${Math.round(c)} spm`:'\u2014';}};
+  const colCad        = {label:'Cadència',          render:s=>{const c=toNumber(s.raw['Cadencia(spm)']);return typeof c==='number'&&c>0?`${Math.round(c)} spm`:'\u2014';}};
   const colDesnivell  = {label:'Desnivell',         render:s=>{const d=toNumber(s.raw['Desnivell(m)']);return typeof d==='number'&&d>0?`${Math.round(d)} m`:'\u2014';}};
-  const colRitmeSeries= {label:'Ritme s\u00e8ries', render:s=>formatPace(typeof s.ritmeMitjaSeries==='number'?s.ritmeMitjaSeries:null)};
-  const colFCSeries   = {label:'FC s\u00e8ries',    render:s=>fcBadgeHTML(s.fcMitjaSeries)};
-  const colSeries     = {label:'S\u00e8ries',       render:s=>{const n=toNumber(s.raw['Num_Series']);return typeof n==='number'&&n>0?String(Math.round(n)):'\u2014';}};
+  const colRitmeSeries= {label:'Ritme sèries',      render:s=>formatPace(typeof s.ritmeMitjaSeries==='number'?s.ritmeMitjaSeries:null)};
+  const colFCSeries   = {label:'FC sèries',         render:s=>fcBadgeHTML(s.fcMitjaSeries)};
+  const colSeries     = {label:'Sèries',            render:s=>{const n=toNumber(s.raw['Num_Series']);return typeof n==='number'&&n>0?String(Math.round(n)):'\u2014';}};
   const colPTE        = {label:'PTE',               render:s=>{const p=toNumber(s.raw['PTE']);return typeof p==='number'&&p>0?fmtNum(p):'\u2014';}};
   const colDurSerie   = {
-    label: 'Dur/S\u00e8rie',
+    label: 'Dur/Sèrie',
     render: s => {
       const n   = toNumber(s.raw['Num_Series']);
       const dur = parseDurSeries(s);
@@ -589,7 +581,6 @@ function getSessCols(type) {
     }
   };
 
-  // colComentari s'afegeix sempre com a última columna
   switch (type) {
     case 'z2':       return [colData,colKm,colDurada,colRitme,colCad,colFC,colZ2min,colEpoc,colCarrega,colComentari];
     case 'quality':  return [colData,colTipus,colSeries,colDurSerie,colRitmeSeries,colFCSeries,colKm,colCarrega,colPTE,colComentari];
@@ -604,4 +595,25 @@ function getSessCols(type) {
 function setSessText(id, value) {
   const el = document.getElementById(id);
   if (el) el.textContent = value;
+}
+
+// ── Helpers de comentari ──────────────────────────────────────────────────────────────
+
+// Trunca i escapa el text d'un comentari per mostrar-lo en preview
+function commentPreview(comment, max = 36) {
+  const txt = String(comment ?? '').trim();
+  if (!txt) return '';
+  return txt.length > max ? `${esc(txt.slice(0, max))}\u2026` : esc(txt);
+}
+
+// Lliga els botons de comentari de la taula de sessions.
+// Els botons ja tenen onclick inline; aquest binding és un guard de seguretat
+// per si s'eliminen els inline handlers en una refactorització futura.
+function bindSessCommentButtons() {
+  const tbody = document.getElementById('sess-tbody');
+  if (!tbody) return;
+  tbody.querySelectorAll('[data-comment-arxiu]').forEach(btn => {
+    if (btn.dataset.commentBound) return;
+    btn.dataset.commentBound = '1';
+  });
 }
