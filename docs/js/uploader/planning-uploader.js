@@ -5,11 +5,19 @@
 // ─────────────────────────────────────────────────────────────
 
 
-// ─── COLUMNES OBLIGATÒRIES ────────────────────────────────────
+// ─── CONFIGURACIÓ GITHUB API ───────────────────────────────────
 
-// Llista exhaustiva de columnes que ha de tenir qualsevol
-// planning.csv vàlid. Permet detectar fitxers incomplets o
-// de format incorrecte abans de fer cap merge.
+const PLANNING_GITHUB_CONFIG = {
+  owner:  "BIRPauSorrosal",
+  repo:   "suunto-coach-parser",
+  branch: "main",
+  path:   "docs/data/planning.csv",
+  get token() { return window.getGitHubToken ? window.getGitHubToken() : ''; },
+};
+
+
+// ─── COLUMNES OBLIGATÒRIES ───────────────────────────────────────
+
 const PLANNING_REQUIRED_COLUMNS = [
   "Setmana", "Data_Inici", "Data_Fi", "Cicle", "Fase",
   "Q_Series", "Q_Durada_Serie_min", "Q_Ritme_min_km",
@@ -23,24 +31,14 @@ const PLANNING_REQUIRED_COLUMNS = [
 
 // ─── ESTAT INTERN ────────────────────────────────────────────
 
-// Resultat del merge pendent de confirmació per l'usuari.
-// Forma: { rows: [], stats: { added, replaced, unchanged } }
 let _pendingMerge = null;
 
 function getPendingMerge()   { return _pendingMerge; }
 function clearPendingMerge() { _pendingMerge = null; }
 
 
-// ─── AUTODETECTE DEL SEPARADOR ────────────────────────────────
+// ─── AUTODETECTE DEL SEPARADOR ──────────────────────────────────
 
-/**
- * Detecta el separador d'un CSV llegint la primera línia.
- * Suporta coma (,) i punt i coma (;).
- * Criteris: el separador que apareix més vegades a la capçalera.
- *
- * @param {string} firstLine — primera línia del CSV (capçalera)
- * @returns {',' | ';'}
- */
 function detectCSVSeparator(firstLine) {
   const commas     = (firstLine.match(/,/g)  || []).length;
   const semicolons = (firstLine.match(/;/g)  || []).length;
@@ -50,14 +48,6 @@ function detectCSVSeparator(firstLine) {
 
 // ─── PARSING CSV ──────────────────────────────────────────────
 
-/**
- * Parseja un string CSV amb capçalera i retorna un array
- * d'objectes { columna: valor }.
- * Separador: autodetectat (coma o punt i coma). Ignora files buides.
- *
- * @param {string} text — contingut del fitxer CSV
- * @returns {Object[]}
- */
 function parseCSVText(text) {
   const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
   if (lines.length < 2) return [];
@@ -74,14 +64,8 @@ function parseCSVText(text) {
 }
 
 
-// ─── VALIDACIÓ DE COLUMNES ──────────────────────────────────
+// ─── VALIDACIÓ DE COLUMNES ─────────────────────────────────────
 
-/**
- * Comprova que el CSV conté totes les columnes obligatòries.
- * Retorna { valid: bool, missing: string[] }
- *
- * @param {Object[]} rows — files parsejades del CSV entrant
- */
 function validatePlanningColumns(rows) {
   if (!rows.length) {
     return { valid: false, missing: [], error: "El fitxer és buit o no té files de dades." };
@@ -94,24 +78,13 @@ function validatePlanningColumns(rows) {
 
 // ─── HELPERS DE DATA ─────────────────────────────────────────
 
-/**
- * Converteix una data en format DD/MM/YYYY o YYYY-MM-DD
- * a un timestamp numèric per ordenar correctament.
- * Retorna 0 si el format no es reconeix.
- *
- * @param {string} value
- * @returns {number}
- */
 function parseDateForSort(value) {
   if (!value) return 0;
   const s = String(value).trim();
-
-  // Format DD/MM/YYYY (el que usa el planning.csv actual)
   if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {
     const [d, m, y] = s.split("/").map(Number);
     return new Date(y, m - 1, d).getTime();
   }
-  // Format YYYY-MM-DD (ISO)
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
     const [y, m, d] = s.split("-").map(Number);
     return new Date(y, m - 1, d).getTime();
@@ -120,33 +93,14 @@ function parseDateForSort(value) {
 }
 
 
-// ─── MERGE (UPSERT PER SETMANA) ──────────────────────────────
+// ─── MERGE (UPSERT PER SETMANA) ──────────────────────────────────
 
-/**
- * Fusiona les files entrants amb les existents.
- * Clau de deduplicació: columna `Setmana`.
- *
- * Escenaris coberts:
- *   a) Setmana nova      → s'afegeix
- *   b) Setmana existent  → se substitueix
- *   c) Combinació de (a) i (b)
- *
- * Retorna:
- *   {
- *     rows:     Object[],   // planning complet resultant, ordenat per Data_Inici
- *     stats:    { added, replaced, unchanged },
- *     incoming: { row, status: 'added'|'replaced'|'unchanged' }[]
- *   }
- *
- * @param {Object[]} existing — files del planning.csv actual (raw)
- * @param {Object[]} incoming — files del CSV nou pujat per l'usuari
- */
 function mergePlanning(existing, incoming) {
   const map = new Map();
   existing.forEach(row => map.set(row.Setmana, row));
 
-  const stats              = { added: 0, replaced: 0, unchanged: 0 };
-  const incomingAnnotated  = [];
+  const stats             = { added: 0, replaced: 0, unchanged: 0 };
+  const incomingAnnotated = [];
 
   for (const row of incoming) {
     const key = row.Setmana;
@@ -168,8 +122,6 @@ function mergePlanning(existing, incoming) {
     }
   }
 
-  // Ordenar el resultat final per Data_Inici de forma robusta
-  // (suporta DD/MM/YYYY i YYYY-MM-DD)
   const rows = Array.from(map.values()).sort((a, b) =>
     parseDateForSort(a.Data_Inici) - parseDateForSort(b.Data_Inici)
   );
@@ -178,23 +130,14 @@ function mergePlanning(existing, incoming) {
 }
 
 
-// ─── SERIALITZACIÓ CSV ──────────────────────────────────────────
+// ─── SERIALITZACIÓ CSV ────────────────────────────────────────────
 
-/**
- * Converteix un array d'objectes a string CSV (separador ,)
- * amb les columnes en l'ordre de PLANNING_REQUIRED_COLUMNS.
- * S'usa coma perquè és el format del planning.csv actual del projecte.
- *
- * @param {Object[]} rows
- * @returns {string}
- */
 function serializePlanningCSV(rows) {
   if (!rows.length) return PLANNING_REQUIRED_COLUMNS.join(",") + "\n";
   const header = PLANNING_REQUIRED_COLUMNS.join(",");
   const lines  = rows.map(row =>
     PLANNING_REQUIRED_COLUMNS.map(col => {
       const val = String(row[col] ?? "");
-      // Envoltem amb cometes si el valor conté comes o salts de línia
       return val.includes(",") || val.includes("\n")
         ? `"${val.replace(/"/g, '""')}"`
         : val;
@@ -204,14 +147,88 @@ function serializePlanningCSV(rows) {
 }
 
 
-// ─── LECTURA DE FITXERS ───────────────────────────────────────
+// ─── GITHUB API: helpers UTF-8 ──────────────────────────────────────
+// Mateixos helpers que csv-writer.js per garantir accénts correctes
 
-/**
- * Llegeix un File com a text UTF-8. Retorna Promise<string>.
- */
+function _base64ToUtf8(base64) {
+  const binary = atob(base64.replace(/\n/g, ''));
+  const bytes  = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
+function _utf8ToBase64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let binary  = '';
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
+
+// ─── GITHUB API: llegir planning.csv actual ──────────────────────────
+
+async function _fetchCurrentPlanningCSV() {
+  const { owner, repo, branch, path, token } = PLANNING_GITHUB_CONFIG;
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
+
+  const res = await fetch(url, {
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Accept":        "application/vnd.github+json",
+    }
+  });
+
+  if (res.status === 404) return { content: "", sha: null };
+
+  if (!res.ok) throw new Error(`Error llegint planning.csv: ${res.status} ${res.statusText}`);
+
+  const json = await res.json();
+  return { content: _base64ToUtf8(json.content), sha: json.sha };
+}
+
+
+// ─── GITHUB API: pujar planning.csv ─────────────────────────────────
+
+async function _pushPlanningCSVToGitHub(csvText, sha, stats) {
+  const { owner, repo, branch, path, token } = PLANNING_GITHUB_CONFIG;
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+
+  const added    = stats.added;
+  const replaced = stats.replaced;
+  const parts    = [];
+  if (added)    parts.push(`${added} noves`);
+  if (replaced) parts.push(`${replaced} substituïdes`);
+  const summary = parts.length ? parts.join(", ") : "sense canvis";
+
+  const body = {
+    message: `[planning] ${new Date().toLocaleDateString("ca-ES")} — ${summary}`,
+    content: _utf8ToBase64(csvText),
+    branch,
+    ...(sha ? { sha } : {}),
+  };
+
+  const res = await fetch(url, {
+    method:  "PUT",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Accept":        "application/vnd.github+json",
+      "Content-Type":  "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(`Error pujant planning.csv: ${res.status} — ${err.message ?? res.statusText}`);
+  }
+}
+
+
+// ─── LECTURA DE FITXERS ────────────────────────────────────────────
+
 function readPlanningFileAsText(file) {
   return new Promise((resolve, reject) => {
-    const reader  = new FileReader();
+    const reader   = new FileReader();
     reader.onload  = e => resolve(e.target.result);
     reader.onerror = () => reject(new Error(`Error llegint ${file.name}`));
     reader.readAsText(file, "utf-8");
@@ -219,34 +236,16 @@ function readPlanningFileAsText(file) {
 }
 
 
-// ─── COORDINADOR PRINCIPAL ─────────────────────────────────────
+// ─── COORDINADOR PRINCIPAL ────────────────────────────────────────
 
-/**
- * Punt d'entrada cridat per planning-uploader-ui.js quan l'usuari
- * selecciona un fitxer CSV de planning.
- *
- * Flux:
- *   1. Valida extensió .csv
- *   2. Llegeix el contingut
- *   3. Parseja les files (separador autodetectat)
- *   4. Valida columnes obligatòries
- *   5. Obté el planning actual (window.planningData, injectat per app.js)
- *   6. Fa el merge
- *   7. Desa l'estat intern i notifica la UI via onDone
- *
- * @param {File}     file    — fitxer CSV seleccionat
- * @param {Function} onDone  — callback({ ok, error, merge }) per actualitzar la UI
- */
 async function handlePlanningFileSelection(file, onDone) {
   if (!file) return;
 
-  // 1. Extensió
   if (!file.name.toLowerCase().endsWith(".csv")) {
     onDone({ ok: false, error: "El fitxer ha de tenir extensió .csv." });
     return;
   }
 
-  // 2. Lectura
   let text;
   try {
     text = await readPlanningFileAsText(file);
@@ -255,11 +254,9 @@ async function handlePlanningFileSelection(file, onDone) {
     return;
   }
 
-  // 3. Parsing (separador autodetectat: coma o punt i coma)
-  const incoming = parseCSVText(text);
-
-  // 4. Validació de columnes
+  const incoming   = parseCSVText(text);
   const validation = validatePlanningColumns(incoming);
+
   if (!validation.valid) {
     const msg = validation.error
       ?? `Columnes que falten: ${validation.missing.join(", ")}`;
@@ -267,46 +264,75 @@ async function handlePlanningFileSelection(file, onDone) {
     return;
   }
 
-  // 5. Planning actual (window.planningData exposat per app.js)
-  //    Pot ser buit si el planning.csv no s'ha carregat encara.
   const existing = Array.isArray(window.planningData) ? window.planningData : [];
+  const merge    = mergePlanning(existing, incoming);
 
-  // 6. Merge
-  const merge = mergePlanning(existing, incoming);
-
-  // 7. Desar estat intern
   _pendingMerge = merge;
-
   onDone({ ok: true, error: null, merge });
 }
 
 
 /**
- * Punt d'entrada cridat per planning-uploader-ui.js quan l'usuari
- * confirma el merge. Genera el CSV resultant i el descarrega.
+ * Confirma el merge: puja el planning.csv resultant a GitHub
+ * (o descarrega localment si no hi ha token configurat).
  *
- * També actualitza window.planningData en memòria perquè el dashboard
- * reflecteixi el planning merged sense necessitat de recarregar la pàgina.
+ * Flux idèntic al de appendRowsToCSV() de csv-writer.js:
+ *   1. Llegir SHA actual del fitxer al repo
+ *   2. Fer PUT amb el nou contingut
+ *   3. Actualitzar window.planningData en memòria
+ *   4. Mostrar notificació i tancar modal
  *
- * @param {Function} onComplete — callback() quan acaba (per tancar el modal)
+ * @param {Function} onComplete — callback quan acaba (per tancar el modal)
  */
-function confirmPlanningImport(onComplete) {
+async function confirmPlanningImport(onComplete) {
   if (!_pendingMerge) return;
 
-  const csv = serializePlanningCSV(_pendingMerge.rows);
+  const merge = _pendingMerge;
+  const csv   = serializePlanningCSV(merge.rows);
+  const token = window.getGitHubToken ? window.getGitHubToken() : '';
 
-  // Descarrega el fitxer resultant
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a");
-  a.href     = url;
-  a.download = "planning.csv";
-  a.click();
-  URL.revokeObjectURL(url);
+  try {
+    if (token) {
+      // ── Mode GitHub: llegir SHA actual i fer push ──
+      showNotice("Llegint planning.csv actual...");
+      const { sha } = await _fetchCurrentPlanningCSV();
 
-  // Actualitzar les dades en memòria
-  window.planningData = _pendingMerge.rows;
+      showNotice("Pujant planning al repositori...");
+      await _pushPlanningCSVToGitHub(csv, sha, merge.stats);
 
-  _pendingMerge = null;
-  onComplete();
+      const added    = merge.stats.added;
+      const replaced = merge.stats.replaced;
+      const parts    = [];
+      if (added)    parts.push(`${added} setmanes noves`);
+      if (replaced) parts.push(`${replaced} substituïdes`);
+      showNotice(`✅ Planning importat: ${parts.join(", ") || "sense canvis nous"}.`);
+
+    } else {
+      // ── Mode fallback: descàrrega local ──
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href     = url;
+      a.download = "planning.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+      showNotice("✅ planning.csv descarregat (configura el token per pujar directament).");
+    }
+
+    // Actualitzar dades en memòria sense recarregar la pàgina
+    window.planningData = merge.rows;
+    if (typeof loadData === "function") loadData();
+
+  } catch (err) {
+    console.error(err);
+    showNotice(`❌ Error: ${err.message}`, true);
+  } finally {
+    _pendingMerge = null;
+    onComplete();
+  }
 }
+
+
+window.addEventListener('gh-token-changed', () => {
+  PLANNING_GITHUB_CONFIG.token = window.getGitHubToken();
+});
