@@ -534,7 +534,7 @@ function makeColComentari() {
         class="ced-btn${hasComment ? ' ced-btn--has-comment' : ''}"
         data-comment-arxiu="${safeName}"
         title="${titleAttr}"
-        onclick="openCommentEditor(${JSON.stringify(s.raw).replace(/"/g, '&quot;')})"
+        onclick="openSessionCommentEditor({ arxiu: '${esc(s.raw['Arxiu']||'')}', data: '${esc(s.displayDate||'')}', tipus: '${esc(s.tipus||'')}' })"
         aria-label="${titleAttr}"
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
