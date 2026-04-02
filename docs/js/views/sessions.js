@@ -6,6 +6,7 @@
 //                         getTSSLevel, tssBadgeHTML, tssDotHTML)
 //      app.js            (CHART_COLORS via charts.js, STRENGTH_RE, PADEL_TYPES,
 //                         QUALITY_TYPES, LONG_TYPES, TEST_RACE_TYPES)
+//      comment-editor.js (openCommentEditor)
 // NOTA: No declarar aquí constants de tipus — usar les de app.js
 
 let _sessSessions = [];
@@ -36,7 +37,7 @@ const SESS_TYPE_LABELS = {
   other:    'Altres activitats',
 };
 
-// ── Punt d'entrada ──────────────────────────────────────────────────────────────────
+// ── Punt d'entrada ─────────────────────────────────────────────────────────────────────
 function renderSessionsView(sessions) {
   _sessSessions = sessions;
   initSessFilters();
@@ -44,7 +45,7 @@ function renderSessionsView(sessions) {
   renderPMC(_sessSessions);
 }
 
-// ── Inicialitza listeners ─────────────────────────────────────────────────────────
+// ── Inicialitza listeners ─────────────────────────────────────────────────────
 function initSessFilters() {
   const sel = document.getElementById('sess-type-select');
   if (sel) {
@@ -67,7 +68,7 @@ function initSessFilters() {
   });
 }
 
-// ── Render principal ────────────────────────────────────────────────────────────────────
+// ── Render principal ───────────────────────────────────────────────────────────────────
 function renderSessPanel() {
   const filtered = applyFilters(_sessSessions);
   renderSessKPIs(filtered);
@@ -75,7 +76,7 @@ function renderSessPanel() {
   renderSessTable(filtered);
 }
 
-// ── Filtratge ───────────────────────────────────────────────────────────────────────
+// ── Filtratge ──────────────────────────────────────────────────────────────────────
 function applyFilters(sessions) {
   let result = sessions;
   if (_sessPeriod === -1) {
@@ -100,7 +101,7 @@ function applyFilters(sessions) {
   return result;
 }
 
-// ── KPIs ──────────────────────────────────────────────────────────────────────────
+// ── KPIs ─────────────────────────────────────────────────────────────────────────────
 function renderSessKPIs(sessions) {
   const totalKm   = sessions.reduce((a,s) => a + (s.distancia||0), 0);
   const totalMin  = sessions.reduce((a,s) => a + (s.durada||0), 0);
@@ -116,10 +117,10 @@ function renderSessKPIs(sessions) {
   setSessText('kpi-epoc', totalEpoc>0 ? fmtNum(totalEpoc)          : '--');
 }
 
-// ══════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════
 // PMC — Performance Management Chart (CTL / ATL / TSB)
 // Usa buildPMCData() de lib/metrics.js
-// ══════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════
 
 const PMC_GRADIENT_PLUGIN = {
   id: 'pmcTsbGradient',
@@ -200,7 +201,7 @@ function renderPMC(sessions) {
   });
 }
 
-// ── Exportació PMC CSV ──────────────────────────────────────────────────────────────────
+// ── Exportació PMC CSV ───────────────────────────────────────────────────────────────────
 function exportPMCcsv(days) {
   if (!_pmcDataCache.length) return;
   const rows   = days>0 ? _pmcDataCache.slice(-days) : _pmcDataCache;
@@ -216,7 +217,7 @@ function exportPMCcsv(days) {
     `pmc_${days>0?days+'d':'complet'}_${new Date().toISOString().slice(0,10)}.csv`);
 }
 
-// ── Exportació Sessions CSV ─────────────────────────────────────────────────────────
+// ── Exportació Sessions CSV ──────────────────────────────────────────────────────────────
 function exportSessionsCSV(days) {
   let rows = _sessSessions;
   if (days > 0) {
@@ -243,9 +244,9 @@ function triggerCsvDownload(csvContent, filename) {
   document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
-// ══════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════
 // Gràfic de tendència — usa groupByWeek() de lib/metrics.js
-// ══════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════
 
 function renderSessTrendChart(sessions) {
   const ctx = document.getElementById('chart-sess-trend');
@@ -261,9 +262,9 @@ function renderSessTrendChart(sessions) {
   _sessChart = new Chart(ctx, buildSessChartConfig(byWeek, byWeek.map(w=>w.label), sessions));
 }
 
-// ══════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════
 // buildSessChartConfig
-// ══════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════
 
 function buildSessChartConfig(byWeek, labels, sessions) {
   const C = CHART_COLORS;
@@ -491,7 +492,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
   }
 }
 
-// ── Taula ───────────────────────────────────────────────────────────────────────────
+// ── Taula ─────────────────────────────────────────────────────────────────────────────
 function renderSessTable(sessions) {
   const thead=document.getElementById('sess-thead');
   const tbody=document.getElementById('sess-tbody');
@@ -505,15 +506,47 @@ function renderSessTable(sessions) {
   if (sb7)  sb7.disabled  = !_sessSessions.length;
   if (sb90) sb90.disabled = !_sessSessions.length;
   const cols = getSessCols(_sessType);
-  thead.innerHTML = `<tr>${cols.map(c=>`<th>${c.label}</th>`).join('')}</tr>`;
+  thead.innerHTML = `<tr>${cols.map(c=>`<th${c.cls?` class="${c.cls}"`:''}>${c.label}</th>`).join('')}</tr>`;
   if (!sessions.length) {
     tbody.innerHTML = `<tr><td colspan="${cols.length}" class="empty-row">Cap sessi\u00f3 amb els filtres seleccionats.</td></tr>`;
     return;
   }
-  tbody.innerHTML = sessions.map(s=>`<tr>${cols.map(c=>`<td>${c.render(s)}</td>`).join('')}</tr>`).join('');
+  tbody.innerHTML = sessions
+    .map(s => `<tr>${cols.map(c=>`<td${c.cls?` class="${c.cls}"`:''}>${c.render(s)}</td>`).join('')}</tr>`)
+    .join('');
+}
+
+// ── Columna comentari (shared entre tots els tipus) ──────────────────────────────
+function makeColComentari() {
+  return {
+    label: '&#x270F;',          // icò llapis al capçal
+    cls:   'sess-col-comment',  // alineació centrada (comment-editor.css)
+    render: s => {
+      const comentari  = s.raw['Comentari'] || '';
+      const hasComment = !!comentari;
+      const safeName   = esc(s.raw['Arxiu'] || '');
+      const titleAttr  = hasComment
+        ? `Comentari: ${esc(comentari.slice(0, 80))}${comentari.length > 80 ? '...' : ''}`
+        : 'Afegir comentari';
+      return `<button
+        class="ced-btn${hasComment ? ' ced-btn--has-comment' : ''}"
+        data-comment-arxiu="${safeName}"
+        title="${titleAttr}"
+        onclick="openCommentEditor(${JSON.stringify(s.raw).replace(/"/g, '&quot;')})"
+        aria-label="${titleAttr}"
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+      </button>`;
+    }
+  };
 }
 
 function getSessCols(type) {
+  const colComentari  = makeColComentari();
   const colData       = {label:'Data',            render:s=>esc(s.displayDate)};
   const colTipus      = {label:'Tipus',            render:s=>esc(s.tipus)};
   const colKm         = {label:'Km',               render:s=>s.distancia>0?`${fmtNum(s.distancia)} km`:'\u2014'};
@@ -526,7 +559,7 @@ function getSessCols(type) {
     render: s => {
       return (typeof s.carrega === 'number' && s.carrega > 0)
         ? tssDotHTML(s.carrega)
-        : '—';
+        : '\u2014';
     }
   };
 
@@ -556,14 +589,15 @@ function getSessCols(type) {
     }
   };
 
+  // colComentari s'afegeix sempre com a última columna
   switch (type) {
-    case 'z2':       return [colData,colKm,colDurada,colRitme,colCad,colFC,colZ2min,colEpoc,colCarrega];
-    case 'quality':  return [colData,colTipus,colSeries,colDurSerie,colRitmeSeries,colFCSeries,colKm,colCarrega,colPTE];
-    case 'long':     return [colData,colTipus,colKm,colDurada,colRitme,colFC,colDesnivell,colZ2min,colCarrega];
-    case 'testrace': return [colData,colTipus,colKm,colDurada,colRitme,colFC,colDesnivell,colCarrega];
-    case 'strength': return [colData,colTipus,colDurada,colFC,colCarrega,colEpoc,colRecup];
-    case 'other':    return [colData,colTipus,colDurada,colFC,colCarrega,colEpoc];
-    default:         return [colData,colTipus,colKm,colDurada,colRitme,colFC,colCarrega,colEpoc];
+    case 'z2':       return [colData,colKm,colDurada,colRitme,colCad,colFC,colZ2min,colEpoc,colCarrega,colComentari];
+    case 'quality':  return [colData,colTipus,colSeries,colDurSerie,colRitmeSeries,colFCSeries,colKm,colCarrega,colPTE,colComentari];
+    case 'long':     return [colData,colTipus,colKm,colDurada,colRitme,colFC,colDesnivell,colZ2min,colCarrega,colComentari];
+    case 'testrace': return [colData,colTipus,colKm,colDurada,colRitme,colFC,colDesnivell,colCarrega,colComentari];
+    case 'strength': return [colData,colTipus,colDurada,colFC,colCarrega,colEpoc,colRecup,colComentari];
+    case 'other':    return [colData,colTipus,colDurada,colFC,colCarrega,colEpoc,colComentari];
+    default:         return [colData,colTipus,colKm,colDurada,colRitme,colFC,colCarrega,colEpoc,colComentari];
   }
 }
 
