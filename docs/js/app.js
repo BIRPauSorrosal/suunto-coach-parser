@@ -7,8 +7,7 @@ const DATA_SOURCES = {
   planning: ['./data/planning.csv']
 };
 
-// ── Constants de classificació de sessions ────────────────────────────────────
-// Font única de veritat per a totes les vistes. No duplicar en cap vista.
+// ── Constants de classificació de sessions ────────────────────────────────
 function isRunning(s)  { return RUNNING_TYPES.has(s.tipusKey); }
 function isStrength(s) { return STRENGTH_RE.test(s.tipusKey); }
 function isTestRace(s) { return TEST_RACE_TYPES.has(s.tipusKey); }
@@ -20,7 +19,7 @@ const state = {
   sources:  {}
 };
 
-// ── Router de vistes ──────────────────────────────────────────────────────────
+// ── Router de vistes ────────────────────────────────────────────────
 function initRouter() {
   const navLinks = document.querySelectorAll('.nav-link[data-target]');
   const views    = document.querySelectorAll('.view[data-view]');
@@ -51,14 +50,14 @@ function initRouter() {
   });
 }
 
-// ── Punt d'entrada ────────────────────────────────────────────────────────────
+// ── Punt d'entrada ───────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   initRouter();
   document.getElementById('reload-data-btn').addEventListener('click', loadDashboardData);
   loadDashboardData();
 });
 
-// ── Càrrega de dades ──────────────────────────────────────────────────────────
+// ── Càrrega de dades ──────────────────────────────────────────────
 async function loadDashboardData() {
   setNotice('Llegint fitxers CSV...', 'info');
   setBadge('Carregant dades...');
@@ -94,7 +93,7 @@ async function loadDashboardData() {
   }
 }
 
-// ── 🔧 FIX UTF-8: decodifica Base64 de l'API GitHub respectant UTF-8 ──────────
+// ── 🔧 FIX UTF-8: decodifica Base64 de l'API GitHub respectant UTF-8 ────────
 // atob() retorna Latin-1 i trenca accents (à, è, ç, etc.).
 // Aquesta funció converteix correctament Base64 → UTF-8.
 function base64ToUtf8(base64) {
@@ -106,16 +105,14 @@ function base64ToUtf8(base64) {
   return new TextDecoder('utf-8').decode(bytes);
 }
 
-// ── Fetch ─────────────────────────────────────────────────────────────────────
+// ── Fetch ───────────────────────────────────────────────────────────
 async function fetchFirstAvailable(paths) {
   const token = window.getGitHubToken ? window.getGitHubToken() : '';
 
-  // Si hi ha token → llegeix directament de l'API de GitHub (sempre fresc)
   if (token) {
     for (const path of paths) {
       try {
-        // Converteix './data/sessions.csv' → 'docs/data/sessions.csv'
-        const repoPath = path.replace(/^\.\//, 'docs/');
+        const repoPath = path.replace(/^\.\//,  'docs/');
         const apiUrl   = `https://api.github.com/repos/BIRPauSorrosal/suunto-coach-parser/contents/${repoPath}?ref=main`;
 
         const res = await fetch(apiUrl, {
@@ -127,7 +124,6 @@ async function fetchFirstAvailable(paths) {
         if (!res.ok) throw new Error(`API GitHub: ${res.status}`);
 
         const json = await res.json();
-        // 🔧 FIX UTF-8: substituïm atob() per base64ToUtf8()
         const text = base64ToUtf8(json.content);
         if (!text.trim()) throw new Error(`Fitxer buit: ${repoPath}`);
         return { path, text };
@@ -137,14 +133,11 @@ async function fetchFirstAvailable(paths) {
     }
   }
 
-  // Sense token (o si l'API falla) → GitHub Pages amb cache-bust
   let lastError = null;
   for (const path of paths) {
     try {
       const response = await fetch(`${path}?t=${Date.now()}`, { cache: 'no-store' });
       if (!response.ok) throw new Error(`HTTP ${response.status} a ${path}`);
-      // 🔧 FIX UTF-8: llegim com a ArrayBuffer i decodifiquem explícitament en UTF-8
-      // response.text() pot usar la codificació del servidor; TextDecoder garanteix UTF-8.
       const buffer = await response.arrayBuffer();
       const text = new TextDecoder('utf-8').decode(buffer);
       if (!text.trim()) throw new Error(`Fitxer buit a ${path}`);
@@ -156,7 +149,7 @@ async function fetchFirstAvailable(paths) {
   throw lastError || new Error('Cap ruta vàlida per al CSV');
 }
 
-// ── Parser CSV ────────────────────────────────────────────────────────────────
+// ── Parser CSV ───────────────────────────────────────────────────
 function parseCSV(text) {
   const rows = [];
   let row = [], value = '', insideQuotes = false;
@@ -184,7 +177,6 @@ function parseCSV(text) {
   const cleanRows = rows.filter(cols => cols.some(cell => String(cell).trim() !== ''));
   if (!cleanRows.length) return [];
 
-  // 🔧 FIX UTF-8: el .replace(/^\uFEFF/, '') ja estava — elimina BOM si el Java l'afegeix
   const headers = cleanRows[0].map(h => String(h || '').replace(/^\uFEFF/, '').trim());
   return cleanRows.slice(1).map(cols => {
     const entry = {};
@@ -193,7 +185,7 @@ function parseCSV(text) {
   });
 }
 
-// ── Orquestració del render ───────────────────────────────────────────────────
+// ── Orquestració del render ─────────────────────────────────────────
 function renderDashboard() {
   const planning = state.planning
     .map(enrichPlanningRow)
@@ -207,13 +199,17 @@ function renderDashboard() {
 
   window._chartData = { sessions, planning };
 
+  // Exposar les files RAW del planning perquè planning-uploader.js
+  // pugui fer el merge sense dependre de les dades enriquides.
+  window.planningData = state.planning;
+
   renderOverviewView(sessions, planning);
   renderSetmanalView(sessions, planning);
   renderPlanningView(planning, sessions);
   renderSessionsView(sessions);
 }
 
-// ── Enriquiment de files ──────────────────────────────────────────────────────
+// ── Enriquiment de files ──────────────────────────────────────────
 function enrichPlanningRow(row) {
   const startDate = parseDate(row['Data_Inici']);
   const endDate   = parseDate(row['Data_Fi']);
@@ -269,18 +265,14 @@ function enrichSessionRow(row) {
   };
 }
 
-// ── Detecció setmana activa ───────────────────────────────────────────────────
+// ── Detecció setmana activa ─────────────────────────────────────────
 function detectActiveWeek(planning, sessions) {
-  // PRIORITAT 1: setmana del calendari que conté AVUI.
-  // Assumim que les sessions acaben a les 20:00h, per tant fins les 20:00h
-  // del primer dia de la nova setmana encara estem "dins" la setmana anterior.
-  const now = new Date();
+  const now   = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 20, 0, 0);
 
   const todayWeek = planning.find(w => today >= w.startDate && today <= w.endDate);
   if (todayWeek) return todayWeek;
 
-  // PRIORITAT 2: setmana de la última sessió registrada
   const latest = sessions[0];
   if (latest) {
     const match = planning.find(w =>
@@ -289,11 +281,10 @@ function detectActiveWeek(planning, sessions) {
     if (match) return match;
   }
 
-  // FALLBACK: última setmana del planning
   return planning[planning.length - 1];
 }
 
-// ── Status sidebar ────────────────────────────────────────────────────────────
+// ── Status sidebar ────────────────────────────────────────────────
 function updateStatus(errorMessage = null) {
   setText('status-sessions', state.sessions.length
     ? `sessions.csv carregat (${state.sessions.length} files)`
@@ -307,7 +298,7 @@ function updateStatus(errorMessage = null) {
   setText('status-last-update', `Actualitzat: ${new Date().toLocaleString('ca-ES')}`);
 }
 
-// ── Helpers UI ────────────────────────────────────────────────────────────────
+// ── Helpers UI ──────────────────────────────────────────────────
 function setNotice(message, type = 'info') {
   const bar = document.getElementById('notice-bar');
   bar.classList.remove('is-error', 'is-warning');
@@ -318,7 +309,7 @@ function setNotice(message, type = 'info') {
   bar.style.display = activeView === 'overview' || activeView == null ? '' : 'none';
 }
 
-// ── Helpers de dades ──────────────────────────────────────────────────────────
+// ── Helpers de dades ─────────────────────────────────────────────
 function parseDate(value) {
   if (!value) return null;
   const s = String(value).trim();
