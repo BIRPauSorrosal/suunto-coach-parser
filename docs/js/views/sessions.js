@@ -6,7 +6,7 @@
 //                         getTSSLevel, tssBadgeHTML, tssDotHTML)
 //      app.js            (CHART_COLORS via charts.js, STRENGTH_RE, PADEL_TYPES,
 //                         QUALITY_TYPES, LONG_TYPES, TEST_RACE_TYPES)
-//      comment-editor.js (openCommentEditor)
+//      comment-editor.js (openSessionCommentEditor)
 // NOTA: No declarar aquí constants de tipus — usar les de app.js
 
 let _sessSessions = [];
