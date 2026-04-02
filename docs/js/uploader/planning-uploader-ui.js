@@ -72,7 +72,7 @@ function buildPlanningModal() {
       <footer class="uploader-footer">
         <button class="btn btn-ghost"   id="planning-uploader-cancel-btn">Cancel·lar</button>
         <button class="btn btn-primary" id="planning-uploader-confirm-btn" disabled>
-          Descarregar planning.csv
+          Importar planning
         </button>
       </footer>
 
@@ -142,11 +142,9 @@ function renderPlanningResults(result) {
 
   // Habilitar el botó de confirmació només si hi ha canvis reals
   confirmBtn.disabled = (stats.added + stats.replaced) === 0;
-  if (confirmBtn.disabled) {
-    confirmBtn.title = "No hi ha canvis nous respecte al planning actual.";
-  } else {
-    confirmBtn.title = "";
-  }
+  confirmBtn.title = confirmBtn.disabled
+    ? "No hi ha canvis nous respecte al planning actual."
+    : "";
 }
 
 /**
@@ -156,9 +154,9 @@ function setPlanningConfirmState(state) {
   const btn = document.getElementById("planning-uploader-confirm-btn");
   if (!btn) return;
   const states = {
-    idle:       { text: "Descarregar planning.csv", disabled: false },
-    validating: { text: "Validant...",               disabled: true  },
-    processing: { text: "Processant...",             disabled: true  },
+    idle:       { text: "Importar planning", disabled: false },
+    validating: { text: "Validant...",        disabled: true  },
+    processing: { text: "Processant...",      disabled: true  },
   };
   const s = states[state] ?? states.idle;
   btn.textContent = s.text;
