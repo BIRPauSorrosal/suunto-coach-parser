@@ -114,7 +114,7 @@
   display:       flex;
   flex-direction: column;
   gap:           12px;
-  max-height:    260px;
+  max-height:    320px;
   overflow-y:    auto;
 }
 
@@ -151,6 +151,25 @@
 }
 .uploader-list-item--err {
   background: rgba(239, 68, 68, 0.08);
+}
+
+/* Ítems amb comentari: el layout és en bloc (flex column) per
+   poder mostrar el textarea a sota de la fila principal */
+.uploader-list-item--with-comment {
+  display:        flex;
+  flex-direction: column;
+  gap:            0;
+  padding:        0;
+  align-items:    stretch;
+}
+
+/* Fila principal de l'ítem (icona + nom + badge + data + botó) */
+.uploader-item-row {
+  display:     grid;
+  grid-template-columns: 20px 1fr auto auto auto;
+  align-items: center;
+  gap:         8px;
+  padding:     6px 10px;
 }
 
 .uploader-item-icon  { font-size: .85rem; }
@@ -195,6 +214,62 @@
 }
 .uploader-list-item--err .uploader-item-name   { grid-column: 2; }
 .uploader-list-item--err .uploader-item-reason { grid-column: 2; }
+
+
+/* ── Botó de toggle del comentari ───────────────────────────── */
+.uploader-comment-toggle {
+  background:    none;
+  border:        1px solid var(--border);
+  color:         var(--text-muted);
+  font-size:     .78rem;
+  cursor:        pointer;
+  padding:       2px 5px;
+  border-radius: 4px;
+  line-height:   1.4;
+  transition:    color .15s, background .15s, border-color .15s;
+}
+.uploader-comment-toggle:hover {
+  color:         var(--text);
+  border-color:  var(--accent);
+  background:    rgba(34, 197, 94, 0.06);
+}
+/* Estat actiu: quan el textarea és visible */
+.uploader-comment-toggle--active {
+  color:         var(--accent);
+  border-color:  var(--accent);
+  background:    rgba(34, 197, 94, 0.10);
+}
+
+
+/* ── Àrea de comentari col·lapsable ─────────────────────────── */
+.uploader-comment-area {
+  padding:       4px 10px 8px;
+  border-top:    1px solid var(--border);
+}
+
+.uploader-comment-input {
+  width:         100%;
+  font-family:   var(--font);
+  font-size:     .8rem;
+  color:         var(--text);
+  background:    var(--bg);
+  border:        1px solid var(--border);
+  border-radius: var(--radius);
+  padding:       6px 8px;
+  resize:        vertical;
+  box-sizing:    border-box;
+  transition:    border-color .15s, box-shadow .15s;
+  line-height:   1.5;
+}
+.uploader-comment-input:focus {
+  outline:       none;
+  border-color:  var(--accent);
+  box-shadow:    0 0 0 2px rgba(34, 197, 94, 0.18);
+}
+.uploader-comment-input::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
 
 
 /* ── Resum de merge del planning ────────────────────────────── */
@@ -271,4 +346,5 @@
   .uploader-list-item      { grid-template-columns: 20px 1fr; }
   .uploader-item-badge,
   .uploader-item-date      { display: none; }
+  .uploader-comment-area   { padding: 4px 8px 8px; }
 }
