@@ -79,6 +79,10 @@ function buildModal() {
  * Actualitza la secció de resultats del modal.
  * Cridat pel callback onDone de handleFileSelection().
  *
+ * Cada fitxer vàlid mostra un textarea col·lapsable per afegir
+ * un comentari opcional a la sessió. L'id del textarea segueix
+ * el patró: uploader-comment-{index}
+ *
  * @param {Array} ok     — [{ name, row }]
  * @param {Array} errors — [{ name, reason }]
  */
@@ -94,14 +98,37 @@ function renderResults(ok, errors) {
   if (ok.length) {
     document.getElementById("uploader-ok-count").textContent = ok.length;
     document.getElementById("uploader-ok-list").innerHTML = ok
-      .map(f => `
-        <li class="uploader-list-item">
-          <span class="uploader-item-icon">📄</span>
-          <span class="uploader-item-name">${f.name}</span>
-          <span class="uploader-item-badge">${f.row.Tipus}</span>
-          <span class="uploader-item-date">${f.row.Data}</span>
+      .map((f, i) => `
+        <li class="uploader-list-item uploader-list-item--with-comment">
+          <div class="uploader-item-row">
+            <span class="uploader-item-icon">📄</span>
+            <span class="uploader-item-name">${f.name}</span>
+            <span class="uploader-item-badge">${f.row.Tipus}</span>
+            <span class="uploader-item-date">${f.row.Data}</span>
+            <button
+              type="button"
+              class="uploader-comment-toggle"
+              aria-label="Afegir comentari"
+              aria-expanded="false"
+              data-target="uploader-comment-${i}"
+              title="Afegir comentari"
+            >✏️</button>
+          </div>
+          <div class="uploader-comment-area" id="uploader-comment-area-${i}" style="display:none">
+            <textarea
+              id="uploader-comment-${i}"
+              class="uploader-comment-input"
+              placeholder="Comentari opcional per a aquesta sessió..."
+              rows="2"
+            ></textarea>
+          </div>
         </li>`)
       .join("");
+
+    // Binding dels botons toggle (delegació d'events sobre la llista)
+    document.getElementById("uploader-ok-list")
+      .addEventListener("click", _handleCommentToggle);
+
     okSection.style.display  = "block";
     confirmBtn.disabled      = false;
   } else {
@@ -125,6 +152,44 @@ function renderResults(ok, errors) {
     errSection.style.display = "none";
   }
 }
+
+/**
+ * Gestiona el clic al botó ✏️ de cada ítem.
+ * Expandeix/col·lapsa el textarea de comentari.
+ */
+function _handleCommentToggle(e) {
+  const btn = e.target.closest(".uploader-comment-toggle");
+  if (!btn) return;
+
+  const targetId = btn.dataset.target;
+  const areaId   = "uploader-comment-area-" + targetId.replace("uploader-comment-", "");
+  const area     = document.getElementById(areaId);
+  if (!area) return;
+
+  const isOpen = area.style.display !== "none";
+  area.style.display = isOpen ? "none" : "block";
+  btn.setAttribute("aria-expanded", String(!isOpen));
+  btn.classList.toggle("uploader-comment-toggle--active", !isOpen);
+
+  // Focus automàtic al obrir
+  if (!isOpen) {
+    const textarea = area.querySelector("textarea");
+    if (textarea) textarea.focus();
+  }
+}
+
+/**
+ * Recull tots els comentaris introduïts als textareas.
+ * Retorna un array de strings, un per cada fitxer OK (en ordre).
+ */
+function collectComments() {
+  const items = document.querySelectorAll("#uploader-ok-list .uploader-list-item--with-comment");
+  return Array.from(items).map((_, i) => {
+    const ta = document.getElementById(`uploader-comment-${i}`);
+    return ta ? ta.value.trim() : "";
+  });
+}
+
 
 /**
  * Canvia l'estat visual del botó de confirmació.
@@ -203,7 +268,8 @@ function _bindEvents(dialog) {
   document.getElementById("uploader-confirm-btn")
     .addEventListener("click", async () => {
       setConfirmState("processing");
-      await confirmImport(closeUploaderModal);  // uploader.js
+      const comments = collectComments();             // llegim comentaris de la UI
+      await confirmImport(comments, closeUploaderModal);  // uploader.js (actualitzat)
     });
 }
 
