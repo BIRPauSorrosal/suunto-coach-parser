@@ -1,0 +1,174 @@
+/* ────────────────────────────────────────────────────────────────
+   comment-editor.css — Modal per editar comentaris de sessió
+   ──────────────────────────────────────────────────────────────── */
+
+/* ── Dialog (modal natiu) ────────────────────────────────────────────── */
+#comment-editor-dialog {
+  border: none;
+  border-radius: var(--radius-lg, 0.75rem);
+  box-shadow:
+    0 12px 32px oklch(0.2 0.01 80 / 0.18),
+    0  2px  8px oklch(0.2 0.01 80 / 0.10);
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #1a1a1a);
+  padding: 0;
+  width: min(520px, calc(100vw - 2rem));
+  max-height: calc(100dvh - 4rem);
+  overflow: hidden;
+}
+
+#comment-editor-dialog::backdrop {
+  background: oklch(0.1 0 0 / 0.45);
+  backdrop-filter: blur(2px);
+}
+
+/* Animació d'entrada */
+@keyframes ced-in {
+  from { opacity: 0; transform: translateY(-10px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)     scale(1);    }
+}
+#comment-editor-dialog[open] {
+  animation: ced-in 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Layout intern ─────────────────────────────────────────────────────────── */
+.ced-form {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  gap: 1rem;
+}
+
+.ced-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.ced-title {
+  font-size: var(--text-lg, 1.125rem);
+  font-weight: 600;
+  margin: 0;
+  color: var(--color-text, #1a1a1a);
+}
+
+.ced-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md, 0.5rem);
+  color: var(--color-text-muted, #666);
+  transition: background 150ms, color 150ms;
+  flex-shrink: 0;
+}
+.ced-close:hover {
+  background: var(--color-surface-offset, #f0f0f0);
+  color: var(--color-text, #1a1a1a);
+}
+
+/* ── Meta info (Data · Tipus · Km) ───────────────────────────────────── */
+.ced-meta {
+  font-size: var(--text-sm, 0.875rem);
+  color: var(--color-text-muted, #666);
+  background: var(--color-surface-offset, #f5f5f5);
+  border-radius: var(--radius-sm, 0.375rem);
+  padding: 0.5rem 0.75rem;
+  line-height: 1.4;
+}
+
+/* ── Textarea ─────────────────────────────────────────────────────────────── */
+.ced-textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 110px;
+  padding: 0.75rem;
+  border: 1px solid oklch(from var(--color-text, #1a1a1a) l c h / 0.14);
+  border-radius: var(--radius-md, 0.5rem);
+  background: var(--color-bg, #fff);
+  color: var(--color-text, #1a1a1a);
+  font-size: var(--text-sm, 0.875rem);
+  font-family: inherit;
+  line-height: 1.6;
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.ced-textarea::placeholder {
+  color: var(--color-text-faint, #aaa);
+}
+.ced-textarea:focus {
+  outline: none;
+  border-color: var(--color-primary, #01696f);
+  box-shadow: 0 0 0 3px oklch(from var(--color-primary, #01696f) l c h / 0.15);
+}
+
+/* ── Contador de caràcters ────────────────────────────────────────────── */
+.ced-counter {
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--color-text-faint, #aaa);
+  text-align: right;
+  margin-top: -0.5rem;
+}
+
+/* ── Botons d'acció ──────────────────────────────────────────────────────────── */
+.ced-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--color-divider, #e0e0e0);
+}
+
+/* ── Botó ✏️ a la taula de sessions ────────────────────────────────── */
+.ced-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm, 0.375rem);
+  border: 1px solid oklch(from var(--color-text, #1a1a1a) l c h / 0.12);
+  background: transparent;
+  color: var(--color-text-muted, #666);
+  cursor: pointer;
+  transition: background 150ms, color 150ms, border-color 150ms;
+  flex-shrink: 0;
+}
+.ced-btn:hover {
+  background: var(--color-surface-offset, #f0f0f0);
+  color: var(--color-primary, #01696f);
+  border-color: var(--color-primary, #01696f);
+}
+.ced-btn:active {
+  background: var(--color-primary-highlight, #cedcd8);
+}
+
+/* Estat: té comentari → accent visible */
+.ced-btn--has-comment {
+  color: var(--color-primary, #01696f);
+  border-color: var(--color-primary, #01696f);
+  background: var(--color-primary-highlight, #cedcd8);
+}
+.ced-btn--has-comment:hover {
+  background: var(--color-primary, #01696f);
+  color: #fff;
+}
+
+/* Cel·la de la columna comentari: centrada i compacta */
+.sess-col-comment {
+  text-align: center;
+  width: 44px;
+  padding-inline: 4px;
+}
+
+/* ── Responsive (bottom sheet en mòbil) ─────────────────────────────── */
+@media (max-width: 480px) {
+  #comment-editor-dialog {
+    width: calc(100vw - 1rem);
+    border-radius: var(--radius-md, 0.5rem) var(--radius-md, 0.5rem) 0 0;
+    position: fixed;
+    bottom: 0;
+    margin: 0 auto;
+  }
+}
