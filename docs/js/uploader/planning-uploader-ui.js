@@ -45,7 +45,7 @@ function buildPlanningModal() {
       <div class="uploader-results" id="planning-uploader-results" style="display:none">
 
         <!-- Capçalera resum -->
-        <div class="planning-merge-summary" id="planning-merge-summary">
+        <div class="planning-merge-summary" id="planning-merge-summary" style="display:none">
           <span class="planning-badge planning-badge--added"   id="planning-count-added">0 noves</span>
           <span class="planning-badge planning-badge--replaced" id="planning-count-replaced">0 substituïdes</span>
           <span class="planning-badge planning-badge--unchanged" id="planning-count-unchanged">0 sense canvis</span>
@@ -118,13 +118,13 @@ function renderPlanningResults(result) {
   const { stats, incoming } = result.merge;
 
   // Actualitzar badges de resum
-  document.getElementById("planning-merge-summary").style.display = "";
+  document.getElementById("planning-merge-summary").style.display = "flex";
   document.getElementById("planning-count-added").textContent     = `${stats.added} noves`;
   document.getElementById("planning-count-replaced").textContent  = `${stats.replaced} substituïdes`;
   document.getElementById("planning-count-unchanged").textContent = `${stats.unchanged} sense canvis`;
 
   // Llista de setmanes entrants amb el seu estat
-  const ICONS = { added: "🟢", replaced: "🟡", unchanged: "⚪" };
+  const ICONS  = { added: "🟢", replaced: "🟡", unchanged: "⚪" };
   const LABELS = { added: "Nova", replaced: "Substituïda", unchanged: "Sense canvis" };
 
   document.getElementById("planning-uploader-ok-count").textContent = incoming.length;
@@ -262,7 +262,6 @@ function closePlanningUploaderModal() {
  */
 function initPlanningUploaderUI() {
   function _inject() {
-    // Evitar doble injecció
     if (document.getElementById("import-planning-btn")) return;
 
     const importBtn = document.getElementById("import-data-btn");
@@ -270,7 +269,7 @@ function initPlanningUploaderUI() {
 
     const btn = document.createElement("button");
     btn.type        = "button";
-    btn.className   = "btn btn-ghost btn-sidebar";
+    btn.className   = "btn btn-primary btn-sidebar";  // mateix estil verd que "Importar activitats"
     btn.id          = "import-planning-btn";
     btn.textContent = "Importar planning";
     btn.addEventListener("click", openPlanningUploaderModal);
@@ -279,7 +278,6 @@ function initPlanningUploaderUI() {
     importBtn.insertAdjacentElement("afterend", btn);
   }
 
-  // Intent inicial (si import-data-btn ja existeix)
   _inject();
 
   // Fallback amb MutationObserver per si s'injecta posteriorment
