@@ -10,7 +10,7 @@
 const SUUNTO_HEADER_KEYS = ["DateTime", "Duration"];
 
 
-// ─── ESTAT INTERN ────────────────────────────────────────────
+// ─── ESTAT INTERN ─────────────────────────────────────────────
 
 // Files parsejades pendents de confirmar per l'usuari
 let _pendingRows = [];
@@ -19,7 +19,7 @@ function getPendingRows()   { return _pendingRows; }
 function clearPendingRows() { _pendingRows = []; }
 
 
-// ─── VALIDACIÓ ───────────────────────────────────────────────
+// ─── VALIDACIÓ ──────────────────────────────────────────────────
 
 /**
  * Comprova que un objecte JSON té l'estructura mínima de Suunto.
@@ -47,7 +47,7 @@ function validateSuuntoJson(data) {
 }
 
 
-// ─── LECTURA DE FITXERS ──────────────────────────────────────
+// ─── LECTURA DE FITXERS ──────────────────────────────────────────
 
 /**
  * Llegeix un File com a text. Retorna Promise<string>.
@@ -119,7 +119,7 @@ async function processFiles(files) {
 }
 
 
-// ─── COORDINADOR PRINCIPAL ───────────────────────────────────
+// ─── COORDINADOR PRINCIPAL ───────────────────────────────────────
 
 /**
  * Punt d'entrada cridat per uploader-ui.js quan l'usuari
@@ -138,13 +138,23 @@ async function handleFileSelection(files, onDone) {
 
 /**
  * Punt d'entrada cridat per uploader-ui.js quan l'usuari confirma.
- * Delega a csv-writer.js i neteja l'estat intern.
+ * Injecta els comentaris de la UI a les rows pendents,
+ * delega a csv-writer.js i neteja l'estat intern.
  *
+ * @param {string[]} comments   — array de comentaris (un per fila, en ordre)
+ *                               proviùt per uploader-ui.js via collectComments()
  * @param {Function} onComplete — callback() quan acaba (per tancar modal, etc.)
  */
-async function confirmImport(onComplete) {
+async function confirmImport(comments, onComplete) {
   if (!_pendingRows.length) return;
-  await appendRowsToCSV(_pendingRows);   // definit a csv-writer.js
+
+  // Injectem el comentari a cada row. Si no n'hi ha, queda string buit.
+  const rowsWithComments = _pendingRows.map((row, i) => ({
+    ...row,
+    Comentari: (comments && comments[i]) ? comments[i] : "",
+  }));
+
+  await appendRowsToCSV(rowsWithComments);   // definit a csv-writer.js
   _pendingRows = [];
   onComplete();
 }
