@@ -289,23 +289,31 @@ function enrichSessionRow(row) {
   if (!date) return null;
   const tipus = String(row['Tipus'] || '').trim().toUpperCase();
   return {
-    raw:              row,
+    raw:                 row,
     date,
-    displayDate:      formatDate(date),
-    tipus:            row['Tipus'] || '--',
-    tipusKey:         tipus,
-    durada:           toNumber(row['Durada(min)']),
-    distancia:        toNumber(row['Dist(km)']),
-    desnivell:        toNumber(row['Desnivell(m)']),
-    carrega:          toNumber(row['Carrega']),
-    z1min:            toNumber(row['Z1(min)']),
-    z2min:            toNumber(row['Z2(min)']),
-    fcMitja:          toNumber(row['FCMitja']),
-    ritme:            toNumber(row['Ritme(min/km)']),
-    ritmeMitjaSeries: toNumber(row['Ritme_Mitja_Series']),
-    fcMitjaSeries:    toNumber(row['FC_Mitja_Series']),
-    epoc:             toNumber(row['EPOC']),
-    recuperacio:      toNumber(row['Recup(h)'])
+    displayDate:         formatDate(date),
+    tipus:               row['Tipus'] || '--',
+    tipusKey:            tipus,
+    durada:              toNumber(row['Durada(min)']),
+    distancia:           toNumber(row['Dist(km)']),
+    desnivell:           toNumber(row['Desnivell(m)']),
+    carrega:             toNumber(row['Carrega']),
+    z1min:               toNumber(row['Z1(min)']),
+    z2min:               toNumber(row['Z2(min)']),
+    fcMitja:             toNumber(row['FCMitja']),
+    ritme:               toNumber(row['Ritme(min/km)']),
+    // ── Camps de qualitat (sèries) ────────────────────────────────
+    numSeries:           toNumber(row['Num_Series']),
+    duradaMitjaSeries:   toNumber(row['Durada_Mitja_Series']),
+    recMitjaMin:         toNumber(row['Rec_Mitja_Min']),
+    ritmeMitjaSeries:    toNumber(row['Ritme_Mitja_Series']),
+    consistenciaRitme:   toNumber(row['Consistencia_Ritme']),
+    fcMitjaSeries:       toNumber(row['FC_Mitja_Series']),
+    fcMaxMitjaSeries:    toNumber(row['FC_Max_Mitja_Series']),
+    cadenciaMitjaSeries: toNumber(row['Cadencia_Mitja_Series']),
+    // ── Altres ───────────────────────────────────────────────────
+    epoc:                toNumber(row['EPOC']),
+    recuperacio:         toNumber(row['Recup(h)'])
   };
 }
 

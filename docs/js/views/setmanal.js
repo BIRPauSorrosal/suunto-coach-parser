@@ -103,7 +103,7 @@ function renderQualityBlock(week, weekSessions) {
 
   const ritmeReal = sess.length
     ? sess.reduce((best, s) => {
-        const r = isFinite(s.ritmeMitjaSeries) ? s.ritmeMitjaSeries : s.ritme;
+        const r = isFinite(s.ritmeMitjaSeries) && s.ritmeMitjaSeries > 0 ? s.ritmeMitjaSeries : s.ritme;
         return (!best || r < best) ? r : best;
       }, null)
     : null;
@@ -131,7 +131,7 @@ function renderQualityBlock(week, weekSessions) {
   if (tbody) {
     tbody.innerHTML = sess.length
       ? sess.map(s => sessionRowQuality(s)).join('')
-      : `<tr><td colspan="4" class="empty-row muted-msg">Sense sessions de qualitat</td></tr>`;
+      : `<tr><td colspan="5" class="empty-row muted-msg">Sense sessions de qualitat</td></tr>`;
   }
   setBlockStatus('sw-q-block', sess.length > 0);
 }
@@ -248,12 +248,35 @@ function tssCell(carrega) {
   return tssDotHTML(carrega);
 }
 
-// Qualitat: Data | Ritme sèries | FC | TSS
+// Qualitat: Data | Sèries | Ritme sèries | FC | TSS
+// «Sèries» mostra: «2 × 10 min (rec: 2 min)» si tenim les dades;
+//                  «N sèries» si tenim numSeries però no la durada;
+//                  «—» si no hi ha res.
 function sessionRowQuality(s) {
-  const ritme = isFinite(s.ritmeMitjaSeries) ? s.ritmeMitjaSeries : s.ritme;
-  const fc    = isFinite(s.fcMitjaSeries)    ? s.fcMitjaSeries    : s.fcMitja;
+  const ritme = isFinite(s.ritmeMitjaSeries) && s.ritmeMitjaSeries > 0
+    ? s.ritmeMitjaSeries
+    : s.ritme;
+  const fc = isFinite(s.fcMitjaSeries) && s.fcMitjaSeries > 0
+    ? s.fcMitjaSeries
+    : s.fcMitja;
+
+  // Construeix la cel·la de sèries
+  let seriesCell = '—';
+  const n   = s.numSeries;
+  const dur = s.duradaMitjaSeries;
+  const rec = s.recMitjaMin;
+  if (isFinite(n) && n > 0) {
+    if (isFinite(dur) && dur > 0) {
+      seriesCell = `${n} × ${fmtNum(dur)} min`;
+      if (isFinite(rec) && rec > 0) seriesCell += ` <span class="muted-detail">(rec: ${fmtNum(rec)} min)</span>`;
+    } else {
+      seriesCell = `${n} sèries`;
+    }
+  }
+
   return `<tr>
     <td>${esc(s.displayDate)}</td>
+    <td>${seriesCell}</td>
     <td>${formatPace(ritme)}</td>
     <td>${fcBadgeHTML(fc)}</td>
     <td>${tssCell(s.carrega)}</td>
