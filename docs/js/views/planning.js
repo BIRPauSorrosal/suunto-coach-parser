@@ -1,5 +1,7 @@
 // docs/js/views/planning.js
-// Dep: app.js (formatPace)
+// Dep: app.js (formatPace, enrichPlanningRow)
+// Tots els camps del planning s'accedeixen via propietats enriquides (w.camp),
+// mai via w.raw['Columna']. L'enriquiment es fa a enrichPlanningRow() (app.js).
 
 const CYCLE_COLORS = {
   'BASE':         { color: '#38bdf8', bg: 'rgba(56,189,248,0.15)'  },
@@ -32,7 +34,7 @@ let planningYear      = new Date().getFullYear();
 let planningMonth     = new Date().getMonth();
 let planningWeekIndex = 0;
 
-// ── Punt d'entrada ────────────────────────────────────────────────────────────
+// ── Punt d'entrada ──────────────────────────────────────────────────────────────
 function renderPlanningView(planning, sessions) {
   if (!planning.length) return;
   const today  = new Date();
@@ -47,7 +49,7 @@ function renderPlanningView(planning, sessions) {
   renderPlanningLevel(planning, sessions);
 }
 
-// ── Navegació de nivells ──────────────────────────────────────────────────────
+// ── Navegació de nivells ─────────────────────────────────────────────────────────
 function initPlanningNav(planning, sessions) {
   ['btn-plan-yearly', 'btn-plan-monthly'].forEach(id => {
     const btn = document.getElementById(id);
@@ -76,7 +78,7 @@ function updateLevelButtons() {
   document.getElementById('btn-plan-monthly')?.classList.toggle('active', planningViewLevel === 'monthly');
 }
 
-// ── Genera les setmanes ISO de l'any (dilluns a diumenge) ────────────────────
+// ── Genera les setmanes ISO de l'any (dilluns a diumenge) ──────────────────────
 function buildISOWeeks(year) {
   const weeks = [];
   const jan1     = new Date(year, 0, 1);
@@ -99,19 +101,19 @@ function buildISOWeeks(year) {
   return weeks;
 }
 
-// ── Mes representatiu d'una setmana (dijous → convenció ISO) ─────────────────
+// ── Mes representatiu d'una setmana (dijous → convenció ISO) ───────────────────
 function isoWeekMonth(isoStart) {
   const thu = new Date(isoStart);
   thu.setDate(thu.getDate() + 3);
   return thu.getMonth();
 }
 
-// ── Troba el planning entry que solapa amb una setmana ISO ───────────────────
+// ── Troba el planning entry que solapa amb una setmana ISO ─────────────────────
 function findPlanningForWeek(isoStart, isoEnd, planning) {
   return planning.find(w => w.startDate <= isoEnd && w.endDate >= isoStart) || null;
 }
 
-// ── Vista ANUAL — calendari 3 files × 4 columnes de mesos ────────────────────
+// ── Vista ANUAL — calendari 3 files × 4 columnes de mesos ─────────────────────
 function renderYearlyView(container, planning, sessions) {
   const MONTH_NAMES_LONG  = ['Gener','Febrer','Març','Abril','Maig','Juny',
                               'Juliol','Agost','Setembre','Octubre','Novembre','Desembre'];
@@ -228,7 +230,7 @@ function renderYearlyView(container, planning, sessions) {
   }
 }
 
-// ── Vista MENSUAL ─────────────────────────────────────────────────────────────
+// ── Vista MENSUAL ───────────────────────────────────────────────────────────────
 function renderMonthlyView(container, planning, sessions) {
   const monthNames = ['Gener','Febrer','Març','Abril','Maig','Juny',
                       'Juliol','Agost','Setembre','Octubre','Novembre','Desembre'];
@@ -320,7 +322,7 @@ function renderMonthlyView(container, planning, sessions) {
   });
 }
 
-// ── Vista SETMANAL (pla + real) ───────────────────────────────────────────────
+// ── Vista SETMANAL (pla + real) ───────────────────────────────────────────────────
 // 5 panells: Qualitat · Z2 · Tirada llarga · Força · Altres (Pàdel...)
 function renderWeeklyPlanView(container, planning, sessions) {
   const week = planning[planningWeekIndex];
@@ -332,11 +334,11 @@ function renderWeeklyPlanView(container, planning, sessions) {
     ? ' <span class="pwv-real-val">' + fmtNumP(stats.kmTotal) + ' km fets (' + stats.pctTotal + '%)</span>'
     : '';
 
-  // ── Reals per panell ──────────────────────────────────────────────────────
+  // ── Reals per panell ────────────────────────────────────────────────────────
   const qReal = week.qKm > 0 && stats.status !== 'future'
     ? '<li class="sw-plan-real"><span>Real</span><strong>' + fmtNumP(stats.kmQuality) + ' km (' + (stats.pctQuality || 0) + '%)</strong></li>'
     : '';
-  const z2Real = parseFloat(week.raw['Z2_Km_Plan']) > 0 && stats.status !== 'future'
+  const z2Real = week.z2Km > 0 && stats.status !== 'future'
     ? '<li class="sw-plan-real"><span>Real</span><strong>' + fmtNumP(stats.kmZ2) + ' km (' + (stats.pctZ2 || 0) + '%)</strong></li>'
     : '';
   const llReal = week.llKm > 0 && stats.status !== 'future'
@@ -357,8 +359,9 @@ function renderWeeklyPlanView(container, planning, sessions) {
       + '</strong></li>'
     : '';
 
-  const qRitmePla  = formatPace(week.raw['Q_Ritme_min_km']);
-  const z2RitmePla = formatPace(week.raw['Z2_Ritme_min_km_min'], '') + '–' + formatPace(week.raw['Z2_Ritme_min_km_max']);
+  // Ritmes formatats des dels camps enriquits (tipus number, no string)
+  const qRitmePla  = formatPace(week.qRitme);
+  const z2RitmePla = formatPace(week.z2RitmeMin, '') + '–' + formatPace(week.z2RitmeMax);
 
   container.innerHTML =
     '<div class="plan-week-nav">'
@@ -385,17 +388,18 @@ function renderWeeklyPlanView(container, planning, sessions) {
     +   '</div>'
     + '</div>'
 
-    // ── 5 panells ──────────────────────────────────────────────────────────
+    // ── 5 panells ──────────────────────────────────────────────────────────────────
     + '<div class="pwv-grid">'
 
     // 1 · Qualitat
     + '<article class="panel pwv-block">'
     +   '<p class="eyebrow">🎯 Qualitat</p>'
     +   '<ul class="sw-plan-list" style="margin-top:12px">'
-    +     '<li><span>Sèries</span><strong>' + (week.qSeries || '--') + '</strong></li>'
+    +     '<li><span>Sèries</span><strong>' + (isFinite(week.qSeries) ? week.qSeries : '--') + '</strong></li>'
+    +     '<li><span>Durada sèrie</span><strong>' + (isFinite(week.qDuradaSerie) ? week.qDuradaSerie + ' min' : '--') + '</strong></li>'
     +     '<li><span>Ritme</span><strong>' + qRitmePla + '</strong></li>'
-    +     '<li><span>Recuperació</span><strong>' + (week.raw['Q_Rec_min'] || '--') + ' min</strong></li>'
-    +     '<li><span>FC</span><strong>' + formatFCRangeP(week.raw['Q_FC_min'], week.raw['Q_FC_max']) + '</strong></li>'
+    +     '<li><span>Recuperació</span><strong>' + (isFinite(week.qRec) ? week.qRec + ' min' : '--') + '</strong></li>'
+    +     '<li><span>FC</span><strong>' + formatFCRangeP(week.qFcMin, week.qFcMax) + '</strong></li>'
     +     '<li><span>Km pla</span><strong>' + fmtNumP(week.qKm) + ' km</strong></li>'
     +     qReal
     +   '</ul>'
@@ -403,12 +407,12 @@ function renderWeeklyPlanView(container, planning, sessions) {
 
     // 2 · Z2
     + '<article class="panel pwv-block">'
-    +   '<p class="eyebrow">🫁 Z2</p>'
+    +   '<p class="eyebrow">�aby1 Z2</p>'
     +   '<ul class="sw-plan-list" style="margin-top:12px">'
     +     '<li><span>Durada</span><strong>' + fmtNumP(week.z2Durada) + ' min</strong></li>'
     +     '<li><span>Ritme</span><strong>' + z2RitmePla + '</strong></li>'
-    +     '<li><span>FC</span><strong>' + formatFCRangeP(week.raw['Z2_FC_min'], week.raw['Z2_FC_max']) + '</strong></li>'
-    +     '<li><span>Km pla</span><strong>' + fmtNumP(week.raw['Z2_Km_Plan']) + ' km</strong></li>'
+    +     '<li><span>FC</span><strong>' + formatFCRangeP(week.z2FcMin, week.z2FcMax) + '</strong></li>'
+    +     '<li><span>Km pla</span><strong>' + fmtNumP(week.z2Km) + ' km</strong></li>'
     +     z2Real
     +   '</ul>'
     + '</article>'
@@ -417,8 +421,8 @@ function renderWeeklyPlanView(container, planning, sessions) {
     + '<article class="panel pwv-block">'
     +   '<p class="eyebrow">🏃 Tirada llarga</p>'
     +   '<ul class="sw-plan-list" style="margin-top:12px">'
-    +     '<li><span>Tipus</span><strong>' + (week.llTipus || '--') + '</strong></li>'
-    +     '<li><span>Durada</span><strong>' + (week.raw['LL_Durada_min'] ? fmtNumP(week.raw['LL_Durada_min']) + ' min' : '--') + '</strong></li>'
+    +     '<li><span>Tipus</span><strong>' + week.llTipus + '</strong></li>'
+    +     '<li><span>Durada</span><strong>' + (isFinite(week.llDurada) ? fmtNumP(week.llDurada) + ' min' : '--') + '</strong></li>'
     +     '<li><span>Km pla</span><strong>' + fmtNumP(week.llKm) + ' km</strong></li>'
     +     llReal
     +   '</ul>'
@@ -428,7 +432,7 @@ function renderWeeklyPlanView(container, planning, sessions) {
     + '<article class="panel pwv-block">'
     +   '<p class="eyebrow">💪 Força</p>'
     +   '<ul class="sw-plan-list" style="margin-top:12px">'
-    +     '<li><span>Pla</span><strong>' + (week.forcaPlan || '--') + '</strong></li>'
+    +     '<li><span>Pla</span><strong>' + week.forcaPlan + '</strong></li>'
     +     strengthReal
     +   '</ul>'
     + '</article>'
@@ -437,7 +441,7 @@ function renderWeeklyPlanView(container, planning, sessions) {
     + '<article class="panel pwv-block pwv-block--wide">'
     +   '<p class="eyebrow">🎾 Altres</p>'
     +   '<ul class="sw-plan-list" style="margin-top:12px">'
-    +     '<li><span>Pàdel pla</span><strong>' + (week.padelPlan || '--') + '</strong></li>'
+    +     '<li><span>Pàdel pla</span><strong>' + week.padelPlan + '</strong></li>'
     +     altresReal
     +   '</ul>'
     + '</article>'
@@ -452,7 +456,7 @@ function renderWeeklyPlanView(container, planning, sessions) {
   });
 }
 
-// ── Stats per setmana (JOIN planning ↔ sessions) ──────────────────────────────
+// ── Stats per setmana (JOIN planning ↔ sessions) ──────────────────────────────────
 function getWeekStats(week, sessions) {
   const ws = sessions.filter(s => s.date >= week.startDate && s.date <= week.endDate);
 
@@ -461,7 +465,7 @@ function getWeekStats(week, sessions) {
                        .reduce((acc, s) => acc + (s.distancia || 0), 0);
   const kmZ2       = ws.filter(s => s.tipusKey === 'Z2')
                        .reduce((acc, s) => acc + (s.distancia || 0), 0);
-  const kmLong     = ws.filter(s => ['LLARGA','MARATÓ','TRAIL','MITJA','MARATO'].includes(s.tipusKey))
+  const kmLong     = ws.filter(s => ['LLARGA','MARÀTÓ','TRAIL','MITJA','MARATO'].includes(s.tipusKey))
                        .reduce((acc, s) => acc + (s.distancia || 0), 0);
 
   // Força: sessions que comencen per FORÇA/FORCA
@@ -476,9 +480,8 @@ function getWeekStats(week, sessions) {
 
   const pctTotal   = week.kmTotal > 0 ? Math.round((kmTotal   / week.kmTotal) * 100) : 0;
   const pctQuality = week.qKm     > 0 ? Math.round((kmQuality / week.qKm)     * 100) : null;
-  const pctZ2      = parseFloat(week.raw['Z2_Km_Plan']) > 0
-                   ? Math.round((kmZ2  / parseFloat(week.raw['Z2_Km_Plan'])) * 100) : null;
-  const pctLong    = week.llKm > 0 ? Math.round((kmLong / week.llKm) * 100) : null;
+  const pctZ2      = week.z2Km    > 0 ? Math.round((kmZ2      / week.z2Km)    * 100) : null;
+  const pctLong    = week.llKm    > 0 ? Math.round((kmLong    / week.llKm)    * 100) : null;
 
   const today  = new Date(); today.setHours(0,0,0,0);
   const start  = new Date(week.startDate); start.setHours(0,0,0,0);
@@ -491,7 +494,7 @@ function getWeekStats(week, sessions) {
            pctTotal, pctQuality, pctZ2, pctLong, status };
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────────
 function getCycleStyle(cicle) {
   return CYCLE_COLORS[String(cicle || '').toUpperCase().trim()] || CYCLE_DEFAULT;
 }
@@ -504,11 +507,10 @@ function formatFCRangeP(min, max) {
   return (min || max) + ' bpm';
 }
 function estimatedMinutes(w) {
-  const z2 = parseFloat(w.z2Durada) || 0;
-  const q  = (parseFloat(w.qSeries) || 0)
-           * ((parseFloat(w.raw['Q_Durada_Serie_min']) || 0)
-            + (parseFloat(w.raw['Q_Rec_min'])          || 0));
-  const ll = parseFloat(w.raw['LL_Durada_min']) || 0;
+  // Tots els valors ja són number (toNumber), no calen parseFloat
+  const z2 = w.z2Durada   || 0;
+  const q  = (w.qSeries   || 0) * ((w.qDuradaSerie || 0) + (w.qRec || 0));
+  const ll = w.llDurada   || 0;
   return Math.round(z2 + q + ll);
 }
 function fmtMinutes(mins) {
