@@ -114,11 +114,13 @@ function renderQualityBlock(week, weekSessions) {
       }, 0) / sess.length)
     : null;
 
-  setTextV('sw-q-series',  week.qSeries || '--');
-  setTextV('sw-q-ritme',   formatPace(week.raw['Q_Ritme_min_km']));
-  setTextV('sw-q-rec',     week.raw['Q_Rec_min'] ? week.raw['Q_Rec_min'] + ' min' : '--');
-  setTextV('sw-q-fc',      formatFCRange(week.raw['Q_FC_min'], week.raw['Q_FC_max']));
-  setTextV('sw-q-km-plan', `${fmtNum(week.qKm)} km`);
+  // Usem camps enriquits de enrichPlanningRow() — no raw[]
+  setTextV('sw-q-series',       isFinite(week.qSeries) && week.qSeries > 0 ? week.qSeries : (week.raw['Q_Series'] || '--'));
+  setTextV('sw-q-durada-serie', isFinite(week.qDuradaSerie) && week.qDuradaSerie > 0 ? week.qDuradaSerie + ' min' : '--');
+  setTextV('sw-q-ritme',        formatPace(week.qRitme));
+  setTextV('sw-q-rec',          isFinite(week.qRec) && week.qRec > 0 ? week.qRec + ' min' : '--');
+  setTextV('sw-q-fc',           formatFCRange(week.qFcMin, week.qFcMax));
+  setTextV('sw-q-km-plan',      `${fmtNum(week.qKm)} km`);
 
   setTextV('sw-q-ritme-real',    ritmeReal ? formatPace(ritmeReal) : '—');
   setTextV('sw-q-fc-real',       fcReal && fcReal > 0 ? fcReal + ' bpm' : '—');
@@ -129,7 +131,7 @@ function renderQualityBlock(week, weekSessions) {
   if (tbody) {
     tbody.innerHTML = sess.length
       ? sess.map(s => sessionRowQuality(s)).join('')
-      : `<tr><td colspan="5" class="empty-row muted-msg">Sense sessions de qualitat</td></tr>`;
+      : `<tr><td colspan="4" class="empty-row muted-msg">Sense sessions de qualitat</td></tr>`;
   }
   setBlockStatus('sw-q-block', sess.length > 0);
 }
@@ -153,11 +155,12 @@ function renderZ2Block(week, weekSessions) {
     ? Math.round(sess.reduce((acc, s) => acc + (s.fcMitja || 0), 0) / sess.length)
     : null;
 
+  // Usem camps enriquits — no raw[]
   setTextV('sw-z2-durada-plan', `${fmtNum(week.z2Durada)} min`);
   setTextV('sw-z2-ritme-plan',
-    `${formatPace(week.raw['Z2_Ritme_min_km_min'], '')}–${formatPace(week.raw['Z2_Ritme_min_km_max'])}`);
-  setTextV('sw-z2-fc-plan',   formatFCRange(week.raw['Z2_FC_min'], week.raw['Z2_FC_max']));
-  setTextV('sw-z2-km-plan',   `${fmtNum(week.raw['Z2_Km_Plan'])} km`);
+    `${formatPace(week.z2RitmeMin, '')}–${formatPace(week.z2RitmeMax)}`);
+  setTextV('sw-z2-fc-plan',   formatFCRange(week.z2FcMin, week.z2FcMax));
+  setTextV('sw-z2-km-plan',   `${fmtNum(week.z2Km)} km`);
 
   let duradaRealText = '—';
   if (realDuradaTotal > 0) {
@@ -187,8 +190,9 @@ function renderLongBlock(week, weekSessions) {
     ? sess.reduce((best, s) => (!best || (isFinite(s.ritme) && s.ritme < best)) ? s.ritme : best, null)
     : null;
 
+  // Usem camps enriquits — no raw[]
   setTextV('sw-ll-tipus-plan',  week.llTipus || '--');
-  setTextV('sw-ll-durada-plan', week.raw['LL_Durada_min'] ? `${fmtNum(week.raw['LL_Durada_min'])} min` : '--');
+  setTextV('sw-ll-durada-plan', isFinite(week.llDurada) && week.llDurada > 0 ? `${fmtNum(week.llDurada)} min` : '--');
   setTextV('sw-ll-km-plan',     `${fmtNum(week.llKm)} km`);
 
   setTextV('sw-ll-ritme-real', ritmeReal ? formatPace(ritmeReal) : '—');
@@ -244,7 +248,7 @@ function tssCell(carrega) {
   return tssDotHTML(carrega);
 }
 
-// Qualitat: Data | Ritme sèries | FC sèries | FC | TSS
+// Qualitat: Data | Ritme sèries | FC | TSS
 function sessionRowQuality(s) {
   const ritme = isFinite(s.ritmeMitjaSeries) ? s.ritmeMitjaSeries : s.ritme;
   const fc    = isFinite(s.fcMitjaSeries)    ? s.fcMitjaSeries    : s.fcMitja;
