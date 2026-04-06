@@ -215,28 +215,72 @@ function enrichPlanningRow(row) {
   const endDate   = parseDate(row['Data_Fi']);
   if (!startDate || !endDate) return null;
 
+  // ── Qualitat ───────────────────────────────────────────────────
+  const qSeries      = toNumber(row['Q_Series']);           // número de sèries
+  const qDuradaSerie = toNumber(row['Q_Durada_Serie_min']); // minuts per sèrie
+  const qRec         = toNumber(row['Q_Rec_min']);          // minuts recuperació entre sèries
+  const qRitme       = toNumber(row['Q_Ritme_min_km']);     // ritme objectiu (min/km)
+  const qFcMin       = toNumber(row['Q_FC_min']);
+  const qFcMax       = toNumber(row['Q_FC_max']);
+  const qKm          = toNumber(row['Q_Km_Plan']);
+
+  // ── Z2 ────────────────────────────────────────────────────────
+  const z2Durada     = toNumber(row['Z2_Durada_min']);
+  const z2RitmeMin   = toNumber(row['Z2_Ritme_min_km_min']);
+  const z2RitmeMax   = toNumber(row['Z2_Ritme_min_km_max']);
+  const z2FcMin      = toNumber(row['Z2_FC_min']);
+  const z2FcMax      = toNumber(row['Z2_FC_max']);
+  const z2Km         = toNumber(row['Z2_Km_Plan']);
+
+  // ── Tirada llarga ─────────────────────────────────────────────
+  const llTipus      = row['LL_Tipus']    || '--';
+  const llDurada     = toNumber(row['LL_Durada_min']);
+  const llKm         = toNumber(row['LL_Km_Plan']);
+
+  // ── Km totals: primer intenta el camp explícit, si no suma parcials ─
+  const kmTotal = firstFinite([
+    toNumber(row['Km_Total_Plan']),
+    sumNumbers([qKm, z2Km, llKm])
+  ]);
+
   return {
     raw:          row,
-    setmana:      row['Setmana']   || '--',
-    cicle:        row['Cicle']     || '--',
-    fase:         row['Fase']      || '--',
+
+    // Metadades
+    setmana:      row['Setmana'] || '--',
+    cicle:        row['Cicle']   || '--',
+    fase:         row['Fase']    || '--',
     startDate,
     endDate,
-    qKm:          toNumber(row['Q_Km_Plan']),
-    z2Durada:     toNumber(row['Z2_Durada_min']),
-    llKm:         toNumber(row['LL_Km_Plan']),
-    kmTotal:      firstFinite([
-      toNumber(row['Km_Total_Plan']),
-      sumNumbers([toNumber(row['Q_Km_Plan']), toNumber(row['Z2_Km_Plan']), toNumber(row['LL_Km_Plan'])])
-    ]),
-    llTipus:      row['LL_Tipus']             || '--',
-    qSeries:      row['Q_Series']             || '--',
-    qDuradaSerie: row['Q_Durada_Serie_min']   || '--',
-    qRitme:       row['Q_Ritme_min_km']       || '--',
-    z2PaceMin:    row['Z2_Ritme_min_km_min']  || '--',
-    z2PaceMax:    row['Z2_Ritme_min_km_max']  || '--',
-    forcaPlan:    row['Forca_Plan']           || '--',
-    padelPlan:    row['Padel_Plan']           || '--'
+
+    // Qualitat
+    qSeries,
+    qDuradaSerie,
+    qRec,
+    qRitme,
+    qFcMin,
+    qFcMax,
+    qKm,
+
+    // Z2
+    z2Durada,
+    z2RitmeMin,
+    z2RitmeMax,
+    z2FcMin,
+    z2FcMax,
+    z2Km,
+
+    // Tirada llarga
+    llTipus,
+    llDurada,
+    llKm,
+
+    // Totals
+    kmTotal,
+
+    // Altres
+    forcaPlan:    row['Forca_Plan'] || '--',
+    padelPlan:    row['Padel_Plan'] || '--'
   };
 }
 
