@@ -142,7 +142,10 @@ function parseLongRun(filename, data) {
 
 
 // ─── QUALITY PARSER (equivalent a quality_parser.py) ──────────
-const RECUPERACIO_MAX_DURADA = 210;   // segons
+
+// Un interval es considera "recuperació" si dura menys d'aquest llindar (en segons)
+const RECUPERACIO_MAX_DURADA = 210;
+// Factor FC per distingir sèries de recuperacions quan totes superen RECUPERACIO_MAX_DURADA
 const RECUPERACIO_FC_FACTOR  = 0.82;
 
 function stdDev(arr) {
@@ -166,16 +169,19 @@ function parseQuality(filename, data) {
     ([k]) => nameLower.includes(k)
   )?.[1] ?? "QUALITAT";
 
-  // Extreu intervals bruts dels Windows de tipus "Interval"
+  // ── Extreu intervals bruts dels Windows de tipus "Interval" ──────────────
+  // L'estructura real del JSON Suunto té els camps directament a l'arrel
+  // de cada Window: SpeedAvg, HRAvg, HRMax, CadenceAvg (no dins sub-arrays).
+  // Exemple: { Type:"Interval", Duration:600, SpeedAvg:2.865, HRAvg:2.825, ... }
   const rawIntervals = windows
     .map(w => w.Window ?? w)
     .filter(w => w.Type === "Interval")
     .map(w => {
-      const dur     = w.Duration ?? 0;
-      const speed   = (w.Speed?.[0]?.Avg)   ?? 0;
-      const hrAvg   = (w.HR?.[0]?.Avg)      ?? 0;
-      const hrMax   = (w.HR?.[0]?.Max)      ?? 0;
-      const cadence = (w.Cadence?.[0]?.Avg) ?? 0;
+      const dur     = w.Duration   ?? 0;
+      const speed   = w.SpeedAvg   ?? 0;   // m/s directe a l'arrel
+      const hrAvg   = w.HRAvg      ?? 0;   // Hz directe a l'arrel (× 60 = bpm)
+      const hrMax   = w.HRMax      ?? hrAvg;
+      const cadence = w.CadenceAvg ?? 0;   // Hz directe a l'arrel
       return {
         dur_s:    dur,
         dist_m:   Math.round(w.Distance ?? 0),
@@ -187,23 +193,45 @@ function parseQuality(filename, data) {
       };
     });
 
-  // Lògica 2 passades idèntica al Python
-  const fcMaxSeries = Math.max(
-    ...rawIntervals
-      .filter(iv => iv.dur_s > RECUPERACIO_MAX_DURADA)
-      .map(iv => iv.fc_max),
-    0
+  // ── Lògica 2 passades: separa sèries de recuperacions ────────────────────
+  // Passada 1: intenta separar per durada (sèrie > RECUPERACIO_MAX_DURADA s)
+  const intervalsLlargs = rawIntervals.filter(iv => iv.dur_s > RECUPERACIO_MAX_DURADA);
+
+  // Passada 2: si tots els intervals són llargs (ex: TEMPO sense recuperació curta),
+  // distingeix sèries de recuperacions per FC (les de FC alta = sèries)
+  const fcMaxGlobal = Math.max(...rawIntervals.map(iv => iv.fc_max), 0);
+  const llindatFC   = Math.round(fcMaxGlobal * RECUPERACIO_FC_FACTOR);
+
+  let series;
+  if (intervalsLlargs.length > 0) {
+    // Cas normal: INTERVALS amb recuperació curta
+    series = intervalsLlargs.filter(iv => iv.fc_mitja > llindatFC);
+    if (series.length === 0) series = intervalsLlargs; // fallback: totes les llargues
+  } else {
+    // Cas TEMPO o intervals sense recuperació explícita: tots els intervals
+    series = rawIntervals.filter(iv => iv.fc_mitja > llindatFC);
+    if (series.length === 0) series = rawIntervals; // fallback: tot
+  }
+
+  series = series.map((s, i) => ({ ...s, serie: i + 1 }));
+
+  // ── Extreu recuperacions: intervals curts entre sèries ────────────────────
+  // Cada recuperació és el Window de tipus "Interval" entre dues sèries
+  const recuperacions = rawIntervals.filter(
+    iv => iv.dur_s > 0 && iv.dur_s <= RECUPERACIO_MAX_DURADA
   );
-  const llindatFC = Math.round(fcMaxSeries * RECUPERACIO_FC_FACTOR);
 
-  const series = rawIntervals.filter(iv =>
-    iv.dur_s > RECUPERACIO_MAX_DURADA && iv.fc_mitja > llindatFC
-  ).map((s, i) => ({ ...s, serie: i + 1 }));
+  const recMitjaMin = recuperacions.length
+    ? avgArr(recuperacions.map(r => r.dur_min).filter(v => v > 0))
+    : 0;
 
-  // Elimina dur_s del detall (igual que el Python)
+  // ── Elimina dur_s del detall final (igual que el Python) ─────────────────
   const seriesDetall = series.map(({ dur_s, ...rest }) => rest);
 
+  // ── Omple la fila de sortida ───────────────────────────────────────────────
   row.Num_Series            = series.length;
+  row.Durada_Mitja_Series   = avgArr(series.map(s => s.dur_min).filter(v => v > 0));
+  row.Rec_Mitja_Min         = recMitjaMin;
   row.Ritme_Mitja_Series    = avgArr(series.map(s => s.ritme).filter(v => v > 0));
   row.Consistencia_Ritme    = stdDev(series.map(s => s.ritme).filter(v => v > 0));
   row.FC_Mitja_Series       = avgArr(series.map(s => s.fc_mitja).filter(v => v > 0));
