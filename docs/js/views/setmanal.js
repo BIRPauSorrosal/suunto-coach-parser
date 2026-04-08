@@ -150,7 +150,7 @@ function renderLongBlock(week, weekSessions) {
   if (tbody) {
     tbody.innerHTML = sess.length
       ? sess.map(s => sessionRowLong(s)).join('')
-      : `<tr><td colspan="9" class="empty-row muted-msg">Sense tirada llarga</td></tr>`;
+      : `<tr><td colspan="8" class="empty-row muted-msg">Sense tirada llarga</td></tr>`;
   }
   setBlockStatus('sw-ll-block', sess.length > 0);
 }
@@ -225,7 +225,7 @@ function sessionRowZ2(s) {
   const cadencia = toNumber(s.raw['Cadencia(spm)']);
   return `<tr>
     <td>${esc(s.displayDate)}</td>
-    <td>${s.durada > 0 ? fmtNum(s.durada) + ' min' : '—'}</td>
+    <td>${isFinite(s.durada) && s.durada > 0 ? fmtNum(s.durada) + ' min' : '—'}</td>
     <td>${formatPace(s.ritme)}</td>
     <td>${isFinite(cadencia) && cadencia > 0 ? Math.round(cadencia) + ' spm' : '—'}</td>
     <td>${fcBadgeHTML(s.fcMitja)}</td>
@@ -234,16 +234,20 @@ function sessionRowZ2(s) {
   </tr>`;
 }
 
-// Llarga: Data | Durada | Ritme | Cadència | Min Z2 | Desnivell | FC | TSS | Km
+// Llarga: Data | Durada | Ritme | Min Z2 | Desnivell | FC | TSS | Km
+// NOTA: s'elimina Cadència (irrellevant en tirades llargues) per alliberar espai
+//       i es reordena: Durada primer, Ritme segon, sense columna buida de Ritme al Pla.
 function sessionRowLong(s) {
-  const cadencia  = toNumber(s.raw['Cadencia(spm)']);
   const desnivell = toNumber(s.raw['Desnivell(m)']);
+  const duradaCell = isFinite(s.durada) && s.durada > 0
+    ? fmtNum(s.durada) + ' min'
+    : '—';
+
   return `<tr>
     <td>${esc(s.displayDate)}</td>
-    <td>${s.durada > 0 ? fmtNum(s.durada) + ' min' : '—'}</td>
+    <td>${duradaCell}</td>
     <td>${formatPace(s.ritme)}</td>
-    <td>${isFinite(cadencia) && cadencia > 0 ? Math.round(cadencia) + ' spm' : '—'}</td>
-    <td>${s.z2min > 0 ? fmtNum(s.z2min) + ' min' : '—'}</td>
+    <td>${isFinite(s.z2min) && s.z2min > 0 ? fmtNum(s.z2min) + ' min' : '—'}</td>
     <td>${isFinite(desnivell) && desnivell > 0 ? Math.round(desnivell) + ' m' : '—'}</td>
     <td>${fcBadgeHTML(s.fcMitja)}</td>
     <td>${tssCell(s.carrega)}</td>
@@ -256,7 +260,7 @@ function sessionRowExtra(s) {
   return `<tr>
     <td>${esc(s.displayDate)}</td>
     <td>${esc(s.tipus)}</td>
-    <td>${s.durada > 0 ? fmtNum(s.durada) + ' min' : '—'}</td>
+    <td>${isFinite(s.durada) && s.durada > 0 ? fmtNum(s.durada) + ' min' : '—'}</td>
     <td>${fcBadgeHTML(s.fcMitja)}</td>
     <td>${tssCell(s.carrega)}</td>
   </tr>`;
