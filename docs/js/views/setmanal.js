@@ -114,6 +114,18 @@ function renderQualityBlock(week, weekSessions) {
       }, 0) / sess.length)
     : null;
 
+  // Resum de sèries fetes:
+  // Si alguna sessió té numSeries > 0 → sumem totes les sèries i mostrem "N sèries"
+  // Si cap sessió té numSeries → mostrem "N sess." (sessions antigues sense el camp)
+  const totalSeries = sess.reduce((acc, s) => {
+    return acc + (isFinite(s.numSeries) && s.numSeries > 0 ? s.numSeries : 0);
+  }, 0);
+  const sessionsRealText = !sess.length
+    ? '—'
+    : totalSeries > 0
+      ? `${totalSeries} sèries`
+      : `${sess.length} sess.`;
+
   // Usem camps enriquits de enrichPlanningRow() — no raw[]
   setTextV('sw-q-series',       isFinite(week.qSeries) && week.qSeries > 0 ? week.qSeries : (week.raw['Q_Series'] || '--'));
   setTextV('sw-q-durada-serie', isFinite(week.qDuradaSerie) && week.qDuradaSerie > 0 ? week.qDuradaSerie + ' min' : '--');
@@ -125,7 +137,7 @@ function renderQualityBlock(week, weekSessions) {
   setTextV('sw-q-ritme-real',    ritmeReal ? formatPace(ritmeReal) : '—');
   setTextV('sw-q-fc-real',       fcReal && fcReal > 0 ? fcReal + ' bpm' : '—');
   setTextV('sw-q-km-real',       sess.length ? `${fmtNum(realKm)} km` : '—');
-  setTextV('sw-q-sessions-real', sess.length ? `${sess.length} sess.` : '—');
+  setTextV('sw-q-sessions-real', sessionsRealText);
 
   const tbody = document.getElementById('sw-q-sessions-list');
   if (tbody) {
@@ -249,9 +261,10 @@ function tssCell(carrega) {
 }
 
 // Qualitat: Data | Sèries | Ritme sèries | FC | TSS
-// «Sèries» mostra: «2 × 10 min (rec: 2 min)» si tenim les dades;
-//                  «N sèries» si tenim numSeries però no la durada;
-//                  «—» si no hi ha res.
+// «Sèries» mostra:
+//   «2 × 10 min (rec: 2 min)» → si tenim numSeries + duradaMitjaSeries (sessió nova)
+//   «2 sèries»                → si tenim numSeries però no durada (sessió antiga amb Num_Series)
+//   «—»                       → si no hi ha numSeries (sessions antigues sense el camp)
 function sessionRowQuality(s) {
   const ritme = isFinite(s.ritmeMitjaSeries) && s.ritmeMitjaSeries > 0
     ? s.ritmeMitjaSeries
