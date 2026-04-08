@@ -160,7 +160,6 @@ function renderForcaBlock(week, weekSessions) {
   const sess = weekSessions.filter(s => STRENGTH_RE.test(s.tipusKey));
 
   setTextV('sw-forca-plan', week.forcaPlan || '--');
-  setTextV('sw-forca-real', sess.length ? `${sess.length} sess.` : '—');
 
   const tbody = document.getElementById('sw-forca-sessions-list');
   if (tbody) {
@@ -173,12 +172,9 @@ function renderForcaBlock(week, weekSessions) {
 
 // ── Bloc Altres ───────────────────────────────────────────────────────────────
 function renderAltresBlock(week, weekSessions) {
-  const sess        = weekSessions.filter(s => PADEL_TYPES.has(s.tipusKey));
-  const totalDurada = sess.reduce((a, s) => a + (s.durada || 0), 0);
+  const sess = weekSessions.filter(s => PADEL_TYPES.has(s.tipusKey));
 
-  setTextV('sw-altres-padel-plan',    week.padelPlan || '--');
-  setTextV('sw-altres-sessions-real', sess.length ? `${sess.length} part.` : '—');
-  setTextV('sw-altres-durada-real',   totalDurada > 0 ? `${fmtNum(totalDurada)} min` : '—');
+  setTextV('sw-altres-padel-plan', week.padelPlan || '--');
 
   const tbody = document.getElementById('sw-altres-sessions-list');
   if (tbody) {
@@ -198,26 +194,16 @@ function tssCell(carrega) {
 
 // Qualitat: Data | Sèries | Dur.sèrie | Ritme | Rec. | Cadència | FC | TSS | Km
 function sessionRowQuality(s) {
-  // Ritme: prioritza ritmeMitjaSeries (sessions noves), fallback a ritme global
   const ritme = isFinite(s.ritmeMitjaSeries) && s.ritmeMitjaSeries > 0
     ? s.ritmeMitjaSeries : s.ritme;
-  // FC: prioritza fcMitjaSeries, fallback a fcMitja
   const fc = isFinite(s.fcMitjaSeries) && s.fcMitjaSeries > 0
     ? s.fcMitjaSeries : s.fcMitja;
-
-  // Cel·la Sèries: nombre de sèries o —
-  const n = s.numSeries;
+  const n   = s.numSeries;
   const seriesCell = isFinite(n) && n > 0 ? n : '—';
-
-  // Dur.sèrie
   const dur = s.duradaMitjaSeries;
   const durCell = isFinite(dur) && dur > 0 ? `${fmtNum(dur)} min` : '—';
-
-  // Rec.
   const rec = s.recMitjaMin;
   const recCell = isFinite(rec) && rec > 0 ? `${fmtNum(rec)} min` : '—';
-
-  // Cadència sèries
   const cad = s.cadenciaMitjaSeries;
   const cadCell = isFinite(cad) && cad > 0 ? `${Math.round(cad)} spm` : '—';
 
