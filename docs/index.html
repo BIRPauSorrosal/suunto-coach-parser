@@ -286,21 +286,21 @@
             <div class="sw-block-header"><h3>🏃 Tirada llarga</h3><span class="sw-status-dot"></span></div>
             <div class="sw-htable-wrap">
               <table class="sw-htable">
-                <thead><tr><th></th><th>Tipus</th><th>Durada</th><th>Ritme</th><th>Km</th></tr></thead>
+                <!-- Pla LL: Tipus | Durada | Km (sense Ritme, no existeix al planning) -->
+                <thead><tr><th></th><th>Tipus</th><th>Durada</th><th>Km</th></tr></thead>
                 <tbody>
                   <tr class="sw-row--plan">
                     <td class="sw-row-lbl">Pla</td>
                     <td id="sw-ll-tipus-plan">--</td>
                     <td id="sw-ll-durada-plan">--</td>
-                    <td>—</td>
                     <td id="sw-ll-km-plan">--</td>
                   </tr>
                 </tbody>
               </table>
             </div>
-            <!-- Taula sessions llarga: Data | Durada | Ritme | Cadència | Min Z2 | Desnivell | FC | TSS | Km -->
+            <!-- Sessions LL: Data | Durada | Ritme | Min Z2 | Desnivell | FC | TSS | Km (8 cols) -->
             <table class="sw-mini-table">
-              <thead><tr><th>Data</th><th>Durada</th><th>Ritme</th><th>Cadència</th><th>Min Z2</th><th>Desnivell</th><th>FC</th><th>TSS</th><th>Km</th></tr></thead>
+              <thead><tr><th>Data</th><th>Durada</th><th>Ritme</th><th>Min Z2</th><th>Desnivell</th><th>FC</th><th>TSS</th><th>Km</th></tr></thead>
               <tbody id="sw-ll-sessions-list"></tbody>
             </table>
           </article>
