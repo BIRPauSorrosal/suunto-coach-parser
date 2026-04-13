@@ -125,22 +125,15 @@
           </div>
         </article>
 
-        <!-- ② Tendència càrrega + ④ Forma actual (CTL) — 2 columnes -->
+        <!-- ② Zones cardíaques + ④ Forma actual (CTL) — 2 columnes -->
         <div class="overview-trend-grid">
 
-          <!-- ② Tendència de càrrega -->
-          <article class="panel" id="panel-load-trend">
+          <!-- Zones cardíaques -->
+          <article class="panel">
             <div class="panel-header">
-              <div>
-                <p class="eyebrow">Últimes 7 setmanes</p>
-                <h3>Tendència de càrrega</h3>
-              </div>
-              <span class="badge badge-muted">TSS setmanal</span>
+              <div><p class="eyebrow">Últims 30 dies</p><h3>Zones cardíaques</h3></div>
             </div>
-            <div class="chart-wrap chart-wrap--trend">
-              <canvas id="chart-load-trend"></canvas>
-            </div>
-            <div id="load-trend-pill"></div>
+            <div class="chart-wrap chart-wrap--zones"><canvas id="chart-zones"></canvas></div>
           </article>
 
           <!-- ④ Forma actual (CTL) -->
@@ -160,15 +153,22 @@
 
         </div><!-- /overview-trend-grid -->
 
-        <!-- Fila 2: Zones cardíaques + Càrrega actual costat a costat -->
+        <!-- Fila 2: Tendència càrrega + Càrrega actual costat a costat -->
         <div class="overview-bottom-grid">
 
-          <!-- Zones cardíaques -->
-          <article class="panel">
+          <!-- ② Tendència de càrrega -->
+          <article class="panel" id="panel-load-trend">
             <div class="panel-header">
-              <div><p class="eyebrow">Últims 30 dies</p><h3>Zones cardíaques</h3></div>
+              <div>
+                <p class="eyebrow">Últimes 7 setmanes</p>
+                <h3>Tendència de càrrega</h3>
+              </div>
+              <span class="badge badge-muted">TSS setmanal</span>
             </div>
-            <div class="chart-wrap chart-wrap--zones"><canvas id="chart-zones"></canvas></div>
+            <div class="chart-wrap chart-wrap--trend">
+              <canvas id="chart-load-trend"></canvas>
+            </div>
+            <div id="load-trend-pill"></div>
           </article>
 
           <!-- Càrrega actual: TSS + EPOC + Recuperació -->
