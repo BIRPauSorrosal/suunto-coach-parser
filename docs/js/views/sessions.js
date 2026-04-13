@@ -282,7 +282,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
     cad:  { line:'rgba(168,85,247,0.85)' },
     epoc: { bar:'rgba(251,191,36,0.35)', line:'rgba(251,191,36,0.9)'  },
     load: { bar:'rgba(34,197,94,0.25)',  line:'rgba(34,197,94,0.9)'   },
-    dur:  { bar:'rgba(56,189,248,0.35)', line:'rgba(56,189,248,0.9)'  },
+    dur:  { bar:'rgba(56,189,248,0.35)', line:'rgba(56,189,248,0.7)'  },
   };
   const baseOpts = {
     responsive:true, maintainAspectRatio:false,
@@ -293,7 +293,10 @@ function buildSessChartConfig(byWeek, labels, sessions) {
   const yBase = { grid:{color:C.gridLine}, ticks:{font:{size:11}}, beginAtZero:true };
 
   const scaleKm    = (lbl='km')  => ({ ...yBase, position:'left',  title:{ display:true, text:lbl,      color:C.text, font:{size:10} } });
-  const scaleDur   = (lbl='min') => ({ ...yBase, position:'left',  title:{ display:true, text:lbl,      color:C.text, font:{size:10} } });
+  const scaleDurS  = ()          => ({ ...yBase, position:'left', offset:true,
+    grid:{ drawOnChartArea:false },
+    ticks:{ ...yBase.ticks, callback: v => `${v} min` },
+    title:{ display:true, text:'min sèr.', color:COL.dur.line, font:{size:10} } });
   const scaleRitme = ()          => ({ ...yBase, position:'right', reverse:true, min:3, max:8,
     grid:{ drawOnChartArea:false },
     ticks:{ ...yBase.ticks, callback: v => formatPace(v,'') },
@@ -373,27 +376,37 @@ function buildSessChartConfig(byWeek, labels, sessions) {
       }};
     }
 
-    // FIX 3: el dataset de Km sempre s'afegeix com a base, independentment
-    // de si hi ha dades de sèries. Cada has* és independent i no bloqueja els altres.
+    // ── QUALITY ──────────────────────────────────────────────────────────────────────
+    // Temps sèries: era type:'bar' a l'eix km (y). Ara és type:'line' a
+    // un eix y4 propi (esquerra, offset) perquè té unitat «min» independent
+    // dels km i no distorsiona les barres de volum.
     case 'quality': {
       const hasDurS  = byWeek.some(w => w.totalDurSeries > 0);
       const hasPaceS = byWeek.some(w => w.avgPaceSeries  !== null);
       const hasFCS   = byWeek.some(w => w.avgFCSeries    !== null);
       const hasCadS  = byWeek.some(w => w.avgCadSeries   !== null);
 
-      // Km és sempre present com a dataset base visible
       const datasets = [
         { type:'bar', label:'Km', data:byWeek.map(w => w.km > 0 ? w.km : null),
           backgroundColor:COL.km.bar, borderColor:COL.km.line,
           borderWidth:1, borderRadius:4, yAxisID:'y' },
       ];
-      // Temps de sèries s'afegeix a l'eix y si existeix
+
+      // Temps sèries → línia a eix dedicat y4
       if (hasDurS) datasets.push({
-        type:'bar', label:'Temps sèries (min)',
-        data:byWeek.map(w => w.totalDurSeries > 0 ? w.totalDurSeries : null),
-        backgroundColor:COL.dur.bar, borderColor:COL.dur.line,
-        borderWidth:1, borderRadius:4, yAxisID:'y'
+        type: 'line',
+        label: 'Temps sèries (min)',
+        data: byWeek.map(w => w.totalDurSeries > 0 ? w.totalDurSeries : null),
+        borderColor:     COL.dur.line,
+        backgroundColor: 'transparent',
+        borderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        tension: 0.3,
+        spanGaps: true,
+        yAxisID: 'y4',
       });
+
       if (hasPaceS) datasets.push({ type:'line', label:'Ritme sèries (min/km)',
         data:byWeek.map(w=>w.avgPaceSeries), borderColor:COL.ritme.line,
         backgroundColor:'transparent', borderWidth:2, pointRadius:4,
@@ -406,12 +419,16 @@ function buildSessChartConfig(byWeek, labels, sessions) {
         data:byWeek.map(w=>w.avgCadSeries), borderColor:COL.cad.line,
         backgroundColor:'transparent', borderWidth:2, pointRadius:4,
         tension:0.3, yAxisID:'y3', spanGaps:true });
+
       return { type:'bar', data:{labels,datasets}, options:{...baseOpts,
         plugins:{...baseOpts.plugins, tooltip:{callbacks:{label:tooltipLabel}}},
-        scales:{ x:baseOpts.scales.x,
-          y:  scaleKm(hasDurS ? 'km / min' : 'km'),
-          y2: hasPaceS           ? scaleRitme()     : { display:false },
-          y3: (hasFCS||hasCadS)  ? scaleFC()        : { display:false } }
+        scales:{
+          x:  baseOpts.scales.x,
+          y:  scaleKm('km'),
+          y2: hasPaceS           ? scaleRitme() : { display:false },
+          y3: (hasFCS||hasCadS)  ? scaleFC()    : { display:false },
+          y4: hasDurS            ? scaleDurS()  : { display:false },
+        }
       }};
     }
 
