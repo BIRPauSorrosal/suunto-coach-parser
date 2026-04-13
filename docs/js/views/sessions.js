@@ -229,7 +229,6 @@ function exportSessionsCSV(days) {
   rows = [...rows].sort((a,b) => a.date - b.date);
   if (!rows.length) return;
   const headers = Object.keys(rows[0].raw);
-  // FIX: escCsv sense backtick fantasma — ternari correctament tancat
   const escCsv = v => {
     const s = String(v ?? '');
     return (s.includes(',') || s.includes('"') || s.includes('\n'))
@@ -297,7 +296,9 @@ function buildSessChartConfig(byWeek, labels, sessions) {
     grid:{ drawOnChartArea:false },
     ticks:{ ...yBase.ticks, callback: v => `${v} min` },
     title:{ display:true, text:'min sèr.', color:COL.dur.line, font:{size:10} } });
-  const scaleRitme = ()          => ({ ...yBase, position:'right', reverse:true, min:3, max:8,
+  // Rang 3–10 min/km: cobreix des de ritmes de qualitat (3:00) fins a
+  // tirades llargues suaus o trails (>8:00) sense tallar cap activitat.
+  const scaleRitme = ()          => ({ ...yBase, position:'right', reverse:true, min:3, max:10,
     grid:{ drawOnChartArea:false },
     ticks:{ ...yBase.ticks, callback: v => formatPace(v,'') },
     title:{ display:true, text:'min/km', color:C.text, font:{size:10} } });
@@ -377,9 +378,6 @@ function buildSessChartConfig(byWeek, labels, sessions) {
     }
 
     // ── QUALITY ──────────────────────────────────────────────────────────────────────
-    // Temps sèries: era type:'bar' a l'eix km (y). Ara és type:'line' a
-    // un eix y4 propi (esquerra, offset) perquè té unitat «min» independent
-    // dels km i no distorsiona les barres de volum.
     case 'quality': {
       const hasDurS  = byWeek.some(w => w.totalDurSeries > 0);
       const hasPaceS = byWeek.some(w => w.avgPaceSeries  !== null);
@@ -392,7 +390,6 @@ function buildSessChartConfig(byWeek, labels, sessions) {
           borderWidth:1, borderRadius:4, yAxisID:'y' },
       ];
 
-      // Temps sèries → línia a eix dedicat y4
       if (hasDurS) datasets.push({
         type: 'line',
         label: 'Temps sèries (min)',
@@ -604,8 +601,6 @@ function getSessCols(type) {
   const colSeries     = {label:'Sèries',            render:s=>{const n=toNumber(s.raw['Num_Series']);return typeof n==='number'&&n>0?String(Math.round(n)):'\u2014';}};
   const colPTE        = {label:'PTE',               render:s=>{const p=toNumber(s.raw['PTE']);return typeof p==='number'&&p>0?fmtNum(p):'\u2014';}};
 
-  // FIX 1: usa s.duradaMitjaSeries (ja enriquit per enrichSessionRow) en lloc de
-  // recalcular via parseDurSeries(s), que depèn del JSON Series_Detall i pot fallar.
   const colDurSerie = {
     label: 'Dur/Sèrie',
     render: s => {
