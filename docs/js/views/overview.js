@@ -1,6 +1,6 @@
 // docs/js/views/overview.js
 // Vista Overview: hero-cards + metric-boxes + panells Test/Cursa + Altres
-// Dep: formatters.js, metrics.js, load-scale.js, app.js
+// Dep: formatters.js, metrics.js, load-scale.js, pmc-config.js, app.js
 
 // ── Punt d'entrada ──────────────────────────────────────────────────────────────────
  function renderOverviewView(sessions, planning) {
@@ -167,22 +167,16 @@ function renderEpocPanel(sessions) {
   const epocBarMax = 150;
   const epocPct    = Math.min(100, Math.round((epocLvl.avg / epocBarMax) * 100));
   const epocAvgTxt = epocLvl.count > 0 ? `${Math.round(epocLvl.avg)} EPOC/sessió` : '--';
-  const countTxt = `${epocLvl.count} ${epocLvl.count !== 1 ? 'sessions' : 'sessió'}`;
+  const countTxt   = `${epocLvl.count} ${epocLvl.count !== 1 ? 'sessions' : 'sessió'}`;
 
-  // ── TSS ───────────────────────────────────────────────────────────────────
+  // ── TSS (TrainingLoadPeak) — llindars recalibrats via PMC_CONFIG ──────────
   const tssValues  = recent.map(s => s.carrega).filter(v => v !== null && isFinite(v) && v > 0);
   const tssTotal   = tssValues.reduce((a, b) => a + b, 0);
   const tssAvg     = tssValues.length > 0 ? tssTotal / tssValues.length : 0;
-  const tssScore   = tssAvg * Math.sqrt(tssValues.length);  // mateixa fórmula que EPOC weekly
+  const tssScore   = tssAvg * Math.sqrt(tssValues.length);
 
-  // Barem TSS setmanal (calibrat sobre score combinat, escala ~1.5x la sessió)
-  const TSS_WEEKLY_SCALE = [
-    { max:  45, key: 'recovery', label: 'Recuperació', cls: 'tss-recovery' },
-    { max:  90, key: 'easy',     label: 'Fàcil',       cls: 'tss-easy'     },
-    { max: 150, key: 'moderate', label: 'Moderada',    cls: 'tss-moderate' },
-    { max: 225, key: 'hard',     label: 'Dura',        cls: 'tss-hard'     },
-    { max: Infinity, key: 'extreme', label: 'Extrem',  cls: 'tss-extreme'  },
-  ];
+  // Escala setmanal des de PMC_CONFIG (calibrada a escala TLP)
+  const TSS_WEEKLY_SCALE = PMC_CONFIG.TSS_WEEKLY_SCALE;
   let tssLvl = TSS_WEEKLY_SCALE[0];
   if (tssScore > 0) {
     for (const tier of TSS_WEEKLY_SCALE) {
@@ -190,9 +184,8 @@ function renderEpocPanel(sessions) {
     }
   }
 
-  const tssBarMax = 225;
-  const tssPct    = Math.min(100, Math.round((tssScore / tssBarMax) * 100));
-  const tssAvgTxt = tssValues.length > 0 ? `${Math.round(tssAvg)} TSS/sessió` : '--';
+  const tssPct    = Math.min(100, Math.round((tssScore / PMC_CONFIG.TSS_BAR_MAX) * 100));
+  const tssAvgTxt = tssValues.length > 0 ? `${Math.round(tssAvg)} TLP/sessió` : '--';
 
   // ── Recuperació pendent ───────────────────────────────────────────────────
   let maxPendent  = 0;
@@ -223,7 +216,7 @@ function renderEpocPanel(sessions) {
   container.innerHTML = `
     <div class="epoc-block">
       <div class="epoc-block-header">
-        <span class="epoc-block-title">TSS acumulat</span>
+        <span class="epoc-block-title">TLP acumulat</span>
         <span class="epoc-value">${Math.round(tssTotal)}</span>
       </div>
       <div class="epoc-bar-wrap">
@@ -321,9 +314,9 @@ function renderLoadTrend(sessions, planning) {
   let pillClass, pillIcon, pillText;
 
   if (avgPast === 0 && currentLoad === 0) {
-    pillClass = 'neutral'; pillIcon = '\u2192'; pillText = 'Sense dades de TSS';
+    pillClass = 'neutral'; pillIcon = '\u2192'; pillText = 'Sense dades de TLP';
   } else if (avgPast === 0) {
-    pillClass = 'neutral'; pillIcon = '\u2192'; pillText = `${currentLoad} TSS \u00b7 Sense refer\u00e8ncia anterior`;
+    pillClass = 'neutral'; pillIcon = '\u2192'; pillText = `${currentLoad} TLP \u00b7 Sense refer\u00e8ncia anterior`;
   } else {
     const diffPct = ((currentLoad - avgPast) / avgPast) * 100;
     if (diffPct > 15) {
@@ -349,7 +342,7 @@ function renderLoadTrend(sessions, planning) {
       labels,
       datasets: [
         {
-          label: 'TSS',
+          label: 'TLP',
           data: loads,
           backgroundColor: barColors,
           borderColor: borderColors,
@@ -379,7 +372,7 @@ function renderLoadTrend(sessions, planning) {
         tooltip: {
           callbacks: {
             label: ctx => ctx.datasetIndex === 0
-              ? ` TSS: ${ctx.raw}`
+              ? ` TLP: ${ctx.raw}`
               : ` Mitjana 6 blocs: ${avgPast}`,
           },
         },
@@ -400,7 +393,9 @@ function renderLoadTrend(sessions, planning) {
 }
 
 // ============================================================
-// #P-TREND B — Forma actual: CTL (últims 42 dies)
+// #P-TREND B — Forma actual: CTL + ATL + TSB (últims 42 dies)
+// Model PMC Opció C: TrainingLoadPeak natiu, τ estàndard,
+// llindars TSB recalibrats. Constants centralitzades a pmc-config.js
 // ============================================================
 function renderCtlTrend(sessions) {
   const canvas = document.getElementById('chart-ctl-trend');
@@ -409,16 +404,18 @@ function renderCtlTrend(sessions) {
 
   if (canvas._chartInstance) { canvas._chartInstance.destroy(); }
 
-  const CSS        = getComputedStyle(document.documentElement);
-  const clrAccent  = CSS.getPropertyValue('--accent').trim()    || '#22c55e';
-  const clrMuted   = CSS.getPropertyValue('--text-muted').trim()|| '#94a3b8';
-  const clrOrange  = CSS.getPropertyValue('--orange').trim()    || '#f97316';
+  const CSS       = getComputedStyle(document.documentElement);
+  const clrAccent = CSS.getPropertyValue('--accent').trim()    || '#22c55e';
+  const clrMuted  = CSS.getPropertyValue('--text-muted').trim()|| '#94a3b8';
+  const clrOrange = CSS.getPropertyValue('--orange').trim()    || '#f97316';
+  const clrBlue   = CSS.getPropertyValue('--blue').trim()      || '#38bdf8';
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const rangeStart = new Date(today);
   rangeStart.setDate(rangeStart.getDate() - 41);
 
+  // Construïm mapa de càrrega diària (TLP natiu)
   const sorted = [...sessions]
     .filter(s => s.date instanceof Date && isFinite(s.date))
     .sort((a, b) => a.date - b.date);
@@ -429,56 +426,81 @@ function renderCtlTrend(sessions) {
     dayLoad.set(key, (dayLoad.get(key) || 0) + (isFinite(s.carrega) ? s.carrega : 0));
   });
 
-  const TAU_CTL = 42;
-  const k_ctl   = Math.exp(-1 / TAU_CTL);
+  // Constants PMC des de pmc-config.js
+  const { TAU_CTL, TAU_ATL, TSB_THRESHOLDS } = PMC_CONFIG;
+  const k_ctl = Math.exp(-1 / TAU_CTL);
+  const k_atl = Math.exp(-1 / TAU_ATL);
 
+  // EMA des del primer dia de dades (warm-up complet)
   let firstDay = sorted.length ? new Date(sorted[0].date) : new Date(rangeStart);
   firstDay.setHours(0, 0, 0, 0);
 
-  let ctl = 0;
+  let ctl = 0, atl = 0;
   const ctlByDate = new Map();
+  const atlByDate = new Map();
+  const tsbByDate = new Map();
 
   for (let d = new Date(firstDay); d <= today; d.setDate(d.getDate() + 1)) {
     const key  = d.toISOString().slice(0, 10);
     const load = dayLoad.get(key) || 0;
     ctl = ctl * k_ctl + load * (1 - k_ctl);
+    atl = atl * k_atl + load * (1 - k_atl);
     ctlByDate.set(key, +ctl.toFixed(1));
+    atlByDate.set(key, +atl.toFixed(1));
+    tsbByDate.set(key, +(ctl - atl).toFixed(1));
   }
 
+  // Construïm arrays per al rang visible (últims 42 dies)
   const labels  = [];
   const ctlData = [];
+  const atlData = [];
+  const tsbData = [];
   const months  = ['gen','feb','mar','abr','mai','jun','jul','ago','set','oct','nov','des'];
 
   for (let d = new Date(rangeStart); d <= today; d.setDate(d.getDate() + 1)) {
-    const key = d.toISOString().slice(0, 10);
+    const key  = d.toISOString().slice(0, 10);
     const diff = Math.round((today - d) / 86400000);
     const showLabel = diff % 7 === 0;
     labels.push(showLabel ? `${d.getDate()} ${months[d.getMonth()]}` : '');
     ctlData.push(ctlByDate.get(key) ?? 0);
+    atlData.push(atlByDate.get(key) ?? 0);
+    tsbData.push(tsbByDate.get(key) ?? 0);
   }
 
+  // Valors actuals per al pill
   const ctlAvui = ctlData[ctlData.length - 1] || 0;
-  const d7ago   = new Date(today); d7ago.setDate(d7ago.getDate() - 7);
+  const atlAvui = atlData[atlData.length - 1] || 0;
+  const tsbAvui = tsbData[tsbData.length - 1] || 0;
+
+  const d7ago  = new Date(today); d7ago.setDate(d7ago.getDate() - 7);
   const ctl7ago = ctlByDate.get(d7ago.toISOString().slice(0, 10)) || 0;
   const ctlDiff = +(ctlAvui - ctl7ago).toFixed(1);
 
-  let pillClass, pillIcon, pillText;
-  if (ctlDiff > 1) {
-    pillClass = 'up';      pillIcon = '\u2191';
-    pillText  = `Guany +${ctlDiff} pts CTL (\u2192 ${ctlAvui})`;
-  } else if (ctlDiff < -1) {
-    pillClass = 'down';    pillIcon = '\u2193';
-    pillText  = `P\u00e8rdua ${ctlDiff} pts CTL (\u2192 ${ctlAvui})`;
-  } else {
-    pillClass = 'neutral'; pillIcon = '\u2192';
-    pillText  = `Estable ${ctlDiff >= 0 ? '+' : ''}${ctlDiff} pts CTL (\u2192 ${ctlAvui})`;
+  // Zona de forma basada en TSB_THRESHOLDS de PMC_CONFIG
+  function getTSBZone(tsb) {
+    if (tsb > TSB_THRESHOLDS.fresc)        return { key: 'fresc',        label: 'Fresc',          cls: 'up'      };
+    if (tsb >= TSB_THRESHOLDS.optim_min)   return { key: 'optim',        label: 'Forma òptima',   cls: 'up'      };
+    if (tsb >= TSB_THRESHOLDS.productiu_min) return { key: 'productiu',  label: 'Productiu',      cls: 'neutral' };
+    if (tsb >= TSB_THRESHOLDS.fatigat_min) return { key: 'fatigat',      label: 'Fatigat',        cls: 'down'    };
+    return                                          { key: 'sobrecarregat', label: 'Sobrecarregat', cls: 'down'   };
   }
 
+  const zona = getTSBZone(tsbAvui);
+
+  // Pill: CTL | ATL | TSB + zona de forma
+  const ctlTxt = `CTL ${ctlAvui}`;
+  const atlTxt = `ATL ${atlAvui}`;
+  const tsbTxt = `TSB ${tsbAvui >= 0 ? '+' : ''}${tsbAvui}`;
+  const tendTxt = ctlDiff > 1  ? `\u2191 +${ctlDiff} pts`
+                : ctlDiff < -1 ? `\u2193 ${ctlDiff} pts`
+                : `\u2192 estable`;
+
   pillEl.innerHTML = `
-    <span class="trend-pill trend-pill--${pillClass}">${pillIcon} ${esc(pillText)}</span>
-    <span class="trend-context">\u00b11 pt = estable | >+1 = guany de forma | <-1 = p\u00e8rdua forma</span>
+    <span class="trend-pill trend-pill--${zona.cls}">${zona.label} · ${tsbTxt}</span>
+    <span class="trend-context">${ctlTxt} · ${atlTxt} · ${tendTxt} (7d)</span>
   `;
 
+  // Colors dels punts extrems de CTL
   const pointColors = ctlData.map((_, i) => {
     if (i === 0)                  return clrMuted;
     if (i === ctlData.length - 1) return ctlDiff >= 0 ? clrAccent : clrOrange;
@@ -492,31 +514,72 @@ function renderCtlTrend(sessions) {
     type: 'line',
     data: {
       labels,
-      datasets: [{
-        label: 'CTL',
-        data: ctlData,
-        borderColor: clrAccent,
-        borderWidth: 2,
-        pointBackgroundColor: pointColors,
-        pointBorderColor: pointColors,
-        pointRadius,
-        pointHoverRadius: 5,
-        fill: {
-          target: 'origin',
-          above: 'rgba(34,197,94,0.07)',
+      datasets: [
+        {
+          label: 'CTL',
+          data: ctlData,
+          borderColor: clrAccent,
+          borderWidth: 2,
+          pointBackgroundColor: pointColors,
+          pointBorderColor: pointColors,
+          pointRadius,
+          pointHoverRadius: 5,
+          fill: {
+            target: 'origin',
+            above: 'rgba(34,197,94,0.07)',
+          },
+          tension: 0.35,
+          order: 2,
         },
-        tension: 0.35,
-      }],
+        {
+          label: 'ATL',
+          data: atlData,
+          borderColor: clrOrange,
+          borderWidth: 1.5,
+          borderDash: [4, 3],
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          fill: false,
+          tension: 0.35,
+          order: 1,
+        },
+        {
+          label: 'TSB',
+          data: tsbData,
+          borderColor: clrBlue,
+          borderWidth: 1,
+          borderDash: [2, 4],
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          fill: {
+            target: { value: 0 },
+            above: 'rgba(56,189,248,0.06)',
+            below: 'rgba(249,115,22,0.06)',
+          },
+          tension: 0.35,
+          order: 0,
+        },
+      ],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       animation: { duration: 400 },
       plugins: {
-        legend: { display: false },
+        legend: {
+          display: true,
+          position: 'top',
+          align: 'end',
+          labels: { boxWidth: 10, padding: 10, font: { size: 11 } },
+        },
         tooltip: {
           callbacks: {
-            label: ctx => ` CTL: ${ctx.raw} pts`,
+            label: ctx => {
+              const v = ctx.raw;
+              if (ctx.dataset.label === 'CTL') return ` CTL: ${v}`;
+              if (ctx.dataset.label === 'ATL') return ` ATL: ${v}`;
+              return ` TSB: ${v >= 0 ? '+' : ''}${v} (${getTSBZone(v).label})`;
+            },
           },
         },
       },
@@ -576,7 +639,7 @@ function renderTestRacePanel(sessions) {
           <th>Ritme</th>
           <th>FC</th>
           <th>Desnivell</th>
-          <th>TSS</th>
+          <th>TLP</th>
         </tr>
       </thead>
       <tbody>
@@ -610,7 +673,7 @@ function renderOthersPanel(sessions) {
             <th>Tipus</th>
             <th>Durada</th>
             <th>FC</th>
-            <th>TSS</th>
+            <th>TLP</th>
           </tr>
         </thead>
         <tbody>
