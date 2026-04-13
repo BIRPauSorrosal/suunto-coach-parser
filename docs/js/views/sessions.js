@@ -229,9 +229,15 @@ function exportSessionsCSV(days) {
   rows = [...rows].sort((a,b) => a.date - b.date);
   if (!rows.length) return;
   const headers = Object.keys(rows[0].raw);
-  const escCsv = v => { const s=String(v??''); return (s.includes(',')||s.includes('"')||s.includes('\n'))?`"${s.replaceAll('"','""')}"`':s; };
-  const lines = rows.map(s => headers.map(h => escCsv(s.raw[h]??'')).join(','));
-  triggerCsvDownload([headers.map(escCsv).join(','),...lines].join('\n'),
+  // FIX: escCsv sense backtick fantasma — ternari correctament tancat
+  const escCsv = v => {
+    const s = String(v ?? '');
+    return (s.includes(',') || s.includes('"') || s.includes('\n'))
+      ? `"${s.replaceAll('"', '""')}"`
+      : s;
+  };
+  const lines = rows.map(s => headers.map(h => escCsv(s.raw[h] ?? '')).join(','));
+  triggerCsvDownload([headers.map(escCsv).join(','), ...lines].join('\n'),
     `sessions_${days>0?days+'d':'complet'}_${new Date().toISOString().slice(0,10)}.csv`);
 }
 
@@ -381,7 +387,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
           backgroundColor:COL.km.bar, borderColor:COL.km.line,
           borderWidth:1, borderRadius:4, yAxisID:'y' },
       ];
-      // Temps de sèries s'afegeix a l'eix y si existeix (substitueix Km com a bar principal)
+      // Temps de sèries s'afegeix a l'eix y si existeix
       if (hasDurS) datasets.push({
         type:'bar', label:'Temps sèries (min)',
         data:byWeek.map(w => w.totalDurSeries > 0 ? w.totalDurSeries : null),
@@ -524,7 +530,7 @@ function renderSessTable(sessions) {
     .map(s => `<tr>${cols.map(c=>`<td${c.cls?` class="${c.cls}"`:''}>${c.render(s)}</td>`).join('')}</tr>`)
     .join('');
 
-  bindSessCommentButtons(); // ← NOU
+  bindSessCommentButtons();
 }
 
 // ── Columna comentari (shared entre tots els tipus) ──────────────────────────────
@@ -611,16 +617,12 @@ function setSessText(id, value) {
 
 // ── Helpers de comentari ──────────────────────────────────────────────────────────────
 
-// Trunca i escapa el text d'un comentari per mostrar-lo en preview
 function commentPreview(comment, max = 36) {
   const txt = String(comment ?? '').trim();
   if (!txt) return '';
   return txt.length > max ? `${esc(txt.slice(0, max))}\u2026` : esc(txt);
 }
 
-// Lliga els botons de comentari de la taula de sessions.
-// Els botons ja tenen onclick inline; aquest binding és un guard de seguretat
-// per si s'eliminen els inline handlers en una refactorització futura.
 function bindSessCommentButtons() {
   const tbody = document.getElementById('sess-tbody');
   if (!tbody) return;
