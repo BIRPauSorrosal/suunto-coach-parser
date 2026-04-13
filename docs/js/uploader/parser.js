@@ -32,7 +32,7 @@ const PARSER_REGISTRY = {
   "mitja":         parseLongRun,
   "cursa":         parseLongRun,
   "força":         parseStrength,
-  "forca":         parseStrength,   // fallback sense accent
+  "forca":         parseStrength,
   "bici_estatica": parseGeneric,
   "padel":         parseGeneric,
   "tennis":        parseGeneric,
@@ -41,7 +41,6 @@ const PARSER_REGISTRY = {
   "swim":          parseGeneric,
 };
 
-// Detecta quina funció parser cal usar pel nom de fitxer
 function detectParser(filename) {
   const nameLower = filename.toLowerCase().replace(".json", "");
   for (const [keyword, parserFn] of Object.entries(PARSER_REGISTRY)) {
@@ -58,7 +57,6 @@ function parseBase(filename, data) {
   const samples = data?.DeviceLog?.Samples ?? [];
   const zones   = header.HrZones ?? {};
 
-  // FC ve en Hz (batecs/segon), cal × 60 per obtenir bpm
   const hrList = samples
     .filter(s => s.HR != null)
     .map(s => s.HR);
@@ -70,7 +68,6 @@ function parseBase(filename, data) {
     ? Math.round(Math.max(...hrList) * 60)
     : 0;
 
-  // Data: ISO → dd/mm/yyyy
   let dataFormatada = "";
   if (header.DateTime) {
     const dt = new Date(header.DateTime);
@@ -83,7 +80,7 @@ function parseBase(filename, data) {
   return {
     Arxiu:           filename.replace(".json", ""),
     Data:            dataFormatada,
-    Tipus:           "",   // sobreescrit pel parser específic
+    Tipus:           "",
     "Durada(min)":   Math.round(((header.Duration ?? 0) / 60) * 10) / 10,
     "Dist(km)":      Math.round(((header.Distance ?? 0) / 1000) * 100) / 100,
     "Desnivell(m)":  Math.round(header.Ascent ?? 0),
@@ -103,7 +100,7 @@ function parseBase(filename, data) {
 }
 
 
-// ─── BASE RUNNING PARSER (equivalent a base_running_parser.py) 
+// ─── BASE RUNNING PARSER (equivalent a base_running_parser.py)
 
 function parseRunningBase(filename, data) {
   const row     = parseBase(filename, data);
@@ -132,7 +129,7 @@ function parseRunningBase(filename, data) {
 
 // ─── LONG RUN PARSER (equivalent a long_run_parser.py) ────────
 function parseLongRun(filename, data) {
-  const row      = parseRunningBase(filename, data);
+  const row       = parseRunningBase(filename, data);
   const nameLower = filename.toLowerCase();
   row.Tipus = Object.entries(ACTIVITY_LONG_RUN_TYPES).find(
     ([k]) => nameLower.includes(k)
@@ -143,9 +140,7 @@ function parseLongRun(filename, data) {
 
 // ─── QUALITY PARSER (equivalent a quality_parser.py) ──────────
 
-// Un interval es considera "recuperació" si dura menys d'aquest llindar (en segons)
 const RECUPERACIO_MAX_DURADA = 210;
-// Factor FC per distingir sèries de recuperacions quan totes superen RECUPERACIO_MAX_DURADA
 const RECUPERACIO_FC_FACTOR  = 0.82;
 
 function stdDev(arr) {
@@ -160,23 +155,16 @@ function avgArr(arr) {
   return Math.round((arr.reduce((a, b) => a + b, 0) / arr.length) * 100) / 100;
 }
 
-// ─── FIX: recalcula mètriques d'un interval des dels Samples ──────────────
-// Quan els Windows de Suunto no porten SpeedAvg/HRAvg/CadenceAvg (valor 0),
-// creuem el rang temporal del Window amb els Samples per calcular-les.
-//
-// samples:    array de Samples del DeviceLog (cada un té TimeISO8601 + mètriques)
-// startIso:   string ISO8601 de l'inici del Window  (camp "StartTime")
-// durationS:  durada en segons del Window           (camp "Duration")
-//
-// Retorna { speedAvg, hrAvg, hrMax, cadenceAvg } en unitats natives (m/s, Hz).
+// ─── Fallback: recalcula mètriques d'un interval des dels Samples ─────────
+// S'usa quan les mètriques del Window són 0 o absents.
+// startIso: TimeISO8601 del wrapper extern del Window.
+// durationS: Duration del Window en segons.
 function enrichFromSamples(samples, startIso, durationS) {
   if (!startIso || !durationS) return { speedAvg: 0, hrAvg: 0, hrMax: 0, cadenceAvg: 0 };
 
   const t0 = new Date(startIso).getTime();
   const t1 = t0 + durationS * 1000;
 
-  // Cada Sample pot tenir TimeISO8601 (string) o un offset en ms (número).
-  // El JSON Suunto usa la clau "TimeISO8601" al Sample.
   const inRange = samples.filter(s => {
     const ts = s.TimeISO8601 ? new Date(s.TimeISO8601).getTime() : null;
     return ts !== null && ts >= t0 && ts <= t1;
@@ -186,12 +174,12 @@ function enrichFromSamples(samples, startIso, durationS) {
   const hrs       = inRange.filter(s => s.HR       != null && s.HR       > 0).map(s => s.HR);
   const cadences  = inRange.filter(s => s.Cadence  != null && s.Cadence  > 0).map(s => s.Cadence);
 
-  const speedAvg   = speeds.length   ? speeds.reduce((a,b)=>a+b,0)   / speeds.length   : 0;
-  const hrAvg      = hrs.length      ? hrs.reduce((a,b)=>a+b,0)      / hrs.length      : 0;
-  const hrMax      = hrs.length      ? Math.max(...hrs)                                 : 0;
-  const cadenceAvg = cadences.length ? cadences.reduce((a,b)=>a+b,0) / cadences.length : 0;
-
-  return { speedAvg, hrAvg, hrMax, cadenceAvg };
+  return {
+    speedAvg:   speeds.length   ? speeds.reduce((a,b)=>a+b,0)   / speeds.length   : 0,
+    hrAvg:      hrs.length      ? hrs.reduce((a,b)=>a+b,0)      / hrs.length      : 0,
+    hrMax:      hrs.length      ? Math.max(...hrs)                                 : 0,
+    cadenceAvg: cadences.length ? cadences.reduce((a,b)=>a+b,0) / cadences.length : 0,
+  };
 }
 
 function parseQuality(filename, data) {
@@ -205,27 +193,46 @@ function parseQuality(filename, data) {
   )?.[1] ?? "QUALITAT";
 
   // ── Extreu intervals bruts dels Windows de tipus "Interval" ──────────────
-  // L'estructura real del JSON Suunto té els camps directament a l'arrel
-  // de cada Window: SpeedAvg, HRAvg, HRMax, CadenceAvg (no dins sub-arrays).
-  // Exemple: { Type:"Interval", Duration:600, SpeedAvg:2.865, HRAvg:2.825, ... }
   //
-  // FIX: Alguns dispositius Suunto no poblen SpeedAvg/HRAvg/CadenceAvg als Windows.
-  // En aquest cas (valor 0 o absent), recalculem des dels Samples individuals
-  // creuant el rang temporal [StartTime, StartTime + Duration].
+  // Estructura real del JSON Suunto (vàlida per Suunto Monza i similars):
+  //   data.DeviceLog.Windows = [
+  //     { TimeISO8601: "2026-04-08T18:32:06+02:00",   ← timestamp al WRAPPER
+  //       Window: {
+  //         Type: "Interval",
+  //         Duration: 480,
+  //         Distance: 1380,
+  //         Speed:   [{ Avg: 2.875, Max: 3.15, Min: 2.44 }],  ← array [{Avg,Max,Min}]
+  //         HR:      [{ Avg: 2.788, Max: 3.0,  Min: 2.483 }],
+  //         Cadence: [{ Avg: 1.412, Max: 1.517, Min: 1.333 }],
+  //         ...
+  //       }
+  //     }, ...
+  //   ]
+  //
+  // ERRORS anteriors del parser:
+  //   • w.SpeedAvg   → no existeix, cal w.Speed?.[0]?.Avg
+  //   • w.HRAvg      → no existeix, cal w.HR?.[0]?.Avg
+  //   • w.CadenceAvg → no existeix, cal w.Cadence?.[0]?.Avg
+  //   • w.StartTime  → no existeix, el timestamp està a wrapper.TimeISO8601
   const rawIntervals = windows
-    .map(w => w.Window ?? w)
-    .filter(w => w.Type === "Interval")
-    .map(w => {
-      const dur     = w.Duration   ?? 0;
-      let speed     = w.SpeedAvg   ?? 0;
-      let hrAvg     = w.HRAvg      ?? 0;
-      let hrMax     = w.HRMax      ?? 0;
-      let cadence   = w.CadenceAvg ?? 0;
+    .filter(wrapper => {
+      const w = wrapper.Window ?? wrapper;
+      return typeof w === "object" && w.Type === "Interval";
+    })
+    .map(wrapper => {
+      const w         = wrapper.Window ?? wrapper;
+      const startIso  = wrapper.TimeISO8601 ?? null;  // ← timestamp al wrapper
+      const dur       = w.Duration ?? 0;
 
-      // Si les mètriques agregades del Window estan buides, les recalculem
-      // des dels Samples individuals per rang de temps.
-      if ((speed === 0 || hrAvg === 0) && samples.length > 0 && w.StartTime) {
-        const enriched = enrichFromSamples(samples, w.StartTime, dur);
+      // Les mètriques són arrays [{Avg, Max, Min}] — cal agafar [0].Avg
+      let speed   = w.Speed?.[0]?.Avg   ?? 0;
+      let hrAvg   = w.HR?.[0]?.Avg      ?? 0;
+      let hrMax   = w.HR?.[0]?.Max      ?? 0;
+      let cadence = w.Cadence?.[0]?.Avg ?? 0;
+
+      // Fallback: si les mètriques del Window són 0, recalcula des dels Samples
+      if ((speed === 0 || hrAvg === 0) && samples.length > 0 && startIso) {
+        const enriched = enrichFromSamples(samples, startIso, dur);
         if (speed   === 0) speed   = enriched.speedAvg;
         if (hrAvg   === 0) hrAvg   = enriched.hrAvg;
         if (hrMax   === 0) hrMax   = enriched.hrMax;
@@ -244,29 +251,22 @@ function parseQuality(filename, data) {
     });
 
   // ── Lògica 2 passades: separa sèries de recuperacions ────────────────────
-  // Passada 1: intenta separar per durada (sèrie > RECUPERACIO_MAX_DURADA s)
   const intervalsLlargs = rawIntervals.filter(iv => iv.dur_s > RECUPERACIO_MAX_DURADA);
 
-  // Passada 2: si tots els intervals són llargs (ex: TEMPO sense recuperació curta),
-  // distingeix sèries de recuperacions per FC (les de FC alta = sèries)
   const fcMaxGlobal = Math.max(...rawIntervals.map(iv => iv.fc_max), 0);
   const llindatFC   = Math.round(fcMaxGlobal * RECUPERACIO_FC_FACTOR);
 
   let series;
   if (intervalsLlargs.length > 0) {
-    // Cas normal: INTERVALS amb recuperació curta
     series = intervalsLlargs.filter(iv => iv.fc_mitja > llindatFC);
-    if (series.length === 0) series = intervalsLlargs; // fallback: totes les llargues
+    if (series.length === 0) series = intervalsLlargs;
   } else {
-    // Cas TEMPO o intervals sense recuperació explícita: tots els intervals
     series = rawIntervals.filter(iv => iv.fc_mitja > llindatFC);
-    if (series.length === 0) series = rawIntervals; // fallback: tot
+    if (series.length === 0) series = rawIntervals;
   }
 
   series = series.map((s, i) => ({ ...s, serie: i + 1 }));
 
-  // ── Extreu recuperacions: intervals curts entre sèries ────────────────────
-  // Cada recuperació és el Window de tipus "Interval" entre dues sèries
   const recuperacions = rawIntervals.filter(
     iv => iv.dur_s > 0 && iv.dur_s <= RECUPERACIO_MAX_DURADA
   );
@@ -275,10 +275,8 @@ function parseQuality(filename, data) {
     ? avgArr(recuperacions.map(r => r.dur_min).filter(v => v > 0))
     : 0;
 
-  // ── Elimina dur_s del detall final (igual que el Python) ─────────────────
   const seriesDetall = series.map(({ dur_s, ...rest }) => rest);
 
-  // ── Omple la fila de sortida ───────────────────────────────────────────────
   row.Num_Series            = series.length;
   row.Durada_Mitja_Series   = avgArr(series.map(s => s.dur_min).filter(v => v > 0));
   row.Rec_Mitja_Min         = recMitjaMin;
@@ -296,8 +294,8 @@ function parseQuality(filename, data) {
 // ─── STRENGTH PARSER (equivalent a strength_parser.py) ────────
 
 function parseStrength(filename, data) {
-  const row  = parseBase(filename, data);
-  const name = filename.replace(".json", "");
+  const row   = parseBase(filename, data);
+  const name  = filename.replace(".json", "");
   const match = name.match(/[Ss](\d+)/);
   const code  = match ? `S${match[1]}` : "";
   row.Tipus = `FORÇA ${code}`.trim();
@@ -307,7 +305,7 @@ function parseStrength(filename, data) {
 
 // ─── GENERIC PARSER (equivalent a generic_parser.py) ──────────
 function parseGeneric(filename, data) {
-  const row      = parseBase(filename, data);
+  const row       = parseBase(filename, data);
   const nameLower = filename.toLowerCase();
   row.Tipus = Object.entries(ACTIVITY_GENERIC_TYPES).find(
     ([k]) => nameLower.includes(k)
