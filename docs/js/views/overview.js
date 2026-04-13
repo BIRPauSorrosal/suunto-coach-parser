@@ -526,7 +526,7 @@ function renderCtlTrend(sessions) {
           pointHoverRadius: 5,
           fill: {
             target: 'origin',
-            above: 'rgba(34,197,94,0.07)',
+            above: 'rgba(168,85,247,0.10)',
           },
           tension: 0.35,
           order: 2,
@@ -553,8 +553,8 @@ function renderCtlTrend(sessions) {
           pointHoverRadius: 4,
           fill: {
             target: { value: 0 },
-            above: 'rgba(56,189,248,0.06)',
-            below: 'rgba(249,115,22,0.06)',
+            above: 'rgba(34,197,94,0.10)',   // TSB positiu → verd (Productiu/Forma òptima)
+            below: 'rgba(249,115,22,0.12)',  // TSB negatiu → taronja (Fatigat)
           },
           tension: 0.35,
           order: 0,
