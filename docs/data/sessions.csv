@@ -42,3 +42,4 @@ Arxiu,Data,Tipus,Durada(min),Dist(km),Desnivell(m),FCMitja,FCMax,Z1(min),Z2(min)
 260407_padel,07/04/2026,PADEL,52.7,0,0,154,194,0.2,16.2,26.9,8.3,1.1,4.5,103.3,175.4,775,26.1,,,,,,,,,,,,
 260411_running_z2,11/04/2026,Z2,42.4,5.61,32,145,164,0,38.8,3.6,0,0,3.4,54.8,81.7,533,14.8,7.56,151,,,,,,,,"Ruta de sempre, que comença a quedar-se curta degut a la millora de ritme i ppm",,
 260412_força,12/04/2026,FORÇA,36,0,0,127,168,15.7,18.9,1.5,0,0,2.5,25.4,33.2,338,6,,,,,,,,,,,,
+260413_running_tempo,08/04/2026,TEMPO,55.5,8.33,46,156,186,0.3,26.3,14.9,13.4,0.5,4.9,119.7,182.6,801,28.4,6.64,158,3,0,0,0,0,0,"[{""dist_m"":1380,""dur_min"":8,""ritme"":0,""fc_mitja"":0,""fc_max"":0,""cadencia"":0,""serie"":1},{""dist_m"":1472,""dur_min"":8,""ritme"":0,""fc_mitja"":0,""fc_max"":0,""cadencia"":0,""serie"":2},{""dist_m"":1382,""dur_min"":8,""ritme"":0,""fc_mitja"":0,""fc_max"":0,""cadencia"":0,""serie"":3}]",,8,2
