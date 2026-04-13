@@ -7,7 +7,7 @@
 
 let currentWeekIndex = 0;
 
-// ── Punt d'entrada ────────────────────────────────────────────────────────────
+// ── Punt d'entrada ─────────────────────────────────────────────────────────────────────
 function renderSetmanalView(sessions, planning) {
   if (!planning.length) return;
   if (currentWeekIndex === 0) {
@@ -17,7 +17,7 @@ function renderSetmanalView(sessions, planning) {
   initWeekNav(sessions, planning);
 }
 
-// ── Detecció setmana activa ───────────────────────────────────────────────────
+// ── Detecció setmana activa ────────────────────────────────────────────────────────
 function detectActiveWeekIndex(sessions, planning) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -36,7 +36,7 @@ function detectActiveWeekIndex(sessions, planning) {
   return planning.length - 1;
 }
 
-// ── Navegació ─────────────────────────────────────────────────────────────────
+// ── Navegació ─────────────────────────────────────────────────────────────────────────
 function initWeekNav(sessions, planning) {
   const btnPrev = document.getElementById('week-nav-prev');
   const btnNext = document.getElementById('week-nav-next');
@@ -59,7 +59,7 @@ function updateNavButtons(planning) {
   if (btnNext) btnNext.disabled = currentWeekIndex === planning.length - 1;
 }
 
-// ── Render de la setmana ──────────────────────────────────────────────────────
+// ── Render de la setmana ──────────────────────────────────────────────────────────
 function renderWeek(sessions, planning) {
   const week = planning[currentWeekIndex];
   if (!week) return;
@@ -75,7 +75,7 @@ function renderWeek(sessions, planning) {
   renderAltresBlock(week, weekSessions);
 }
 
-// ── Capçalera ─────────────────────────────────────────────────────────────────
+// ── Capçalera ──────────────────────────────────────────────────────────────────────────
 function renderWeekHeader(week, planning) {
   setTextV('sw-week-label',   `${week.setmana} · ${week.cicle}`);
   setTextV('sw-week-fase',    week.fase);
@@ -83,7 +83,7 @@ function renderWeekHeader(week, planning) {
   setTextV('sw-week-counter', `${currentWeekIndex + 1} / ${planning.length}`);
 }
 
-// ── Barra de progrés ──────────────────────────────────────────────────────────
+// ── Barra de progrés ───────────────────────────────────────────────────────────────────
 function renderWeekProgress(week, weekSessions) {
   const realKm    = weekSessions.reduce((a, s) => a + (s.distancia || 0), 0);
   const plannedKm = week.kmTotal || 0;
@@ -95,7 +95,7 @@ function renderWeekProgress(week, weekSessions) {
   if (bar) bar.style.width = `${pct}%`;
 }
 
-// ── Bloc Qualitat ─────────────────────────────────────────────────────────────
+// ── Bloc Qualitat ──────────────────────────────────────────────────────────────────────
 function renderQualityBlock(week, weekSessions) {
   const qualityTypesSetmanal = new Set([...QUALITY_TYPES, 'TEST']);
   const sess = weekSessions.filter(s => qualityTypesSetmanal.has(s.tipusKey));
@@ -117,14 +117,14 @@ function renderQualityBlock(week, weekSessions) {
   setBlockStatus('sw-q-block', sess.length > 0);
 }
 
-// ── Bloc Z2 ───────────────────────────────────────────────────────────────────
+// ── Bloc Z2 ────────────────────────────────────────────────────────────────────────────
 function renderZ2Block(week, weekSessions) {
   const sess = weekSessions.filter(s => s.tipusKey === 'Z2');
 
   // Fila Pla
   setTextV('sw-z2-durada-plan', `${fmtNum(week.z2Durada)} min`);
   setTextV('sw-z2-ritme-plan',
-    `${formatPace(week.z2RitmeMin, '')}–${formatPace(week.z2RitmeMax)}`);
+    `${formatPace(week.z2RitmeMin, '')}\u2013${formatPace(week.z2RitmeMax)}`);
   setTextV('sw-z2-fc-plan',   formatFCRange(week.z2FcMin, week.z2FcMax));
   setTextV('sw-z2-km-plan',   `${fmtNum(week.z2Km)} km`);
 
@@ -137,7 +137,7 @@ function renderZ2Block(week, weekSessions) {
   setBlockStatus('sw-z2-block', sess.length > 0);
 }
 
-// ── Bloc Tirada llarga ────────────────────────────────────────────────────────
+// ── Bloc Tirada llarga ───────────────────────────────────────────────────────────────────
 function renderLongBlock(week, weekSessions) {
   const sess = weekSessions.filter(s => LONG_TYPES.has(s.tipusKey));
 
@@ -155,7 +155,7 @@ function renderLongBlock(week, weekSessions) {
   setBlockStatus('sw-ll-block', sess.length > 0);
 }
 
-// ── Bloc Força ────────────────────────────────────────────────────────────────
+// ── Bloc Força ───────────────────────────────────────────────────────────────────────────
 function renderForcaBlock(week, weekSessions) {
   const sess = weekSessions.filter(s => STRENGTH_RE.test(s.tipusKey));
 
@@ -170,7 +170,7 @@ function renderForcaBlock(week, weekSessions) {
   setBlockStatus('sw-forca-block', sess.length > 0);
 }
 
-// ── Bloc Altres ───────────────────────────────────────────────────────────────
+// ── Bloc Altres ──────────────────────────────────────────────────────────────────────────
 function renderAltresBlock(week, weekSessions) {
   const sess = weekSessions.filter(s => PADEL_TYPES.has(s.tipusKey));
 
@@ -185,27 +185,36 @@ function renderAltresBlock(week, weekSessions) {
   setBlockStatus('sw-altres-block', sess.length > 0);
 }
 
-// ── Rows de taula ─────────────────────────────────────────────────────────────
+// ── Rows de taula ─────────────────────────────────────────────────────────────────────────
 
 function tssCell(carrega) {
-  if (!(typeof carrega === 'number' && carrega > 0)) return '—';
+  if (!(typeof carrega === 'number' && carrega > 0)) return '\u2014';
   return tssDotHTML(carrega);
 }
 
 // Qualitat: Data | Sèries | Dur.sèrie | Ritme | Rec. | Cadència | FC | TSS | Km
+//
+// FIX 4: Ritme i FC mostren — si no hi ha dades de sèries (sense fallback
+// al ritme/FC globals de la sessió, que podria confondre l'usuari).
 function sessionRowQuality(s) {
-  const ritme = isFinite(s.ritmeMitjaSeries) && s.ritmeMitjaSeries > 0
-    ? s.ritmeMitjaSeries : s.ritme;
-  const fc = isFinite(s.fcMitjaSeries) && s.fcMitjaSeries > 0
-    ? s.fcMitjaSeries : s.fcMitja;
+  // Ritme: només de sèries. Si no existeix → null → formatPace retorna '\u2014'
+  const ritme = (isFinite(s.ritmeMitjaSeries) && s.ritmeMitjaSeries > 0)
+    ? s.ritmeMitjaSeries
+    : null;
+
+  // FC: només de sèries. Si no existeix → null → fcBadgeHTML retorna '\u2014'
+  const fc = (isFinite(s.fcMitjaSeries) && s.fcMitjaSeries > 0)
+    ? s.fcMitjaSeries
+    : null;
+
   const n   = s.numSeries;
-  const seriesCell = isFinite(n) && n > 0 ? n : '—';
+  const seriesCell = isFinite(n) && n > 0 ? n : '\u2014';
   const dur = s.duradaMitjaSeries;
-  const durCell = isFinite(dur) && dur > 0 ? `${fmtNum(dur)} min` : '—';
+  const durCell = isFinite(dur) && dur > 0 ? `${fmtNum(dur)} min` : '\u2014';
   const rec = s.recMitjaMin;
-  const recCell = isFinite(rec) && rec > 0 ? `${fmtNum(rec)} min` : '—';
+  const recCell = isFinite(rec) && rec > 0 ? `${fmtNum(rec)} min` : '\u2014';
   const cad = s.cadenciaMitjaSeries;
-  const cadCell = isFinite(cad) && cad > 0 ? `${Math.round(cad)} spm` : '—';
+  const cadCell = isFinite(cad) && cad > 0 ? `${Math.round(cad)} spm` : '\u2014';
 
   return `<tr>
     <td>${esc(s.displayDate)}</td>
@@ -216,7 +225,7 @@ function sessionRowQuality(s) {
     <td>${cadCell}</td>
     <td>${fcBadgeHTML(fc)}</td>
     <td>${tssCell(s.carrega)}</td>
-    <td>${isFinite(s.distancia) && s.distancia > 0 ? fmtNum(s.distancia) + ' km' : '—'}</td>
+    <td>${isFinite(s.distancia) && s.distancia > 0 ? fmtNum(s.distancia) + ' km' : '\u2014'}</td>
   </tr>`;
 }
 
@@ -225,12 +234,12 @@ function sessionRowZ2(s) {
   const cadencia = toNumber(s.raw['Cadencia(spm)']);
   return `<tr>
     <td>${esc(s.displayDate)}</td>
-    <td>${isFinite(s.durada) && s.durada > 0 ? fmtNum(s.durada) + ' min' : '—'}</td>
+    <td>${isFinite(s.durada) && s.durada > 0 ? fmtNum(s.durada) + ' min' : '\u2014'}</td>
     <td>${formatPace(s.ritme)}</td>
-    <td>${isFinite(cadencia) && cadencia > 0 ? Math.round(cadencia) + ' spm' : '—'}</td>
+    <td>${isFinite(cadencia) && cadencia > 0 ? Math.round(cadencia) + ' spm' : '\u2014'}</td>
     <td>${fcBadgeHTML(s.fcMitja)}</td>
     <td>${tssCell(s.carrega)}</td>
-    <td>${isFinite(s.distancia) && s.distancia > 0 ? fmtNum(s.distancia) + ' km' : '—'}</td>
+    <td>${isFinite(s.distancia) && s.distancia > 0 ? fmtNum(s.distancia) + ' km' : '\u2014'}</td>
   </tr>`;
 }
 
@@ -241,17 +250,17 @@ function sessionRowLong(s) {
   const desnivell = toNumber(s.raw['Desnivell(m)']);
   const duradaCell = isFinite(s.durada) && s.durada > 0
     ? fmtNum(s.durada) + ' min'
-    : '—';
+    : '\u2014';
 
   return `<tr>
     <td>${esc(s.displayDate)}</td>
     <td>${duradaCell}</td>
     <td>${formatPace(s.ritme)}</td>
-    <td>${isFinite(s.z2min) && s.z2min > 0 ? fmtNum(s.z2min) + ' min' : '—'}</td>
-    <td>${isFinite(desnivell) && desnivell > 0 ? Math.round(desnivell) + ' m' : '—'}</td>
+    <td>${isFinite(s.z2min) && s.z2min > 0 ? fmtNum(s.z2min) + ' min' : '\u2014'}</td>
+    <td>${isFinite(desnivell) && desnivell > 0 ? Math.round(desnivell) + ' m' : '\u2014'}</td>
     <td>${fcBadgeHTML(s.fcMitja)}</td>
     <td>${tssCell(s.carrega)}</td>
-    <td>${isFinite(s.distancia) && s.distancia > 0 ? fmtNum(s.distancia) + ' km' : '—'}</td>
+    <td>${isFinite(s.distancia) && s.distancia > 0 ? fmtNum(s.distancia) + ' km' : '\u2014'}</td>
   </tr>`;
 }
 
@@ -260,13 +269,13 @@ function sessionRowExtra(s) {
   return `<tr>
     <td>${esc(s.displayDate)}</td>
     <td>${esc(s.tipus)}</td>
-    <td>${isFinite(s.durada) && s.durada > 0 ? fmtNum(s.durada) + ' min' : '—'}</td>
+    <td>${isFinite(s.durada) && s.durada > 0 ? fmtNum(s.durada) + ' min' : '\u2014'}</td>
     <td>${fcBadgeHTML(s.fcMitja)}</td>
     <td>${tssCell(s.carrega)}</td>
   </tr>`;
 }
 
-// ── Helpers locals ────────────────────────────────────────────────────────────
+// ── Helpers locals ───────────────────────────────────────────────────────────────────────
 function setBlockStatus(id, done) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -276,7 +285,7 @@ function setBlockStatus(id, done) {
 
 function formatFCRange(min, max) {
   if (!min && !max) return '--';
-  if (min && max)   return `${min}–${max} bpm`;
+  if (min && max)   return `${min}\u2013${max} bpm`;
   return `${min || max} bpm`;
 }
 
