@@ -429,10 +429,13 @@ function buildSessChartConfig(byWeek, labels, sessions) {
       }};
     }
 
+    // ── LONG ────────────────────────────────────────────────────────────────────────
+    // Cadència afegida: hasCad + dataset linia morada a y3 (compartit amb FC)
     case 'long': {
       const hasDesn  = byWeek.some(w => w.desnivell > 0);
       const hasRitme = byWeek.some(w => w.avgPace !== null);
       const hasFC    = byWeek.some(w => w.avgFC   !== null);
+      const hasCad   = byWeek.some(w => w.avgCad  !== null);
       const datasets = [
         { type:'bar', label:'Km', data:byWeek.map(w=>w.km),
           backgroundColor:COL.km.bar, borderColor:COL.km.line,
@@ -451,14 +454,17 @@ function buildSessChartConfig(byWeek, labels, sessions) {
       if (hasFC) datasets.push({ type:'line', label:'FC mitja (ppm)',
         data:byWeek.map(w=>w.avgFC), borderColor:COL.fc.line, backgroundColor:'transparent',
         borderWidth:2, pointRadius:4, tension:0.3, yAxisID:'y3', spanGaps:true });
+      if (hasCad) datasets.push({ type:'line', label:'Cadència (spm)',
+        data:byWeek.map(w=>w.avgCad), borderColor:COL.cad.line, backgroundColor:'transparent',
+        borderWidth:2, pointRadius:4, tension:0.3, yAxisID:'y3', spanGaps:true });
       return { type:'bar', data:{labels,datasets}, options:{...baseOpts,
         plugins:{...baseOpts.plugins, tooltip:{callbacks:{label:tooltipLabel}}},
         scales:{
           x:  baseOpts.scales.x,
           y:  scaleKm('km'),
-          y2: hasRitme ? scaleRitme() : { display:false },
-          y3: hasFC    ? scaleFC()    : { display:false },
-          y4: hasDesn  ? scaleDesn()  : { display:false },
+          y2: hasRitme           ? scaleRitme() : { display:false },
+          y3: (hasFC||hasCad)    ? scaleFC()    : { display:false },
+          y4: hasDesn            ? scaleDesn()  : { display:false },
         }
       }};
     }
