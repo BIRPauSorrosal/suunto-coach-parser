@@ -478,11 +478,11 @@ function renderCtlTrend(sessions) {
 
   // Zona de forma basada en TSB_THRESHOLDS de PMC_CONFIG
   function getTSBZone(tsb) {
-    if (tsb > TSB_THRESHOLDS.fresc)        return { key: 'fresc',        label: 'Fresc',          cls: 'up'      };
-    if (tsb >= TSB_THRESHOLDS.optim_min)   return { key: 'optim',        label: 'Forma òptima',   cls: 'up'      };
-    if (tsb >= TSB_THRESHOLDS.productiu_min) return { key: 'productiu',  label: 'Productiu',      cls: 'neutral' };
-    if (tsb >= TSB_THRESHOLDS.fatigat_min) return { key: 'fatigat',      label: 'Fatigat',        cls: 'down'    };
-    return                                          { key: 'sobrecarregat', label: 'Sobrecarregat', cls: 'down'   };
+    if (tsb > TSB_THRESHOLDS.fresc)          return { key: 'fresc',         label: 'Fresc',          cls: 'up'       };
+    if (tsb >= TSB_THRESHOLDS.optim_min)     return { key: 'optim',         label: 'Forma òptima',   cls: 'up'       };
+    if (tsb >= TSB_THRESHOLDS.productiu_min) return { key: 'productiu',     label: 'Productiu',      cls: 'blue'     };
+    if (tsb >= TSB_THRESHOLDS.fatigat_min)   return { key: 'fatigat',       label: 'Fatigat',        cls: 'warning'  };
+    return                                           { key: 'sobrecarregat', label: 'Sobrecarregat',  cls: 'down'     };
   }
 
   const zona = getTSBZone(tsbAvui);
