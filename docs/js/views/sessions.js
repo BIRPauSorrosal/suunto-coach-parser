@@ -132,13 +132,24 @@ const PMC_GRADIENT_PLUGIN = {
     if (!chartArea || !scales.y2) return;
     const { top, bottom, height } = chartArea;
     if (!isFinite(top) || !isFinite(bottom) || height <= 0) return;
-    const zeroY = scales.y2.getPixelForValue(0);
-    const pct   = Math.max(0, Math.min(1, (zeroY - top) / height));
-    const grad  = chart.ctx.createLinearGradient(0, top, 0, bottom);
-    grad.addColorStop(0,   'rgba(34,197,94,0.18)');
-    grad.addColorStop(pct, 'rgba(34,197,94,0.05)');
-    grad.addColorStop(pct, 'rgba(239,68,68,0.05)');
-    grad.addColorStop(1,   'rgba(239,68,68,0.18)');
+
+    // Posicions en píxels per a cada llindar TSB
+    const pxAt = v => Math.max(0, Math.min(1, (scales.y2.getPixelForValue(v) - top) / height));
+
+    const p10  = pxAt(10);   // TSB > 10  → Fresc (verd)
+    const p0   = pxAt(0);    // TSB 0-10  → Forma òptima (verd suau)
+    const pN20 = pxAt(-20);  // TSB -20-0 → Productiu (blau)
+    const pN57 = pxAt(-57);  // TSB -57 a -20 → Fatigat (taronja)
+    //                          TSB < -57  → Sobrecarregat (vermell)
+
+    const grad = chart.ctx.createLinearGradient(0, top, 0, bottom);
+    grad.addColorStop(0,     'rgba(168,85,247,0.25)');  // Fresc      — lila/violeta
+    grad.addColorStop(p10,   'rgba(34,197,94,0.22)');   // Forma òpt. — verd
+    grad.addColorStop(p0,    'rgba(56,189,248,0.18)');  // Productiu  — blau cel
+    grad.addColorStop(pN20,  'rgba(245,158,11,0.20)');  // Fatigat    — groc-ambre
+    grad.addColorStop(pN57,  'rgba(239,68,68,0.22)');   // Sobrecarr. — vermell
+    grad.addColorStop(1,     'rgba(239,68,68,0.32)');   // Sobrecarr. — vermell fort
+
     chart.data.datasets[2].backgroundColor = grad;
   }
 };
@@ -188,7 +199,12 @@ function renderPMC(sessions) {
           const v = c.parsed.y;
           if (c.datasetIndex===0) return ` CTL (Forma): ${v}`;
           if (c.datasetIndex===1) return ` ATL (Fatiga): ${v}`;
-          const estat = v>5?'★ Fresc':v>-10?'≈ Neutral':'⚠️ Fatigat';
+          let estat;
+          if      (v > 10)  estat = '★ Fresc';
+          else if (v > 0)   estat = '✓ Forma òptima';
+          else if (v > -20) estat = '≈ Productiu';
+          else if (v > -57) estat = '⚠ Fatigat';
+          else              estat = '✗ Sobrecarregat';
           return ` TSB (Frescor): ${v}  ${estat}`;
         }}}
       },
