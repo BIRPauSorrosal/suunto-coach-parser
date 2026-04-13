@@ -229,9 +229,15 @@ function exportSessionsCSV(days) {
   rows = [...rows].sort((a,b) => a.date - b.date);
   if (!rows.length) return;
   const headers = Object.keys(rows[0].raw);
-  const escCsv = v => { const s=String(v??''); return (s.includes(',')||s.includes('"')||s.includes('\n'))?`"${s.replaceAll('"','""')}"`:s; };
-  const lines = rows.map(s => headers.map(h => escCsv(s.raw[h]??'')).join(','));
-  triggerCsvDownload([headers.map(escCsv).join(','),...lines].join('\n'),
+  // FIX: escCsv sense backtick fantasma — ternari correctament tancat
+  const escCsv = v => {
+    const s = String(v ?? '');
+    return (s.includes(',') || s.includes('"') || s.includes('\n'))
+      ? `"${s.replaceAll('"', '""')}"`
+      : s;
+  };
+  const lines = rows.map(s => headers.map(h => escCsv(s.raw[h] ?? '')).join(','));
+  triggerCsvDownload([headers.map(escCsv).join(','), ...lines].join('\n'),
     `sessions_${days>0?days+'d':'complet'}_${new Date().toISOString().slice(0,10)}.csv`);
 }
 
@@ -367,12 +373,21 @@ function buildSessChartConfig(byWeek, labels, sessions) {
       }};
     }
 
+    // FIX 3: el dataset de Km sempre s'afegeix com a base, independentment
+    // de si hi ha dades de sèries. Cada has* és independent i no bloqueja els altres.
     case 'quality': {
       const hasDurS  = byWeek.some(w => w.totalDurSeries > 0);
       const hasPaceS = byWeek.some(w => w.avgPaceSeries  !== null);
       const hasFCS   = byWeek.some(w => w.avgFCSeries    !== null);
       const hasCadS  = byWeek.some(w => w.avgCadSeries   !== null);
-      const datasets = [];
+
+      // Km és sempre present com a dataset base visible
+      const datasets = [
+        { type:'bar', label:'Km', data:byWeek.map(w => w.km > 0 ? w.km : null),
+          backgroundColor:COL.km.bar, borderColor:COL.km.line,
+          borderWidth:1, borderRadius:4, yAxisID:'y' },
+      ];
+      // Temps de sèries s'afegeix a l'eix y si existeix
       if (hasDurS) datasets.push({
         type:'bar', label:'Temps sèries (min)',
         data:byWeek.map(w => w.totalDurSeries > 0 ? w.totalDurSeries : null),
@@ -394,7 +409,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
       return { type:'bar', data:{labels,datasets}, options:{...baseOpts,
         plugins:{...baseOpts.plugins, tooltip:{callbacks:{label:tooltipLabel}}},
         scales:{ x:baseOpts.scales.x,
-          y:  hasDurS            ? scaleDur('min')  : { display:false },
+          y:  scaleKm(hasDurS ? 'km / min' : 'km'),
           y2: hasPaceS           ? scaleRitme()     : { display:false },
           y3: (hasFCS||hasCadS)  ? scaleFC()        : { display:false } }
       }};
@@ -515,7 +530,7 @@ function renderSessTable(sessions) {
     .map(s => `<tr>${cols.map(c=>`<td${c.cls?` class="${c.cls}"`:''}>${c.render(s)}</td>`).join('')}</tr>`)
     .join('');
 
-  bindSessCommentButtons(); // ← NOU
+  bindSessCommentButtons();
 }
 
 // ── Columna comentari (shared entre tots els tipus) ──────────────────────────────
@@ -571,13 +586,16 @@ function getSessCols(type) {
   const colFCSeries   = {label:'FC sèries',         render:s=>fcBadgeHTML(s.fcMitjaSeries)};
   const colSeries     = {label:'Sèries',            render:s=>{const n=toNumber(s.raw['Num_Series']);return typeof n==='number'&&n>0?String(Math.round(n)):'\u2014';}};
   const colPTE        = {label:'PTE',               render:s=>{const p=toNumber(s.raw['PTE']);return typeof p==='number'&&p>0?fmtNum(p):'\u2014';}};
-  const colDurSerie   = {
+
+  // FIX 1: usa s.duradaMitjaSeries (ja enriquit per enrichSessionRow) en lloc de
+  // recalcular via parseDurSeries(s), que depèn del JSON Series_Detall i pot fallar.
+  const colDurSerie = {
     label: 'Dur/Sèrie',
     render: s => {
-      const n   = toNumber(s.raw['Num_Series']);
-      const dur = parseDurSeries(s);
-      if (typeof n !== 'number' || n <= 0 || dur <= 0) return '\u2014';
-      return `${fmtNum(Math.round((dur / n) * 10) / 10)} min`;
+      const dur = s.duradaMitjaSeries;
+      return (typeof dur === 'number' && isFinite(dur) && dur > 0)
+        ? `${fmtNum(Math.round(dur * 10) / 10)} min`
+        : '\u2014';
     }
   };
 
@@ -599,16 +617,12 @@ function setSessText(id, value) {
 
 // ── Helpers de comentari ──────────────────────────────────────────────────────────────
 
-// Trunca i escapa el text d'un comentari per mostrar-lo en preview
 function commentPreview(comment, max = 36) {
   const txt = String(comment ?? '').trim();
   if (!txt) return '';
   return txt.length > max ? `${esc(txt.slice(0, max))}\u2026` : esc(txt);
 }
 
-// Lliga els botons de comentari de la taula de sessions.
-// Els botons ja tenen onclick inline; aquest binding és un guard de seguretat
-// per si s'eliminen els inline handlers en una refactorització futura.
 function bindSessCommentButtons() {
   const tbody = document.getElementById('sess-tbody');
   if (!tbody) return;
