@@ -33,6 +33,43 @@ function parseDurSeries(session) {
   } catch { return 0; }
 }
 
+// ── Funció compartida: construeix un bucket a partir d'una llista de sessions ──
+function buildBucket(sessions, dateKey, label) {
+  const ss = sessions;
+  const totalKm        = ss.reduce((a,s) => a + (typeof s.distancia==='number' && s.distancia>0 ? s.distancia : 0), 0);
+  const totalLoad      = ss.reduce((a,s) => a + (typeof s.carrega==='number'   && s.carrega>0   ? s.carrega   : 0), 0);
+  const totalEpoc      = ss.reduce((a,s) => { const e=toNumber(s.raw['EPOC']);          return a+(typeof e==='number'&&e>0?e:0); }, 0);
+  const totalDesnivell = ss.reduce((a,s) => { const d=toNumber(s.raw['Desnivell(m)']); return a+(typeof d==='number'&&d>0?d:0); }, 0);
+  const totalZ1        = ss.reduce((a,s) => { const v=toNumber(s.raw['Z1(min)']);       return a+(typeof v==='number'&&v>0?v:0); }, 0);
+  const totalZ2        = ss.reduce((a,s) => { const v=toNumber(s.raw['Z2(min)']);       return a+(typeof v==='number'&&v>0?v:0); }, 0);
+
+  const avgPace        = avgValid(ss, s => (typeof s.ritme==='number'&&s.ritme>0) ? s.ritme : null);
+  const avgFC          = avgValid(ss, s => (typeof s.fcMitja==='number'&&s.fcMitja>0) ? s.fcMitja : null);
+  const avgCad         = avgValid(ss, s => { const c=toNumber(s.raw['Cadencia(spm)']); return (typeof c==='number'&&c>0)?c:null; });
+  const avgPaceSeries  = avgValid(ss, s => (typeof s.ritmeMitjaSeries==='number'&&s.ritmeMitjaSeries>0) ? s.ritmeMitjaSeries : null);
+  const avgFCSeries    = avgValid(ss, s => (typeof s.fcMitjaSeries==='number'&&s.fcMitjaSeries>0) ? s.fcMitjaSeries : null);
+  const avgCadSeries   = avgValid(ss, s => { const c=toNumber(s.raw['Cadencia_Mitja_Series']); return (typeof c==='number'&&c>0)?c:null; });
+  const totalDurSeries = Math.round(ss.reduce((a, s) => a + parseDurSeries(s), 0) * 10) / 10;
+
+  return {
+    label,
+    km:    Math.round(totalKm * 10) / 10,
+    load:  Math.round(totalLoad * 10) / 10,
+    epoc:  Math.round(totalEpoc * 10) / 10,
+    desnivell:     Math.round(totalDesnivell),
+    z1min:         Math.round(totalZ1 * 10) / 10,
+    z2min:         Math.round(totalZ2 * 10) / 10,
+    avgPace,
+    avgFC:         typeof avgFC==='number'         ? Math.round(avgFC)                 : null,
+    avgCad:        typeof avgCad==='number'        ? Math.round(avgCad)                : null,
+    avgPaceSeries: typeof avgPaceSeries==='number' ? Math.round(avgPaceSeries*100)/100 : null,
+    avgFCSeries:   typeof avgFCSeries==='number'   ? Math.round(avgFCSeries)           : null,
+    avgCadSeries:  typeof avgCadSeries==='number'  ? Math.round(avgCadSeries)          : null,
+    totalDurSeries,
+    count: ss.length,
+  };
+}
+
 // ── groupByWeek ───────────────────────────────────────────────────────────────
 // Agrupa sessions per setmana natural (dilluns–diumenge) i calcula agregats.
 // NOTA: Diferent de buildWeeklyData() a charts.js, que usa el planning com a eix.
@@ -49,44 +86,45 @@ function groupByWeek(sessions) {
   });
 
   return Array.from(map.values()).map(w => {
-    const ss = w.sessions;
-    const totalKm        = ss.reduce((a,s) => a + (typeof s.distancia==='number' && s.distancia>0 ? s.distancia : 0), 0);
-    const totalLoad      = ss.reduce((a,s) => a + (typeof s.carrega==='number'   && s.carrega>0   ? s.carrega   : 0), 0);
-    const totalEpoc      = ss.reduce((a,s) => { const e=toNumber(s.raw['EPOC']);        return a+(typeof e==='number'&&e>0?e:0); }, 0);
-    const totalDesnivell = ss.reduce((a,s) => { const d=toNumber(s.raw['Desnivell(m)']); return a+(typeof d==='number'&&d>0?d:0); }, 0);
-    const totalZ1        = ss.reduce((a,s) => { const v=toNumber(s.raw['Z1(min)']);     return a+(typeof v==='number'&&v>0?v:0); }, 0);
-    const totalZ2        = ss.reduce((a,s) => { const v=toNumber(s.raw['Z2(min)']);     return a+(typeof v==='number'&&v>0?v:0); }, 0);
-
-    const avgPace        = avgValid(ss, s => (typeof s.ritme==='number'&&s.ritme>0) ? s.ritme : null);
-    const avgFC          = avgValid(ss, s => (typeof s.fcMitja==='number'&&s.fcMitja>0) ? s.fcMitja : null);
-    const avgCad         = avgValid(ss, s => { const c=toNumber(s.raw['Cadencia(spm)']); return (typeof c==='number'&&c>0)?c:null; });
-    const avgPaceSeries  = avgValid(ss, s => (typeof s.ritmeMitjaSeries==='number'&&s.ritmeMitjaSeries>0) ? s.ritmeMitjaSeries : null);
-    const avgFCSeries    = avgValid(ss, s => (typeof s.fcMitjaSeries==='number'&&s.fcMitjaSeries>0) ? s.fcMitjaSeries : null);
-    const avgCadSeries   = avgValid(ss, s => { const c=toNumber(s.raw['Cadencia_Mitja_Series']); return (typeof c==='number'&&c>0)?c:null; });
-    const totalDurSeries = Math.round(ss.reduce((a, s) => a + parseDurSeries(s), 0) * 10) / 10;
-
     const d  = w.date;
     const dd = String(d.getDate()).padStart(2, '0');
     const mm = String(d.getMonth() + 1).padStart(2, '0');
-
-    return {
-      label: `${dd}/${mm}`,
-      km:    Math.round(totalKm * 10) / 10,
-      load:  Math.round(totalLoad * 10) / 10,
-      epoc:  Math.round(totalEpoc * 10) / 10,
-      desnivell:     Math.round(totalDesnivell),
-      z1min:         Math.round(totalZ1 * 10) / 10,
-      z2min:         Math.round(totalZ2 * 10) / 10,
-      avgPace,
-      avgFC:         typeof avgFC==='number'         ? Math.round(avgFC)                : null,
-      avgCad:        typeof avgCad==='number'        ? Math.round(avgCad)               : null,
-      avgPaceSeries: typeof avgPaceSeries==='number' ? Math.round(avgPaceSeries*100)/100 : null,
-      avgFCSeries:   typeof avgFCSeries==='number'   ? Math.round(avgFCSeries)          : null,
-      avgCadSeries:  typeof avgCadSeries==='number'  ? Math.round(avgCadSeries)         : null,
-      totalDurSeries,
-      count: ss.length,
-    };
+    return buildBucket(w.sessions, w.date.toISOString().slice(0, 10), `${dd}/${mm}`);
   });
+}
+
+// ── groupByDay ────────────────────────────────────────────────────────────────
+// Mateix API que groupByWeek però un bucket per dia.
+// Inclou tots els dies del rang (fins i tot els sense sessions) per mantenir
+// l'eix X continu i evitar que les línies de ritme/FC saltin.
+function groupByDay(sessions) {
+  if (!sessions.length) return [];
+
+  const sorted = [...sessions].sort((a, b) => a.date - b.date);
+
+  // índex sessions per dia
+  const map = new Map();
+  sorted.forEach(s => {
+    const key = s.date.toISOString().slice(0, 10);
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(s);
+  });
+
+  // rang complet: primer dia → avui
+  const start = new Date(sorted[0].date);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date();
+  end.setHours(0, 0, 0, 0);
+
+  const result = [];
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const key  = d.toISOString().slice(0, 10);
+    const dd   = String(d.getDate()).padStart(2, '0');
+    const mm   = String(d.getMonth() + 1).padStart(2, '0');
+    const ssDia = map.get(key) || [];
+    result.push(buildBucket(ssDia, key, `${dd}/${mm}`));
+  }
+  return result;
 }
 
 // ── buildPMCData ──────────────────────────────────────────────────────────────

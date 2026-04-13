@@ -1,7 +1,7 @@
 // docs/js/views/sessions.js
 // Panell Sessions: filtres, KPIs, gràfic tendència, PMC + exportació CSV, taula
 // Dep: lib/formatters.js (formatPace, fmtNum, toNumber, esc)
-//      lib/metrics.js    (buildPMCData, groupByWeek, parseDurSeries)
+//      lib/metrics.js    (buildPMCData, groupByWeek, groupByDay, parseDurSeries)
 //      lib/load-scale.js (loadBadgeHTML, loadDotHTML, getLoadLevelSession,
 //                         getTSSLevel, tssBadgeHTML, tssDotHTML)
 //      app.js            (CHART_COLORS via charts.js, STRENGTH_RE, PADEL_TYPES,
@@ -37,7 +37,10 @@ const SESS_TYPE_LABELS = {
   other:    'Altres activitats',
 };
 
-// ── Punt d'entrada ─────────────────────────────────────────────────────────────────────
+// ── Llindar: <= 30 dies → agrupació diària, > 30 dies → setmanal ──────────────
+const DAY_VIEW_THRESHOLD = 30;
+
+// ── Punt d'entrada ──────────────────────────────────────────────────────────────
 function renderSessionsView(sessions) {
   _sessSessions = sessions;
   initSessFilters();
@@ -45,7 +48,7 @@ function renderSessionsView(sessions) {
   renderPMC(_sessSessions);
 }
 
-// ── Inicialitza listeners ─────────────────────────────────────────────────────
+// ── Inicialitza listeners ──────────────────────────────────────────────────────
 function initSessFilters() {
   const sel = document.getElementById('sess-type-select');
   if (sel) {
@@ -68,7 +71,7 @@ function initSessFilters() {
   });
 }
 
-// ── Render principal ───────────────────────────────────────────────────────────────────
+// ── Render principal ──────────────────────────────────────────────────────────
 function renderSessPanel() {
   const filtered = applyFilters(_sessSessions);
   renderSessKPIs(filtered);
@@ -76,7 +79,7 @@ function renderSessPanel() {
   renderSessTable(filtered);
 }
 
-// ── Filtratge ──────────────────────────────────────────────────────────────────────
+// ── Filtratge ──────────────────────────────────────────────────────────────────
 function applyFilters(sessions) {
   let result = sessions;
   if (_sessPeriod === -1) {
@@ -101,7 +104,7 @@ function applyFilters(sessions) {
   return result;
 }
 
-// ── KPIs ─────────────────────────────────────────────────────────────────────────────
+// ── KPIs ───────────────────────────────────────────────────────────────────────
 function renderSessKPIs(sessions) {
   const totalKm   = sessions.reduce((a,s) => a + (s.distancia||0), 0);
   const totalMin  = sessions.reduce((a,s) => a + (s.durada||0), 0);
@@ -117,10 +120,10 @@ function renderSessKPIs(sessions) {
   setSessText('kpi-epoc', totalEpoc>0 ? fmtNum(totalEpoc)          : '--');
 }
 
-// ════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
 // PMC — Performance Management Chart (CTL / ATL / TSB)
 // Usa buildPMCData() de lib/metrics.js
-// ════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
 
 const PMC_GRADIENT_PLUGIN = {
   id: 'pmcTsbGradient',
@@ -185,7 +188,7 @@ function renderPMC(sessions) {
           const v = c.parsed.y;
           if (c.datasetIndex===0) return ` CTL (Forma): ${v}`;
           if (c.datasetIndex===1) return ` ATL (Fatiga): ${v}`;
-          const estat = v>5?'\u2605 Fresc':v>-10?'\u2248 Neutral':'\u26a0\ufe0f Fatigat';
+          const estat = v>5?'★ Fresc':v>-10?'≈ Neutral':'⚠️ Fatigat';
           return ` TSB (Frescor): ${v}  ${estat}`;
         }}}
       },
@@ -201,7 +204,7 @@ function renderPMC(sessions) {
   });
 }
 
-// ── Exportació PMC CSV ───────────────────────────────────────────────────────────────────
+// ── Exportació PMC CSV ────────────────────────────────────────────────────────
 function exportPMCcsv(days) {
   if (!_pmcDataCache.length) return;
   const rows   = days>0 ? _pmcDataCache.slice(-days) : _pmcDataCache;
@@ -217,7 +220,7 @@ function exportPMCcsv(days) {
     `pmc_${days>0?days+'d':'complet'}_${new Date().toISOString().slice(0,10)}.csv`);
 }
 
-// ── Exportació Sessions CSV ──────────────────────────────────────────────────────────────
+// ── Exportació Sessions CSV ───────────────────────────────────────────────────
 function exportSessionsCSV(days) {
   let rows = _sessSessions;
   if (days > 0) {
@@ -249,9 +252,9 @@ function triggerCsvDownload(csvContent, filename) {
   document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
-// ════════════════════════════════════════════════════════════════════════
-// Gràfic de tendència — usa groupByWeek() de lib/metrics.js
-// ════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
+// Gràfic de tendència
+// ══════════════════════════════════════════════════════════════════════════════
 
 function renderSessTrendChart(sessions) {
   const ctx = document.getElementById('chart-sess-trend');
@@ -261,15 +264,25 @@ function renderSessTrendChart(sessions) {
   _sessChart = null;
   if (sessions.length < 1) { ctx.style.display='none'; return; }
   ctx.style.display = '';
-  const byWeek = (_sessType === 'testrace')
-    ? sessions.map(s => ({ ...s, label: s.displayDate }))
-    : groupByWeek(sessions);           // ← lib/metrics.js
+
+  // testrace: un punt per sessió (sense agrupació)
+  // 7d / 30d : agrupació diària (groupByDay)
+  // 90d+     : agrupació setmanal (groupByWeek)
+  let byWeek;
+  if (_sessType === 'testrace') {
+    byWeek = sessions.map(s => ({ ...s, label: s.displayDate }));
+  } else if (_sessPeriod > 0 && _sessPeriod <= DAY_VIEW_THRESHOLD) {
+    byWeek = groupByDay(sessions);    // ← lib/metrics.js
+  } else {
+    byWeek = groupByWeek(sessions);   // ← lib/metrics.js
+  }
+
   _sessChart = new Chart(ctx, buildSessChartConfig(byWeek, byWeek.map(w=>w.label), sessions));
 }
 
-// ════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
 // buildSessChartConfig
-// ════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
 
 function buildSessChartConfig(byWeek, labels, sessions) {
   const C = CHART_COLORS;
@@ -377,7 +390,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
       }};
     }
 
-    // ── QUALITY ──────────────────────────────────────────────────────────────────────
+    // ── QUALITY ────────────────────────────────────────────────────────────────
     case 'quality': {
       const hasDurS  = byWeek.some(w => w.totalDurSeries > 0);
       const hasPaceS = byWeek.some(w => w.avgPaceSeries  !== null);
@@ -429,8 +442,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
       }};
     }
 
-    // ── LONG ────────────────────────────────────────────────────────────────────────
-    // Cadència afegida: hasCad + dataset linia morada a y3 (compartit amb FC)
+    // ── LONG ───────────────────────────────────────────────────────────────────
     case 'long': {
       const hasDesn  = byWeek.some(w => w.desnivell > 0);
       const hasRitme = byWeek.some(w => w.avgPace !== null);
@@ -527,7 +539,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
   }
 }
 
-// ── Taula ─────────────────────────────────────────────────────────────────────────────
+// ── Taula ──────────────────────────────────────────────────────────────────────
 function renderSessTable(sessions) {
   const thead=document.getElementById('sess-thead');
   const tbody=document.getElementById('sess-tbody');
@@ -553,7 +565,7 @@ function renderSessTable(sessions) {
   bindSessCommentButtons();
 }
 
-// ── Columna comentari (shared entre tots els tipus) ──────────────────────────────
+// ── Columna comentari (shared entre tots els tipus) ───────────────────────────
 function makeColComentari() {
   return {
     label: '&#x270F;',
@@ -586,26 +598,26 @@ function getSessCols(type) {
   const colComentari  = makeColComentari();
   const colData       = {label:'Data',            render:s=>esc(s.displayDate)};
   const colTipus      = {label:'Tipus',            render:s=>esc(s.tipus)};
-  const colKm         = {label:'Km',               render:s=>s.distancia>0?`${fmtNum(s.distancia)} km`:'\u2014'};
-  const colDurada     = {label:'Durada',           render:s=>s.durada>0?`${fmtNum(s.durada)} min`:'\u2014'};
+  const colKm         = {label:'Km',               render:s=>s.distancia>0?`${fmtNum(s.distancia)} km`:'—'};
+  const colDurada     = {label:'Durada',           render:s=>s.durada>0?`${fmtNum(s.durada)} min`:'—'};
   const colRitme      = {label:'Ritme',            render:s=>formatPace(s.ritme)};
   const colFC         = {label:'FC',               render:s=>fcBadgeHTML(s.fcMitja)};
   const colCarrega = {
     label: 'TSS',
-    render: s => (typeof s.carrega === 'number' && s.carrega > 0) ? tssDotHTML(s.carrega) : '\u2014'
+    render: s => (typeof s.carrega === 'number' && s.carrega > 0) ? tssDotHTML(s.carrega) : '—'
   };
   const colEpoc = {
     label: 'EPOC',
-    render: s => { const e = toNumber(s.raw['EPOC']); return (typeof e === 'number' && e > 0) ? loadBadgeHTML(e) : '\u2014'; }
+    render: s => { const e = toNumber(s.raw['EPOC']); return (typeof e === 'number' && e > 0) ? loadBadgeHTML(e) : '—'; }
   };
-  const colRecup      = {label:'Recup.',            render:s=>{const r=toNumber(s.raw['Recup(h)']);return typeof r==='number'&&r>0?`${fmtNum(r)} h`:'\u2014';}};
-  const colZ2min      = {label:'Z2 (min)',          render:s=>s.z2min>0?`${fmtNum(s.z2min)} min`:'\u2014'};
-  const colCad        = {label:'Cadència',          render:s=>{const c=toNumber(s.raw['Cadencia(spm)']);return typeof c==='number'&&c>0?`${Math.round(c)} spm`:'\u2014';}};
-  const colDesnivell  = {label:'Desnivell',         render:s=>{const d=toNumber(s.raw['Desnivell(m)']);return typeof d==='number'&&d>0?`${Math.round(d)} m`:'\u2014';}};
+  const colRecup      = {label:'Recup.',            render:s=>{const r=toNumber(s.raw['Recup(h)']);return typeof r==='number'&&r>0?`${fmtNum(r)} h`:'—';}};
+  const colZ2min      = {label:'Z2 (min)',          render:s=>s.z2min>0?`${fmtNum(s.z2min)} min`:'—'};
+  const colCad        = {label:'Cadència',          render:s=>{const c=toNumber(s.raw['Cadencia(spm)']);return typeof c==='number'&&c>0?`${Math.round(c)} spm`:'—';}};
+  const colDesnivell  = {label:'Desnivell',         render:s=>{const d=toNumber(s.raw['Desnivell(m)']);return typeof d==='number'&&d>0?`${Math.round(d)} m`:'—';}};
   const colRitmeSeries= {label:'Ritme sèries',      render:s=>formatPace(typeof s.ritmeMitjaSeries==='number'?s.ritmeMitjaSeries:null)};
   const colFCSeries   = {label:'FC sèries',         render:s=>fcBadgeHTML(s.fcMitjaSeries)};
-  const colSeries     = {label:'Sèries',            render:s=>{const n=toNumber(s.raw['Num_Series']);return typeof n==='number'&&n>0?String(Math.round(n)):'\u2014';}};
-  const colPTE        = {label:'PTE',               render:s=>{const p=toNumber(s.raw['PTE']);return typeof p==='number'&&p>0?fmtNum(p):'\u2014';}};
+  const colSeries     = {label:'Sèries',            render:s=>{const n=toNumber(s.raw['Num_Series']);return typeof n==='number'&&n>0?String(Math.round(n)):'—';}};
+  const colPTE        = {label:'PTE',               render:s=>{const p=toNumber(s.raw['PTE']);return typeof p==='number'&&p>0?fmtNum(p):'—';}};
 
   const colDurSerie = {
     label: 'Dur/Sèrie',
@@ -613,7 +625,7 @@ function getSessCols(type) {
       const dur = s.duradaMitjaSeries;
       return (typeof dur === 'number' && isFinite(dur) && dur > 0)
         ? `${fmtNum(Math.round(dur * 10) / 10)} min`
-        : '\u2014';
+        : '—';
     }
   };
 
@@ -633,12 +645,12 @@ function setSessText(id, value) {
   if (el) el.textContent = value;
 }
 
-// ── Helpers de comentari ──────────────────────────────────────────────────────────────
+// ── Helpers de comentari ──────────────────────────────────────────────────────
 
 function commentPreview(comment, max = 36) {
   const txt = String(comment ?? '').trim();
   if (!txt) return '';
-  return txt.length > max ? `${esc(txt.slice(0, max))}\u2026` : esc(txt);
+  return txt.length > max ? `${esc(txt.slice(0, max))}…` : esc(txt);
 }
 
 function bindSessCommentButtons() {
