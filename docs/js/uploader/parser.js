@@ -160,9 +160,44 @@ function avgArr(arr) {
   return Math.round((arr.reduce((a, b) => a + b, 0) / arr.length) * 100) / 100;
 }
 
+// ─── FIX: recalcula mètriques d'un interval des dels Samples ──────────────
+// Quan els Windows de Suunto no porten SpeedAvg/HRAvg/CadenceAvg (valor 0),
+// creuem el rang temporal del Window amb els Samples per calcular-les.
+//
+// samples:    array de Samples del DeviceLog (cada un té TimeISO8601 + mètriques)
+// startIso:   string ISO8601 de l'inici del Window  (camp "StartTime")
+// durationS:  durada en segons del Window           (camp "Duration")
+//
+// Retorna { speedAvg, hrAvg, hrMax, cadenceAvg } en unitats natives (m/s, Hz).
+function enrichFromSamples(samples, startIso, durationS) {
+  if (!startIso || !durationS) return { speedAvg: 0, hrAvg: 0, hrMax: 0, cadenceAvg: 0 };
+
+  const t0 = new Date(startIso).getTime();
+  const t1 = t0 + durationS * 1000;
+
+  // Cada Sample pot tenir TimeISO8601 (string) o un offset en ms (número).
+  // El JSON Suunto usa la clau "TimeISO8601" al Sample.
+  const inRange = samples.filter(s => {
+    const ts = s.TimeISO8601 ? new Date(s.TimeISO8601).getTime() : null;
+    return ts !== null && ts >= t0 && ts <= t1;
+  });
+
+  const speeds    = inRange.filter(s => s.Speed    != null && s.Speed    > 0).map(s => s.Speed);
+  const hrs       = inRange.filter(s => s.HR       != null && s.HR       > 0).map(s => s.HR);
+  const cadences  = inRange.filter(s => s.Cadence  != null && s.Cadence  > 0).map(s => s.Cadence);
+
+  const speedAvg   = speeds.length   ? speeds.reduce((a,b)=>a+b,0)   / speeds.length   : 0;
+  const hrAvg      = hrs.length      ? hrs.reduce((a,b)=>a+b,0)      / hrs.length      : 0;
+  const hrMax      = hrs.length      ? Math.max(...hrs)                                 : 0;
+  const cadenceAvg = cadences.length ? cadences.reduce((a,b)=>a+b,0) / cadences.length : 0;
+
+  return { speedAvg, hrAvg, hrMax, cadenceAvg };
+}
+
 function parseQuality(filename, data) {
   const row     = parseRunningBase(filename, data);
   const windows = data?.DeviceLog?.Windows ?? [];
+  const samples = data?.DeviceLog?.Samples ?? [];
   const nameLower = filename.toLowerCase();
 
   row.Tipus = Object.entries(ACTIVITY_QUALITY_TYPES).find(
@@ -173,22 +208,37 @@ function parseQuality(filename, data) {
   // L'estructura real del JSON Suunto té els camps directament a l'arrel
   // de cada Window: SpeedAvg, HRAvg, HRMax, CadenceAvg (no dins sub-arrays).
   // Exemple: { Type:"Interval", Duration:600, SpeedAvg:2.865, HRAvg:2.825, ... }
+  //
+  // FIX: Alguns dispositius Suunto no poblen SpeedAvg/HRAvg/CadenceAvg als Windows.
+  // En aquest cas (valor 0 o absent), recalculem des dels Samples individuals
+  // creuant el rang temporal [StartTime, StartTime + Duration].
   const rawIntervals = windows
     .map(w => w.Window ?? w)
     .filter(w => w.Type === "Interval")
     .map(w => {
       const dur     = w.Duration   ?? 0;
-      const speed   = w.SpeedAvg   ?? 0;   // m/s directe a l'arrel
-      const hrAvg   = w.HRAvg      ?? 0;   // Hz directe a l'arrel (× 60 = bpm)
-      const hrMax   = w.HRMax      ?? hrAvg;
-      const cadence = w.CadenceAvg ?? 0;   // Hz directe a l'arrel
+      let speed     = w.SpeedAvg   ?? 0;
+      let hrAvg     = w.HRAvg      ?? 0;
+      let hrMax     = w.HRMax      ?? 0;
+      let cadence   = w.CadenceAvg ?? 0;
+
+      // Si les mètriques agregades del Window estan buides, les recalculem
+      // des dels Samples individuals per rang de temps.
+      if ((speed === 0 || hrAvg === 0) && samples.length > 0 && w.StartTime) {
+        const enriched = enrichFromSamples(samples, w.StartTime, dur);
+        if (speed   === 0) speed   = enriched.speedAvg;
+        if (hrAvg   === 0) hrAvg   = enriched.hrAvg;
+        if (hrMax   === 0) hrMax   = enriched.hrMax;
+        if (cadence === 0) cadence = enriched.cadenceAvg;
+      }
+
       return {
         dur_s:    dur,
         dist_m:   Math.round(w.Distance ?? 0),
         dur_min:  Math.round((dur / 60) * 10) / 10,
         ritme:    msTominkm(speed),
         fc_mitja: Math.round(hrAvg * 60),
-        fc_max:   Math.round(hrMax * 60),
+        fc_max:   Math.round((hrMax || hrAvg) * 60),
         cadencia: hzToSpm(cadence),
       };
     });
