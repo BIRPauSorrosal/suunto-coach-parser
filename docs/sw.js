@@ -5,7 +5,7 @@
      - Network First → dades CSV (canvien sovint)
    ============================================================ */
 
-const CACHE_NAME = 'suunto-coach-v1';
+const CACHE_NAME = 'suunto-coach-v2';
 
 // Assets estàtics que es precachegen en instal·lar el SW
 const PRECACHE_URLS = [
@@ -16,6 +16,7 @@ const PRECACHE_URLS = [
   './icons/icon-512.png',
   './icons/apple-touch-icon.png',
   './css/style.css',
+  './css/mobile.css',
   './css/load-scale.css',
   './css/fc-config-modal.css',
   './css/fc-scale.css',
