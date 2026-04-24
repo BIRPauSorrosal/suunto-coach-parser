@@ -4,6 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Suunto Coach Dashboard</title>
+
+  <!-- ── PWA: Manifest ───────────────────────────────────────────── -->
+  <link rel="manifest" href="./manifest.json">
+
+  <!-- ── PWA: iOS (Safari) ───────────────────────────────────────── -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Suunto Coach">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+
+  <!-- ── PWA: Barra de sistema (Android Chrome) ──────────────────── -->
+  <meta name="theme-color" content="#0f172a">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -250,7 +263,6 @@
                 </tbody>
               </table>
             </div>
-            <!-- Taula sessions qualitat: Data | Sèries | Dur.sèrie | Ritme | Rec. | Cadència | FC | TSS | Km -->
             <table class="sw-mini-table">
               <thead><tr><th>Data</th><th>Sèries</th><th>Dur.sèrie</th><th>Ritme</th><th>Rec.</th><th>Cadència</th><th>FC</th><th>TSS</th><th>Km</th></tr></thead>
               <tbody id="sw-q-sessions-list"></tbody>
@@ -274,7 +286,6 @@
                 </tbody>
               </table>
             </div>
-            <!-- Taula sessions Z2: Data | Durada | Ritme | Cadència | FC | TSS | Km -->
             <table class="sw-mini-table">
               <thead><tr><th>Data</th><th>Durada</th><th>Ritme</th><th>Cadència</th><th>FC</th><th>TSS</th><th>Km</th></tr></thead>
               <tbody id="sw-z2-sessions-list"></tbody>
@@ -286,7 +297,6 @@
             <div class="sw-block-header"><h3>🏃 Tirada llarga</h3><span class="sw-status-dot"></span></div>
             <div class="sw-htable-wrap">
               <table class="sw-htable">
-                <!-- Pla LL: Tipus | Durada | Km (sense Ritme, no existeix al planning) -->
                 <thead><tr><th></th><th>Tipus</th><th>Durada</th><th>Km</th></tr></thead>
                 <tbody>
                   <tr class="sw-row--plan">
@@ -298,7 +308,6 @@
                 </tbody>
               </table>
             </div>
-            <!-- Sessions LL: Data | Durada | Ritme | Min Z2 | Desnivell | FC | TSS | Km (8 cols) -->
             <table class="sw-mini-table">
               <thead><tr><th>Data</th><th>Durada</th><th>Ritme</th><th>Min Z2</th><th>Desnivell</th><th>FC</th><th>TSS</th><th>Km</th></tr></thead>
               <tbody id="sw-ll-sessions-list"></tbody>
@@ -463,5 +472,18 @@
   <script src="./js/uploader/planning-uploader.js"></script>
   <script src="./js/uploader/planning-uploader-ui.js"></script>
   <script src="./js/app.js"></script>
+
+  <!-- ── PWA: Registre del Service Worker ────────────────────────── -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker
+          .register('./sw.js')
+          .then(reg => console.log('[SW] Registrat:', reg.scope))
+          .catch(err => console.warn('[SW] Error en el registre:', err));
+      });
+    }
+  </script>
+
 </body>
 </html>
