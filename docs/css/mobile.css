@@ -134,11 +134,180 @@
     padding: 32px 0;
   }
 
+  /* ══════════════════════════════════════════════════════════
+     TASCA 4.1 — Touch targets botons petits
+     .btn-sm té padding: 5px 11px → ~30px alçada, per sota
+     del mínim tàctil de 44px. En mòbil l'ampliem.
+     ══════════════════════════════════════════════════════════ */
+  .btn-sm {
+    padding: 10px 14px;
+    font-size: .8rem;
+    min-height: 44px;
+  }
+
+  /* Botons de capçalera (nav setmanal, exportació...) */
+  .btn {
+    min-height: 44px;
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     TASCA 4.2 — Filtres de sessions en mòbil
+     Convertim el flex horitzontal en 2 files verticals:
+     - Fila 1: selector de tipus (ample complet)
+     - Fila 2: botons de període (wrap)
+     El separador vertical s'oculta (no té sentit en vertical).
+     ══════════════════════════════════════════════════════════ */
+  .sess-filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px 14px;
+  }
+
+  .sess-filter-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    width: 100%;
+  }
+
+  /* El select ocupa tota l'amplada disponible */
+  .sess-select {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: .9rem;
+    min-height: 44px;
+  }
+
+  /* Separador vertical → ocult en mòbil */
+  .sess-filter-sep {
+    display: none;
+  }
+
+  /* Botons de període: una mica més grans per al toc */
+  .sess-period-btns {
+    width: 100%;
+    gap: 6px;
+  }
+
+  .sess-period-btns .btn-sm {
+    flex: 1;
+    justify-content: center;
+    min-height: 40px; /* lleugerament menys per no fer la barra massa alta */
+    padding: 8px 6px;
+    font-size: .75rem;
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     TASCA 4.3 — Padding i espai dels panels en mòbil
+     24px de padding en desktop ocupa massa espai horitzontal
+     en 375px. Reduïm a valors més compactes.
+     ══════════════════════════════════════════════════════════ */
+  .panel {
+    padding: 16px 14px;
+    margin-bottom: 14px;
+  }
+
+  .hero-card {
+    padding: 14px;
+  }
+
+  .sess-kpi {
+    padding: 12px 14px;
+  }
+
+  /* Hero value lleugerament més petit per cabre bé */
+  .hero-value {
+    font-size: 1.5rem;
+  }
+
+  /* KPI value: reduir per evitar overflow */
+  .sess-kpi-value {
+    font-size: 1.2rem;
+  }
+
+  /* Panel header: menys marge inferior */
+  .panel-header {
+    margin-bottom: 14px;
+  }
+
+  /* Gràfics: reduir alçada per deixar espai al contingut */
+  .chart-wrap         { height: 180px; }
+  .chart-wrap--tall   { height: 220px; }
+  .chart-wrap--trend  { height: 160px; }
+  .chart-wrap--zones  { height: 160px; }
+  .pmc-chart-wrap     { height: 240px; }
+
 }
 
 /* En desktop, les cards sempre ocultes */
 @media (min-width: 768px) {
   .sess-cards { display: none; }
+}
+
+/* ============================================================
+   TASCA 4.4 — :active states i feedback tàctil
+   Dispositius sense hover (mòbil/tàctil): afegim feedback
+   visual immediat al prémer. Usem @media (hover: none) per
+   no afectar desktop on el :hover ja fa la feina.
+   ============================================================ */
+
+@media (hover: none) {
+
+  /* Botons genèrics */
+  .btn:active {
+    opacity: 0.75;
+    transform: scale(0.97);
+    transition: opacity 0.08s, transform 0.08s;
+  }
+
+  /* Targetes de planning setmanal */
+  .plan-week-card:active {
+    transform: scale(0.98);
+    box-shadow: none;
+    transition: transform 0.08s;
+  }
+
+  /* Cel·les del planning anual (pcy) */
+  .pcy-cell:not(.pcy-cell--empty):active {
+    opacity: 1;
+    transform: scale(0.93);
+    transition: transform 0.08s;
+  }
+
+  /* Hero cards (si fossin clicables en el futur) */
+  .hero-card:active {
+    opacity: 0.85;
+    transition: opacity 0.08s;
+  }
+
+  /* Cards de sessions */
+  .sess-card:active {
+    background: var(--surface-2);
+    transition: background 0.08s;
+  }
+
+  /* Nav links de la bottom bar (ja té :active al mobile.css,
+     però reforcem amb transform) */
+  .bnav-item:active {
+    background: var(--surface-2);
+    transform: scale(0.94);
+    transition: background 0.08s, transform 0.08s;
+  }
+
+  /* Botons del drawer */
+  .bnav-drawer-actions .btn:active {
+    opacity: 0.75;
+  }
+
+  /* Evitem :hover residuals en tàctil (ex: plan-week-card hover) */
+  .plan-week-card:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  .pcy-month-card:hover {
+    box-shadow: none;
+  }
 }
 
 /* ============================================================
