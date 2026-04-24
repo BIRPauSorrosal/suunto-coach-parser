@@ -26,6 +26,8 @@
   <link rel="stylesheet" href="./css/fc-scale.css">
   <link rel="stylesheet" href="./css/uploader.css">
   <link rel="stylesheet" href="css/comment-editor.css">
+  <!-- ── Mòbil: layout responsiu + bottom nav ────────────────────── -->
+  <link rel="stylesheet" href="./css/mobile.css">
 </head>
 <body>
   <div class="app-shell">
@@ -449,6 +451,49 @@
       </section>
     </main>
   </div>
+
+  <!-- ── Bottom Tab Bar (mòbil) ──────────────────────────────────── -->
+  <!-- Overlay fosc darrere el drawer -->
+  <div class="bnav-overlay" id="bnav-overlay"></div>
+
+  <!-- Drawer "Més": accions de la sidebar accessibles en mòbil -->
+  <div class="bnav-drawer" id="bnav-drawer">
+    <p class="bnav-drawer-title">Opcions</p>
+    <div class="bnav-drawer-actions">
+      <button type="button" class="btn btn-ghost" onclick="openGitHubTokenModal(); closeBnavDrawer()">
+        ⚙️ Token GitHub
+      </button>
+      <!-- Els botons d'importar s'insereixen via JS igual que a la sidebar -->
+      <button type="button" class="btn btn-primary" id="reload-data-btn-mobile"
+              onclick="loadDashboardData(); closeBnavDrawer()">
+        Recarregar dades
+      </button>
+    </div>
+  </div>
+
+  <!-- Barra de navegació inferior -->
+  <nav class="bottom-nav" aria-label="Navegació mòbil">
+    <a href="#" class="bnav-item active" data-target="overview">
+      <span class="bnav-icon">◎</span>
+      <span class="bnav-label">Overview</span>
+    </a>
+    <a href="#" class="bnav-item" data-target="setmanal">
+      <span class="bnav-icon">◈</span>
+      <span class="bnav-label">Setmana</span>
+    </a>
+    <a href="#" class="bnav-item" data-target="planning">
+      <span class="bnav-icon">◫</span>
+      <span class="bnav-label">Planning</span>
+    </a>
+    <a href="#" class="bnav-item" data-target="sessions">
+      <span class="bnav-icon">◇</span>
+      <span class="bnav-label">Sessions</span>
+    </a>
+    <button class="bnav-item bnav-more" id="bnav-more-btn" aria-label="Més opcions">
+      <span class="bnav-icon">⋯</span>
+      <span class="bnav-label">Més</span>
+    </button>
+  </nav>
 
   <script src="./js/vendor/chart.umd.min.js"></script>
   <script src="./js/lib/formatters.js"></script>
