@@ -441,12 +441,18 @@
               <button id="sess-export-90" class="btn btn-ghost btn-sm" disabled onclick="exportSessionsCSV(90)" title="Exporta els darrers 90 dies de sessions com a CSV per enviar a la IA">↓ CSV 90 dies</button>
             </div>
           </div>
-          <div class="table-shell">
+
+          <!-- Taula: visible en desktop -->
+          <div class="table-shell sess-table-wrap">
             <table id="sess-table">
               <thead id="sess-thead"></thead>
               <tbody id="sess-tbody"></tbody>
             </table>
           </div>
+
+          <!-- Cards: visible en mòbil (≤767px) -->
+          <div id="sess-cards" class="sess-cards"></div>
+
         </article>
       </section>
     </main>
