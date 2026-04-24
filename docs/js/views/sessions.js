@@ -77,6 +77,7 @@ function renderSessPanel() {
   renderSessKPIs(filtered);
   renderSessTrendChart(filtered);
   renderSessTable(filtered);
+  renderSessCards(filtered);  // ← mòbil
 }
 
 // ── Filtratge ──────────────────────────────────────────────────────────────────
@@ -133,22 +134,20 @@ const PMC_GRADIENT_PLUGIN = {
     const { top, bottom, height } = chartArea;
     if (!isFinite(top) || !isFinite(bottom) || height <= 0) return;
 
-    // Posicions en píxels per a cada llindar TSB
     const pxAt = v => Math.max(0, Math.min(1, (scales.y2.getPixelForValue(v) - top) / height));
 
-    const p10  = pxAt(10);   // TSB > 10  → Fresc (verd)
-    const p0   = pxAt(0);    // TSB 0-10  → Forma òptima (verd suau)
-    const pN20 = pxAt(-20);  // TSB -20-0 → Productiu (blau)
-    const pN57 = pxAt(-57);  // TSB -57 a -20 → Fatigat (taronja)
-    //                          TSB < -57  → Sobrecarregat (vermell)
+    const p10  = pxAt(10);
+    const p0   = pxAt(0);
+    const pN20 = pxAt(-20);
+    const pN57 = pxAt(-57);
 
     const grad = chart.ctx.createLinearGradient(0, top, 0, bottom);
-    grad.addColorStop(0,     'rgba(168,85,247,0.25)');  // Fresc      — lila/violeta
-    grad.addColorStop(p10,   'rgba(34,197,94,0.22)');   // Forma òpt. — verd
-    grad.addColorStop(p0,    'rgba(56,189,248,0.18)');  // Productiu  — blau cel
-    grad.addColorStop(pN20,  'rgba(245,158,11,0.20)');  // Fatigat    — groc-ambre
-    grad.addColorStop(pN57,  'rgba(239,68,68,0.22)');   // Sobrecarr. — vermell
-    grad.addColorStop(1,     'rgba(239,68,68,0.32)');   // Sobrecarr. — vermell fort
+    grad.addColorStop(0,     'rgba(168,85,247,0.25)');
+    grad.addColorStop(p10,   'rgba(34,197,94,0.22)');
+    grad.addColorStop(p0,    'rgba(56,189,248,0.18)');
+    grad.addColorStop(pN20,  'rgba(245,158,11,0.20)');
+    grad.addColorStop(pN57,  'rgba(239,68,68,0.22)');
+    grad.addColorStop(1,     'rgba(239,68,68,0.32)');
 
     chart.data.datasets[2].backgroundColor = grad;
   }
@@ -162,7 +161,7 @@ function renderPMC(sessions) {
   _pmcChart = null;
   if (!sessions.length) return;
 
-  _pmcDataCache = buildPMCData(sessions);   // ← lib/metrics.js
+  _pmcDataCache = buildPMCData(sessions);
   if (!_pmcDataCache.length) return;
 
   const btn90 = document.getElementById('pmc-export-90');
@@ -281,16 +280,13 @@ function renderSessTrendChart(sessions) {
   if (sessions.length < 1) { ctx.style.display='none'; return; }
   ctx.style.display = '';
 
-  // testrace: un punt per sessió (sense agrupació)
-  // 7d / 30d : agrupació diària (groupByDay)
-  // 90d+     : agrupació setmanal (groupByWeek)
   let byWeek;
   if (_sessType === 'testrace') {
     byWeek = sessions.map(s => ({ ...s, label: s.displayDate }));
   } else if (_sessPeriod > 0 && _sessPeriod <= DAY_VIEW_THRESHOLD) {
-    byWeek = groupByDay(sessions);    // ← lib/metrics.js
+    byWeek = groupByDay(sessions);
   } else {
-    byWeek = groupByWeek(sessions);   // ← lib/metrics.js
+    byWeek = groupByWeek(sessions);
   }
 
   _sessChart = new Chart(ctx, buildSessChartConfig(byWeek, byWeek.map(w=>w.label), sessions));
@@ -325,8 +321,6 @@ function buildSessChartConfig(byWeek, labels, sessions) {
     grid:{ drawOnChartArea:false },
     ticks:{ ...yBase.ticks, callback: v => `${v} min` },
     title:{ display:true, text:'min sèr.', color:COL.dur.line, font:{size:10} } });
-  // Rang 3–10 min/km: cobreix des de ritmes de qualitat (3:00) fins a
-  // tirades llargues suaus o trails (>8:00) sense tallar cap activitat.
   const scaleRitme = ()          => ({ ...yBase, position:'right', reverse:true, min:3, max:10,
     grid:{ drawOnChartArea:false },
     ticks:{ ...yBase.ticks, callback: v => formatPace(v,'') },
@@ -406,7 +400,6 @@ function buildSessChartConfig(byWeek, labels, sessions) {
       }};
     }
 
-    // ── QUALITY ────────────────────────────────────────────────────────────────
     case 'quality': {
       const hasDurS  = byWeek.some(w => w.totalDurSeries > 0);
       const hasPaceS = byWeek.some(w => w.avgPaceSeries  !== null);
@@ -420,17 +413,11 @@ function buildSessChartConfig(byWeek, labels, sessions) {
       ];
 
       if (hasDurS) datasets.push({
-        type: 'line',
-        label: 'Temps sèries (min)',
+        type: 'line', label: 'Temps sèries (min)',
         data: byWeek.map(w => w.totalDurSeries > 0 ? w.totalDurSeries : null),
-        borderColor:     COL.dur.line,
-        backgroundColor: 'transparent',
-        borderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        tension: 0.3,
-        spanGaps: true,
-        yAxisID: 'y4',
+        borderColor: COL.dur.line, backgroundColor: 'transparent',
+        borderWidth: 2, pointRadius: 4, pointHoverRadius: 6,
+        tension: 0.3, spanGaps: true, yAxisID: 'y4',
       });
 
       if (hasPaceS) datasets.push({ type:'line', label:'Ritme sèries (min/km)',
@@ -458,7 +445,6 @@ function buildSessChartConfig(byWeek, labels, sessions) {
       }};
     }
 
-    // ── LONG ───────────────────────────────────────────────────────────────────
     case 'long': {
       const hasDesn  = byWeek.some(w => w.desnivell > 0);
       const hasRitme = byWeek.some(w => w.avgPace !== null);
@@ -555,7 +541,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
   }
 }
 
-// ── Taula ──────────────────────────────────────────────────────────────────────
+// ── Taula (desktop) ────────────────────────────────────────────────────────────
 function renderSessTable(sessions) {
   const thead=document.getElementById('sess-thead');
   const tbody=document.getElementById('sess-tbody');
@@ -579,6 +565,152 @@ function renderSessTable(sessions) {
     .join('');
 
   bindSessCommentButtons();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Cards de sessions (mòbil)
+// Renderitza les sessions com a targetes compactes sota el gràfic.
+// Cada tipus de sessió mostra les mètriques més rellevants.
+// ══════════════════════════════════════════════════════════════════════════════
+
+function renderSessCards(sessions) {
+  const container = document.getElementById('sess-cards');
+  if (!container) return;
+
+  if (!sessions.length) {
+    container.innerHTML = '<p class="sess-cards-empty">Cap sessió amb els filtres seleccionats.</p>';
+    return;
+  }
+
+  container.innerHTML = sessions.map(s => buildSessCard(s)).join('');
+}
+
+function buildSessCard(s) {
+  const comentari  = s.raw['Comentari'] || '';
+  const hasComment = !!comentari;
+  const safeName   = esc(s.raw['Arxiu'] || '');
+  const titleAttr  = hasComment
+    ? `Comentari: ${esc(comentari.slice(0, 80))}${comentari.length > 80 ? '...' : ''}`
+    : 'Afegir comentari';
+
+  const commentBtn = `<button
+    class="ced-btn${hasComment ? ' ced-btn--has-comment' : ''} sess-card-comment"
+    data-comment-arxiu="${safeName}"
+    title="${titleAttr}"
+    onclick="openSessionCommentEditor({ arxiu: '${esc(s.raw['Arxiu']||'')}', data: '${esc(s.displayDate||'')}', tipus: '${esc(s.tipus||'')}' })"
+    aria-label="${titleAttr}"
+  >
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2.5">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>
+  </button>`;
+
+  const metrics = getSessCardMetrics(s);
+  const metricsHTML = metrics.map(m =>
+    `<div class="sess-card-metric${m.wide ? ' sess-card-metric--wide' : ''}${m.full ? ' sess-card-metric--full' : ''}">
+      <span class="sess-card-metric-label">${m.label}</span>
+      <span class="sess-card-metric-value">${m.value}</span>
+    </div>`
+  ).join('');
+
+  return `
+    <div class="sess-card">
+      <div class="sess-card-header">
+        <span class="sess-card-date">${esc(s.displayDate)}</span>
+        <span class="sess-card-tipus">${esc(s.tipus)}</span>
+        ${commentBtn}
+      </div>
+      <div class="sess-card-metrics">
+        ${metricsHTML}
+      </div>
+    </div>`;
+}
+
+// Mètriques per tipus de sessió — prioritzem les més rellevants en mòbil
+function getSessCardMetrics(s) {
+  const km    = s.distancia > 0 ? `${fmtNum(s.distancia)} km` : '—';
+  const dur   = s.durada    > 0 ? `${fmtNum(s.durada)} min`  : '—';
+  const ritme = formatPace(s.ritme);
+  const fc    = (typeof s.fcMitja === 'number' && s.fcMitja > 0) ? `${Math.round(s.fcMitja)} ppm` : '—';
+  const tss   = (typeof s.carrega === 'number' && s.carrega > 0) ? `${fmtNum(s.carrega)} TSS`     : '—';
+  const epocRaw = toNumber(s.raw['EPOC']);
+  const epoc  = (typeof epocRaw === 'number' && epocRaw > 0)     ? fmtNum(epocRaw) : '—';
+  const cadRaw = toNumber(s.raw['Cadencia(spm)']);
+  const cad   = (typeof cadRaw === 'number' && cadRaw > 0)       ? `${Math.round(cadRaw)} spm` : '—';
+  const desnRaw = toNumber(s.raw['Desnivell(m)']);
+  const desn  = (typeof desnRaw === 'number' && desnRaw > 0)     ? `${Math.round(desnRaw)} m` : '—';
+  const recupRaw = toNumber(s.raw['Recup(h)']);
+  const recup = (typeof recupRaw === 'number' && recupRaw > 0)   ? `${fmtNum(recupRaw)} h` : '—';
+  const numSeries = toNumber(s.raw['Num_Series']);
+  const series = (typeof numSeries === 'number' && numSeries > 0) ? String(Math.round(numSeries)) : '—';
+  const ritmeSer = formatPace(typeof s.ritmeMitjaSeries === 'number' ? s.ritmeMitjaSeries : null);
+  const fcSer  = (typeof s.fcMitjaSeries === 'number' && s.fcMitjaSeries > 0) ? `${Math.round(s.fcMitjaSeries)} ppm` : '—';
+  const z2min  = s.z2min > 0 ? `${fmtNum(s.z2min)} min` : '—';
+
+  switch (_sessType) {
+    case 'z2':
+      return [
+        { label: 'Km',        value: km },
+        { label: 'Durada',    value: dur },
+        { label: 'Ritme',     value: ritme },
+        { label: 'FC',        value: fc },
+        { label: 'Z2',        value: z2min },
+        { label: 'TSS',       value: tss },
+      ];
+    case 'quality':
+      return [
+        { label: 'Sèries',    value: series },
+        { label: 'Ritme sèr.',value: ritmeSer },
+        { label: 'FC sèr.',   value: fcSer },
+        { label: 'Km total',  value: km },
+        { label: 'TSS',       value: tss },
+        { label: 'Cadència',  value: cad },
+      ];
+    case 'long':
+      return [
+        { label: 'Km',        value: km },
+        { label: 'Ritme',     value: ritme },
+        { label: 'FC',        value: fc },
+        { label: 'Durada',    value: dur },
+        { label: 'D+',        value: desn },
+        { label: 'TSS',       value: tss },
+      ];
+    case 'testrace':
+      return [
+        { label: 'Km',        value: km },
+        { label: 'Ritme',     value: ritme },
+        { label: 'FC',        value: fc },
+        { label: 'D+',        value: desn },
+        { label: 'Durada',    value: dur },
+        { label: 'TSS',       value: tss },
+      ];
+    case 'strength':
+      return [
+        { label: 'Durada',    value: dur },
+        { label: 'FC',        value: fc },
+        { label: 'TSS',       value: tss },
+        { label: 'EPOC',      value: epoc },
+        { label: 'Recup.',    value: recup },
+      ];
+    case 'other':
+      return [
+        { label: 'Durada',    value: dur },
+        { label: 'FC',        value: fc },
+        { label: 'TSS',       value: tss },
+        { label: 'EPOC',      value: epoc },
+      ];
+    default: // 'all'
+      return [
+        { label: 'Km',        value: km },
+        { label: 'Durada',    value: dur },
+        { label: 'Ritme',     value: ritme },
+        { label: 'FC',        value: fc },
+        { label: 'TSS',       value: tss },
+        { label: 'EPOC',      value: epoc },
+      ];
+  }
 }
 
 // ── Columna comentari (shared entre tots els tipus) ───────────────────────────

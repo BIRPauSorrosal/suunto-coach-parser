@@ -33,6 +33,112 @@
     gap: 6px;
   }
 
+  /* ── Taula sessions: ocultar en mòbil ───────────────────── */
+  .sess-table-wrap {
+    display: none;
+  }
+
+  /* ── Cards de sessions (mòbil) ───────────────────────────── */
+  .sess-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .sess-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 14px 10px;
+    position: relative;
+  }
+
+  /* Capçalera: data + tipus + botó comentari */
+  .sess-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .sess-card-date {
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    white-space: nowrap;
+  }
+
+  .sess-card-tipus {
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    border-radius: 6px;
+    padding: 2px 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+  }
+
+  .sess-card-comment {
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  /* Grid de mètriques: 3 columnes */
+  .sess-card-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px 6px;
+  }
+
+  .sess-card-metric {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .sess-card-metric-label {
+    font-size: .6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text-muted);
+  }
+
+  .sess-card-metric-value {
+    font-size: .88rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* Mètriques wide (ocupen 2 columnes, ex: sèries detall) */
+  .sess-card-metric--wide {
+    grid-column: span 2;
+  }
+
+  /* Mètriques full (tota la fila) */
+  .sess-card-metric--full {
+    grid-column: 1 / -1;
+  }
+
+  /* Fila «sense resultats» */
+  .sess-cards-empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: .85rem;
+    padding: 32px 0;
+  }
+
+}
+
+/* En desktop, les cards sempre ocultes */
+@media (min-width: 768px) {
+  .sess-cards { display: none; }
 }
 
 /* ============================================================
