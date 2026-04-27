@@ -11,7 +11,7 @@
 // • PATCH (v3.0.1, v3.0.2…) — fixes petits de CSS/JS, ajustos visuals
 // Qualsevol canvi al nom de CACHE_NAME invalida la cache anterior i força la
 // descàrrega de tots els assets nous al pròxim activate del SW.
-const CACHE_NAME = 'suunto-coach-v3.0.1';
+const CACHE_NAME = 'suunto-coach-v3.0.2';
 
 // Assets estàtics que es precachegen en instal·lar el SW
 const PRECACHE_URLS = [
