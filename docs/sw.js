@@ -5,7 +5,13 @@
      - Network First → dades CSV (canvien sovint)
    ============================================================ */
 
-const CACHE_NAME = 'suunto-coach-v3'; // ← bump per forçar recàrrega de tots els assets
+// Versioning: MAJOR.MINOR.PATCH
+// • MAJOR (v4, v5…) — canvis estructurals grans (noves vistes, refactor complet)
+// • MINOR (v3.1, v3.2…) — funcionalitats noves o canvis visibles rellevants
+// • PATCH (v3.0.1, v3.0.2…) — fixes petits de CSS/JS, ajustos visuals
+// Qualsevol canvi al nom de CACHE_NAME invalida la cache anterior i força la
+// descàrrega de tots els assets nous al pròxim activate del SW.
+const CACHE_NAME = 'suunto-coach-v3.0.1';
 
 // Assets estàtics que es precachegen en instal·lar el SW
 const PRECACHE_URLS = [
@@ -58,7 +64,7 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(PRECACHE_URLS))
-      .then(() => self.skipWaiting()) // activa el SW immediatament
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -71,7 +77,7 @@ self.addEventListener('activate', event => {
           .filter(key => key !== CACHE_NAME)
           .map(key => caches.delete(key))
       ))
-      .then(() => self.clients.claim()) // pren el control de totes les pestanyes
+      .then(() => self.clients.claim())
   );
 });
 
@@ -80,34 +86,29 @@ self.addEventListener('fetch', event => {
   const { request } = event;
   const url = request.url;
 
-  // Ignora peticions no-GET i chrome-extension
   if (request.method !== 'GET' || url.startsWith('chrome-extension')) return;
 
-  // Network First per a CSV i API GitHub
   const isNetworkFirst = NETWORK_FIRST_PATTERNS.some(pattern => pattern.test(url));
 
   if (isNetworkFirst) {
     event.respondWith(
       fetch(request)
         .then(response => {
-          // Si la resposta és vàlida, actualitza la cache
           if (response && response.status === 200) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
           }
           return response;
         })
-        .catch(() => caches.match(request)) // fallback a cache si no hi ha xarxa
+        .catch(() => caches.match(request))
     );
     return;
   }
 
-  // Cache First per a la resta d'assets
   event.respondWith(
     caches.match(request)
       .then(cached => {
         if (cached) return cached;
-        // No està en cache: baixa de xarxa i desa
         return fetch(request).then(response => {
           if (response && response.status === 200) {
             const clone = response.clone();

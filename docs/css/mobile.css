@@ -12,31 +12,21 @@
   .sidebar { display: none; }
 
   /* ── App shell: columna vertical ─────────────────────────── */
-  .app-shell {
-    flex-direction: column;
-  }
+  .app-shell { flex-direction: column; }
 
   /* ── Main content: amplada completa ──────────────────────── */
   .main-content {
     max-width: 100%;
     padding: 16px 14px;
-    /* Espai per no quedar tapat per la bottom nav (64px) + marge */
     padding-bottom: 80px;
   }
 
-  /* ── Page header: reduir mida ────────────────────────────── */
+  /* ── Page header ────────────────────────────────────────── */
   .page-header h2 { font-size: 1.3rem; }
-
-  /* ── Botons de navegació setmanal: wrap ──────────────────── */
-  .header-actions {
-    flex-wrap: wrap;
-    gap: 6px;
-  }
+  .header-actions { flex-wrap: wrap; gap: 6px; }
 
   /* ── Taula sessions: ocultar en mòbil ───────────────────── */
-  .sess-table-wrap {
-    display: none;
-  }
+  .sess-table-wrap { display: none; }
 
   /* ── Cards de sessions (mòbil) ───────────────────────────── */
   .sess-cards {
@@ -54,7 +44,6 @@
     position: relative;
   }
 
-  /* Capçalera: data + tipus + botó comentari */
   .sess-card-header {
     display: flex;
     align-items: center;
@@ -84,12 +73,8 @@
     max-width: 140px;
   }
 
-  .sess-card-comment {
-    margin-left: auto;
-    flex-shrink: 0;
-  }
+  .sess-card-comment { margin-left: auto; flex-shrink: 0; }
 
-  /* Grid de mètriques: 3 columnes */
   .sess-card-metrics {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -116,17 +101,9 @@
     color: var(--text);
   }
 
-  /* Mètriques wide (ocupen 2 columnes, ex: sèries detall) */
-  .sess-card-metric--wide {
-    grid-column: span 2;
-  }
+  .sess-card-metric--wide  { grid-column: span 2; }
+  .sess-card-metric--full  { grid-column: 1 / -1; }
 
-  /* Mètriques full (tota la fila) */
-  .sess-card-metric--full {
-    grid-column: 1 / -1;
-  }
-
-  /* Fila «sense resultats» */
   .sess-cards-empty {
     text-align: center;
     color: var(--text-muted);
@@ -134,22 +111,11 @@
     padding: 32px 0;
   }
 
-  /* ══════════════════════════════════════════════════════════
-     TASCA 4.1 — Touch targets botons petits
-     ══════════════════════════════════════════════════════════ */
-  .btn-sm {
-    padding: 10px 14px;
-    font-size: .8rem;
-    min-height: 44px;
-  }
+  /* ══ Touch targets ═══════════════════════════════════════════ */
+  .btn-sm { padding: 10px 14px; font-size: .8rem; min-height: 44px; }
+  .btn    { min-height: 44px; }
 
-  .btn {
-    min-height: 44px;
-  }
-
-  /* ══════════════════════════════════════════════════════════
-     TASCA 4.2 — Filtres de sessions en mòbil
-     ══════════════════════════════════════════════════════════ */
+  /* ══ Filtres de sessions ═══════════════════════════════════════ */
   .sess-filters {
     flex-direction: column;
     align-items: stretch;
@@ -171,14 +137,9 @@
     min-height: 44px;
   }
 
-  .sess-filter-sep {
-    display: none;
-  }
+  .sess-filter-sep { display: none; }
 
-  .sess-period-btns {
-    width: 100%;
-    gap: 6px;
-  }
+  .sess-period-btns { width: 100%; gap: 6px; }
 
   .sess-period-btns .btn-sm {
     flex: 1;
@@ -188,33 +149,13 @@
     font-size: .75rem;
   }
 
-  /* ══════════════════════════════════════════════════════════
-     TASCA 4.3 — Padding i espai dels panels en mòbil
-     ══════════════════════════════════════════════════════════ */
-  .panel {
-    padding: 16px 14px;
-    margin-bottom: 14px;
-  }
-
-  .hero-card {
-    padding: 14px;
-  }
-
-  .sess-kpi {
-    padding: 12px 14px;
-  }
-
-  .hero-value {
-    font-size: 1.5rem;
-  }
-
-  .sess-kpi-value {
-    font-size: 1.2rem;
-  }
-
-  .panel-header {
-    margin-bottom: 14px;
-  }
+  /* ══ Padding i espai dels panels ════════════════════════════════ */
+  .panel         { padding: 16px 14px; margin-bottom: 14px; }
+  .hero-card     { padding: 14px; }
+  .sess-kpi      { padding: 12px 14px; }
+  .hero-value    { font-size: 1.5rem; }
+  .sess-kpi-value { font-size: 1.2rem; }
+  .panel-header  { margin-bottom: 14px; }
 
   .chart-wrap         { height: 180px; }
   .chart-wrap--tall   { height: 220px; }
@@ -222,65 +163,90 @@
   .chart-wrap--zones  { height: 160px; }
   .pmc-chart-wrap     { height: 240px; }
 
-  /* ══════════════════════════════════════════════════════════
-     FIX A — Wrapper .sw-mini-table-wrap: scroll horitzontal
-     Aplicat a TOTS els wrappers (Overview i Setmana actual).
-     La classe .sw-mini-table-wrap s'ha afegit al HTML per
-     envoltar totes les taules sw-mini-table.
-     ══════════════════════════════════════════════════════════ */
+  /* ================================================================
+     TAULES AMB SCROLL HORITZONTAL
+     .sw-mini-table-wrap  — contenidor de totes les taules de sessions
+                            (Overview: Test&Cursa, Altres)
+                            (Setmana: Qualitat, Z2, LL, Força, Altres)
+     .sw-htable-wrap      — contenidor de la fila Pla de cada bloc
+     La clau: overflow-x:auto + min-width a la taula fills
+     ================================================================ */
 
+  /* ── Wrapper genèric: sessions reals (sw-mini-table) ──────────── */
   .sw-mini-table-wrap {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
-    /* Marge negatiu per compensar el padding del panel pare
-       i deixar la taula fins a la vora del contenidor */
+    /* Surt fins a les vores del panel per aprofitar tota l'amplada */
     margin-inline: -14px;
     padding-inline: 14px;
+    /* Separació de la htable de sobre */
+    margin-top: 10px;
   }
 
   .sw-mini-table-wrap .sw-mini-table {
-    font-size: .75rem;
-    min-width: 380px; /* força scroll en comptes de trencar layout */
+    font-size: .72rem;
+    /* min-width diferent per cada taula:
+       les més amples (Qualitat: 9 cols) necessiten més espai */
+    min-width: 420px;
   }
 
   .sw-mini-table-wrap .sw-mini-table th,
   .sw-mini-table-wrap .sw-mini-table td {
-    padding: 6px 8px;
+    padding: 5px 7px;
     white-space: nowrap;
   }
 
-  /* ══════════════════════════════════════════════════════════
-     FIX B — Vista Setmana actual: sw-grid i sw-htable
-     ══════════════════════════════════════════════════════════ */
-
-  .sw-grid {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-
-  .sw-block--wide {
-    grid-column: span 1;
-  }
-
-  .sw-block-header {
-    margin-bottom: 10px;
-  }
-
-  /* Taula de pla (htable): scroll horitzontal garantit */
+  /* ── Wrapper fila Pla (sw-htable) ──────────────────────────── */
   .sw-htable-wrap {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    margin-bottom: 10px;
+    scrollbar-width: none;          /* oculta el scrollbar: la htable és petita */
+    margin-bottom: 0;
     margin-inline: -14px;
     padding-inline: 14px;
   }
 
   .sw-htable-wrap .sw-htable {
+    font-size: .72rem;
     min-width: 280px;
+    width: 100%;
   }
 
+  /* Reduir padding de cel·les htable en mòbil */
+  .sw-htable-wrap .sw-htable th,
+  .sw-htable-wrap .sw-htable td {
+    padding: 5px 7px;
+    white-space: nowrap;
+  }
+
+  /* ── Vista Setmana: grid d'un sol bloc per fila ──────────────── */
+  .sw-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .sw-block--wide { grid-column: span 1; }
+
+  .sw-block-header { margin-bottom: 8px; }
+
+  /* Etiqueta "Pla" dins la htable: sempre visible i fixa */
+  .sw-row-lbl {
+    font-size: .68rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* Separador visual entre la htable i la mini-table */
+  .sw-htable-wrap + .sw-mini-table-wrap {
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+
+  /* ── Altres ajustos de la vista Setmana ──────────────────────── */
   .sw-cols {
     grid-template-columns: 1fr;
     gap: 10px;
@@ -291,6 +257,13 @@
     margin-top: 8px;
   }
 
+  .progress-panel { padding: 14px; }
+
+  /* Nom del bloc de setmana (emoji + text): lletra més petita */
+  .sw-block-header h3 {
+    font-size: .95rem;
+  }
+
 }
 
 /* En desktop, les cards sempre ocultes */
@@ -299,7 +272,8 @@
 }
 
 /* ============================================================
-   TASCA 4.4 — :active states i feedback tàctil
+   :active states i feedback tàctil (tots els dispositius
+   que no suporten hover, és a dir, pantalles tàctils)
    ============================================================ */
 
 @media (hover: none) {
@@ -338,26 +312,17 @@
     transition: background 0.08s, transform 0.08s;
   }
 
-  .bnav-drawer-actions .btn:active {
-    opacity: 0.75;
-  }
+  .bnav-drawer-actions .btn:active { opacity: 0.75; }
 
-  .plan-week-card:hover {
-    transform: none;
-    box-shadow: none;
-  }
-  .pcy-month-card:hover {
-    box-shadow: none;
-  }
+  .plan-week-card:hover  { transform: none; box-shadow: none; }
+  .pcy-month-card:hover  { box-shadow: none; }
 }
 
 /* ============================================================
    Bottom Tab Bar — sempre al DOM, visible només a ≤767px
    ============================================================ */
 
-.bottom-nav {
-  display: none;
-}
+.bottom-nav { display: none; }
 
 @media (max-width: 767px) {
   .bottom-nav {
@@ -396,41 +361,21 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .bnav-item:active {
-    background: var(--surface-2);
-  }
+  .bnav-item:active  { background: var(--surface-2); }
+  .bnav-item.active  { color: var(--accent); }
 
-  .bnav-item.active {
-    color: var(--accent);
-  }
+  .bnav-icon  { font-size: 1.2rem; line-height: 1; }
+  .bnav-label { font-size: .6rem; font-weight: 600; letter-spacing: .04em; line-height: 1; }
 
-  .bnav-icon {
-    font-size: 1.2rem;
-    line-height: 1;
-  }
-
-  .bnav-label {
-    font-size: .6rem;
-    font-weight: 600;
-    letter-spacing: .04em;
-    line-height: 1;
-  }
-
-  .bnav-more {
-    color: var(--text-muted);
-  }
-  .bnav-more.drawer-open {
-    color: var(--accent);
-  }
+  .bnav-more            { color: var(--text-muted); }
+  .bnav-more.drawer-open { color: var(--accent); }
 }
 
 /* ============================================================
    Drawer "Més" — panell lliscant des de baix
    ============================================================ */
 
-.bnav-drawer {
-  display: none;
-}
+.bnav-drawer { display: none; }
 
 @media (max-width: 767px) {
   .bnav-drawer {
