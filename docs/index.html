@@ -202,13 +202,14 @@
 
         </div><!-- /overview-bottom-grid -->
 
-        <!-- Test &amp; Cursa -->
+        <!-- Test & Cursa -->
         <article class="panel">
           <div class="panel-header">
             <div><p class="eyebrow">Rendiment</p><h3>Test &amp; Cursa</h3></div>
             <span class="badge badge-muted">Darrera activitat de cada tipus</span>
           </div>
-          <div id="test-race-container"><p class="plan-no-data">Carregant...</p></div>
+          <!-- wrapper scroll horitzontal — el JS injecta .sw-mini-table aquí dins -->
+          <div class="sw-mini-table-wrap" id="test-race-container"><p class="plan-no-data">Carregant...</p></div>
         </article>
 
         <!-- Altres activitats -->
@@ -217,7 +218,8 @@
             <div><p class="eyebrow">Activitats complementàries</p><h3>Altres activitats</h3></div>
             <span class="badge badge-muted" id="others-count">—</span>
           </div>
-          <div id="others-container"><p class="plan-no-data">Carregant...</p></div>
+          <!-- wrapper scroll horitzontal — el JS injecta .sw-mini-table aquí dins -->
+          <div class="sw-mini-table-wrap" id="others-container"><p class="plan-no-data">Carregant...</p></div>
         </article>
       </section>
 
@@ -265,10 +267,13 @@
                 </tbody>
               </table>
             </div>
-            <table class="sw-mini-table">
-              <thead><tr><th>Data</th><th>Sèries</th><th>Dur.sèrie</th><th>Ritme</th><th>Rec.</th><th>Cadència</th><th>FC</th><th>TSS</th><th>Km</th></tr></thead>
-              <tbody id="sw-q-sessions-list"></tbody>
-            </table>
+            <!-- wrapper scroll horitzontal per a les sessions reals -->
+            <div class="sw-mini-table-wrap">
+              <table class="sw-mini-table">
+                <thead><tr><th>Data</th><th>Sèries</th><th>Dur.sèrie</th><th>Ritme</th><th>Rec.</th><th>Cadència</th><th>FC</th><th>TSS</th><th>Km</th></tr></thead>
+                <tbody id="sw-q-sessions-list"></tbody>
+              </table>
+            </div>
           </article>
 
           <!-- ── Bloc Z2 ─────────────────────────────────────────────────── -->
@@ -288,10 +293,13 @@
                 </tbody>
               </table>
             </div>
-            <table class="sw-mini-table">
-              <thead><tr><th>Data</th><th>Durada</th><th>Ritme</th><th>Cadència</th><th>FC</th><th>TSS</th><th>Km</th></tr></thead>
-              <tbody id="sw-z2-sessions-list"></tbody>
-            </table>
+            <!-- wrapper scroll horitzontal per a les sessions reals -->
+            <div class="sw-mini-table-wrap">
+              <table class="sw-mini-table">
+                <thead><tr><th>Data</th><th>Durada</th><th>Ritme</th><th>Cadència</th><th>FC</th><th>TSS</th><th>Km</th></tr></thead>
+                <tbody id="sw-z2-sessions-list"></tbody>
+              </table>
+            </div>
           </article>
 
           <!-- ── Bloc Tirada llarga ────────────────────────────────────────── -->
@@ -310,10 +318,13 @@
                 </tbody>
               </table>
             </div>
-            <table class="sw-mini-table">
-              <thead><tr><th>Data</th><th>Durada</th><th>Ritme</th><th>Min Z2</th><th>Desnivell</th><th>FC</th><th>TSS</th><th>Km</th></tr></thead>
-              <tbody id="sw-ll-sessions-list"></tbody>
-            </table>
+            <!-- wrapper scroll horitzontal per a les sessions reals -->
+            <div class="sw-mini-table-wrap">
+              <table class="sw-mini-table">
+                <thead><tr><th>Data</th><th>Durada</th><th>Ritme</th><th>Min Z2</th><th>Desnivell</th><th>FC</th><th>TSS</th><th>Km</th></tr></thead>
+                <tbody id="sw-ll-sessions-list"></tbody>
+              </table>
+            </div>
           </article>
 
           <!-- ── Bloc Força ────────────────────────────────────────────────── -->
@@ -330,10 +341,13 @@
                 </tbody>
               </table>
             </div>
-            <table class="sw-mini-table">
-              <thead><tr><th>Data</th><th>Tipus</th><th>Durada</th><th>FC</th><th>TSS</th></tr></thead>
-              <tbody id="sw-forca-sessions-list"></tbody>
-            </table>
+            <!-- wrapper scroll horitzontal per a les sessions reals -->
+            <div class="sw-mini-table-wrap">
+              <table class="sw-mini-table">
+                <thead><tr><th>Data</th><th>Tipus</th><th>Durada</th><th>FC</th><th>TSS</th></tr></thead>
+                <tbody id="sw-forca-sessions-list"></tbody>
+              </table>
+            </div>
           </article>
 
           <!-- ── Bloc Altres ───────────────────────────────────────────────── -->
@@ -350,10 +364,13 @@
                 </tbody>
               </table>
             </div>
-            <table class="sw-mini-table">
-              <thead><tr><th>Data</th><th>Tipus</th><th>Durada</th><th>FC</th><th>TSS</th></tr></thead>
-              <tbody id="sw-altres-sessions-list"></tbody>
-            </table>
+            <!-- wrapper scroll horitzontal per a les sessions reals -->
+            <div class="sw-mini-table-wrap">
+              <table class="sw-mini-table">
+                <thead><tr><th>Data</th><th>Tipus</th><th>Durada</th><th>FC</th><th>TSS</th></tr></thead>
+                <tbody id="sw-altres-sessions-list"></tbody>
+              </table>
+            </div>
           </article>
 
         </div>
@@ -522,6 +539,7 @@
   <script src="./js/uploader/uploader-ui.js"></script>
   <script src="./js/uploader/planning-uploader.js"></script>
   <script src="./js/uploader/planning-uploader-ui.js"></script>
+  <script src="./js/lib/github-token-modal.js"></script>
   <script src="./js/app.js"></script>
 
   <!-- ── PWA: Registre del Service Worker ────────────────────────── -->

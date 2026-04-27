@@ -5,7 +5,7 @@
      - Network First → dades CSV (canvien sovint)
    ============================================================ */
 
-const CACHE_NAME = 'suunto-coach-v2';
+const CACHE_NAME = 'suunto-coach-v3'; // ← bump per forçar recàrrega de tots els assets
 
 // Assets estàtics que es precachegen en instal·lar el SW
 const PRECACHE_URLS = [

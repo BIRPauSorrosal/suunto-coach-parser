@@ -136,8 +136,6 @@
 
   /* ══════════════════════════════════════════════════════════
      TASCA 4.1 — Touch targets botons petits
-     .btn-sm té padding: 5px 11px → ~30px alçada, per sota
-     del mínim tàctil de 44px. En mòbil l'ampliem.
      ══════════════════════════════════════════════════════════ */
   .btn-sm {
     padding: 10px 14px;
@@ -145,17 +143,12 @@
     min-height: 44px;
   }
 
-  /* Botons de capçalera (nav setmanal, exportació...) */
   .btn {
     min-height: 44px;
   }
 
   /* ══════════════════════════════════════════════════════════
      TASCA 4.2 — Filtres de sessions en mòbil
-     Convertim el flex horitzontal en 2 files verticals:
-     - Fila 1: selector de tipus (ample complet)
-     - Fila 2: botons de període (wrap)
-     El separador vertical s'oculta (no té sentit en vertical).
      ══════════════════════════════════════════════════════════ */
   .sess-filters {
     flex-direction: column;
@@ -171,7 +164,6 @@
     width: 100%;
   }
 
-  /* El select ocupa tota l'amplada disponible */
   .sess-select {
     width: 100%;
     padding: 10px 12px;
@@ -179,12 +171,10 @@
     min-height: 44px;
   }
 
-  /* Separador vertical → ocult en mòbil */
   .sess-filter-sep {
     display: none;
   }
 
-  /* Botons de període: una mica més grans per al toc */
   .sess-period-btns {
     width: 100%;
     gap: 6px;
@@ -193,15 +183,13 @@
   .sess-period-btns .btn-sm {
     flex: 1;
     justify-content: center;
-    min-height: 40px; /* lleugerament menys per no fer la barra massa alta */
+    min-height: 40px;
     padding: 8px 6px;
     font-size: .75rem;
   }
 
   /* ══════════════════════════════════════════════════════════
      TASCA 4.3 — Padding i espai dels panels en mòbil
-     24px de padding en desktop ocupa massa espai horitzontal
-     en 375px. Reduïm a valors més compactes.
      ══════════════════════════════════════════════════════════ */
   .panel {
     padding: 16px 14px;
@@ -216,22 +204,18 @@
     padding: 12px 14px;
   }
 
-  /* Hero value lleugerament més petit per cabre bé */
   .hero-value {
     font-size: 1.5rem;
   }
 
-  /* KPI value: reduir per evitar overflow */
   .sess-kpi-value {
     font-size: 1.2rem;
   }
 
-  /* Panel header: menys marge inferior */
   .panel-header {
     margin-bottom: 14px;
   }
 
-  /* Gràfics: reduir alçada per deixar espai al contingut */
   .chart-wrap         { height: 180px; }
   .chart-wrap--tall   { height: 220px; }
   .chart-wrap--trend  { height: 160px; }
@@ -239,94 +223,69 @@
   .pmc-chart-wrap     { height: 240px; }
 
   /* ══════════════════════════════════════════════════════════
-     FIX A — Taula Test & Cursa i sw-mini-table (Overview)
-     El contenidor #test-race-container i #others-container
-     generen taules .sw-mini-table sense cap wrapper amb
-     overflow-x. A 375px les 7 columnes es desborden.
-     Solucions:
-       1. Embolcall scroll horitzontal als dos contenidors.
-       2. Reduir font-size de les taules en mòbil.
-       3. Ocultar columna Desnivell (menys crítica) per guanyar espai.
+     FIX A — Wrapper .sw-mini-table-wrap: scroll horitzontal
+     Aplicat a TOTS els wrappers (Overview i Setmana actual).
+     La classe .sw-mini-table-wrap s'ha afegit al HTML per
+     envoltar totes les taules sw-mini-table.
      ══════════════════════════════════════════════════════════ */
 
-  /* Contenidors de taules de l'Overview: scroll horitzontal */
-  #test-race-container,
-  #others-container {
+  .sw-mini-table-wrap {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    /* Pista visual: ombra lateral quan hi ha scroll */
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
+    /* Marge negatiu per compensar el padding del panel pare
+       i deixar la taula fins a la vora del contenidor */
+    margin-inline: -14px;
+    padding-inline: 14px;
   }
 
-  /* Taules sw-mini-table dins l'overview: més compactes */
-  #test-race-container .sw-mini-table,
-  #others-container .sw-mini-table {
+  .sw-mini-table-wrap .sw-mini-table {
     font-size: .75rem;
-    min-width: 420px; /* força scroll en lloc de trencar el layout */
+    min-width: 380px; /* força scroll en comptes de trencar layout */
   }
 
-  #test-race-container .sw-mini-table th,
-  #test-race-container .sw-mini-table td,
-  #others-container .sw-mini-table th,
-  #others-container .sw-mini-table td {
-    padding: 7px 8px;
+  .sw-mini-table-wrap .sw-mini-table th,
+  .sw-mini-table-wrap .sw-mini-table td {
+    padding: 6px 8px;
     white-space: nowrap;
   }
 
   /* ══════════════════════════════════════════════════════════
-     FIX B — Vista Setmana actual: widgets .sw-grid
-     El grid de 2 columnes col·lapsa a 860px (style.css),
-     però en 375px els blocs sw-block encara són massa amples
-     per als continguts interns (.sw-htable, .sw-mini-table).
-     A més, .sw-block--wide (Altres) usa grid-column: span 2
-     que en 1 columna no té efecte, però el padding intern
-     continua sent massa gran.
+     FIX B — Vista Setmana actual: sw-grid i sw-htable
      ══════════════════════════════════════════════════════════ */
 
-  /* Grid de setmana actual: forçar 1 columna des de 767px */
   .sw-grid {
     grid-template-columns: 1fr;
     gap: 14px;
   }
 
-  /* Bloc ample (Altres) → 1 columna, ja no cal span 2 */
   .sw-block--wide {
     grid-column: span 1;
   }
 
-  /* Capçalera de cada bloc: més compacta */
   .sw-block-header {
     margin-bottom: 10px;
   }
 
-  /* Taules htable dins els blocs: scroll horitzontal garantiït */
+  /* Taula de pla (htable): scroll horitzontal garantit */
   .sw-htable-wrap {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     margin-bottom: 10px;
-    border-radius: var(--radius);
+    margin-inline: -14px;
+    padding-inline: 14px;
   }
 
-  /* Mini-taula de sessions reals: scroll horitzontal */
-  .sw-block .sw-mini-table {
-    font-size: .72rem;
-    min-width: 340px;
+  .sw-htable-wrap .sw-htable {
+    min-width: 280px;
   }
 
-  .sw-block .sw-mini-table th,
-  .sw-block .sw-mini-table td {
-    padding: 5px 7px;
-    white-space: nowrap;
-  }
-
-  /* Columnes de Pla/Real de sw-cols (dins sw-block) */
   .sw-cols {
     grid-template-columns: 1fr;
     gap: 10px;
   }
 
-  /* Valors de km i temps del peu del bloc setmanal */
   .pwv-km-total {
     text-align: left;
     margin-top: 8px;
@@ -341,60 +300,48 @@
 
 /* ============================================================
    TASCA 4.4 — :active states i feedback tàctil
-   Dispositius sense hover (mòbil/tàctil): afegim feedback
-   visual immediat al prémer. Usem @media (hover: none) per
-   no afectar desktop on el :hover ja fa la feina.
    ============================================================ */
 
 @media (hover: none) {
 
-  /* Botons genèrics */
   .btn:active {
     opacity: 0.75;
     transform: scale(0.97);
     transition: opacity 0.08s, transform 0.08s;
   }
 
-  /* Targetes de planning setmanal */
   .plan-week-card:active {
     transform: scale(0.98);
     box-shadow: none;
     transition: transform 0.08s;
   }
 
-  /* Cel·les del planning anual (pcy) */
   .pcy-cell:not(.pcy-cell--empty):active {
     opacity: 1;
     transform: scale(0.93);
     transition: transform 0.08s;
   }
 
-  /* Hero cards (si fossin clicables en el futur) */
   .hero-card:active {
     opacity: 0.85;
     transition: opacity 0.08s;
   }
 
-  /* Cards de sessions */
   .sess-card:active {
     background: var(--surface-2);
     transition: background 0.08s;
   }
 
-  /* Nav links de la bottom bar (ja té :active al mobile.css,
-     però reforcem amb transform) */
   .bnav-item:active {
     background: var(--surface-2);
     transform: scale(0.94);
     transition: background 0.08s, transform 0.08s;
   }
 
-  /* Botons del drawer */
   .bnav-drawer-actions .btn:active {
     opacity: 0.75;
   }
 
-  /* Evitem :hover residuals en tàctil (ex: plan-week-card hover) */
   .plan-week-card:hover {
     transform: none;
     box-shadow: none;
@@ -409,7 +356,7 @@
    ============================================================ */
 
 .bottom-nav {
-  display: none; /* ocult per defecte (desktop) */
+  display: none;
 }
 
 @media (max-width: 767px) {
@@ -423,12 +370,9 @@
     background: var(--surface);
     border-top: 1px solid var(--border);
     z-index: 1000;
-
-    /* Safe area iOS (notch / home indicator) */
     padding-bottom: env(safe-area-inset-bottom);
   }
 
-  /* ── Cada ítem de la barra ───────────────────────────────── */
   .bnav-item {
     flex: 1;
     display: flex;
@@ -447,10 +391,8 @@
     border: none;
     cursor: pointer;
     font-family: var(--font);
-    /* Touch target mínim 44px */
     min-height: 44px;
     transition: color .15s;
-    /* Evitar ressaltat blau en tap (iOS/Android) */
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -462,7 +404,6 @@
     color: var(--accent);
   }
 
-  /* ── Icona SVG ───────────────────────────────────────────── */
   .bnav-icon {
     font-size: 1.2rem;
     line-height: 1;
@@ -475,7 +416,6 @@
     line-height: 1;
   }
 
-  /* ── Botó "Més" (drawer) ─────────────────────────────────── */
   .bnav-more {
     color: var(--text-muted);
   }
@@ -486,19 +426,17 @@
 
 /* ============================================================
    Drawer "Més" — panell lliscant des de baix
-   Conté les accions que eren a la sidebar:
-   Token GitHub, Importar activitats, Recarregar dades
    ============================================================ */
 
 .bnav-drawer {
-  display: none; /* ocult per defecte */
+  display: none;
 }
 
 @media (max-width: 767px) {
   .bnav-drawer {
     display: block;
     position: fixed;
-    bottom: 64px; /* just per sobre la bottom nav */
+    bottom: 64px;
     left: 0;
     right: 0;
     background: var(--surface);
@@ -507,8 +445,6 @@
     padding: 20px 20px 16px;
     z-index: 999;
     box-shadow: 0 -8px 32px rgba(0,0,0,.4);
-
-    /* Animació: entra des de baix */
     transform: translateY(100%);
     transition: transform .25s cubic-bezier(.16, 1, .3, 1);
     pointer-events: none;
@@ -534,14 +470,12 @@
     gap: 10px;
   }
 
-  /* Els botons dins el drawer ocupen tota l'amplada */
   .bnav-drawer-actions .btn {
     width: 100%;
     justify-content: center;
-    padding: 12px 16px; /* touch target generós */
+    padding: 12px 16px;
   }
 
-  /* Overlay fosc darrere el drawer */
   .bnav-overlay {
     display: none;
     position: fixed;
