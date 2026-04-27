@@ -11,7 +11,7 @@
 // • PATCH (v3.0.1, v3.0.2…) — fixes petits de CSS/JS, ajustos visuals
 // Qualsevol canvi al nom de CACHE_NAME invalida la cache anterior i força la
 // descàrrega de tots els assets nous al pròxim activate del SW.
-const CACHE_NAME = 'suunto-coach-v3.0.3';
+const CACHE_NAME = 'suunto-coach-v3.1.0';
 
 // Assets estàtics que es precachegen en instal·lar el SW
 const PRECACHE_URLS = [
@@ -59,7 +59,7 @@ const NETWORK_FIRST_PATTERNS = [
   /raw\.githubusercontent\.com/,
 ];
 
-// ── Install: precaché dels assets estàtics ─────────────────────────
+// ── Install: precaché dels assets estàtics ─────────────────────────────────────
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -68,7 +68,7 @@ self.addEventListener('install', event => {
   );
 });
 
-// ── Activate: elimina caches antigues ──────────────────────────────
+// ── Activate: elimina caches antigues ──────────────────────────────────
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
@@ -81,7 +81,7 @@ self.addEventListener('activate', event => {
   );
 });
 
-// ── Fetch: Cache First o Network First segons el recurs ────────────
+// ── Fetch: Cache First o Network First segons el recurs ────────────────
 self.addEventListener('fetch', event => {
   const { request } = event;
   const url = request.url;
