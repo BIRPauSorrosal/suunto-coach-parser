@@ -178,9 +178,6 @@
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
-    /* Surt fins a les vores del panel per aprofitar tota l'amplada */
-    margin-inline: -14px;
-    padding-inline: 14px;
     /* Separació de la htable de sobre */
     margin-top: 10px;
   }
@@ -204,8 +201,6 @@
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;          /* oculta el scrollbar: la htable és petita */
     margin-bottom: 0;
-    margin-inline: -14px;
-    padding-inline: 14px;
   }
 
   .sw-htable-wrap .sw-htable {
