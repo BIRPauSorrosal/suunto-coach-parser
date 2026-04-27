@@ -238,6 +238,100 @@
   .chart-wrap--zones  { height: 160px; }
   .pmc-chart-wrap     { height: 240px; }
 
+  /* ══════════════════════════════════════════════════════════
+     FIX A — Taula Test & Cursa i sw-mini-table (Overview)
+     El contenidor #test-race-container i #others-container
+     generen taules .sw-mini-table sense cap wrapper amb
+     overflow-x. A 375px les 7 columnes es desborden.
+     Solucions:
+       1. Embolcall scroll horitzontal als dos contenidors.
+       2. Reduir font-size de les taules en mòbil.
+       3. Ocultar columna Desnivell (menys crítica) per guanyar espai.
+     ══════════════════════════════════════════════════════════ */
+
+  /* Contenidors de taules de l'Overview: scroll horitzontal */
+  #test-race-container,
+  #others-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    /* Pista visual: ombra lateral quan hi ha scroll */
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  /* Taules sw-mini-table dins l'overview: més compactes */
+  #test-race-container .sw-mini-table,
+  #others-container .sw-mini-table {
+    font-size: .75rem;
+    min-width: 420px; /* força scroll en lloc de trencar el layout */
+  }
+
+  #test-race-container .sw-mini-table th,
+  #test-race-container .sw-mini-table td,
+  #others-container .sw-mini-table th,
+  #others-container .sw-mini-table td {
+    padding: 7px 8px;
+    white-space: nowrap;
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     FIX B — Vista Setmana actual: widgets .sw-grid
+     El grid de 2 columnes col·lapsa a 860px (style.css),
+     però en 375px els blocs sw-block encara són massa amples
+     per als continguts interns (.sw-htable, .sw-mini-table).
+     A més, .sw-block--wide (Altres) usa grid-column: span 2
+     que en 1 columna no té efecte, però el padding intern
+     continua sent massa gran.
+     ══════════════════════════════════════════════════════════ */
+
+  /* Grid de setmana actual: forçar 1 columna des de 767px */
+  .sw-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  /* Bloc ample (Altres) → 1 columna, ja no cal span 2 */
+  .sw-block--wide {
+    grid-column: span 1;
+  }
+
+  /* Capçalera de cada bloc: més compacta */
+  .sw-block-header {
+    margin-bottom: 10px;
+  }
+
+  /* Taules htable dins els blocs: scroll horitzontal garantiït */
+  .sw-htable-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 10px;
+    border-radius: var(--radius);
+  }
+
+  /* Mini-taula de sessions reals: scroll horitzontal */
+  .sw-block .sw-mini-table {
+    font-size: .72rem;
+    min-width: 340px;
+  }
+
+  .sw-block .sw-mini-table th,
+  .sw-block .sw-mini-table td {
+    padding: 5px 7px;
+    white-space: nowrap;
+  }
+
+  /* Columnes de Pla/Real de sw-cols (dins sw-block) */
+  .sw-cols {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  /* Valors de km i temps del peu del bloc setmanal */
+  .pwv-km-total {
+    text-align: left;
+    margin-top: 8px;
+  }
+
 }
 
 /* En desktop, les cards sempre ocultes */
