@@ -165,28 +165,26 @@
 
   /* ================================================================
      TAULES AMB SCROLL HORITZONTAL
-     .sw-mini-table-wrap  — contenidor de totes les taules de sessions
-                            (Overview: Test&Cursa, Altres)
-                            (Setmana: Qualitat, Z2, LL, Força, Altres)
-     .sw-htable-wrap      — contenidor de la fila Pla de cada bloc
-     La clau: overflow-x:auto + min-width a la taula fills
+     Principi: el wrapper ocupa el 100% del panel (sense marge negatiu)
+     i la taula interior té un min-width que força el scroll quan
+     l'espai disponible és inferior.
      ================================================================ */
 
-  /* ── Wrapper genèric: sessions reals (sw-mini-table) ──────────── */
+  /* ── Wrapper sessions reals (sw-mini-table) ───────────────────── */
   .sw-mini-table-wrap {
+    display: block;
+    width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
-    /* Separació de la htable de sobre */
     margin-top: 10px;
   }
 
   .sw-mini-table-wrap .sw-mini-table {
     font-size: .72rem;
-    /* min-width diferent per cada taula:
-       les més amples (Qualitat: 9 cols) necessiten més espai */
-    min-width: 420px;
+    min-width: 420px; /* força scroll quan la pantalla és <420px */
+    width: max-content; /* no s'estira més del necessari */
   }
 
   .sw-mini-table-wrap .sw-mini-table th,
@@ -195,43 +193,25 @@
     white-space: nowrap;
   }
 
-  /* ── Wrapper fila Pla (sw-htable) ──────────────────────────── */
+  /* ── Wrapper fila Pla (sw-htable) ──────────────────────────────── */
   .sw-htable-wrap {
+    display: block;
+    width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;          /* oculta el scrollbar: la htable és petita */
+    scrollbar-width: none; /* scrollbar ocult: la htable és petita */
     margin-bottom: 0;
   }
 
   .sw-htable-wrap .sw-htable {
     font-size: .72rem;
     min-width: 280px;
-    width: 100%;
+    width: max-content;
   }
 
-  /* Reduir padding de cel·les htable en mòbil */
   .sw-htable-wrap .sw-htable th,
   .sw-htable-wrap .sw-htable td {
     padding: 5px 7px;
-    white-space: nowrap;
-  }
-
-  /* ── Vista Setmana: grid d'un sol bloc per fila ──────────────── */
-  .sw-grid {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-
-  .sw-block--wide { grid-column: span 1; }
-
-  .sw-block-header { margin-bottom: 8px; }
-
-  /* Etiqueta "Pla" dins la htable: sempre visible i fixa */
-  .sw-row-lbl {
-    font-size: .68rem;
-    font-weight: 700;
-    color: var(--text-muted);
-    text-transform: uppercase;
     white-space: nowrap;
   }
 
@@ -241,23 +221,28 @@
     padding-top: 10px;
   }
 
-  /* ── Altres ajustos de la vista Setmana ──────────────────────── */
-  .sw-cols {
+  /* ── Vista Setmana: grid d'un sol bloc per fila ──────────────── */
+  .sw-grid {
     grid-template-columns: 1fr;
-    gap: 10px;
+    gap: 14px;
   }
 
-  .pwv-km-total {
-    text-align: left;
-    margin-top: 8px;
+  .sw-block--wide { grid-column: span 1; }
+  .sw-block-header { margin-bottom: 8px; }
+  .sw-block-header h3 { font-size: .95rem; }
+
+  .sw-row-lbl {
+    font-size: .68rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    white-space: nowrap;
   }
 
+  /* ── Altres ajustos vista Setmana ─────────────────────────────── */
+  .sw-cols        { grid-template-columns: 1fr; gap: 10px; }
+  .pwv-km-total   { text-align: left; margin-top: 8px; }
   .progress-panel { padding: 14px; }
-
-  /* Nom del bloc de setmana (emoji + text): lletra més petita */
-  .sw-block-header h3 {
-    font-size: .95rem;
-  }
 
 }
 
@@ -267,8 +252,7 @@
 }
 
 /* ============================================================
-   :active states i feedback tàctil (tots els dispositius
-   que no suporten hover, és a dir, pantalles tàctils)
+   :active states i feedback tàctil
    ============================================================ */
 
 @media (hover: none) {
@@ -291,15 +275,8 @@
     transition: transform 0.08s;
   }
 
-  .hero-card:active {
-    opacity: 0.85;
-    transition: opacity 0.08s;
-  }
-
-  .sess-card:active {
-    background: var(--surface-2);
-    transition: background 0.08s;
-  }
+  .hero-card:active     { opacity: 0.85; transition: opacity 0.08s; }
+  .sess-card:active     { background: var(--surface-2); transition: background 0.08s; }
 
   .bnav-item:active {
     background: var(--surface-2);
@@ -308,7 +285,6 @@
   }
 
   .bnav-drawer-actions .btn:active { opacity: 0.75; }
-
   .plan-week-card:hover  { transform: none; box-shadow: none; }
   .pcy-month-card:hover  { box-shadow: none; }
 }
@@ -356,13 +332,13 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .bnav-item:active  { background: var(--surface-2); }
-  .bnav-item.active  { color: var(--accent); }
+  .bnav-item:active   { background: var(--surface-2); }
+  .bnav-item.active   { color: var(--accent); }
 
   .bnav-icon  { font-size: 1.2rem; line-height: 1; }
   .bnav-label { font-size: .6rem; font-weight: 600; letter-spacing: .04em; line-height: 1; }
 
-  .bnav-more            { color: var(--text-muted); }
+  .bnav-more             { color: var(--text-muted); }
   .bnav-more.drawer-open { color: var(--accent); }
 }
 
