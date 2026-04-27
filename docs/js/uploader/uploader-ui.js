@@ -317,24 +317,41 @@ function closeUploaderModal() {
 }
 
 
-// ─── INIT: botó al sidebar ─────────────────────────────────────────
+// ─── INIT: botó al sidebar + drawer mòbil ───────────────────────────
 
 /**
- * Afegeix el botó "Importar activitats" just sota #reload-data-btn.
+ * Afegeix el botó "Importar activitats":
+ *   • A la sidebar de desktop: just sota #reload-data-btn
+ *   • Al drawer mòbil (#bnav-drawer-actions): just sobre #reload-data-btn-mobile
  * S'executa automàticament quan el DOM està llest.
  */
 function initUploaderUI() {
+  // ── Sidebar (desktop) ──
   const reloadBtn = document.getElementById("reload-data-btn");
-  if (!reloadBtn) return;
+  if (reloadBtn && !document.getElementById("import-data-btn")) {
+    const btn = document.createElement("button");
+    btn.type        = "button";
+    btn.className   = "btn btn-primary btn-sidebar";
+    btn.id          = "import-data-btn";
+    btn.textContent = "Importar activitats";
+    btn.addEventListener("click", openUploaderModal);
+    reloadBtn.insertAdjacentElement("beforebegin", btn);
+  }
 
-  const btn = document.createElement("button");
-  btn.type        = "button";
-  btn.className   = "btn btn-primary btn-sidebar";
-  btn.id          = "import-data-btn";
-  btn.textContent = "Importar activitats";
-  btn.addEventListener("click", openUploaderModal);
-
-  reloadBtn.insertAdjacentElement("beforebegin", btn);
+  // ── Drawer mòbil ──
+  const reloadMobileBtn = document.getElementById("reload-data-btn-mobile");
+  if (reloadMobileBtn && !document.getElementById("import-data-btn-mobile")) {
+    const btn = document.createElement("button");
+    btn.type        = "button";
+    btn.className   = "btn btn-primary";
+    btn.id          = "import-data-btn-mobile";
+    btn.textContent = "📂 Importar activitats";
+    btn.addEventListener("click", () => {
+      closeBnavDrawer();
+      openUploaderModal();
+    });
+    reloadMobileBtn.insertAdjacentElement("beforebegin", btn);
+  }
 }
 
 document.addEventListener("DOMContentLoaded", initUploaderUI);
