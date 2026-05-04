@@ -24,7 +24,7 @@ if (
 // • PATCH (v3.0.1, v3.0.2…) — fixes petits de CSS/JS, ajustos visuals
 // Qualsevol canvi al nom de CACHE_NAME invalida la cache anterior i força la
 // descàrrega de tots els assets nous al pròxim activate del SW.
-const CACHE_NAME = 'suunto-coach-v3.1.0';
+const CACHE_NAME = 'suunto-coach-v3.1.2';
 
 // Assets estàtics que es precachegen en instal·lar el SW
 const PRECACHE_URLS = [
@@ -82,7 +82,7 @@ self.addEventListener('install', event => {
 });
 
 // ── Activate: elimina caches antigues ──────────────────────────────
-self.addEventListener('activate', event => [
+self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
       .then(keys => Promise.all(
@@ -92,7 +92,7 @@ self.addEventListener('activate', event => [
       ))
       .then(() => self.clients.claim())
   );
-]);
+});
 
 // ── Fetch: Cache First o Network First segons el recurs ───────────────
 self.addEventListener('fetch', event => {
