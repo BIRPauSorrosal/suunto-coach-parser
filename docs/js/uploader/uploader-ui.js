@@ -31,6 +31,10 @@ function buildModal() {
         <label class="btn btn-ghost" for="uploader-file-input">
           Selecciona fitxers .json
         </label>
+        <label class="uploader-touch-btn" for="uploader-file-input">
+          <span class="uploader-touch-btn-icon">📂</span>
+          Selecciona fitxers .json
+        </label>
         <input
           type="file"
           id="uploader-file-input"
@@ -247,17 +251,17 @@ function _bindEvents(dialog) {
     setConfirmState("idle");
   });
 
-  // ── Label → input: garantir el clic en tots els contextos (desktop i mòbil).
+  // ── Labels → input: garantir el clic en tots els contextos (desktop i mòbil).
   // El <label for="..."> és suficient en la majoria de casos, però dins d'un
   // <dialog> natiu alguns navegadors (Chrome amb touch emulation, Safari iOS)
   // bloquen la propagació. El listener explícit ho resol universalment.
-  const fileLabel = dialog.querySelector("label[for='uploader-file-input']");
-  if (fileLabel) {
-    fileLabel.addEventListener("click", e => {
+  // S'aplica als dos labels: el btn-ghost (desktop) i el touch-btn (mòbil).
+  dialog.querySelectorAll("label[for='uploader-file-input']").forEach(lbl => {
+    lbl.addEventListener("click", e => {
       e.preventDefault();
       fileInput.click();
     });
-  }
+  });
 
   // ── Drag & drop: actiu sempre (desktop i mòbil amb suport natiu).
   // No es condiciona a IS_TOUCH — en mòbil simplement no s'activa mai
