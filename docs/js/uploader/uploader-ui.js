@@ -30,27 +30,11 @@ function buildModal() {
       </header>
 
       <div class="uploader-dropzone" id="uploader-dropzone">
-
-        ${
-          IS_TOUCH
-            /* ── Mòbil: un sol botó gran que activa l'input ── */
-            ? `<button
-                 type="button"
-                 class="uploader-touch-btn"
-                 id="uploader-touch-trigger"
-                 aria-label="Seleccionar fitxers .json"
-               >
-                 <span class="uploader-touch-btn-icon">📂</span>
-                 Selecciona fitxers .json
-               </button>`
-            /* ── Desktop: dropzone clàssica amb drag & drop ── */
-            : `<p class="uploader-dropzone-title">Arrossega els fitxers aquí</p>
-               <p class="uploader-dropzone-sub">o</p>
-               <label class="btn btn-ghost" for="uploader-file-input">
-                 Selecciona fitxers .json
-               </label>`
-        }
-
+        <p class="uploader-dropzone-title">Arrossega els fitxers aquí</p>
+        <p class="uploader-dropzone-sub">o</p>
+        <label class="btn btn-ghost" for="uploader-file-input">
+          Selecciona fitxers .json
+        </label>
         <input
           type="file"
           id="uploader-file-input"
@@ -81,7 +65,7 @@ function buildModal() {
       <footer class="uploader-footer">
         <button class="btn btn-ghost"   id="uploader-cancel-btn">Cancel·lar</button>
         <button class="btn btn-primary" id="uploader-confirm-btn" disabled>
-          Afegir al CSV
+          Importar
         </button>
       </footer>
 
@@ -218,7 +202,7 @@ function setConfirmState(state) {
   const btn = document.getElementById("uploader-confirm-btn");
   if (!btn) return;
   const states = {
-    idle:        { text: "Afegir al CSV",  disabled: false },
+    idle:        { text: "Importar",       disabled: false },
     validating:  { text: "Validant...",    disabled: true  },
     processing:  { text: "Processant...",  disabled: true  },
   };
@@ -255,20 +239,25 @@ function _bindEvents(dialog) {
     if (e.target === dialog) closeUploaderModal();
   });
 
-  // ── Input fitxers ──
-  const fileInput = document.getElementById("uploader-file-input");
-  fileInput.addEventListener("change", async e => {
-    const files = Array.from(e.target.files);
-    setConfirmState("validating");
-    await handleFileSelection(files, renderResults);  // uploader.js
-    setConfirmState("idle");
-  });
+// ── Input fitxers ──
+const fileInput = document.getElementById("uploader-file-input");
+fileInput.addEventListener("change", async e => {
+  const files = Array.from(e.target.files);
+  setConfirmState("validating");
+  await handleFileSelection(files, renderResults);
+  setConfirmState("idle");
+});
 
-  // ── Botó touch (mòbil): activa l'input de fitxers ──
-  const touchTrigger = document.getElementById("uploader-touch-trigger");
-  if (touchTrigger) {
-    touchTrigger.addEventListener("click", () => fileInput.click());
-  }
+// ── Label → input: garantir el clic en tots els contextos (desktop i mòbil)
+// El <label for="..."> hauria de ser suficient, però dins d'un <dialog> natiu
+// alguns navegadors bloquen la propagació. Aquest listener ho assegura.
+const fileLabel = dialog.querySelector("label[for='uploader-file-input']");
+if (fileLabel) {
+  fileLabel.addEventListener("click", e => {
+    e.preventDefault();
+    fileInput.click();
+  });
+}
 
   // ── Drag & drop (només desktop) ──
   if (!IS_TOUCH) {
