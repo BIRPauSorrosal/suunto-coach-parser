@@ -5,6 +5,19 @@
      - Network First → dades CSV (canvien sovint)
    ============================================================ */
 
+// ── BYPASS COMPLET EN DESENVOLUPAMENT LOCAL ─────────────────────
+// En localhost/127.0.0.1 el SW no fa cap cache: totes les peticions
+// van directament a la xarxa (= disc local via Live Server).
+// Això evita que els canvis de fitxers JS/CSS quedin amagats per la cache.
+if (
+  self.location.hostname === 'localhost' ||
+  self.location.hostname === '127.0.0.1'
+) {
+  self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));
+} else {
+
+// ── PRODUCCIÓ (GitHub Pages) ────────────────────────────────────
+
 // Versioning: MAJOR.MINOR.PATCH
 // • MAJOR (v4, v5…) — canvis estructurals grans (noves vistes, refactor complet)
 // • MINOR (v3.1, v3.2…) — funcionalitats noves o canvis visibles rellevants
@@ -59,7 +72,7 @@ const NETWORK_FIRST_PATTERNS = [
   /raw\.githubusercontent\.com/,
 ];
 
-// ── Install: precaché dels assets estàtics ─────────────────────────────────────
+// ── Install: precáché dels assets estàtics ───────────────────────────────
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -68,8 +81,8 @@ self.addEventListener('install', event => {
   );
 });
 
-// ── Activate: elimina caches antigues ──────────────────────────────────
-self.addEventListener('activate', event => {
+// ── Activate: elimina caches antigues ──────────────────────────────
+self.addEventListener('activate', event => [
   event.waitUntil(
     caches.keys()
       .then(keys => Promise.all(
@@ -79,9 +92,9 @@ self.addEventListener('activate', event => {
       ))
       .then(() => self.clients.claim())
   );
-});
+]);
 
-// ── Fetch: Cache First o Network First segons el recurs ────────────────
+// ── Fetch: Cache First o Network First segons el recurs ───────────────
 self.addEventListener('fetch', event => {
   const { request } = event;
   const url = request.url;
@@ -119,3 +132,5 @@ self.addEventListener('fetch', event => {
       })
   );
 });
+
+} // fi bloc producció
