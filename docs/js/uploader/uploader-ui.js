@@ -4,10 +4,6 @@
 // NO conté cap lògica de parsing ni de fitxers
 // ───────────────────────────────────────────────────────────────
 
-// Detecció de dispositiu tàctil: condiciona el text i comportament
-// de la dropzone. El drag & drop no existeix en mòbil.
-const IS_TOUCH = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-
 
 // ─── CONSTRUCCIÓ DEL MODAL ──────────────────────────────────
 
@@ -30,27 +26,15 @@ function buildModal() {
       </header>
 
       <div class="uploader-dropzone" id="uploader-dropzone">
-
-        ${
-          IS_TOUCH
-            /* ── Mòbil: un sol botó gran que activa l'input ── */
-            ? `<button
-                 type="button"
-                 class="uploader-touch-btn"
-                 id="uploader-touch-trigger"
-                 aria-label="Seleccionar fitxers .json"
-               >
-                 <span class="uploader-touch-btn-icon">📂</span>
-                 Selecciona fitxers .json
-               </button>`
-            /* ── Desktop: dropzone clàssica amb drag & drop ── */
-            : `<p class="uploader-dropzone-title">Arrossega els fitxers aquí</p>
-               <p class="uploader-dropzone-sub">o</p>
-               <label class="btn btn-ghost" for="uploader-file-input">
-                 Selecciona fitxers .json
-               </label>`
-        }
-
+        <p class="uploader-dropzone-title">Arrossega els fitxers aquí</p>
+        <p class="uploader-dropzone-sub">o</p>
+        <label class="btn btn-ghost" for="uploader-file-input">
+          Selecciona fitxers .json
+        </label>
+        <label class="uploader-touch-btn" for="uploader-file-input">
+          <span class="uploader-touch-btn-icon">📂</span>
+          Selecciona fitxers .json
+        </label>
         <input
           type="file"
           id="uploader-file-input"
@@ -81,7 +65,7 @@ function buildModal() {
       <footer class="uploader-footer">
         <button class="btn btn-ghost"   id="uploader-cancel-btn">Cancel·lar</button>
         <button class="btn btn-primary" id="uploader-confirm-btn" disabled>
-          Afegir al CSV
+          Importar
         </button>
       </footer>
 
@@ -218,7 +202,7 @@ function setConfirmState(state) {
   const btn = document.getElementById("uploader-confirm-btn");
   if (!btn) return;
   const states = {
-    idle:        { text: "Afegir al CSV",  disabled: false },
+    idle:        { text: "Importar",       disabled: false },
     validating:  { text: "Validant...",    disabled: true  },
     processing:  { text: "Processant...",  disabled: true  },
   };
@@ -250,8 +234,11 @@ function _bindEvents(dialog) {
   document.getElementById("uploader-cancel-btn")
     .addEventListener("click", closeUploaderModal);
 
-  // Clic fora del diàleg (només desktop — en mòbil el backdrop és invisible)
-  dialog.addEventListener("click", e => {
+  // Clic fora del diàleg: només tanca si el clic és exactament
+  // sobre el backdrop del <dialog> (e.target === dialog),
+  // i NO sobre cap element interior (dropzone, botó, etc.).
+  // Usem pointerdown per evitar que el clic al label propagui fins aquí.
+  dialog.addEventListener("pointerdown", e => {
     if (e.target === dialog) closeUploaderModal();
   });
 
@@ -264,33 +251,38 @@ function _bindEvents(dialog) {
     setConfirmState("idle");
   });
 
-  // ── Botó touch (mòbil): activa l'input de fitxers ──
-  const touchTrigger = document.getElementById("uploader-touch-trigger");
-  if (touchTrigger) {
-    touchTrigger.addEventListener("click", () => fileInput.click());
-  }
-
-  // ── Drag & drop (només desktop) ──
-  if (!IS_TOUCH) {
-    const dropzone = document.getElementById("uploader-dropzone");
-
-    dropzone.addEventListener("dragover", e => {
+  // ── Labels → input: garantir el clic en tots els contextos (desktop i mòbil).
+  // El <label for="..."> és suficient en la majoria de casos, però dins d'un
+  // <dialog> natiu alguns navegadors (Chrome amb touch emulation, Safari iOS)
+  // bloquen la propagació. El listener explícit ho resol universalment.
+  // S'aplica als dos labels: el btn-ghost (desktop) i el touch-btn (mòbil).
+  dialog.querySelectorAll("label[for='uploader-file-input']").forEach(lbl => {
+    lbl.addEventListener("click", e => {
       e.preventDefault();
-      dropzone.classList.add("uploader-dropzone--over");
+      fileInput.click();
     });
-    dropzone.addEventListener("dragleave", () => {
-      dropzone.classList.remove("uploader-dropzone--over");
-    });
-    dropzone.addEventListener("drop", async e => {
-      e.preventDefault();
-      dropzone.classList.remove("uploader-dropzone--over");
-      const files = Array.from(e.dataTransfer.files)
-        .filter(f => f.name.toLowerCase().endsWith(".json"));
-      setConfirmState("validating");
-      await handleFileSelection(files, renderResults);  // uploader.js
-      setConfirmState("idle");
-    });
-  }
+  });
+
+  // ── Drag & drop: actiu sempre (desktop i mòbil amb suport natiu).
+  // No es condiciona a IS_TOUCH — en mòbil simplement no s'activa mai
+  // perquè els navegadors mòbils no disparen events dragover/drop.
+  const dropzone = document.getElementById("uploader-dropzone");
+  dropzone.addEventListener("dragover", e => {
+    e.preventDefault();
+    dropzone.classList.add("uploader-dropzone--over");
+  });
+  dropzone.addEventListener("dragleave", () => {
+    dropzone.classList.remove("uploader-dropzone--over");
+  });
+  dropzone.addEventListener("drop", async e => {
+    e.preventDefault();
+    dropzone.classList.remove("uploader-dropzone--over");
+    const files = Array.from(e.dataTransfer.files)
+      .filter(f => f.name.toLowerCase().endsWith(".json"));
+    setConfirmState("validating");
+    await handleFileSelection(files, renderResults);  // uploader.js
+    setConfirmState("idle");
+  });
 
   // ── Confirmar ──
   document.getElementById("uploader-confirm-btn")
