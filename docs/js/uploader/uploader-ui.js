@@ -4,10 +4,6 @@
 // NO conté cap lògica de parsing ni de fitxers
 // ───────────────────────────────────────────────────────────────
 
-// Detecció de dispositiu tàctil: condiciona el text i comportament
-// de la dropzone. El drag & drop no existeix en mòbil.
-const IS_TOUCH = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-
 
 // ─── CONSTRUCCIÓ DEL MODAL ──────────────────────────────────
 
@@ -234,52 +230,55 @@ function _bindEvents(dialog) {
   document.getElementById("uploader-cancel-btn")
     .addEventListener("click", closeUploaderModal);
 
-  // Clic fora del diàleg (només desktop — en mòbil el backdrop és invisible)
-  dialog.addEventListener("click", e => {
+  // Clic fora del diàleg: només tanca si el clic és exactament
+  // sobre el backdrop del <dialog> (e.target === dialog),
+  // i NO sobre cap element interior (dropzone, botó, etc.).
+  // Usem pointerdown per evitar que el clic al label propagui fins aquí.
+  dialog.addEventListener("pointerdown", e => {
     if (e.target === dialog) closeUploaderModal();
   });
 
-// ── Input fitxers ──
-const fileInput = document.getElementById("uploader-file-input");
-fileInput.addEventListener("change", async e => {
-  const files = Array.from(e.target.files);
-  setConfirmState("validating");
-  await handleFileSelection(files, renderResults);
-  setConfirmState("idle");
-});
-
-// ── Label → input: garantir el clic en tots els contextos (desktop i mòbil)
-// El <label for="..."> hauria de ser suficient, però dins d'un <dialog> natiu
-// alguns navegadors bloquen la propagació. Aquest listener ho assegura.
-const fileLabel = dialog.querySelector("label[for='uploader-file-input']");
-if (fileLabel) {
-  fileLabel.addEventListener("click", e => {
-    e.preventDefault();
-    fileInput.click();
+  // ── Input fitxers ──
+  const fileInput = document.getElementById("uploader-file-input");
+  fileInput.addEventListener("change", async e => {
+    const files = Array.from(e.target.files);
+    setConfirmState("validating");
+    await handleFileSelection(files, renderResults);  // uploader.js
+    setConfirmState("idle");
   });
-}
 
-  // ── Drag & drop (només desktop) ──
-  if (!IS_TOUCH) {
-    const dropzone = document.getElementById("uploader-dropzone");
-
-    dropzone.addEventListener("dragover", e => {
+  // ── Label → input: garantir el clic en tots els contextos (desktop i mòbil).
+  // El <label for="..."> és suficient en la majoria de casos, però dins d'un
+  // <dialog> natiu alguns navegadors (Chrome amb touch emulation, Safari iOS)
+  // bloquen la propagació. El listener explícit ho resol universalment.
+  const fileLabel = dialog.querySelector("label[for='uploader-file-input']");
+  if (fileLabel) {
+    fileLabel.addEventListener("click", e => {
       e.preventDefault();
-      dropzone.classList.add("uploader-dropzone--over");
-    });
-    dropzone.addEventListener("dragleave", () => {
-      dropzone.classList.remove("uploader-dropzone--over");
-    });
-    dropzone.addEventListener("drop", async e => {
-      e.preventDefault();
-      dropzone.classList.remove("uploader-dropzone--over");
-      const files = Array.from(e.dataTransfer.files)
-        .filter(f => f.name.toLowerCase().endsWith(".json"));
-      setConfirmState("validating");
-      await handleFileSelection(files, renderResults);  // uploader.js
-      setConfirmState("idle");
+      fileInput.click();
     });
   }
+
+  // ── Drag & drop: actiu sempre (desktop i mòbil amb suport natiu).
+  // No es condiciona a IS_TOUCH — en mòbil simplement no s'activa mai
+  // perquè els navegadors mòbils no disparen events dragover/drop.
+  const dropzone = document.getElementById("uploader-dropzone");
+  dropzone.addEventListener("dragover", e => {
+    e.preventDefault();
+    dropzone.classList.add("uploader-dropzone--over");
+  });
+  dropzone.addEventListener("dragleave", () => {
+    dropzone.classList.remove("uploader-dropzone--over");
+  });
+  dropzone.addEventListener("drop", async e => {
+    e.preventDefault();
+    dropzone.classList.remove("uploader-dropzone--over");
+    const files = Array.from(e.dataTransfer.files)
+      .filter(f => f.name.toLowerCase().endsWith(".json"));
+    setConfirmState("validating");
+    await handleFileSelection(files, renderResults);  // uploader.js
+    setConfirmState("idle");
+  });
 
   // ── Confirmar ──
   document.getElementById("uploader-confirm-btn")
