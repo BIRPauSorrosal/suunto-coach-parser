@@ -1,12 +1,12 @@
-// ─────────────────────────────────────────────────────────────
+// ───────────────────────────────────────────────────────────────
 // planning-uploader-ui.js — Modal, render i events del
 //                           importador de planning
 // Depèn de: planning-uploader.js
 // NO conté cap lògica de merge ni de fitxers
-// ─────────────────────────────────────────────────────────────
+// ───────────────────────────────────────────────────────────────
 
 
-// ─── CONSTRUCCIÓ DEL MODAL ───────────────────────────────────
+// ─── CONSTRUCCIÓ DEL MODAL ──────────────────────────────────
 
 /**
  * Injecta el <dialog> del planning al DOM. S'executa només un cop.
@@ -47,7 +47,7 @@ function buildPlanningModal() {
         <!-- Capçalera resum -->
         <div class="planning-merge-summary" id="planning-merge-summary" style="display:none">
           <span class="planning-badge planning-badge--added"   id="planning-count-added">0 noves</span>
-          <span class="planning-badge planning-badge--replaced" id="planning-count-replaced">0 substituïdes</span>
+          <span class="planning-badge planning-badge--replaced" id="planning-count-replaced">0 subs.</span>
           <span class="planning-badge planning-badge--unchanged" id="planning-count-unchanged">0 sense canvis</span>
         </div>
 
@@ -84,7 +84,7 @@ function buildPlanningModal() {
 }
 
 
-// ─── RENDER DE RESULTATS ─────────────────────────────────────
+// ─── RENDER DE RESULTATS ────────────────────────────────────
 
 /**
  * Renderitza el resum del merge al modal.
@@ -120,7 +120,7 @@ function renderPlanningResults(result) {
   // Actualitzar badges de resum
   document.getElementById("planning-merge-summary").style.display = "flex";
   document.getElementById("planning-count-added").textContent     = `${stats.added} noves`;
-  document.getElementById("planning-count-replaced").textContent  = `${stats.replaced} substituïdes`;
+  document.getElementById("planning-count-replaced").textContent  = `${stats.replaced} subs.`;
   document.getElementById("planning-count-unchanged").textContent = `${stats.unchanged} sense canvis`;
 
   // Llista de setmanes entrants amb el seu estat
@@ -164,7 +164,7 @@ function setPlanningConfirmState(state) {
 }
 
 
-// ─── RESET DEL MODAL ─────────────────────────────────────────
+// ─── RESET DEL MODAL ────────────────────────────────────────────
 
 function _resetPlanningModal() {
   const results   = document.getElementById("planning-uploader-results");
@@ -178,7 +178,7 @@ function _resetPlanningModal() {
 }
 
 
-// ─── BINDING D'EVENTS ────────────────────────────────────────
+// ─── BINDING D'EVENTS ───────────────────────────────────────────
 
 function _bindPlanningEvents(dialog) {
 
@@ -232,7 +232,7 @@ function _bindPlanningEvents(dialog) {
 }
 
 
-// ─── OBRIR / TANCAR ──────────────────────────────────────────
+// ─── OBRIR / TANCAR ─────────────────────────────────────────────
 
 function openPlanningUploaderModal() {
   buildPlanningModal();
@@ -247,43 +247,62 @@ function closePlanningUploaderModal() {
 }
 
 
-// ─── INIT: botó al sidebar ───────────────────────────────────
+// ─── INIT: botó al sidebar + drawer mòbil ───────────────────────────
 
 /**
- * Afegeix el botó "Importar planning" just sota el botó
- * "Importar activitats" (#import-data-btn) al sidebar.
- * S'executa automàticament quan el DOM està llest.
- *
- * Nota: s'usa un MutationObserver perquè #import-data-btn
- * és injectat dinàmicament per uploader-ui.js i pot no
- * existir quan s'executa aquest script.
+ * Afegeix el botó "Importar planning":
+ *   • A la sidebar de desktop: just sota #import-data-btn
+ *     (usa MutationObserver perquè #import-data-btn s'injecta dinàmicament)
+ *   • Al drawer mòbil: just sobre #reload-data-btn-mobile
+ *     (esperant que #import-data-btn-mobile ja existeixi, injectat per uploader-ui.js)
  */
 function initPlanningUploaderUI() {
-  function _inject() {
-    if (document.getElementById("import-planning-btn")) return;
 
+  // ── Sidebar (desktop) ──
+  function _injectSidebar() {
+    if (document.getElementById("import-planning-btn")) return;
     const importBtn = document.getElementById("import-data-btn");
     if (!importBtn) return;
 
     const btn = document.createElement("button");
     btn.type        = "button";
-    btn.className   = "btn btn-primary btn-sidebar";  // mateix estil verd que "Importar activitats"
+    btn.className   = "btn btn-primary btn-sidebar";
     btn.id          = "import-planning-btn";
     btn.textContent = "Importar planning";
     btn.addEventListener("click", openPlanningUploaderModal);
-
-    // Inserir just DESPRÉS del botó d'importar activitats
     importBtn.insertAdjacentElement("afterend", btn);
   }
 
-  _inject();
+  // ── Drawer mòbil ──
+  function _injectDrawer() {
+    if (document.getElementById("import-planning-btn-mobile")) return;
+    // Espera que uploader-ui.js hagi injectat #import-data-btn-mobile
+    const importMobileBtn = document.getElementById("import-data-btn-mobile");
+    if (!importMobileBtn) return;
 
-  // Fallback amb MutationObserver per si s'injecta posteriorment
+    const btn = document.createElement("button");
+    btn.type        = "button";
+    btn.className   = "btn btn-primary";
+    btn.id          = "import-planning-btn-mobile";
+    btn.textContent = "📅 Importar planning";
+    btn.addEventListener("click", () => {
+      closeBnavDrawer();
+      openPlanningUploaderModal();
+    });
+    // Inserir just DESPRÉS del botó d'importar activitats
+    importMobileBtn.insertAdjacentElement("afterend", btn);
+  }
+
+  _injectSidebar();
+  _injectDrawer();
+
+  // Fallback amb MutationObserver per si algun dels botons no existeix encara
   const observer = new MutationObserver(() => {
-    if (document.getElementById("import-data-btn")) {
-      _inject();
-      observer.disconnect();
-    }
+    const sidebarDone = !!document.getElementById("import-planning-btn");
+    const drawerDone  = !!document.getElementById("import-planning-btn-mobile");
+    if (!sidebarDone) _injectSidebar();
+    if (!drawerDone)  _injectDrawer();
+    if (sidebarDone && drawerDone) observer.disconnect();
   });
   observer.observe(document.body, { childList: true, subtree: true });
 }

@@ -107,6 +107,9 @@
   margin:    0;
 }
 
+/* Element ocult en desktop (visible només en mòbil) */
+.uploader-touch-btn { display: none; }
+
 
 /* ── Resultats ──────────────────────────────────────────────── */
 .uploader-results {
@@ -273,10 +276,6 @@
 
 
 /* ── Resum de merge del planning ────────────────────────────── */
-/*
-  Tres pastilles alineades horitzontalment que mostren
-  el resum del merge: noves / substituïdes / sense canvis.
-*/
 .planning-merge-summary {
   display:     flex;
   gap:         8px;
@@ -336,13 +335,134 @@
 }
 
 
-/* ── Responsive ─────────────────────────────────────────────── */
+/* ================================================================
+   RESPONSIVE MÒBIL — Bottom Sheet
+   En mòbil el modal centat no és el patró esperat.
+   Convertim el <dialog> en un bottom sheet que llisca des de baix:
+   - ocupa tota l'amplada
+   - border-radius només a dalt
+   - altura màxima del 85% de la pantalla amb scroll intern
+   - dropzone substituïda per un botó gran (drag & drop no existeix
+     en mòbil, és confús i no funciona)
+   ================================================================ */
+
+@media (max-width: 767px) {
+
+  /* ── Repositionament: bottom sheet ──────────────────────────── */
+  .uploader-dialog {
+    top:        auto;
+    bottom:     0;
+    left:       0;
+    right:      0;
+    transform:  none;
+    width:      100%;
+    max-width:  100%;
+    max-height: none;
+  }
+
+  .uploader-inner {
+    width:         100%;
+    max-width:     100%;
+    border-radius: 20px 20px 0 0;
+    border-left:   none;
+    border-right:  none;
+    border-bottom: none;
+    max-height:    85dvh;
+    overflow-y:    auto;
+    /* Scroll suau en iOS */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Pill indicador de sheet (estètica iOS/Android) */
+  .uploader-inner::before {
+    content:      '';
+    display:      block;
+    width:        40px;
+    height:       4px;
+    background:   var(--border);
+    border-radius: 9999px;
+    margin:       12px auto 0;
+    flex-shrink:  0;
+  }
+
+  /* ── Header ──────────────────────────────────────────────────── */
+  .uploader-header {
+    padding: 14px 20px 12px;
+  }
+
+  /* ── Dropzone: mode touch ────────────────────────────────────── */
+  /* Amaguem el text de drag & drop, que no té sentit en mòbil */
+  .uploader-dropzone-title,
+  .uploader-dropzone-sub {
+    display: none;
+  }
+
+  /* Amaguem el label/botó original (queda substituït pel touch-btn) */
+  .uploader-dropzone > .btn {
+    display: none;
+  }
+
+  /* La dropzone passa a ser un botó gran i táctil */
+  .uploader-dropzone {
+    margin:      16px 20px;
+    padding:     0;
+    border:      none;
+    background:  transparent;
+    cursor:      pointer;
+    gap:         0;
+  }
+
+  /* Botó touch: ocult en desktop, visible i gran en mòbil */
+  .uploader-touch-btn {
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    gap:             10px;
+    width:           100%;
+    padding:         18px 20px;
+    background:      var(--surface-2);
+    border:          2px dashed var(--border);
+    border-radius:   var(--radius);
+    color:           var(--text);
+    font-size:       1rem;
+    font-weight:     600;
+    font-family:     var(--font);
+    cursor:          pointer;
+    min-height:      64px;
+    transition:      background .15s, border-color .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .uploader-touch-btn:active {
+    background:    color-mix(in srgb, var(--accent) 10%, var(--surface-2));
+    border-color:  var(--accent);
+  }
+
+  .uploader-touch-btn-icon { font-size: 1.4rem; line-height: 1; }
+
+  /* ── Resultats: scroll generós ───────────────────────────────── */
+  .uploader-results {
+    padding:    0 20px 4px;
+    max-height: 45dvh;
+  }
+
+  /* ── Footer: botons full-width ───────────────────────────────── */
+  .uploader-footer {
+    padding:         14px 20px calc(20px + env(safe-area-inset-bottom));
+    flex-direction:  row;
+    gap:             10px;
+  }
+
+  .uploader-footer .btn {
+    flex:       1;
+    justify-content: center;
+    min-height: 48px;
+    font-size:  .95rem;
+  }
+}
+
+/* Breakpoint antic (520px) — mantenim per compatibilitat */
 @media (max-width: 520px) {
-  .uploader-inner          { width: 100%; }
-  .uploader-header,
-  .uploader-footer         { padding-left: 16px; padding-right: 16px; }
-  .uploader-dropzone       { margin: 16px; }
-  .uploader-results        { padding: 0 16px 4px; }
   .uploader-list-item      { grid-template-columns: 20px 1fr; }
   .uploader-item-badge,
   .uploader-item-date      { display: none; }

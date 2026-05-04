@@ -7,7 +7,7 @@ const DATA_SOURCES = {
   planning: ['./data/planning.csv']
 };
 
-// ── Constants de classificació de sessions ────────────────────────────────
+// ── Constants de classificació de sessions ────────────────────────────────────
 function isRunning(s)  { return RUNNING_TYPES.has(s.tipusKey); }
 function isStrength(s) { return STRENGTH_RE.test(s.tipusKey); }
 function isTestRace(s) { return TEST_RACE_TYPES.has(s.tipusKey); }
@@ -19,45 +19,92 @@ const state = {
   sources:  {}
 };
 
-// ── Router de vistes ────────────────────────────────────────────────
-function initRouter() {
-  const navLinks = document.querySelectorAll('.nav-link[data-target]');
+// ── Router de vistes ─────────────────────────────────────────────────────────
+// navigateTo: única funció que gestiona el canvi de vista.
+// És cridada tant pels .nav-link (sidebar) com pels .bnav-item (bottom nav).
+function navigateTo(target) {
   const views    = document.querySelectorAll('.view[data-view]');
+  const navLinks = document.querySelectorAll('.nav-link[data-target]');
+  const bnavItems = document.querySelectorAll('.bnav-item[data-target]');
 
-  navLinks.forEach(link => {
-    link.addEventListener('click', e => {
-      e.preventDefault();
-      const target = link.dataset.target;
+  // — Actualitza classe active a sidebar i bottom-nav —
+  navLinks.forEach(l  => l.classList.toggle('active',  l.dataset.target === target));
+  bnavItems.forEach(l => l.classList.toggle('active',  l.dataset.target === target));
 
-      navLinks.forEach(l => l.classList.remove('active'));
-      link.classList.add('active');
+  // — Mostra/amaga vistes —
+  views.forEach(v => v.classList.remove('view--active'));
+  const activeView = document.querySelector(`.view[data-view="${target}"]`);
+  if (activeView) activeView.classList.add('view--active');
 
-      const noticeBar = document.getElementById('notice-bar');
-      if (noticeBar) noticeBar.style.display = target === 'overview' ? '' : 'none';
+  // — Notice bar: només visible a l'overview —
+  const noticeBar = document.getElementById('notice-bar');
+  if (noticeBar) noticeBar.style.display = target === 'overview' ? '' : 'none';
 
-      views.forEach(v => v.classList.remove('view--active'));
-      const activeView = document.querySelector(`.view[data-view="${target}"]`);
-      if (activeView) activeView.classList.add('view--active');
-
-      if (!window._chartData) return;
-      const { sessions, planning } = window._chartData;
-
-      if (target === 'overview')  renderOverviewView(sessions, planning);
-      if (target === 'setmanal')  renderSetmanalView(sessions, planning);
-      if (target === 'planning')  renderPlanningView(planning, sessions);
-      if (target === 'sessions')  renderSessionsView(sessions);
-    });
-  });
+  // — Render de la vista corresponent —
+  if (!window._chartData) return;
+  const { sessions, planning } = window._chartData;
+  if (target === 'overview')  renderOverviewView(sessions, planning);
+  if (target === 'setmanal')  renderSetmanalView(sessions, planning);
+  if (target === 'planning')  renderPlanningView(planning, sessions);
+  if (target === 'sessions')  renderSessionsView(sessions);
 }
 
-// ── Punt d'entrada ───────────────────────────────────────────────
+function initRouter() {
+  // — Sidebar nav —
+  document.querySelectorAll('.nav-link[data-target]').forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      navigateTo(link.dataset.target);
+    });
+  });
+
+  // — Bottom nav —
+  document.querySelectorAll('.bnav-item[data-target]').forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      navigateTo(link.dataset.target);
+    });
+  });
+
+  // — Drawer "Més" —
+  const moreBtn  = document.getElementById('bnav-more-btn');
+  const overlay  = document.getElementById('bnav-overlay');
+  if (moreBtn) moreBtn.addEventListener('click', toggleBnavDrawer);
+  if (overlay) overlay.addEventListener('click', closeBnavDrawer);
+}
+
+// ── Drawer helpers ─────────────────────────────────────────────────────
+function toggleBnavDrawer() {
+  const drawer  = document.getElementById('bnav-drawer');
+  const overlay = document.getElementById('bnav-overlay');
+  const btn     = document.getElementById('bnav-more-btn');
+  const isOpen  = drawer && drawer.classList.contains('drawer-open');
+  isOpen ? closeBnavDrawer() : openBnavDrawer();
+}
+
+function openBnavDrawer() {
+  document.getElementById('bnav-drawer')?.classList.add('drawer-open');
+  document.getElementById('bnav-overlay')?.classList.add('drawer-open');
+  document.getElementById('bnav-more-btn')?.classList.add('drawer-open');
+}
+
+function closeBnavDrawer() {
+  document.getElementById('bnav-drawer')?.classList.remove('drawer-open');
+  document.getElementById('bnav-overlay')?.classList.remove('drawer-open');
+  document.getElementById('bnav-more-btn')?.classList.remove('drawer-open');
+}
+
+// Exposar closeBnavDrawer globalment (cridada des del HTML del drawer)
+window.closeBnavDrawer = closeBnavDrawer;
+
+// ── Punt d'entrada ───────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   initRouter();
   document.getElementById('reload-data-btn').addEventListener('click', loadDashboardData);
   loadDashboardData();
 });
 
-// ── Càrrega de dades ──────────────────────────────────────────────
+// ── Càrrega de dades ──────────────────────────────────────────────────
 async function loadDashboardData() {
   setNotice('Llegint fitxers CSV...', 'info');
   setBadge('Carregant dades...');
@@ -93,7 +140,7 @@ async function loadDashboardData() {
   }
 }
 
-// ── 🔧 FIX UTF-8: decodifica Base64 de l'API GitHub respectant UTF-8 ────────
+// ── 🔧 FIX UTF-8: decodifica Base64 de l'API GitHub respectant UTF-8 ─────────────────
 // atob() retorna Latin-1 i trenca accents (à, è, ç, etc.).
 // Aquesta funció converteix correctament Base64 → UTF-8.
 function base64ToUtf8(base64) {
@@ -105,7 +152,7 @@ function base64ToUtf8(base64) {
   return new TextDecoder('utf-8').decode(bytes);
 }
 
-// ── Fetch ───────────────────────────────────────────────────────────
+// ── Fetch ────────────────────────────────────────────────────────────────
 async function fetchFirstAvailable(paths) {
   const token = window.getGitHubToken ? window.getGitHubToken() : '';
 
@@ -149,7 +196,7 @@ async function fetchFirstAvailable(paths) {
   throw lastError || new Error('Cap ruta vàlida per al CSV');
 }
 
-// ── Parser CSV ───────────────────────────────────────────────────
+// ── Parser CSV ───────────────────────────────────────────────────────────────
 function parseCSV(text) {
   const rows = [];
   let row = [], value = '', insideQuotes = false;
@@ -185,7 +232,7 @@ function parseCSV(text) {
   });
 }
 
-// ── Orquestració del render ─────────────────────────────────────────
+// ── Orquestració del render ─────────────────────────────────────────────────
 function renderDashboard() {
   const planning = state.planning
     .map(enrichPlanningRow)
@@ -209,13 +256,13 @@ function renderDashboard() {
   renderSessionsView(sessions);
 }
 
-// ── Enriquiment de files ──────────────────────────────────────────
+// ── Enriquiment de files ──────────────────────────────────────────────────
 function enrichPlanningRow(row) {
   const startDate = parseDate(row['Data_Inici']);
   const endDate   = parseDate(row['Data_Fi']);
   if (!startDate || !endDate) return null;
 
-  // ── Qualitat ───────────────────────────────────────────────────
+  // ── Qualitat ─────────────────────────────────────────────────────────────
   const qSeries      = toNumber(row['Q_Series']);           // número de sèries
   const qDuradaSerie = toNumber(row['Q_Durada_Serie_min']); // minuts per sèrie
   const qRec         = toNumber(row['Q_Rec_min']);          // minuts recuperació entre sèries
@@ -224,7 +271,7 @@ function enrichPlanningRow(row) {
   const qFcMax       = toNumber(row['Q_FC_max']);
   const qKm          = toNumber(row['Q_Km_Plan']);
 
-  // ── Z2 ────────────────────────────────────────────────────────
+  // ── Z2 ───────────────────────────────────────────────────────────────────
   const z2Durada     = toNumber(row['Z2_Durada_min']);
   const z2RitmeMin   = toNumber(row['Z2_Ritme_min_km_min']);
   const z2RitmeMax   = toNumber(row['Z2_Ritme_min_km_max']);
@@ -232,7 +279,7 @@ function enrichPlanningRow(row) {
   const z2FcMax      = toNumber(row['Z2_FC_max']);
   const z2Km         = toNumber(row['Z2_Km_Plan']);
 
-  // ── Tirada llarga ─────────────────────────────────────────────
+  // ── Tirada llarga ────────────────────────────────────────────────────────
   const llTipus      = row['LL_Tipus']    || '--';
   const llDurada     = toNumber(row['LL_Durada_min']);
   const llKm         = toNumber(row['LL_Km_Plan']);
@@ -302,7 +349,7 @@ function enrichSessionRow(row) {
     z2min:               toNumber(row['Z2(min)']),
     fcMitja:             toNumber(row['FCMitja']),
     ritme:               toNumber(row['Ritme(min/km)']),
-    // ── Camps de qualitat (sèries) ────────────────────────────────
+    // ── Camps de qualitat (sèries) ──────────────────────────────────
     numSeries:           toNumber(row['Num_Series']),
     duradaMitjaSeries:   toNumber(row['Durada_Mitja_Series']),
     recMitjaMin:         toNumber(row['Rec_Mitja_Min']),
@@ -311,13 +358,13 @@ function enrichSessionRow(row) {
     fcMitjaSeries:       toNumber(row['FC_Mitja_Series']),
     fcMaxMitjaSeries:    toNumber(row['FC_Max_Mitja_Series']),
     cadenciaMitjaSeries: toNumber(row['Cadencia_Mitja_Series']),
-    // ── Altres ───────────────────────────────────────────────────
+    // ── Altres ────────────────────────────────────────────────────────
     epoc:                toNumber(row['EPOC']),
     recuperacio:         toNumber(row['Recup(h)'])
   };
 }
 
-// ── Detecció setmana activa ─────────────────────────────────────────
+// ── Detecció setmana activa ───────────────────────────────────────────────
 function detectActiveWeek(planning, sessions) {
   const now   = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 20, 0, 0);
@@ -336,7 +383,7 @@ function detectActiveWeek(planning, sessions) {
   return planning[planning.length - 1];
 }
 
-// ── Status sidebar ────────────────────────────────────────────────
+// ── Status sidebar ──────────────────────────────────────────────────────
 function updateStatus(errorMessage = null) {
   setText('status-sessions', state.sessions.length
     ? `sessions.csv carregat (${state.sessions.length} files)`
@@ -350,7 +397,7 @@ function updateStatus(errorMessage = null) {
   setText('status-last-update', `Actualitzat: ${new Date().toLocaleString('ca-ES')}`);
 }
 
-// ── Helpers UI ──────────────────────────────────────────────────
+// ── Helpers UI ────────────────────────────────────────────────────────
 function setNotice(message, type = 'info') {
   const bar = document.getElementById('notice-bar');
   bar.classList.remove('is-error', 'is-warning');
@@ -361,7 +408,7 @@ function setNotice(message, type = 'info') {
   bar.style.display = activeView === 'overview' || activeView == null ? '' : 'none';
 }
 
-// ── Helpers de dades ─────────────────────────────────────────────
+// ── Helpers de dades ───────────────────────────────────────────────────
 function parseDate(value) {
   if (!value) return null;
   const s = String(value).trim();
