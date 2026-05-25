@@ -69,3 +69,4 @@ Arxiu,Data,Tipus,Durada(min),Dist(km),Desnivell(m),FCMitja,FCMax,Z1(min),Z2(min)
 260519_forca,19/05/2026,FORÇA,45.6,0,0,100,136,43.3,2.2,0,0,0,1.5,5.9,17.9,273,1.7,,,,,,,,,,,,
 260520_running_tempo,20/05/2026,TEMPO,53.5,8.58,39,174,174,0.3,24.3,14.6,14.3,0,4.5,112.5,156,782,26,6.22,156,1,5.09,0,170,178,164,"[{dist_m:3927,dur_min:20,ritme:5.09,fc_mitja:170,fc_max:178,cadencia:164,serie:1}]",Primer dia amb sensor de pit per pulsasions. Millors resultats,20,2
 260521_running_z2,21/05/2026,Z2,56.4,7.53,50,0,0,0.2,48,8.1,0,0,3.7,75.6,86.7,735,21.4,7.47,149,,,,,,,,Primer dia de mes calor,,
+260523_hiking,23/05/2026,HIKING,164.5,5.09,316,133,176,43.1,97.1,21,1.6,0,3.2,48.4,60.6,1534,41,,,,,,,,,,,,
