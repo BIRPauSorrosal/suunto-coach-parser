@@ -57,16 +57,34 @@ function parseBase(filename, data) {
   const samples = data?.DeviceLog?.Samples ?? [];
   const zones   = header.HrZones ?? {};
 
+  // HR en samples escalars (exterior/GPS)
   const hrList = samples
-    .filter(s => s.HR != null)
+    .filter(s => typeof s.HR === "number" && s.HR > 0)
     .map(s => s.HR);
 
-  const fcMitja = hrList.length
-    ? Math.round((hrList.reduce((a, b) => a + b, 0) / hrList.length) * 60)
-    : 0;
-  const fcMax = hrList.length
-    ? Math.round(Math.max(...hrList) * 60)
-    : 0;
+  let fcMitja, fcMax;
+
+  if (hrList.length > 0) {
+    // Cas normal: samples per segon disponibles
+    fcMitja = Math.round((hrList.reduce((a, b) => a + b, 0) / hrList.length) * 60);
+    fcMax   = Math.round(Math.max(...hrList) * 60);
+  } else {
+    // Fallback: cinta/sensor extern → HR només als Windows com [{Avg, Max, Min}]
+    const windows = data?.DeviceLog?.Windows ?? [];
+    const hrWindows = windows
+      .map(w => w.Window ?? w)
+      .filter(w => Array.isArray(w.HR) && w.HR[0]?.Avg != null);
+
+    if (hrWindows.length > 0) {
+      const avgs = hrWindows.map(w => w.HR[0].Avg);
+      const maxs = hrWindows.map(w => w.HR[0].Max ?? w.HR[0].Avg);
+      fcMitja = Math.round((avgs.reduce((a, b) => a + b, 0) / avgs.length) * 60);
+      fcMax   = Math.round(Math.max(...maxs) * 60);
+    } else {
+      fcMitja = 0;
+      fcMax   = 0;
+    }
+  }
 
   let dataFormatada = "";
   if (header.DateTime) {
