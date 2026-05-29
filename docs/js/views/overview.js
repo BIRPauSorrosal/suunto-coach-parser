@@ -603,8 +603,9 @@ function renderTestRacePanel(sessions) {
   const container = document.getElementById('test-race-container');
   if (!container) return;
 
-  const lastTest  = sessions.find(s => s.tipusKey === 'TEST');
-  const lastCursa = sessions.find(s => s.tipusKey === 'CURSA');
+  const lastRunningTest = sessions.find(s => s.tipusKey === 'TEST');
+  const lastBikeTest    = sessions.find(s => s.tipusKey === 'TEST_BICI');
+  const lastCursa       = sessions.find(s => s.tipusKey === 'CURSA');
 
   function rowHTML(label, s) {
     if (!s) return `
@@ -612,17 +613,26 @@ function renderTestRacePanel(sessions) {
         <td colspan="7"><span class="eyebrow">${label}</span> — Sense registre</td>
       </tr>`;
 
-    const isTest = s.tipusKey === 'TEST';
-    const ritme  = isTest ? s.ritmeMitjaSeries : s.ritme;
-    const fc     = isTest ? s.fcMitjaSeries    : s.fcMitja;
-    const desTxt = isFinite(s.desnivell) ? `${formatNumber(s.desnivell)} m` : '--';
+    const isRunningTest = s.tipusKey === 'TEST';
+    const isBikeTest    = s.tipusKey === 'TEST_BICI';
+
+    const ritme = isRunningTest ? s.ritmeMitjaSeries
+                : isBikeTest    ? null
+                : s.ritme;
+
+    const fc = isRunningTest ? s.fcMitjaSeries
+             : s.fcMitja;
+
+    const desTxt = isBikeTest
+      ? '--'
+      : (isFinite(s.desnivell) ? `${formatNumber(s.desnivell)} m` : '--');
 
     return `
       <tr>
         <td><span class="eyebrow">${label}</span></td>
         <td>${esc(s.displayDate)}</td>
         <td>${formatMetric(s.distancia, 'km')}</td>
-        <td>${formatPace(ritme)}</td>
+        <td>${ritme != null ? formatPace(ritme) : '--'}</td>
         <td>${fcBadgeHTML(fc)}</td>
         <td>${desTxt}</td>
         <td>${tssDotHTML(s.carrega)}</td>
@@ -643,7 +653,8 @@ function renderTestRacePanel(sessions) {
         </tr>
       </thead>
       <tbody>
-        ${rowHTML('Test', lastTest)}
+        ${rowHTML('Test', lastRunningTest)}
+        ${rowHTML('Test bici', lastBikeTest)}
         ${rowHTML('Cursa', lastCursa)}
       </tbody>
     </table>`;
