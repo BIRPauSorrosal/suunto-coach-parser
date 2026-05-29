@@ -43,9 +43,15 @@ const PARSER_REGISTRY = {
 
 function detectParser(filename) {
   const nameLower = filename.toLowerCase().replace(".json", "");
-  for (const [keyword, parserFn] of Object.entries(PARSER_REGISTRY)) {
+
+  const parserEntries = Object.entries(PARSER_REGISTRY).sort(
+    ([a], [b]) => b.length - a.length
+  );
+
+  for (const [keyword, parserFn] of parserEntries) {
     if (nameLower.includes(keyword)) return parserFn;
   }
+
   return null;
 }
 
@@ -325,9 +331,15 @@ function parseStrength(filename, data) {
 function parseGeneric(filename, data) {
   const row       = parseBase(filename, data);
   const nameLower = filename.toLowerCase();
-  row.Tipus = Object.entries(ACTIVITY_GENERIC_TYPES).find(
-    ([k]) => nameLower.includes(k)
+
+  const genericEntries = Object.entries(ACTIVITY_GENERIC_TYPES).sort(
+    ([a], [b]) => b.length - a.length
+  );
+
+  row.Tipus = genericEntries.find(
+    ([keyword]) => nameLower.includes(keyword)
   )?.[1] ?? "ALTRES";
+
   return row;
 }
 
