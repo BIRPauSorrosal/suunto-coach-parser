@@ -407,7 +407,7 @@ function renderWeeklyPlanView(container, planning, sessions) {
 
     // 2 · Z2
     + '<article class="panel pwv-block">'
-    +   '<p class="eyebrow">�aby1 Z2</p>'
+    +   '<p class="eyebrow">🫀 Z2</p>'
     +   '<ul class="sw-plan-list" style="margin-top:12px">'
     +     '<li><span>Durada</span><strong>' + fmtNumP(week.z2Durada) + ' min</strong></li>'
     +     '<li><span>Ritme</span><strong>' + z2RitmePla + '</strong></li>'
