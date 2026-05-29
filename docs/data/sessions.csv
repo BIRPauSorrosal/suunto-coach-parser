@@ -64,7 +64,7 @@ Arxiu,Data,Tipus,Durada(min),Dist(km),Desnivell(m),FCMitja,FCMax,Z1(min),Z2(min)
 260511_running_tempo,11/05/2026,TEMPO,41.9,6.52,46,157,181,0,15.8,19.6,6.5,0,4.5,102.8,142.6,624,20,6.38,153,2,5.51,0.01,165.5,179.5,162.5,"[{dist_m:1818,dur_min:10,ritme:5.5,fc_mitja:164,fc_max:178,cadencia:161,serie:1},{dist_m:1813,dur_min:10,ritme:5.52,fc_mitja:167,fc_max:181,cadencia:164,serie:2}]",,10,2
 260514_running_z2,14/05/2026,Z2,41.6,5.56,34,149,164,0,33.3,8.3,0,0,3.6,65.4,86,549,15.6,7.46,154,,,,,,,,No molt bones sensacions. Tampoc ajudava que feia força vent,,
 260515_forca,15/05/2026,FORÇA,42.2,0,0,101,160,36.6,5.4,0.2,0,0,1.6,6.8,11.8,246,2.3,,,,,,,,,,,,
-260516_bici_test,16/05/2026,TEST,29.9,0,0,128,166,14.2,12.4,3.3,0,0,2.9,34.7,44.4,319,5.8,0,0,0,0,0,0,0,0,[],Test rampa. FTP 219,0,0
+260516_bici_estatica_test,16/05/2026,TEST,29.9,0,0,128,166,14.2,12.4,3.3,0,0,2.9,34.7,44.4,319,5.8,0,0,0,0,0,0,0,0,[],Test rampa. FTP 219,0,0
 260517_running_longrun,17/05/2026,LLARGA,60,8.6,51,147,176,0.1,52.5,7.1,0.2,0,3.6,62.5,138.9,760,22.9,6.97,155,,,,,,,,Bones sensacions però una mica de fatiga muscular,,
 260519_forca,19/05/2026,FORÇA,45.6,0,0,100,136,43.3,2.2,0,0,0,1.5,5.9,17.9,273,1.7,,,,,,,,,,,,
 260520_running_tempo,20/05/2026,TEMPO,53.5,8.58,39,174,174,0.3,24.3,14.6,14.3,0,4.5,112.5,156,782,26,6.22,156,1,5.09,0,170,178,164,"[{dist_m:3927,dur_min:20,ritme:5.09,fc_mitja:170,fc_max:178,cadencia:164,serie:1}]",Primer dia amb sensor de pit per pulsasions. Millors resultats,20,2
