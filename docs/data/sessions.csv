@@ -77,3 +77,4 @@ Arxiu,Data,Tipus,Durada(min),Dist(km),Desnivell(m),FCMitja,FCMax,Z1(min),Z2(min)
 260601_running_test,01/06/2026,TEST,43.5,7.57,0,162,183,0.4,14.5,8.5,20,0,5,153.3,185.4,694,23.3,5.76,151,1,4.88,0,174,183,159,"[{dist_m:4096,dur_min:20,ritme:4.88,fc_mitja:174,fc_max:183,cadencia:159,serie:1}]",Test a pista atletisme. Bones sensacions i a un ritme una mica mes elevat del que tenia previst. Baixada de pulsasions fins a 140ppm als 3 min posteriors al test.,20,3
 260604_running_z2,04/06/2026,Z2,45,6.28,39,147,158,2.9,41.9,0.1,0,0,3.6,76,82.1,582,16,7.19,156,,,,,,,,Alguna molèstia muscular,,
 260603_forca,03/06/2026,FORÇA,43.8,0,0,112,156,42.8,0.9,0,0,0,1.9,13.2,22.5,327,3.2,,,,,,,,,,,,
+260606_bici_estatica,06/06/2026,BICI ESTÀTICA,69.7,0,0,124,137,69.6,0,0,0,0,2.3,20.8,19.5,642,10.1,,,,,,,,,,Substitució longrun per sessió de bici per evitar impacte respecte les molèsties de la setmana. Bones sensacions.,,
