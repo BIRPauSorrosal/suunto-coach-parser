@@ -137,6 +137,8 @@
             <div class="metric-box"><span>Z1+Z2 running</span><strong id="z2-summary">--</strong><small id="z2-detail">Minuts en zona aeròbica</small></div>
             <div class="metric-box"><span>Tirada llarga</span><strong id="long-summary">--</strong><small id="long-detail">Tipus i volum setmanal</small><small id="long-real" class="metric-real"></small></div>
             <div class="metric-box"><span>Força</span><strong id="strength-summary">--</strong><small id="strength-detail">Sessions de gimnàs</small></div>
+            <!-- NOU: Bici Estàtica -->
+            <div class="metric-box"><span>Bici estàtica</span><strong id="bici-summary">--</strong><small id="bici-detail">Sessions setmanals</small></div>
           </div>
         </article>
 
@@ -208,8 +210,16 @@
             <div><p class="eyebrow">Rendiment</p><h3>Test &amp; Cursa</h3></div>
             <span class="badge badge-muted">Darrera activitat de cada tipus</span>
           </div>
-          <!-- wrapper scroll horitzontal — el JS injecta .sw-mini-table aquí dins -->
           <div class="sw-mini-table-wrap" id="test-race-container"><p class="plan-no-data">Carregant...</p></div>
+        </article>
+
+        <!-- NOU: Bici Estàtica — últims 30 dies -->
+        <article class="panel">
+          <div class="panel-header">
+            <div><p class="eyebrow">Cardio complementari</p><h3>Bici estàtica</h3></div>
+            <span class="badge badge-muted" id="bici-count">—</span>
+          </div>
+          <div class="sw-mini-table-wrap" id="bici-container"><p class="plan-no-data">Carregant...</p></div>
         </article>
 
         <!-- Altres activitats -->
@@ -218,7 +228,6 @@
             <div><p class="eyebrow">Activitats complementàries</p><h3>Altres activitats</h3></div>
             <span class="badge badge-muted" id="others-count">—</span>
           </div>
-          <!-- wrapper scroll horitzontal — el JS injecta .sw-mini-table aquí dins -->
           <div class="sw-mini-table-wrap" id="others-container"><p class="plan-no-data">Carregant...</p></div>
         </article>
       </section>
@@ -267,7 +276,6 @@
                 </tbody>
               </table>
             </div>
-            <!-- wrapper scroll horitzontal per a les sessions reals -->
             <div class="sw-mini-table-wrap">
               <table class="sw-mini-table">
                 <thead><tr><th>Data</th><th>Sèries</th><th>Dur.sèrie</th><th>Ritme</th><th>Rec.</th><th>Cadència</th><th>FC</th><th>TSS</th><th>Km</th></tr></thead>
@@ -293,7 +301,6 @@
                 </tbody>
               </table>
             </div>
-            <!-- wrapper scroll horitzontal per a les sessions reals -->
             <div class="sw-mini-table-wrap">
               <table class="sw-mini-table">
                 <thead><tr><th>Data</th><th>Durada</th><th>Ritme</th><th>Cadència</th><th>FC</th><th>TSS</th><th>Km</th></tr></thead>
@@ -318,7 +325,6 @@
                 </tbody>
               </table>
             </div>
-            <!-- wrapper scroll horitzontal per a les sessions reals -->
             <div class="sw-mini-table-wrap">
               <table class="sw-mini-table">
                 <thead><tr><th>Data</th><th>Durada</th><th>Ritme</th><th>Min Z2</th><th>Desnivell</th><th>FC</th><th>TSS</th><th>Km</th></tr></thead>
@@ -341,11 +347,32 @@
                 </tbody>
               </table>
             </div>
-            <!-- wrapper scroll horitzontal per a les sessions reals -->
             <div class="sw-mini-table-wrap">
               <table class="sw-mini-table">
                 <thead><tr><th>Data</th><th>Tipus</th><th>Durada</th><th>FC</th><th>TSS</th></tr></thead>
                 <tbody id="sw-forca-sessions-list"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <!-- ── Bloc Bici Estàtica ─────────────────────────────────────────── -->
+          <article class="panel sw-block" id="sw-bici-block">
+            <div class="sw-block-header"><h3>🚴 Bici estàtica</h3><span class="sw-status-dot"></span></div>
+            <div class="sw-htable-wrap">
+              <table class="sw-htable">
+                <thead><tr><th></th><th>Sessions pla</th></tr></thead>
+                <tbody>
+                  <tr class="sw-row--plan">
+                    <td class="sw-row-lbl">Pla</td>
+                    <td id="sw-bici-plan">--</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="sw-mini-table-wrap">
+              <table class="sw-mini-table">
+                <thead><tr><th>Data</th><th>Tipus</th><th>Durada</th><th>FC Mitja</th><th>FC Màx</th><th>TSS</th></tr></thead>
+                <tbody id="sw-bici-sessions-list"></tbody>
               </table>
             </div>
           </article>
@@ -364,7 +391,6 @@
                 </tbody>
               </table>
             </div>
-            <!-- wrapper scroll horitzontal per a les sessions reals -->
             <div class="sw-mini-table-wrap">
               <table class="sw-mini-table">
                 <thead><tr><th>Data</th><th>Tipus</th><th>Durada</th><th>FC</th><th>TSS</th></tr></thead>
@@ -403,6 +429,7 @@
               <option value="long">Tirada llarga</option>
               <option value="testrace">Test / Cursa</option>
               <option value="strength">Força</option>
+              <option value="bici">Bici estàtica</option>
               <option value="other">Altres</option>
             </select>
           </div>
@@ -476,17 +503,14 @@
   </div>
 
   <!-- ── Bottom Tab Bar (mòbil) ──────────────────────────────────── -->
-  <!-- Overlay fosc darrere el drawer -->
   <div class="bnav-overlay" id="bnav-overlay"></div>
 
-  <!-- Drawer "Més": accions de la sidebar accessibles en mòbil -->
   <div class="bnav-drawer" id="bnav-drawer">
     <p class="bnav-drawer-title">Opcions</p>
     <div class="bnav-drawer-actions">
       <button type="button" class="btn btn-ghost" onclick="openGitHubTokenModal(); closeBnavDrawer()">
         ⚙️ Token GitHub
       </button>
-      <!-- Els botons d'importar s'insereixen via JS igual que a la sidebar -->
       <button type="button" class="btn btn-primary" id="reload-data-btn-mobile"
               onclick="loadDashboardData(); closeBnavDrawer()">
         Recarregar dades
@@ -494,7 +518,6 @@
     </div>
   </div>
 
-  <!-- Barra de navegació inferior -->
   <nav class="bottom-nav" aria-label="Navegació mòbil">
     <a href="#" class="bnav-item active" data-target="overview">
       <span class="bnav-icon">◎</span>

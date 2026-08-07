@@ -14,6 +14,7 @@
   renderSummary(activeWeek, weeklySessions);
   renderEpocPanel(sessions);
   renderTestRacePanel(sessions);
+  renderBiciPanel(sessions);   // ← NOU
   renderOthersPanel(sessions);
 
   // ② i ④ nous widgets
@@ -94,6 +95,7 @@ function renderSummary(activeWeek, weeklySessions) {
   const quality  = weeklySessions.filter(s => QUALITY_TYPES.has(s.tipusKey));
   const llong    = weeklySessions.filter(s => LONG_TYPES.has(s.tipusKey));
   const strength = weeklySessions.filter(s => isStrength(s));
+  const bici     = weeklySessions.filter(s => isBici(s));   // ← NOU
 
   const runningSessions = weeklySessions.filter(s => isRunning(s));
   const z1z2Minutes     = sumNumbers(runningSessions.map(s => (s.z1min || 0) + (s.z2min || 0)));
@@ -144,6 +146,23 @@ function renderSummary(activeWeek, weeklySessions) {
   setText('strength-detail', activeWeek
     ? `Pla: ${activeWeek.forcaPlan} \u00b7 ${formatNumber(strengthMin)} min reals`
     : 'Sense sessions de for\u00e7a aquesta setmana');
+
+  // ─ Bici estàtica ──────────────────────────────────────────────────────────────────
+  const biciMin  = sumNumbers(bici.map(s => s.durada));
+  const biciLoad = sumNumbers(bici.map(s => s.carrega));
+  if (bici.length) {
+    const fcMitjaArr = bici.map(s => s.fcMitja).filter(v => isFinite(v));
+    const fcTxt = fcMitjaArr.length
+      ? `FC ${Math.round(fcMitjaArr.reduce((a, b) => a + b, 0) / fcMitjaArr.length)} ppm`
+      : '';
+    const el = document.getElementById('bici-summary');
+    if (el) el.innerHTML =
+      `${bici.length} ses · ${formatNumber(biciMin)} min` +
+      (fcTxt ? `<br><span style="font-size:0.85em;opacity:0.8">${esc(fcTxt)}</span>` : '');
+  } else {
+    setText('bici-summary', '\u2014');
+  }
+  setText('bici-detail', `TLP setmanal: ${biciLoad ? formatNumber(biciLoad) : '--'}`);
 }
 
 // ── Panell EPOC & Recuperació ───────────────────────────────────────────────────────────
@@ -394,8 +413,6 @@ function renderLoadTrend(sessions, planning) {
 
 // ============================================================
 // #P-TREND B — Forma actual: CTL + ATL + TSB (últims 42 dies)
-// Model PMC Opció C: TrainingLoadPeak natiu, τ estàndard,
-// llindars TSB recalibrats. Constants centralitzades a pmc-config.js
 // ============================================================
 function renderCtlTrend(sessions) {
   const canvas = document.getElementById('chart-ctl-trend');
@@ -415,7 +432,6 @@ function renderCtlTrend(sessions) {
   const rangeStart = new Date(today);
   rangeStart.setDate(rangeStart.getDate() - 41);
 
-  // Construïm mapa de càrrega diària (TLP natiu)
   const sorted = [...sessions]
     .filter(s => s.date instanceof Date && isFinite(s.date))
     .sort((a, b) => a.date - b.date);
@@ -426,12 +442,10 @@ function renderCtlTrend(sessions) {
     dayLoad.set(key, (dayLoad.get(key) || 0) + (isFinite(s.carrega) ? s.carrega : 0));
   });
 
-  // Constants PMC des de pmc-config.js
   const { TAU_CTL, TAU_ATL, TSB_THRESHOLDS } = PMC_CONFIG;
   const k_ctl = Math.exp(-1 / TAU_CTL);
   const k_atl = Math.exp(-1 / TAU_ATL);
 
-  // EMA des del primer dia de dades (warm-up complet)
   let firstDay = sorted.length ? new Date(sorted[0].date) : new Date(rangeStart);
   firstDay.setHours(0, 0, 0, 0);
 
@@ -450,7 +464,6 @@ function renderCtlTrend(sessions) {
     tsbByDate.set(key, +(ctl - atl).toFixed(1));
   }
 
-  // Construïm arrays per al rang visible (últims 42 dies)
   const labels  = [];
   const ctlData = [];
   const atlData = [];
@@ -467,7 +480,6 @@ function renderCtlTrend(sessions) {
     tsbData.push(tsbByDate.get(key) ?? 0);
   }
 
-  // Valors actuals per al pill
   const ctlAvui = ctlData[ctlData.length - 1] || 0;
   const atlAvui = atlData[atlData.length - 1] || 0;
   const tsbAvui = tsbData[tsbData.length - 1] || 0;
@@ -476,7 +488,6 @@ function renderCtlTrend(sessions) {
   const ctl7ago = ctlByDate.get(d7ago.toISOString().slice(0, 10)) || 0;
   const ctlDiff = +(ctlAvui - ctl7ago).toFixed(1);
 
-  // Zona de forma basada en TSB_THRESHOLDS de PMC_CONFIG
   function getTSBZone(tsb) {
     if (tsb > TSB_THRESHOLDS.fresc)          return { key: 'fresc',         label: 'Fresc',          cls: 'up'       };
     if (tsb >= TSB_THRESHOLDS.optim_min)     return { key: 'optim',         label: 'Forma òptima',   cls: 'up'       };
@@ -487,7 +498,6 @@ function renderCtlTrend(sessions) {
 
   const zona = getTSBZone(tsbAvui);
 
-  // Pill: CTL | ATL | TSB + zona de forma
   const ctlTxt = `CTL ${ctlAvui}`;
   const atlTxt = `ATL ${atlAvui}`;
   const tsbTxt = `TSB ${tsbAvui >= 0 ? '+' : ''}${tsbAvui}`;
@@ -500,7 +510,6 @@ function renderCtlTrend(sessions) {
     <span class="trend-context">${ctlTxt} · ${atlTxt} · ${tendTxt} (7d)</span>
   `;
 
-  // Colors dels punts extrems de CTL
   const pointColors = ctlData.map((_, i) => {
     if (i === 0)                  return clrMuted;
     if (i === ctlData.length - 1) return ctlDiff >= 0 ? clrAccent : clrOrange;
@@ -553,8 +562,8 @@ function renderCtlTrend(sessions) {
           pointHoverRadius: 4,
           fill: {
             target: { value: 0 },
-            above: 'rgba(34,197,94,0.10)',   // TSB positiu → verd (Productiu/Forma òptima)
-            below: 'rgba(249,115,22,0.12)',  // TSB negatiu → taronja (Fatigat)
+            above: 'rgba(34,197,94,0.10)',
+            below: 'rgba(249,115,22,0.12)',
           },
           tension: 0.35,
           order: 0,
@@ -656,6 +665,61 @@ function renderTestRacePanel(sessions) {
         ${rowHTML('Test', lastRunningTest)}
         ${rowHTML('Test bici', lastBikeTest)}
         ${rowHTML('Cursa', lastCursa)}
+      </tbody>
+    </table>`;
+}
+
+// ── Panell Bici Estàtica — últims 30 dies ──────────────────────────────────────────────
+function renderBiciPanel(sessions) {
+  const container = document.getElementById('bici-container');
+  if (!container) return;
+
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 30);
+  cutoff.setHours(0, 0, 0, 0);
+
+  // Inclou BICI ESTÀTICA però exclou TEST_BICI (ja apareix a Test & Cursa)
+  const biciSessions = sessions.filter(
+    s => s.tipusKey === 'BICI ESTÀTICA' && s.date >= cutoff
+  );
+
+  const totalMin  = sumNumbers(biciSessions.map(s => s.durada));
+  const totalLoad = sumNumbers(biciSessions.map(s => s.carrega));
+
+  const countEl = document.getElementById('bici-count');
+  if (countEl) {
+    countEl.textContent = biciSessions.length
+      ? `${biciSessions.length} sessions · ${formatNumber(totalMin)} min · TLP ${formatNumber(totalLoad)}`
+      : 'Sense activitats els últims 30 dies';
+  }
+
+  if (!biciSessions.length) {
+    container.innerHTML = '<p class="plan-no-data">Cap sessió de bici estàtica els últims 30 dies.</p>';
+    return;
+  }
+
+  container.innerHTML = `
+    <table class="sw-mini-table">
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Durada</th>
+          <th>FC Mitja</th>
+          <th>FC Màx</th>
+          <th>TLP</th>
+          <th>EPOC</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${biciSessions.map(s => `
+          <tr>
+            <td>${esc(s.displayDate)}</td>
+            <td>${formatMetric(s.durada, 'min')}</td>
+            <td>${fcBadgeHTML(s.fcMitja)}</td>
+            <td>${isFinite(s.fcMax) ? `${Math.round(s.fcMax)} ppm` : '--'}</td>
+            <td>${tssDotHTML(s.carrega)}</td>
+            <td>${isFinite(s.epoc) ? formatNumber(s.epoc) : '--'}</td>
+          </tr>`).join('')}
       </tbody>
     </table>`;
 }

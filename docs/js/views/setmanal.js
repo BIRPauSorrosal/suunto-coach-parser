@@ -3,7 +3,8 @@
 // Dep: lib/formatters.js (formatPace, fmtNum, formatDate, toNumber, esc)
 //      lib/load-scale.js (tssDotHTML)
 //      app.js (detectActiveWeek, QUALITY_TYPES, LONG_TYPES, PADEL_TYPES, STRENGTH_RE)
-// NOTA: No declarar aquí constants de tipus — usar les de app.js
+//      lib/activity-types.js (BICI_TYPES)
+// NOTA: No declarar aquí constants de tipus — usar les de app.js / activity-types.js
 
 let currentWeekIndex = 0;
 
@@ -72,6 +73,7 @@ function renderWeek(sessions, planning) {
   renderZ2Block(week, weekSessions);
   renderLongBlock(week, weekSessions);
   renderForcaBlock(week, weekSessions);
+  renderBiciBlock(week, weekSessions);
   renderAltresBlock(week, weekSessions);
 }
 
@@ -170,6 +172,22 @@ function renderForcaBlock(week, weekSessions) {
   setBlockStatus('sw-forca-block', sess.length > 0);
 }
 
+// ── Bloc Bici Estàtica ───────────────────────────────────────────────────────────────────
+function renderBiciBlock(week, weekSessions) {
+  const sess = weekSessions.filter(s => BICI_TYPES.has(s.tipusKey));
+
+  // No hi ha camp de planning per a bici — mostrem '--' (com Força quan no hi ha pla)
+  setTextV('sw-bici-plan', '--');
+
+  const tbody = document.getElementById('sw-bici-sessions-list');
+  if (tbody) {
+    tbody.innerHTML = sess.length
+      ? sess.map(s => sessionRowBici(s)).join('')
+      : `<tr><td colspan="5" class="empty-row muted-msg">Sense sessions de bici estàtica</td></tr>`;
+  }
+  setBlockStatus('sw-bici-block', sess.length > 0);
+}
+
 // ── Bloc Altres ──────────────────────────────────────────────────────────────────────────
 function renderAltresBlock(week, weekSessions) {
   const sess = weekSessions.filter(s => PADEL_TYPES.has(s.tipusKey));
@@ -193,20 +211,13 @@ function tssCell(carrega) {
 }
 
 // Qualitat: Data | Sèries | Dur.sèrie | Ritme | Rec. | Cadència | FC | TSS | Km
-//
-// FIX 4: Ritme i FC mostren — si no hi ha dades de sèries (sense fallback
-// al ritme/FC globals de la sessió, que podria confondre l'usuari).
 function sessionRowQuality(s) {
-  // Ritme: només de sèries. Si no existeix → null → formatPace retorna '\u2014'
   const ritme = (isFinite(s.ritmeMitjaSeries) && s.ritmeMitjaSeries > 0)
     ? s.ritmeMitjaSeries
     : null;
-
-  // FC: només de sèries. Si no existeix → null → fcBadgeHTML retorna '\u2014'
   const fc = (isFinite(s.fcMitjaSeries) && s.fcMitjaSeries > 0)
     ? s.fcMitjaSeries
     : null;
-
   const n   = s.numSeries;
   const seriesCell = isFinite(n) && n > 0 ? n : '\u2014';
   const dur = s.duradaMitjaSeries;
@@ -244,8 +255,6 @@ function sessionRowZ2(s) {
 }
 
 // Llarga: Data | Durada | Ritme | Min Z2 | Desnivell | FC | TSS | Km
-// NOTA: s'elimina Cadència (irrellevant en tirades llargues) per alliberar espai
-//       i es reordena: Durada primer, Ritme segon, sense columna buida de Ritme al Pla.
 function sessionRowLong(s) {
   const desnivell = toNumber(s.raw['Desnivell(m)']);
   const duradaCell = isFinite(s.durada) && s.durada > 0
@@ -271,6 +280,20 @@ function sessionRowExtra(s) {
     <td>${esc(s.tipus)}</td>
     <td>${isFinite(s.durada) && s.durada > 0 ? fmtNum(s.durada) + ' min' : '\u2014'}</td>
     <td>${fcBadgeHTML(s.fcMitja)}</td>
+    <td>${tssCell(s.carrega)}</td>
+  </tr>`;
+}
+
+// Bici estàtica: Data | Tipus | Durada | FC Mitja | FC Màx | TSS
+// Inclou FC Màx perquè en sessions de bici pot ser rellevant (intervals de potència)
+function sessionRowBici(s) {
+  const fcMax = toNumber(s.raw['FCMax']);
+  return `<tr>
+    <td>${esc(s.displayDate)}</td>
+    <td>${esc(s.tipus)}</td>
+    <td>${isFinite(s.durada) && s.durada > 0 ? fmtNum(s.durada) + ' min' : '\u2014'}</td>
+    <td>${fcBadgeHTML(s.fcMitja)}</td>
+    <td>${isFinite(fcMax) && fcMax > 0 ? Math.round(fcMax) + ' bpm' : '\u2014'}</td>
     <td>${tssCell(s.carrega)}</td>
   </tr>`;
 }

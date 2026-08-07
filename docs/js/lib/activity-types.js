@@ -21,13 +21,13 @@ const ACTIVITY_LONG_RUN_TYPES = {
 };
 
 const ACTIVITY_GENERIC_TYPES = {
-  "padel":          "PADEL",
-  "tennis":         "TENNIS",
-  "hiking":         "HIKING",
-  "natacio":        "NATACIÓ",
-  "swim":           "NATACIÓ",
+  "padel":               "PADEL",
+  "tennis":              "TENNIS",
+  "hiking":              "HIKING",
+  "natacio":             "NATACIÓ",
+  "swim":                "NATACIÓ",
   "bici_estatica_test":  "TEST_BICI",
-  "bici_estatica":  "BICI ESTÀTICA",
+  "bici_estatica":       "BICI ESTÀTICA",
 };
 
 // ── Classificació de sessions (dashboard) ─────────────────────
@@ -37,6 +37,7 @@ const QUALITY_TYPES   = new Set(["TEMPO", "INTERVALS"]);
 const LONG_TYPES      = new Set(["LLARGA", "MARATÓ", "TRAIL", "MITJA", "MARATO"]);
 const RUNNING_TYPES   = new Set([...QUALITY_TYPES, ...LONG_TYPES, "Z2"]);
 const TEST_RACE_TYPES = new Set(["TEST", "CURSA"]);
-const TEST_BICI_TYPES     = new Set(["TEST_BICI"]); 
+const TEST_BICI_TYPES = new Set(["TEST_BICI"]);
+const BICI_TYPES      = new Set(["BICI ESTÀTICA", "TEST_BICI"]);
 const PADEL_TYPES     = new Set(["PADEL", "TENIS", "TENNIS"]);
 const STRENGTH_RE     = /^FOR[\u00c7C]A/i;
