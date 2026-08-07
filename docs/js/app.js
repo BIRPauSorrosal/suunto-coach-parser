@@ -7,11 +7,12 @@ const DATA_SOURCES = {
   planning: ['./data/planning.csv']
 };
 
-// ── Constants de classificació de sessions ────────────────────────────────────
+// ── Constants de classificació de sessions ────────────────────────────────────────────
 function isRunning(s)  { return RUNNING_TYPES.has(s.tipusKey); }
 function isStrength(s) { return STRENGTH_RE.test(s.tipusKey); }
 function isTestRace(s) { return TEST_RACE_TYPES.has(s.tipusKey); }
-function isOther(s)    { return !isRunning(s) && !isStrength(s) && !isTestRace(s); }
+function isBici(s)     { return BICI_TYPES.has(s.tipusKey); }
+function isOther(s)    { return !isRunning(s) && !isStrength(s) && !isTestRace(s) && !isBici(s); }
 
 const state = {
   sessions: [],
@@ -19,7 +20,7 @@ const state = {
   sources:  {}
 };
 
-// ── Router de vistes ─────────────────────────────────────────────────────────
+// ── Router de vistes ─────────────────────────────────────────────────────────────────────────────
 // navigateTo: única funció que gestiona el canvi de vista.
 // És cridada tant pels .nav-link (sidebar) com pels .bnav-item (bottom nav).
 function navigateTo(target) {
@@ -66,14 +67,14 @@ function initRouter() {
     });
   });
 
-  // — Drawer "Més" —
+  // — Drawer «Més» —
   const moreBtn  = document.getElementById('bnav-more-btn');
   const overlay  = document.getElementById('bnav-overlay');
   if (moreBtn) moreBtn.addEventListener('click', toggleBnavDrawer);
   if (overlay) overlay.addEventListener('click', closeBnavDrawer);
 }
 
-// ── Drawer helpers ─────────────────────────────────────────────────────
+// ── Drawer helpers ─────────────────────────────────────────────────────────────────
 function toggleBnavDrawer() {
   const drawer  = document.getElementById('bnav-drawer');
   const overlay = document.getElementById('bnav-overlay');
@@ -97,14 +98,14 @@ function closeBnavDrawer() {
 // Exposar closeBnavDrawer globalment (cridada des del HTML del drawer)
 window.closeBnavDrawer = closeBnavDrawer;
 
-// ── Punt d'entrada ───────────────────────────────────────────────────
+// ── Punt d'entrada ───────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   initRouter();
   document.getElementById('reload-data-btn').addEventListener('click', loadDashboardData);
   loadDashboardData();
 });
 
-// ── Càrrega de dades ──────────────────────────────────────────────────
+// ── Càrrega de dades ──────────────────────────────────────────────────────────────────
 async function loadDashboardData() {
   setNotice('Llegint fitxers CSV...', 'info');
   setBadge('Carregant dades...');
@@ -140,7 +141,7 @@ async function loadDashboardData() {
   }
 }
 
-// ── 🔧 FIX UTF-8: decodifica Base64 de l'API GitHub respectant UTF-8 ─────────────────
+// ── 🔧 FIX UTF-8: decodifica Base64 de l'API GitHub respectant UTF-8 ──────────────────────
 // atob() retorna Latin-1 i trenca accents (à, è, ç, etc.).
 // Aquesta funció converteix correctament Base64 → UTF-8.
 function base64ToUtf8(base64) {
@@ -152,7 +153,7 @@ function base64ToUtf8(base64) {
   return new TextDecoder('utf-8').decode(bytes);
 }
 
-// ── Fetch ────────────────────────────────────────────────────────────────
+// ── Fetch ──────────────────────────────────────────────────────────────────────
 async function fetchFirstAvailable(paths) {
   const token = window.getGitHubToken ? window.getGitHubToken() : '';
 
@@ -196,7 +197,7 @@ async function fetchFirstAvailable(paths) {
   throw lastError || new Error('Cap ruta vàlida per al CSV');
 }
 
-// ── Parser CSV ───────────────────────────────────────────────────────────────
+// ── Parser CSV ───────────────────────────────────────────────────────────────────────────
 function parseCSV(text) {
   const rows = [];
   let row = [], value = '', insideQuotes = false;
@@ -232,7 +233,7 @@ function parseCSV(text) {
   });
 }
 
-// ── Orquestració del render ─────────────────────────────────────────────────
+// ── Orquestració del render ─────────────────────────────────────────────────────────────────
 function renderDashboard() {
   const planning = state.planning
     .map(enrichPlanningRow)
@@ -256,13 +257,13 @@ function renderDashboard() {
   renderSessionsView(sessions);
 }
 
-// ── Enriquiment de files ──────────────────────────────────────────────────
+// ── Enriquiment de files ──────────────────────────────────────────────────────────────────
 function enrichPlanningRow(row) {
   const startDate = parseDate(row['Data_Inici']);
   const endDate   = parseDate(row['Data_Fi']);
   if (!startDate || !endDate) return null;
 
-  // ── Qualitat ─────────────────────────────────────────────────────────────
+  // ── Qualitat ─────────────────────────────────────────────────────────────────────
   const qSeries      = toNumber(row['Q_Series']);           // número de sèries
   const qDuradaSerie = toNumber(row['Q_Durada_Serie_min']); // minuts per sèrie
   const qRec         = toNumber(row['Q_Rec_min']);          // minuts recuperació entre sèries
@@ -271,7 +272,7 @@ function enrichPlanningRow(row) {
   const qFcMax       = toNumber(row['Q_FC_max']);
   const qKm          = toNumber(row['Q_Km_Plan']);
 
-  // ── Z2 ───────────────────────────────────────────────────────────────────
+  // ── Z2 ───────────────────────────────────────────────────────────────────────
   const z2Durada     = toNumber(row['Z2_Durada_min']);
   const z2RitmeMin   = toNumber(row['Z2_Ritme_min_km_min']);
   const z2RitmeMax   = toNumber(row['Z2_Ritme_min_km_max']);
@@ -279,7 +280,7 @@ function enrichPlanningRow(row) {
   const z2FcMax      = toNumber(row['Z2_FC_max']);
   const z2Km         = toNumber(row['Z2_Km_Plan']);
 
-  // ── Tirada llarga ────────────────────────────────────────────────────────
+  // ── Tirada llarga ───────────────────────────────────────────────────────────────────
   const llTipus      = row['LL_Tipus']    || '--';
   const llDurada     = toNumber(row['LL_Durada_min']);
   const llKm         = toNumber(row['LL_Km_Plan']);
@@ -348,8 +349,9 @@ function enrichSessionRow(row) {
     z1min:               toNumber(row['Z1(min)']),
     z2min:               toNumber(row['Z2(min)']),
     fcMitja:             toNumber(row['FCMitja']),
+    fcMax:               toNumber(row['FCMax']),
     ritme:               toNumber(row['Ritme(min/km)']),
-    // ── Camps de qualitat (sèries) ──────────────────────────────────
+    // ── Camps de qualitat (sèries) ───────────────────────────────────────────────────
     numSeries:           toNumber(row['Num_Series']),
     duradaMitjaSeries:   toNumber(row['Durada_Mitja_Series']),
     recMitjaMin:         toNumber(row['Rec_Mitja_Min']),
@@ -358,13 +360,13 @@ function enrichSessionRow(row) {
     fcMitjaSeries:       toNumber(row['FC_Mitja_Series']),
     fcMaxMitjaSeries:    toNumber(row['FC_Max_Mitja_Series']),
     cadenciaMitjaSeries: toNumber(row['Cadencia_Mitja_Series']),
-    // ── Altres ────────────────────────────────────────────────────────
+    // ── Altres ──────────────────────────────────────────────────────────────────────────────────
     epoc:                toNumber(row['EPOC']),
     recuperacio:         toNumber(row['Recup(h)'])
   };
 }
 
-// ── Detecció setmana activa ───────────────────────────────────────────────
+// ── Detecció setmana activa ──────────────────────────────────────────────────────────────────
 function detectActiveWeek(planning, sessions) {
   const now   = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 20, 0, 0);
@@ -383,7 +385,7 @@ function detectActiveWeek(planning, sessions) {
   return planning[planning.length - 1];
 }
 
-// ── Status sidebar ──────────────────────────────────────────────────────
+// ── Status sidebar ──────────────────────────────────────────────────────────────────────
 function updateStatus(errorMessage = null) {
   setText('status-sessions', state.sessions.length
     ? `sessions.csv carregat (${state.sessions.length} files)`
@@ -397,7 +399,7 @@ function updateStatus(errorMessage = null) {
   setText('status-last-update', `Actualitzat: ${new Date().toLocaleString('ca-ES')}`);
 }
 
-// ── Helpers UI ────────────────────────────────────────────────────────
+// ── Helpers UI ──────────────────────────────────────────────────────────────────────
 function setNotice(message, type = 'info') {
   const bar = document.getElementById('notice-bar');
   bar.classList.remove('is-error', 'is-warning');
@@ -408,7 +410,7 @@ function setNotice(message, type = 'info') {
   bar.style.display = activeView === 'overview' || activeView == null ? '' : 'none';
 }
 
-// ── Helpers de dades ───────────────────────────────────────────────────
+// ── Helpers de dades ───────────────────────────────────────────────────────────────────
 function parseDate(value) {
   if (!value) return null;
   const s = String(value).trim();
