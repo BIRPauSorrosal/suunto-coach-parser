@@ -5,7 +5,7 @@
 //      lib/load-scale.js (loadBadgeHTML, loadDotHTML, getLoadLevelSession,
 //                         getTSSLevel, tssBadgeHTML, tssDotHTML)
 //      app.js            (CHART_COLORS via charts.js, STRENGTH_RE, PADEL_TYPES,
-//                         QUALITY_TYPES, LONG_TYPES, TEST_RACE_TYPES)
+//                         QUALITY_TYPES, LONG_TYPES, TEST_RACE_TYPES, BICI_TYPES)
 //      comment-editor.js (openSessionCommentEditor)
 // NOTA: No declarar aquí constants de tipus — usar les de app.js
 
@@ -23,8 +23,10 @@ const SESS_GROUPS = {
   long:      s => LONG_TYPES.has(s.tipusKey),
   testrace:  s => TEST_RACE_TYPES.has(s.tipusKey),
   strength:  s => STRENGTH_RE.test(s.tipusKey),
+  bici:      s => BICI_TYPES.has(s.tipusKey),
   other:     s => !RUNNING_TYPES.has(s.tipusKey) && !STRENGTH_RE.test(s.tipusKey)
-               && !TEST_RACE_TYPES.has(s.tipusKey) && !PADEL_TYPES.has(s.tipusKey),
+               && !TEST_RACE_TYPES.has(s.tipusKey) && !PADEL_TYPES.has(s.tipusKey)
+               && !BICI_TYPES.has(s.tipusKey),
 };
 
 const SESS_TYPE_LABELS = {
@@ -34,6 +36,7 @@ const SESS_TYPE_LABELS = {
   long:     'Tirades llargues',
   testrace: 'Test i curses',
   strength: 'Sessions de força',
+  bici:     'Bicicleta estàtica',
   other:    'Altres activitats',
 };
 
@@ -307,6 +310,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
     epoc: { bar:'rgba(251,191,36,0.35)', line:'rgba(251,191,36,0.9)'  },
     load: { bar:'rgba(34,197,94,0.25)',  line:'rgba(34,197,94,0.9)'   },
     dur:  { bar:'rgba(56,189,248,0.35)', line:'rgba(56,189,248,0.7)'  },
+    watts:{ line:'rgba(250,204,21,0.9)'  },
   };
   const baseOpts = {
     responsive:true, maintainAspectRatio:false,
@@ -333,6 +337,13 @@ function buildSessChartConfig(byWeek, labels, sessions) {
     grid:{ drawOnChartArea:false },
     ticks:{ ...yBase.ticks, callback: v => `${v} m` },
     title:{ display:true, text:'m D+', color:C.text, font:{size:10} } });
+  const scaleDur   = ()          => ({ ...yBase, position:'left',
+    ticks:{ ...yBase.ticks, callback: v => `${v} min` },
+    title:{ display:true, text:'min', color:COL.dur.line, font:{size:10} } });
+  const scaleWatts = ()          => ({ ...yBase, position:'right', offset:true, beginAtZero:false,
+    grid:{ drawOnChartArea:false },
+    ticks:{ ...yBase.ticks, callback: v => `${v} W` },
+    title:{ display:true, text:'Watts', color:COL.watts.line, font:{size:10} } });
 
   function tooltipLabel(c) {
     const v = c.parsed.y; if (v == null) return null;
@@ -345,6 +356,8 @@ function buildSessChartConfig(byWeek, labels, sessions) {
     if (lbl.includes('Desnivell'))         return `  Desnivell: ${v} m`;
     if (lbl.includes('Km'))               return `  Km: ${v} km`;
     if (lbl.includes('Temps sèries'))      return `  Temps sèries: ${v} min`;
+    if (lbl.includes('Durada'))            return `  Durada: ${v} min`;
+    if (lbl.includes('Watts'))             return `  Watts: ${v} W`;
     return ` ${lbl}: ${v}`;
   }
 
@@ -528,6 +541,41 @@ function buildSessChartConfig(byWeek, labels, sessions) {
         scales:{ x:baseOpts.scales.x, y:yBase }
       }};
 
+    case 'bici': {
+      // Durada com a barra principal (no km, ja que bici estàtica no té distància real)
+      const hasFC    = byWeek.some(w => w.avgFC  !== null);
+      const hasLoad  = byWeek.some(w => w.load   >  0);
+      const hasWatts = byWeek.some(w => {
+        // Watts mig setmanal: mirem si alguna sessió de la setmana té Watts
+        return false; // placeholder — s'activarà quan el parser exposi watts
+      });
+      const datasets = [
+        { type:'bar', label:'Durada (min)', data:byWeek.map(w=>w.dur > 0 ? w.dur : null),
+          backgroundColor:COL.dur.bar, borderColor:COL.dur.line,
+          borderWidth:1, borderRadius:4, yAxisID:'y' },
+      ];
+      if (hasFC) datasets.push({ type:'line', label:'FC mitja (ppm)',
+        data:byWeek.map(w=>w.avgFC), borderColor:COL.fc.line, backgroundColor:'transparent',
+        borderWidth:2, pointRadius:4, tension:0.3, yAxisID:'y2', spanGaps:true });
+      if (hasLoad) datasets.push({ type:'line', label:'TSS',
+        data:byWeek.map(w=>w.load > 0 ? w.load : null), borderColor:COL.load.line,
+        backgroundColor:'transparent', borderWidth:2, pointRadius:3,
+        tension:0.3, yAxisID:'y2', spanGaps:true });
+      return { type:'bar', data:{labels, datasets}, options:{...baseOpts,
+        plugins:{...baseOpts.plugins, tooltip:{callbacks:{label:tooltipLabel}}},
+        scales:{
+          x:  baseOpts.scales.x,
+          y:  scaleDur(),
+          y2: (hasFC||hasLoad) ? {
+                ...yBase, position:'right', beginAtZero:false,
+                grid:{ drawOnChartArea:false },
+                ticks:{ ...yBase.ticks, callback: v => `${v}` },
+                title:{ display:true, text:'FC / TSS', color:C.text, font:{size:10} }
+              } : { display:false },
+        }
+      }};
+    }
+
     case 'other':
       return { type:'bar', data:{labels, datasets:[
         { label:'TSS', data:byWeek.map(w=>w.load),
@@ -648,6 +696,8 @@ function getSessCardMetrics(s) {
   const ritmeSer = formatPace(typeof s.ritmeMitjaSeries === 'number' ? s.ritmeMitjaSeries : null);
   const fcSer  = (typeof s.fcMitjaSeries === 'number' && s.fcMitjaSeries > 0) ? `${Math.round(s.fcMitjaSeries)} ppm` : '—';
   const z2min  = s.z2min > 0 ? `${fmtNum(s.z2min)} min` : '—';
+  const wattsRaw = toNumber(s.raw['Watts'] || s.raw['Potencia(W)'] || s.raw['Potència(W)']);
+  const watts = (typeof wattsRaw === 'number' && wattsRaw > 0) ? `${Math.round(wattsRaw)} W` : '—';
 
   switch (_sessType) {
     case 'z2':
@@ -693,6 +743,15 @@ function getSessCardMetrics(s) {
         { label: 'TSS',       value: tss },
         { label: 'EPOC',      value: epoc },
         { label: 'Recup.',    value: recup },
+      ];
+    case 'bici':
+      return [
+        { label: 'Durada',    value: dur },
+        { label: 'FC',        value: fc },
+        { label: 'TSS',       value: tss },
+        { label: 'EPOC',      value: epoc },
+        { label: 'Watts',     value: watts },
+        { label: 'Cadència',  value: cad },
       ];
     case 'other':
       return [
@@ -766,6 +825,10 @@ function getSessCols(type) {
   const colFCSeries   = {label:'FC sèries',         render:s=>fcBadgeHTML(s.fcMitjaSeries)};
   const colSeries     = {label:'Sèries',            render:s=>{const n=toNumber(s.raw['Num_Series']);return typeof n==='number'&&n>0?String(Math.round(n)):'—';}};
   const colPTE        = {label:'PTE',               render:s=>{const p=toNumber(s.raw['PTE']);return typeof p==='number'&&p>0?fmtNum(p):'—';}};
+  const colWatts      = {label:'Watts',             render:s=>{
+    const w=toNumber(s.raw['Watts']||s.raw['Potencia(W)']||s.raw['Potència(W)']);
+    return typeof w==='number'&&w>0?`${Math.round(w)} W`:'—';
+  }};
 
   const colDurSerie = {
     label: 'Dur/Sèrie',
@@ -783,6 +846,7 @@ function getSessCols(type) {
     case 'long':     return [colData,colTipus,colKm,colDurada,colRitme,colFC,colDesnivell,colZ2min,colCarrega,colComentari];
     case 'testrace': return [colData,colTipus,colKm,colDurada,colRitme,colFC,colDesnivell,colCarrega,colComentari];
     case 'strength': return [colData,colTipus,colDurada,colFC,colCarrega,colEpoc,colRecup,colComentari];
+    case 'bici':     return [colData,colTipus,colDurada,colFC,colCarrega,colEpoc,colWatts,colCad,colComentari];
     case 'other':    return [colData,colTipus,colDurada,colFC,colCarrega,colEpoc,colComentari];
     default:         return [colData,colTipus,colKm,colDurada,colRitme,colFC,colCarrega,colEpoc,colComentari];
   }
