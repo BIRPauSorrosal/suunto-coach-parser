@@ -46,5 +46,4 @@
   global.dashboardStore = Object.freeze(store);
 
   // Compatibilitat temporal amb els mòduls existents i l'API de fase 1.
-  global.dashboardState = state;
 })(window);

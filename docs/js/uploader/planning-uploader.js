@@ -37,58 +37,10 @@ function clearPendingMerge() { _pendingMerge = null; }
 
 // ─── AUTODETECTE DEL SEPARADOR ──────────────────────────────────
 
-function detectCSVSeparator(firstLine) {
-  const commas     = (firstLine.match(/,/g)  || []).length;
-  const semicolons = (firstLine.match(/;/g)  || []).length;
-  return semicolons > commas ? ";" : ",";
-}
-
-
 // ─── PARSING CSV ──────────────────────────────────────────────
 
 function parseCSVText(text) {
-  const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
-  if (lines.length < 2) return [];
-
-  const sep     = detectCSVSeparator(lines[0]);
-  const headers = splitPlanningCSVLine(lines[0], sep)
-    .map(h => h.replace(/^\uFEFF/, "").trim());
-
-  return lines.slice(1).map(line => {
-    const values = splitPlanningCSVLine(line, sep);
-    const row    = {};
-    headers.forEach((h, i) => { row[h] = (values[i] ?? "").trim(); });
-    return row;
-  });
-}
-
-// Parser d'una línia CSV que respecta camps entre cometes i cometes escapades.
-function splitPlanningCSVLine(line, sep) {
-  const values = [];
-  let value = '';
-  let insideQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    const next = line[i + 1];
-
-    if (char === '"') {
-      if (insideQuotes && next === '"') {
-        value += '"';
-        i++;
-      } else {
-        insideQuotes = !insideQuotes;
-      }
-    } else if (char === sep && !insideQuotes) {
-      values.push(value);
-      value = '';
-    } else {
-      value += char;
-    }
-  }
-
-  values.push(value);
-  return values;
+  return window.DashboardCsv.parse(text, { separator: 'auto' });
 }
 
 
@@ -295,7 +247,7 @@ async function handlePlanningFileSelection(file, onDone) {
   const storeState = window.dashboardStore?.getState?.();
   const existing = Array.isArray(storeState?.planning)
     ? storeState.planning
-    : (Array.isArray(window.planningData) ? window.planningData : []);
+    : [];
   const merge    = mergePlanning(existing, incoming);
 
   _pendingMerge = merge;
@@ -310,7 +262,7 @@ async function handlePlanningFileSelection(file, onDone) {
  * Flux idèntic al de appendRowsToCSV() de csv-writer.js:
  *   1. Llegir SHA actual del fitxer al repo
  *   2. Fer PUT amb el nou contingut
- *   3. Actualitzar window.planningData en memòria
+ *   3. Actualitzar l'estat del dashboard en memòria
  *   4. Mostrar notificació i tancar modal
  *
  * @param {Function} onComplete — callback quan acaba (per tancar el modal)
@@ -351,16 +303,11 @@ async function confirmPlanningImport(onComplete) {
     }
 
     // Actualitzar dades en memòria sense recarregar la pàgina
-    window.planningData = merge.rows;
     if (window.dashboardStore?.setPlanning) {
       window.dashboardStore.setPlanning(merge.rows);
-    } else if (window.dashboardState) {
-      window.dashboardState.planning = merge.rows;
     }
     if (token && typeof window.refreshDashboard === 'function') {
       await window.refreshDashboard();
-    } else if (typeof window.refreshDashboardUI === 'function') {
-      window.refreshDashboardUI();
     }
 
   } catch (err) {

@@ -80,7 +80,7 @@ function groupByWeek(sessions) {
 
   sorted.forEach(s => {
     const monday = getMondayOf(s.date);
-    const key    = monday.toISOString().slice(0, 10);
+    const key    = dateKey(monday);
     if (!map.has(key)) map.set(key, { date: monday, sessions: [] });
     map.get(key).sessions.push(s);
   });
@@ -89,7 +89,7 @@ function groupByWeek(sessions) {
     const d  = w.date;
     const dd = String(d.getDate()).padStart(2, '0');
     const mm = String(d.getMonth() + 1).padStart(2, '0');
-    return buildBucket(w.sessions, w.date.toISOString().slice(0, 10), `${dd}/${mm}`);
+    return buildBucket(w.sessions, dateKey(w.date), `${dd}/${mm}`);
   });
 }
 
@@ -105,7 +105,7 @@ function groupByDay(sessions) {
   // índex sessions per dia
   const map = new Map();
   sorted.forEach(s => {
-    const key = s.date.toISOString().slice(0, 10);
+    const key = dateKey(s.date);
     if (!map.has(key)) map.set(key, []);
     map.get(key).push(s);
   });
@@ -118,7 +118,7 @@ function groupByDay(sessions) {
 
   const result = [];
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    const key  = d.toISOString().slice(0, 10);
+    const key  = dateKey(d);
     const dd   = String(d.getDate()).padStart(2, '0');
     const mm   = String(d.getMonth() + 1).padStart(2, '0');
     const ssDia = map.get(key) || [];
@@ -135,7 +135,7 @@ function buildPMCData(sessions) {
   const tssByDay = new Map();
   sessions.forEach(s => {
     if (!s.date) return;
-    const key = s.date.toISOString().slice(0, 10);
+    const key = dateKey(s.date);
     tssByDay.set(key, (tssByDay.get(key) || 0) + (s.carrega || 0));
   });
 
@@ -151,7 +151,7 @@ function buildPMCData(sessions) {
   const result = [];
 
   for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-    const key = d.toISOString().slice(0, 10);
+    const key = dateKey(d);
     const tss = tssByDay.get(key) || 0;
     ctl = ctl * kCTL + tss * (1 - kCTL);
     atl = atl * kATL + tss * (1 - kATL);

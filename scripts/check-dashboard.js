@@ -101,6 +101,27 @@ if (fs.existsSync(workflowPath)) {
   }
 }
 
+// Garanties bàsiques del refactor: no reintroduir loaders/parser antics ni
+// crear gràfics fora del gestor centralitzat.
+const appSource = fs.readFileSync(path.join(docs, 'js/app.js'), 'utf8');
+if (/legacyFetchFirstAvailable|legacyParseCSV/.test(appSource)) {
+  failures.push('app.js encara conté codi legacy de càrrega o parseig');
+}
+const viewSources = walk(path.join(docs, 'js/views'))
+  .filter(file => file.endsWith('.js'))
+  .map(file => fs.readFileSync(file, 'utf8'))
+  .join('\n');
+if (/new\s+Chart\s*\(/.test(viewSources)) {
+  failures.push('Una vista crea gràfics directament en lloc d’usar DashboardComponents');
+}
+if (!fs.readFileSync(path.join(docs, 'sw.js'), 'utf8').includes('const pathname = new URL(url).pathname')) {
+  failures.push('El service worker no normalitza les URLs CSV amb query params');
+}
+const chartsSource = fs.readFileSync(path.join(docs, 'js/charts.js'), 'utf8');
+if (!/function initCharts[\s\S]*?destroyChart\(['"]zones['"]\)/.test(chartsSource)) {
+  failures.push('initCharts podria destruir gràfics que pertanyen a l’Overview');
+}
+
 if (failures.length) {
   console.error('Dashboard checks FAILED');
   failures.forEach(failure => console.error(`- ${failure}`));

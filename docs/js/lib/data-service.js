@@ -34,59 +34,7 @@
   }
 
   function parseCSV(text) {
-    const rows = [];
-    let row = [], value = '', insideQuotes = false;
-
-    for (let i = 0; i < text.length; i++) {
-      const char = text[i];
-      const next = text[i + 1];
-
-      if (char === '"') {
-        if (insideQuotes && next === '"') {
-          value += '"';
-          i++;
-        } else {
-          insideQuotes = !insideQuotes;
-        }
-        continue;
-      }
-      if (char === ',' && !insideQuotes) {
-        row.push(value);
-        value = '';
-        continue;
-      }
-      if ((char === '\n' || char === '\r') && !insideQuotes) {
-        if (char === '\r' && next === '\n') i++;
-        row.push(value);
-        rows.push(row);
-        row = [];
-        value = '';
-        continue;
-      }
-      value += char;
-    }
-
-    if (value.length > 0 || row.length > 0) {
-      row.push(value);
-      rows.push(row);
-    }
-
-    const cleanRows = rows.filter(cols =>
-      cols.some(cell => String(cell).trim() !== '')
-    );
-    if (!cleanRows.length) return [];
-
-    const headers = cleanRows[0].map(header =>
-      String(header || '').replace(/^\uFEFF/, '').trim()
-    );
-
-    return cleanRows.slice(1).map(cols => {
-      const entry = {};
-      headers.forEach((header, index) => {
-        entry[header] = (cols[index] || '').trim();
-      });
-      return entry;
-    });
+    return global.DashboardCsv.parse(text, { separator: ',' });
   }
 
   async function fetchFirstAvailable(paths) {

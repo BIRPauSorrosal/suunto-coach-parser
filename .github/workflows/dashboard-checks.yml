@@ -22,4 +22,6 @@ jobs:
           node-version: 22
 
       - name: Validate dashboard
-        run: node scripts/check-dashboard.js
+        run: |
+          node scripts/check-dashboard.js
+          node scripts/test-dashboard.js

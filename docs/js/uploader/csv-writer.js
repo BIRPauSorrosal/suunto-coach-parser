@@ -49,40 +49,7 @@ function utf8ToBase64(str) {
  * Primera fila = capçalera (claus).
  */
 function csvToObjects(csvText) {
-  const lines = csvText.trim().split("\n");
-  if (lines.length < 2) return [];
-
-  const headers = lines[0].split(",").map(h => h.trim());
-  return lines.slice(1).map(line => {
-    const values = splitCsvLine(line);
-    const obj    = {};
-    headers.forEach((h, i) => { obj[h] = (values[i] ?? "").trim(); });
-    return obj;
-  });
-}
-
-/**
- * Divideix una línia CSV respectant valors entre cometes
- * (necessari per a Series_Detall que conté JSON amb comes).
- */
-function splitCsvLine(line) {
-  const result = [];
-  let current  = "";
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (ch === '"') {
-      inQuotes = !inQuotes;
-    } else if (ch === "," && !inQuotes) {
-      result.push(current);
-      current = "";
-    } else {
-      current += ch;
-    }
-  }
-  result.push(current);
-  return result;
+  return window.DashboardCsv.parse(csvText, { separator: ',' });
 }
 
 
@@ -203,7 +170,7 @@ async function readCurrentSessionsCSV() {
   const storeState = window.dashboardStore?.getState?.();
   const sessions = Array.isArray(storeState?.sessions)
     ? storeState.sessions
-    : window.sessionsData;
+    : [];
 
   if (Array.isArray(sessions) && sessions.length) {
     return { content: objectsToCsv(sessions), sha: null };
@@ -322,12 +289,6 @@ async function appendRowsToCSV(newRows) {
     } else {
       if (window.dashboardStore?.setSessions) {
         window.dashboardStore.setSessions(merged);
-      } else if (window.dashboardState) {
-        window.dashboardState.sessions = merged;
-      }
-      window.sessionsData = merged;
-      if (typeof window.refreshDashboardUI === 'function') {
-        window.refreshDashboardUI();
       }
       downloadCSV(csvText);
       showNotice(`✅ CSV descarregat. ${duplicats.length ? `(${duplicats.length} duplicats ignorats)` : ""}`);

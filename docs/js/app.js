@@ -14,6 +14,8 @@ function isOther(s)    { return !isRunning(s) && !isStrength(s) && !isTestRace(s
 
 // L'estat i la càrrega de dades viuen en mòduls independents.
 const state = window.dashboardStore.getState();
+let chartData = null;
+let loadRequestId = 0;
 
 // Estat compartit mínim per als mòduls d'importació i d'edició.
 // L'aplicació continua utilitzant scripts clàssics, però aquesta referència
@@ -35,14 +37,15 @@ function navigateTo(target) {
   views.forEach(v => v.classList.remove('view--active'));
   const activeView = document.querySelector(`.view[data-view="${target}"]`);
   if (activeView) activeView.classList.add('view--active');
+  window.DashboardComponents.destroyAllCharts();
 
   // — Notice bar: només visible a l'overview —
   const noticeBar = document.getElementById('notice-bar');
   if (noticeBar) noticeBar.style.display = target === 'overview' ? '' : 'none';
 
   // — Render de la vista corresponent —
-  if (!window._chartData) return;
-  const { sessions, planning } = window._chartData;
+  if (!chartData) return;
+  const { sessions, planning } = chartData;
   if (target === 'overview')  renderOverviewView(sessions, planning);
   if (target === 'setmanal')  renderSetmanalView(sessions, planning);
   if (target === 'planning')  renderPlanningView(planning, sessions);
@@ -106,11 +109,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── Càrrega de dades ──────────────────────────────────────────────────────────────────
 async function loadDashboardData() {
+  const requestId = ++loadRequestId;
   setNotice('Llegint fitxers CSV...', 'info');
   setBadge('Carregant dades...');
 
   try {
     const loaded = await window.DashboardDataService.load();
+    if (requestId !== loadRequestId) return;
     window.dashboardStore.setData(loaded);
 
     renderDashboard();
@@ -121,6 +126,7 @@ async function loadDashboardData() {
       'info'
     );
   } catch (error) {
+    if (requestId !== loadRequestId) return;
     console.error(error);
     setBadge('Error de càrrega');
     setNotice(
@@ -144,6 +150,16 @@ function refreshDashboardUI() {
 
 window.refreshDashboardUI = refreshDashboardUI;
 
+// Les actualitzacions locals dels importadors passen pel store i provoquen
+// un únic render de la vista activa. La càrrega inicial continua sent explícita
+// perquè permet mostrar els estats de loading/error abans de renderitzar.
+window.dashboardStore.subscribe((_, reason) => {
+  if (reason === 'data-loaded' || !chartData) return;
+  renderDashboard();
+  updateStatus();
+  setBadge('Dades carregades');
+});
+
 // ── 🔧 FIX UTF-8: decodifica Base64 de l'API GitHub respectant UTF-8 ──────────────────────
 // atob() retorna Latin-1 i trenca accents (à, è, ç, etc.).
 // Aquesta funció converteix correctament Base64 → UTF-8.
@@ -152,7 +168,9 @@ function base64ToUtf8(base64) {
   return window.DashboardDataService.base64ToUtf8(base64);
 }
 
-async function legacyFetchFirstAvailable(paths) {
+/* Obsolete implementation kept disabled for one release; DashboardDataService is the single loader. */
+/*
+async function removedFetchFirstAvailable(paths) {
   const token = window.getGitHubToken ? window.getGitHubToken() : '';
 
   if (token) {
@@ -197,7 +215,7 @@ async function legacyFetchFirstAvailable(paths) {
 }
 
 // ── Parser CSV ───────────────────────────────────────────────────────────────────────────
-function legacyParseCSV(text) {
+function removedParseCSV(text) {
   const rows = [];
   let row = [], value = '', insideQuotes = false;
 
@@ -231,6 +249,7 @@ function legacyParseCSV(text) {
     return entry;
   });
 }
+*/
 
 // ── Orquestració del render ─────────────────────────────────────────────────────────────────
 // Compatibilitat amb codi extern: les implementacions reals viuen a
@@ -254,17 +273,23 @@ function renderDashboard() {
     .filter(Boolean)
     .sort((a, b) => b.date - a.date);
 
-  window._chartData = { sessions, planning };
+  chartData = { sessions, planning };
 
   // Exposar les files RAW del planning perquè planning-uploader.js
   // pugui fer el merge sense dependre de les dades enriquides.
-  window.planningData = state.planning;
-  window.sessionsData = state.sessions;
+  // Les files RAW es consulten directament des del store pels importadors.
 
-  renderOverviewView(sessions, planning);
-  renderSetmanalView(sessions, planning);
-  renderPlanningView(planning, sessions);
-  renderSessionsView(sessions);
+  renderActiveView();
+}
+
+function renderActiveView() {
+  if (!chartData) return;
+  const { sessions, planning } = chartData;
+  const target = document.querySelector('.view--active')?.dataset.view || 'overview';
+  if (target === 'overview') renderOverviewView(sessions, planning);
+  if (target === 'setmanal') renderSetmanalView(sessions, planning);
+  if (target === 'planning') renderPlanningView(planning, sessions);
+  if (target === 'sessions') renderSessionsView(sessions);
 }
 
 // ── Enriquiment de files ──────────────────────────────────────────────────────────────────
@@ -451,8 +476,5 @@ function setText(id, value) { return window.DashboardViewUtils.setText(id, value
 
 // Re-renderitza tot quan l'usuari canvia la configuració de FC
 window.addEventListener('fc-config-changed', () => {
-  if (!window._chartData) return;
-  const { sessions, planning } = window._chartData;
-  renderOverviewView(sessions, planning);
-  renderSetmanalView(sessions, planning);
+  renderActiveView();
 });
