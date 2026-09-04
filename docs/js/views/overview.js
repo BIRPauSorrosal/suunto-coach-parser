@@ -442,7 +442,7 @@ function renderCtlTrend(sessions) {
 
   const dayLoad = new Map();
   sorted.forEach(s => {
-    const key = s.date.toISOString().slice(0, 10);
+    const key = dateKey(s.date);
     dayLoad.set(key, (dayLoad.get(key) || 0) + (isFinite(s.carrega) ? s.carrega : 0));
   });
 
@@ -459,7 +459,7 @@ function renderCtlTrend(sessions) {
   const tsbByDate = new Map();
 
   for (let d = new Date(firstDay); d <= today; d.setDate(d.getDate() + 1)) {
-    const key  = d.toISOString().slice(0, 10);
+    const key  = dateKey(d);
     const load = dayLoad.get(key) || 0;
     ctl = ctl * k_ctl + load * (1 - k_ctl);
     atl = atl * k_atl + load * (1 - k_atl);
@@ -475,7 +475,7 @@ function renderCtlTrend(sessions) {
   const months  = ['gen','feb','mar','abr','mai','jun','jul','ago','set','oct','nov','des'];
 
   for (let d = new Date(rangeStart); d <= today; d.setDate(d.getDate() + 1)) {
-    const key  = d.toISOString().slice(0, 10);
+    const key  = dateKey(d);
     const diff = Math.round((today - d) / 86400000);
     const showLabel = diff % 7 === 0;
     labels.push(showLabel ? `${d.getDate()} ${months[d.getMonth()]}` : '');
@@ -489,7 +489,7 @@ function renderCtlTrend(sessions) {
   const tsbAvui = tsbData[tsbData.length - 1] || 0;
 
   const d7ago  = new Date(today); d7ago.setDate(d7ago.getDate() - 7);
-  const ctl7ago = ctlByDate.get(d7ago.toISOString().slice(0, 10)) || 0;
+  const ctl7ago = ctlByDate.get(dateKey(d7ago)) || 0;
   const ctlDiff = +(ctlAvui - ctl7ago).toFixed(1);
 
   function getTSBZone(tsb) {

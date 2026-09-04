@@ -143,13 +143,7 @@ async function saveSessionComment() {
       // complet ja actualitzat perquè l'usuari el pugui substituir manualment.
       if (window.dashboardStore?.setSessions) {
         window.dashboardStore.setSessions(rows);
-      } else if (window.dashboardState) {
-        window.dashboardState.sessions = rows;
-        if (typeof window.refreshDashboardUI === 'function') {
-          window.refreshDashboardUI();
-        }
       }
-      window.sessionsData = rows;
       downloadCSV(csvText);
     }
 

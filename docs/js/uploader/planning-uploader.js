@@ -247,7 +247,7 @@ async function handlePlanningFileSelection(file, onDone) {
   const storeState = window.dashboardStore?.getState?.();
   const existing = Array.isArray(storeState?.planning)
     ? storeState.planning
-    : (Array.isArray(window.planningData) ? window.planningData : []);
+    : [];
   const merge    = mergePlanning(existing, incoming);
 
   _pendingMerge = merge;
@@ -262,7 +262,7 @@ async function handlePlanningFileSelection(file, onDone) {
  * Flux idèntic al de appendRowsToCSV() de csv-writer.js:
  *   1. Llegir SHA actual del fitxer al repo
  *   2. Fer PUT amb el nou contingut
- *   3. Actualitzar window.planningData en memòria
+ *   3. Actualitzar l'estat del dashboard en memòria
  *   4. Mostrar notificació i tancar modal
  *
  * @param {Function} onComplete — callback quan acaba (per tancar el modal)
@@ -303,14 +303,8 @@ async function confirmPlanningImport(onComplete) {
     }
 
     // Actualitzar dades en memòria sense recarregar la pàgina
-    window.planningData = merge.rows;
     if (window.dashboardStore?.setPlanning) {
       window.dashboardStore.setPlanning(merge.rows);
-    } else if (window.dashboardState) {
-      window.dashboardState.planning = merge.rows;
-      if (typeof window.refreshDashboardUI === 'function') {
-        window.refreshDashboardUI();
-      }
     }
     if (token && typeof window.refreshDashboard === 'function') {
       await window.refreshDashboard();

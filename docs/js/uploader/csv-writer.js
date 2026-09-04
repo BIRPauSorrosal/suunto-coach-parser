@@ -170,7 +170,7 @@ async function readCurrentSessionsCSV() {
   const storeState = window.dashboardStore?.getState?.();
   const sessions = Array.isArray(storeState?.sessions)
     ? storeState.sessions
-    : window.sessionsData;
+    : [];
 
   if (Array.isArray(sessions) && sessions.length) {
     return { content: objectsToCsv(sessions), sha: null };
@@ -289,13 +289,7 @@ async function appendRowsToCSV(newRows) {
     } else {
       if (window.dashboardStore?.setSessions) {
         window.dashboardStore.setSessions(merged);
-      } else if (window.dashboardState) {
-        window.dashboardState.sessions = merged;
-        if (typeof window.refreshDashboardUI === 'function') {
-          window.refreshDashboardUI();
-        }
       }
-      window.sessionsData = merged;
       downloadCSV(csvText);
       showNotice(`✅ CSV descarregat. ${duplicats.length ? `(${duplicats.length} duplicats ignorats)` : ""}`);
     }

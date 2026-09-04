@@ -22,10 +22,12 @@ function load(relativePath) {
 
 load('docs/js/lib/csv.js');
 load('docs/js/lib/formatters.js');
+load('docs/js/lib/dashboard-store.js');
 load('docs/js/lib/metrics.js');
 load('docs/js/uploader/planning-uploader.js');
 
 const csv = context.DashboardCsv;
+assert.equal(context.dateKey(new Date(2026, 8, 4, 23)), '2026-09-04');
 const parsed = csv.parse('Nom,Comentari\nPau,"ritme, control\nsegona línia"\n');
 assert.equal(JSON.stringify(parsed), JSON.stringify([
   { Nom: 'Pau', Comentari: 'ritme, control\nsegona línia' },
@@ -50,8 +52,15 @@ today.setHours(12, 0, 0, 0);
 const yesterday = new Date(today);
 yesterday.setDate(yesterday.getDate() - 1);
 const pmc = context.buildPMCData([{ date: yesterday, carrega: 100 }]);
-assert.equal(pmc.at(-1).tss, 100);
-assert.ok(pmc.at(-1).ctl > 0);
-assert.ok(pmc.at(-1).atl > 0);
+const loadedPmcDay = pmc.find(day => day.tss === 100);
+assert.ok(loadedPmcDay);
+assert.ok(loadedPmcDay.ctl > 0);
+assert.ok(loadedPmcDay.atl > 0);
+
+let storeReason = null;
+context.dashboardStore.subscribe((_, reason) => { storeReason = reason; });
+context.dashboardStore.setSessions([{ id: 1 }]);
+assert.equal(storeReason, 'sessions-updated');
+assert.equal(context.dashboardStore.getState().sessions.length, 1);
 
 console.log('Dashboard unit checks OK');

@@ -33,6 +33,16 @@ function formatDate(date) {
   return new Intl.DateTimeFormat('ca-ES').format(date);
 }
 
+// Clau de calendari local; evita que toISOString desplaci el dia pel fus horari.
+function dateKey(date) {
+  const d = new Date(date);
+  if (!isFinite(d.getTime())) return '';
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 // ── Ritme (min/km) ────────────────────────────────────────────────────────────
 // Exemples: 4.75 → "4:45 min/km" | "4:30" → "4:30 min/km" | null → "-- min/km"
 function formatPace(value, unit = 'min/km') {
