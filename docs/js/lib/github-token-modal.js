@@ -1,6 +1,6 @@
 // docs/js/lib/github-token-modal.js
 // Modal de configuració del token de GitHub per a l'uploader.
-// Guarda el token a localStorage — mai surt del navegador.
+// Guarda el token al navegador — per defecte només durant la sessió.
 // Exposa: openGitHubTokenModal(), getGitHubToken()
 
 (function () {
@@ -8,10 +8,24 @@
   const MODAL_ID    = 'gh-token-modal';
   const OVERLAY_ID  = 'gh-token-overlay';
   const STORAGE_KEY = 'gh-token';
+  const SESSION_STORAGE_KEY = 'gh-token-session';
+
+  function readStorage(storage, key) {
+    try { return storage.getItem(key) || ''; } catch (_) { return ''; }
+  }
+
+  function writeStorage(storage, key, value) {
+    try { storage.setItem(key, value); } catch (_) { /* storage bloquejat */ }
+  }
+
+  function removeStorage(storage, key) {
+    try { storage.removeItem(key); } catch (_) { /* storage bloquejat */ }
+  }
 
   // ── API pública ───────────────────────────────────────────────
   window.getGitHubToken = function () {
-    return localStorage.getItem(STORAGE_KEY) || '';
+    return readStorage(sessionStorage, SESSION_STORAGE_KEY)
+      || readStorage(localStorage, STORAGE_KEY);
   };
 
   window.openGitHubTokenModal = function () {
@@ -62,15 +76,20 @@
               autocomplete="off"
               spellcheck="false"
             />
+            <label class="fc-modal-checkbox">
+              <input type="checkbox" id="gh-token-remember" />
+              Recorda el token en aquest navegador
+            </label>
           </div>
 
           <p class="fc-modal-hint" style="margin-top:8px; line-height:1.6;">
             Genera'l a
-            <a href="https://github.com/settings/tokens" target="_blank"
+            <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer"
                style="color:var(--accent)">
-              GitHub → Settings → Developer settings → PAT (classic)
+              GitHub → Settings → Developer settings → Fine-grained tokens
             </a>
-            amb permís <strong>repo</strong>.
+            amb accés només a aquest repositori i permís <strong>Contents: Read and write</strong>.
+            Defineix també una data d'expiració.
           </p>
 
           <div id="gh-token-status" style="margin-top:12px; font-size:.78rem;"></div>
@@ -95,8 +114,11 @@
 
   // ── Omple l'input amb el token actual ─────────────────────────
   function _populate() {
-    const token = localStorage.getItem(STORAGE_KEY) || '';
+    const persistedToken = readStorage(localStorage, STORAGE_KEY);
+    const sessionToken = readStorage(sessionStorage, SESSION_STORAGE_KEY);
+    const token = sessionToken || persistedToken;
     document.getElementById('gh-token-input').value = token;
+    document.getElementById('gh-token-remember').checked = Boolean(persistedToken && !sessionToken);
     _updateStatus(token);
     document.getElementById('gh-token-error').hidden = true;
   }
@@ -105,10 +127,13 @@
   function _updateStatus(token) {
     const el = document.getElementById('gh-token-status');
     if (!el) return;
+    const branch = window.DashboardConfig?.github?.branch || 'desconeguda';
     if (token) {
-      el.innerHTML = `<span style="color:var(--accent)">✅ Token configurat</span>`;
+      el.textContent = `✅ Token configurat · branca ${branch}`;
+      el.style.color = 'var(--accent)';
     } else {
-      el.innerHTML = `<span style="color:var(--text-muted)">⚠️ Sense token — l'uploader descarregarà el CSV en local</span>`;
+      el.textContent = "⚠️ Sense token — l'uploader descarregarà el CSV en local";
+      el.style.color = 'var(--text-muted)';
     }
   }
 
@@ -136,7 +161,14 @@
         err.hidden = false;
         return;
       }
-      localStorage.setItem(STORAGE_KEY, token);
+      const remember = document.getElementById('gh-token-remember').checked;
+      if (remember) {
+        writeStorage(localStorage, STORAGE_KEY, token);
+        removeStorage(sessionStorage, SESSION_STORAGE_KEY);
+      } else {
+        writeStorage(sessionStorage, SESSION_STORAGE_KEY, token);
+        removeStorage(localStorage, STORAGE_KEY);
+      }
       close();
       // Notifica csv-writer.js perquè actualitzi la seva referència
       window.dispatchEvent(new CustomEvent('gh-token-changed'));
@@ -144,8 +176,10 @@
 
     // Esborrar
     document.getElementById('gh-token-clear').addEventListener('click', () => {
-      localStorage.removeItem(STORAGE_KEY);
+      removeStorage(localStorage, STORAGE_KEY);
+      removeStorage(sessionStorage, SESSION_STORAGE_KEY);
       document.getElementById('gh-token-input').value = '';
+      document.getElementById('gh-token-remember').checked = false;
       _updateStatus('');
     });
   }

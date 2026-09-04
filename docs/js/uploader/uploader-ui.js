@@ -91,6 +91,13 @@ function buildModal() {
  * @param {Array} errors — [{ name, reason }]
  */
 function renderResults(ok, errors) {
+  const escapeHtml = window.DashboardComponents?.escapeHtml
+    || (value => String(value ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;'));
   const resultsEl  = document.getElementById("uploader-results");
   const okSection  = document.getElementById("uploader-ok-section");
   const errSection = document.getElementById("uploader-err-section");
@@ -106,9 +113,9 @@ function renderResults(ok, errors) {
         <li class="uploader-list-item uploader-list-item--with-comment">
           <div class="uploader-item-row">
             <span class="uploader-item-icon">📄</span>
-            <span class="uploader-item-name">${f.name}</span>
-            <span class="uploader-item-badge">${f.row.Tipus}</span>
-            <span class="uploader-item-date">${f.row.Data}</span>
+            <span class="uploader-item-name">${escapeHtml(f.name)}</span>
+            <span class="uploader-item-badge">${escapeHtml(f.row.Tipus)}</span>
+            <span class="uploader-item-date">${escapeHtml(f.row.Data)}</span>
             <button
               type="button"
               class="uploader-comment-toggle"
@@ -147,8 +154,8 @@ function renderResults(ok, errors) {
       .map(e => `
         <li class="uploader-list-item uploader-list-item--err">
           <span class="uploader-item-icon">❌</span>
-          <span class="uploader-item-name">${e.name}</span>
-          <span class="uploader-item-reason">${e.reason}</span>
+          <span class="uploader-item-name">${escapeHtml(e.name)}</span>
+          <span class="uploader-item-reason">${escapeHtml(e.reason)}</span>
         </li>`)
       .join("");
     errSection.style.display = "block";

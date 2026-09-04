@@ -40,7 +40,11 @@ Les paraules clau més específiques tenen prioritat. Si no es detecta cap tipus
 
 ### Token de GitHub
 
-El botó **Token GitHub** desa el token únicament a `localStorage` del navegador. Per pujar CSV cal un Personal Access Token amb permís `repo` sobre el repositori configurat a `docs/js/lib/dashboard-config.js`. No introdueixis el token en fitxers, commits ni captures de pantalla.
+El botó **Token GitHub** desa el token a `sessionStorage` per defecte (només durant la sessió). Si marques «Recorda el token», es desa a `localStorage`. El token no queda escrit al repositori, però qualsevol codi JavaScript que s'executi al mateix domini podria llegir-lo: utilitza l'aplicació només en un dispositiu de confiança i esborra'l quan acabis.
+
+Per pujar CSV, crea un **Fine-grained Personal Access Token** amb accés només a aquest repositori, permís `Contents: Read and write` i una data d'expiració. No utilitzis el permís clàssic `repo` si no és imprescindible. No introdueixis mai el token en fitxers, commits, logs ni captures de pantalla.
+
+La configuració utilitza `main` per defecte. Per provar la branca de desenvolupament publicada a Pages, afegeix `?env=development` a la URL; aquest mode llegeix i escriu a `refactor/optimitzacio`. Revisa sempre la branca abans de confirmar una importació.
 
 Sense token, la lectura continua funcionant i les importacions o comentaris es descarreguen com a CSV perquè es puguin substituir manualment.
 
@@ -63,6 +67,6 @@ Sense token, la lectura continua funcionant i les importacions o comentaris es d
 
 - **No es carreguen dades**: serveix `docs/` per HTTP i comprova la consola i les rutes de `DashboardConfig`.
 - **Es veu una versió antiga**: espera el deploy, força una recàrrega i neteja la cache/service worker.
-- **No es pot pujar a GitHub**: revisa el token, el permís `repo`, la branca i la ruta configurada.
+- **No es pot pujar a GitHub**: revisa el token fine-grained, el permís `Contents`, l'expiració, la branca i la ruta configurada.
 - **Una activitat surt com a ALTRES**: comprova que el nom del fitxer conté una paraula clau registrada.
 - **El check falla**: executa `node scripts/check-dashboard.js` i resol el primer error indicat.

@@ -34,6 +34,17 @@ let planningYear      = new Date().getFullYear();
 let planningMonth     = new Date().getMonth();
 let planningWeekIndex = 0;
 
+// Els valors del planning provenen d'un CSV editable per l'usuari.
+// Escapem sempre el text abans d'inserir-lo en HTML.
+const escapePlanningText = value => window.DashboardComponents?.escapeHtml
+  ? window.DashboardComponents.escapeHtml(value)
+  : String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+
 // ── Punt d'entrada ──────────────────────────────────────────────────────────────
 function renderPlanningView(planning, sessions) {
   if (!planning.length) return;
@@ -160,7 +171,7 @@ function renderYearlyView(container, planning, sessions) {
     weeks.forEach(w => {
       const lbl = w.plan ? w.plan.setmana : `S${w.isoNum}`;
       const tip = escapeAttr(`${fmtDateShortP(w.isoStart)} → ${fmtDateShortP(w.isoEnd)}`);
-      lblRow += `<span class="pcy-week-lbl${w.isActive ? ' pcy-week-lbl--active' : ''}" title="${tip}">${lbl}</span>`;
+      lblRow += `<span class="pcy-week-lbl${w.isActive ? ' pcy-week-lbl--active' : ''}" title="${tip}">${escapePlanningText(lbl)}</span>`;
       if (w.plan) {
         const c   = getCycleStyle(w.plan.cicle);
         const ph  = getPhaseColor(w.plan.fase);
@@ -270,11 +281,11 @@ function renderMonthlyView(container, planning, sessions) {
         + ' style="border-top:3px solid ' + c.color + ';background:' + c.bg + '">'
         + '<div class="pwc-header">'
         +   '<div>'
-        +     '<p class="pwc-setmana">' + w.setmana + '</p>'
+        +     '<p class="pwc-setmana">' + escapePlanningText(w.setmana) + '</p>'
         +     '<p class="pwc-dates">' + fmtDateShortP(w.startDate) + ' → ' + fmtDateShortP(w.endDate) + '</p>'
         +   '</div>'
         +   '<div class="pwc-badges">'
-        +     '<span class="pwc-cicle" style="color:' + c.color + '">' + w.cicle + '</span>'
+        +     '<span class="pwc-cicle" style="color:' + c.color + '">' + escapePlanningText(w.cicle) + '</span>'
         +     badgeHTML
         +   '</div>'
         + '</div>'
@@ -287,7 +298,7 @@ function renderMonthlyView(container, planning, sessions) {
         +   '<span class="pwc-time">~' + fmtMinutes(mins) + '</span>'
         + '</div>'
         + '<div class="pwc-phase-bar" style="background:' + ph + '">'
-        +   '<span>' + w.fase + '</span>'
+        +   '<span>' + escapePlanningText(w.fase) + '</span>'
         + '</div>'
         + '</article>';
     });
@@ -367,7 +378,7 @@ function renderWeeklyPlanView(container, planning, sessions) {
     '<div class="plan-week-nav">'
     + '<button class="btn btn-ghost btn-sm" id="btn-wplan-prev"' + (planningWeekIndex === 0 ? ' disabled' : '') + '>◄ Anterior</button>'
     + '<div class="plan-week-nav-center">'
-    +   '<span class="plan-week-nav-label" style="color:' + c.color + '">' + week.setmana + '</span>'
+    +   '<span class="plan-week-nav-label" style="color:' + c.color + '">' + escapePlanningText(week.setmana) + '</span>'
     +   '<span class="badge-muted plan-week-counter">' + (planningWeekIndex + 1) + ' / ' + planning.length + '</span>'
     + '</div>'
     + '<button class="btn btn-ghost btn-sm" id="btn-wplan-next"' + (planningWeekIndex === planning.length - 1 ? ' disabled' : '') + '>Següent ►</button>'
@@ -376,8 +387,8 @@ function renderWeeklyPlanView(container, planning, sessions) {
     + '<div class="panel" style="border-top:3px solid ' + c.color + '">'
     +   '<div class="pwv-header">'
     +     '<div>'
-    +       '<p class="eyebrow">' + week.cicle + ' · ' + week.fase + '</p>'
-    +       '<h3>' + week.setmana + '</h3>'
+    +       '<p class="eyebrow">' + escapePlanningText(week.cicle) + ' · ' + escapePlanningText(week.fase) + '</p>'
+    +       '<h3>' + escapePlanningText(week.setmana) + '</h3>'
     +       '<p class="card-note">' + fmtDateP(week.startDate) + ' → ' + fmtDateP(week.endDate) + '</p>'
     +     '</div>'
     +     '<div class="pwv-km-total">'
@@ -421,7 +432,7 @@ function renderWeeklyPlanView(container, planning, sessions) {
     + '<article class="panel pwv-block">'
     +   '<p class="eyebrow">🏃 Tirada llarga</p>'
     +   '<ul class="sw-plan-list" style="margin-top:12px">'
-    +     '<li><span>Tipus</span><strong>' + week.llTipus + '</strong></li>'
+    +     '<li><span>Tipus</span><strong>' + escapePlanningText(week.llTipus) + '</strong></li>'
     +     '<li><span>Durada</span><strong>' + (isFinite(week.llDurada) ? fmtNumP(week.llDurada) + ' min' : '--') + '</strong></li>'
     +     '<li><span>Km pla</span><strong>' + fmtNumP(week.llKm) + ' km</strong></li>'
     +     llReal
@@ -432,7 +443,7 @@ function renderWeeklyPlanView(container, planning, sessions) {
     + '<article class="panel pwv-block">'
     +   '<p class="eyebrow">💪 Força</p>'
     +   '<ul class="sw-plan-list" style="margin-top:12px">'
-    +     '<li><span>Pla</span><strong>' + week.forcaPlan + '</strong></li>'
+    +     '<li><span>Pla</span><strong>' + escapePlanningText(week.forcaPlan) + '</strong></li>'
     +     strengthReal
     +   '</ul>'
     + '</article>'
@@ -441,7 +452,7 @@ function renderWeeklyPlanView(container, planning, sessions) {
     + '<article class="panel pwv-block pwv-block--wide">'
     +   '<p class="eyebrow">🎾 Altres</p>'
     +   '<ul class="sw-plan-list" style="margin-top:12px">'
-    +     '<li><span>Pàdel pla</span><strong>' + week.padelPlan + '</strong></li>'
+    +     '<li><span>Pàdel pla</span><strong>' + escapePlanningText(week.padelPlan) + '</strong></li>'
     +     altresReal
     +   '</ul>'
     + '</article>'

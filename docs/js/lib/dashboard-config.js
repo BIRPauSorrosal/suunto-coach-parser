@@ -2,11 +2,26 @@
 // Configuració comuna de fonts de dades i persistència.
 
 (function (global) {
+  // Producció és el valor per defecte. Per provar la branca de desenvolupament
+  // des de Pages, obre l'aplicació amb `?env=development`.
+  const search = global.location?.search || '';
+  const params = typeof global.URLSearchParams === 'function'
+    ? new global.URLSearchParams(search)
+    : null;
+  const requestedEnvironment = params?.get('env')
+    || (search.match(/[?&]env=([^&]+)/)?.[1] || '');
+  const environment = requestedEnvironment === 'development' ? 'development' : 'production';
+  const branches = Object.freeze({
+    production: 'main',
+    development: 'refactor/optimitzacio',
+  });
+
   const config = {
     github: {
       owner: 'BIRPauSorrosal',
       repo: 'suunto-coach-parser',
-      branch: 'main',
+      branch: branches[environment],
+      environment,
     },
     paths: {
       sessions: {

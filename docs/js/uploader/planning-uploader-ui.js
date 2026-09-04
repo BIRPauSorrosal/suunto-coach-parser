@@ -93,6 +93,13 @@ function buildPlanningModal() {
  * @param {{ ok: boolean, error: string|null, merge: object }} result
  */
 function renderPlanningResults(result) {
+  const escapeHtml = window.DashboardComponents?.escapeHtml
+    || (value => String(value ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;'));
   const resultsEl  = document.getElementById("planning-uploader-results");
   const okSection  = document.getElementById("planning-uploader-ok-section");
   const errSection = document.getElementById("planning-uploader-err-section");
@@ -132,8 +139,8 @@ function renderPlanningResults(result) {
     .map(({ row, status }) => `
       <li class="uploader-list-item">
         <span class="uploader-item-icon">${ICONS[status]}</span>
-        <span class="uploader-item-name">${row.Setmana}</span>
-        <span class="uploader-item-date">${row.Data_Inici} → ${row.Data_Fi}</span>
+        <span class="uploader-item-name">${escapeHtml(row.Setmana)}</span>
+        <span class="uploader-item-date">${escapeHtml(row.Data_Inici)} → ${escapeHtml(row.Data_Fi)}</span>
         <span class="uploader-item-badge uploader-item-badge--${status}">${LABELS[status]}</span>
       </li>`)
     .join("");

@@ -61,6 +61,34 @@ const html = fs.readFileSync(path.join(docs, 'index.html'), 'utf8');
 const scriptSources = [...html.matchAll(/<script[^>]+src=["']([^"']+)["']/g)].map(match => match[1]);
 scriptSources.forEach(source => exists(path.join('docs', source.replace(/^\.\//, ''))));
 
+// Guardes bàsiques contra regressions XSS en els punts que renderitzen dades
+// procedents de fitxers pujats o de CSV editables per l'usuari.
+const securityChecks = [
+  {
+    file: 'docs/js/uploader/uploader-ui.js',
+    forbidden: /\$\{(?:f\.name|f\.row\.(?:Tipus|Data)|e\.(?:name|reason))\}/g,
+  },
+  {
+    file: 'docs/js/uploader/planning-uploader-ui.js',
+    forbidden: /\$\{row\.(?:Setmana|Data_Inici|Data_Fi)\}/g,
+  },
+  {
+    file: 'docs/js/views/sessions.js',
+    forbidden: /onclick=["']openSessionCommentEditor/g,
+  },
+  {
+    file: 'docs/js/views/planning.js',
+    forbidden: /(?:\+\s*(?:w|week)\.(?:setmana|cicle|fase|llTipus|forcaPlan|padelPlan)|\$\{lbl\})/g,
+  },
+];
+
+securityChecks.forEach(({ file, forbidden }) => {
+  const source = fs.readFileSync(path.join(root, file), 'utf8');
+  if (forbidden.test(source)) {
+    failures.push(`Possible XSS: render insegur a ${file}`);
+  }
+});
+
 const sw = fs.readFileSync(path.join(docs, 'sw.js'), 'utf8');
 const precacheSources = [...sw.matchAll(/'([^']+\.js)'/g)].map(match => match[1]);
 precacheSources.forEach(source => exists(path.join('docs', source.replace(/^\.\//, ''))));
