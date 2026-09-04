@@ -22,6 +22,8 @@ Executa la comprovació estàtica abans de pujar canvis:
 node scripts/check-dashboard.js
 ```
 
+El mateix check s’executa automàticament amb GitHub Actions a cada `push` a `main` o `refactor/optimitzacio` i a cada pull request.
+
 El projecte no necessita un procés de build ni dependències de Node per executar-se al navegador.
 
 ## Publicació

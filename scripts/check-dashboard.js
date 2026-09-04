@@ -31,6 +31,7 @@ const required = [
   'docs/js/lib/data-service.js',
   'docs/js/lib/view-utils.js',
   'docs/js/lib/ui-components.js',
+  '.github/workflows/dashboard-checks.yml',
 ];
 required.forEach(exists);
 
@@ -63,6 +64,14 @@ scriptSources.forEach(source => exists(path.join('docs', source.replace(/^\.\//,
 const sw = fs.readFileSync(path.join(docs, 'sw.js'), 'utf8');
 const precacheSources = [...sw.matchAll(/'([^']+\.js)'/g)].map(match => match[1]);
 precacheSources.forEach(source => exists(path.join('docs', source.replace(/^\.\//, ''))));
+
+const workflowPath = path.join(root, '.github/workflows/dashboard-checks.yml');
+if (fs.existsSync(workflowPath)) {
+  const workflow = fs.readFileSync(workflowPath, 'utf8');
+  if (!workflow.includes('node scripts/check-dashboard.js')) {
+    failures.push('El workflow de GitHub Actions no executa el smoke check');
+  }
+}
 
 if (failures.length) {
   console.error('Dashboard checks FAILED');

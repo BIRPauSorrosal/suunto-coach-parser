@@ -37,6 +37,8 @@ Després, comprova manualment:
 - gràfics després de recarregar dades;
 - consola del navegador sense errors.
 
+El workflow `.github/workflows/dashboard-checks.yml` executa automàticament el mateix smoke check a GitHub Actions. Si falla, revisa primer els fitxers o les referències indicades al log abans de fer merge.
+
 ## Service worker
 
 Quan s’afegeix o modifica un asset precachejat, incrementa `CACHE_NAME` a `docs/sw.js`. En desenvolupament local el service worker està bypassat; a GitHub Pages pot caldre una recàrrega forçada o netejar les dades del lloc.

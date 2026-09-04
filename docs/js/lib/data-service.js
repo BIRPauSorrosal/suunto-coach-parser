@@ -9,6 +9,20 @@
     planning: [config.paths.planning.local],
   });
   const GITHUB_CONFIG = config.github;
+  const REQUEST_TIMEOUT_MS = 10000;
+
+  async function request(url, options = {}) {
+    const Controller = global.AbortController;
+    const controller = typeof Controller === 'function' ? new Controller() : null;
+    const timeoutId = controller ? global.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS) : null;
+    try {
+      return await global.fetch(url, controller
+        ? { ...options, signal: controller.signal }
+        : options);
+    } finally {
+      if (timeoutId) global.clearTimeout(timeoutId);
+    }
+  }
 
   function base64ToUtf8(base64) {
     const binary = global.atob(base64.replace(/\n/g, ''));
@@ -85,7 +99,7 @@
           const apiUrl =
             `https://api.github.com/repos/${GITHUB_CONFIG.owner}/` +
             `${GITHUB_CONFIG.repo}/contents/${repoPath}?ref=${GITHUB_CONFIG.branch}`;
-          const response = await global.fetch(apiUrl, {
+          const response = await request(apiUrl, {
             headers: {
               Authorization: `Bearer ${token}`,
               Accept: 'application/vnd.github+json',
@@ -106,7 +120,7 @@
     let lastError = null;
     for (const path of paths) {
       try {
-        const response = await global.fetch(`${path}?t=${Date.now()}`, {
+        const response = await request(`${path}?t=${Date.now()}`, {
           cache: 'no-store',
         });
         if (!response.ok) throw new Error(`HTTP ${response.status} a ${path}`);
