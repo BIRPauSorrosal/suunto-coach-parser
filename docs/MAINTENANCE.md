@@ -39,6 +39,13 @@ Després, comprova manualment:
 
 El workflow `.github/workflows/dashboard-checks.yml` executa automàticament el mateix smoke check a GitHub Actions. Si falla, revisa primer els fitxers o les referències indicades al log abans de fer merge.
 
+## Diagnosi ràpida
+
+- Si la càrrega falla, comprova que l’aplicació s’estigui servint per HTTP i que `DashboardConfig` apunti a les rutes correctes.
+- Si Pages mostra una versió anterior, revisa l’estat del deploy i incrementa `CACHE_NAME` quan correspongui.
+- Si una activitat no es classifica, revisa `ACTIVITY_*_TYPES`, `PARSER_REGISTRY` i el nom del fitxer JSON.
+- Si una pujada GitHub falla, elimina i torna a configurar el token i comprova la branca i el repositori.
+
 ## Service worker
 
 Quan s’afegeix o modifica un asset precachejat, incrementa `CACHE_NAME` a `docs/sw.js`. En desenvolupament local el service worker està bypassat; a GitHub Pages pot caldre una recàrrega forçada o netejar les dades del lloc.
