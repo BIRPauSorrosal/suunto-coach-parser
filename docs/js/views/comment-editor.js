@@ -145,11 +145,11 @@ async function saveSessionComment() {
         window.dashboardStore.setSessions(rows);
       } else if (window.dashboardState) {
         window.dashboardState.sessions = rows;
+        if (typeof window.refreshDashboardUI === 'function') {
+          window.refreshDashboardUI();
+        }
       }
       window.sessionsData = rows;
-      if (typeof window.refreshDashboardUI === 'function') {
-        window.refreshDashboardUI();
-      }
       downloadCSV(csvText);
     }
 

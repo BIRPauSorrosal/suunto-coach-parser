@@ -159,8 +159,7 @@ const PMC_GRADIENT_PLUGIN = {
 function renderPMC(sessions) {
   const canvas = document.getElementById('chart-pmc');
   if (!canvas) return;
-  const existing = Chart.getChart(canvas);
-  if (existing) existing.destroy();
+  window.DashboardComponents.destroyChart('sessions-pmc');
   _pmcChart = null;
   if (!sessions.length) return;
 
@@ -175,7 +174,7 @@ function renderPMC(sessions) {
   const C      = CHART_COLORS;
   const labels = _pmcDataCache.map(d => d.label);
 
-  _pmcChart = new Chart(canvas, {
+  _pmcChart = window.DashboardComponents.createChart('sessions-pmc', canvas, {
     type: 'line',
     data: {
       labels,
@@ -277,8 +276,7 @@ function triggerCsvDownload(csvContent, filename) {
 function renderSessTrendChart(sessions) {
   const ctx = document.getElementById('chart-sess-trend');
   if (!ctx) return;
-  const existing = Chart.getChart(ctx);
-  if (existing) existing.destroy();
+  window.DashboardComponents.destroyChart('sessions-trend');
   _sessChart = null;
   if (sessions.length < 1) { ctx.style.display='none'; return; }
   ctx.style.display = '';
@@ -292,7 +290,9 @@ function renderSessTrendChart(sessions) {
     byWeek = groupByWeek(sessions);
   }
 
-  _sessChart = new Chart(ctx, buildSessChartConfig(byWeek, byWeek.map(w=>w.label), sessions));
+  _sessChart = window.DashboardComponents.createChart(
+    'sessions-trend', ctx, buildSessChartConfig(byWeek, byWeek.map(w=>w.label), sessions)
+  );
 }
 
 // ══════════════════════════════════════════════════════════════════════════════

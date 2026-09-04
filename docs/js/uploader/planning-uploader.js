@@ -37,58 +37,10 @@ function clearPendingMerge() { _pendingMerge = null; }
 
 // ─── AUTODETECTE DEL SEPARADOR ──────────────────────────────────
 
-function detectCSVSeparator(firstLine) {
-  const commas     = (firstLine.match(/,/g)  || []).length;
-  const semicolons = (firstLine.match(/;/g)  || []).length;
-  return semicolons > commas ? ";" : ",";
-}
-
-
 // ─── PARSING CSV ──────────────────────────────────────────────
 
 function parseCSVText(text) {
-  const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
-  if (lines.length < 2) return [];
-
-  const sep     = detectCSVSeparator(lines[0]);
-  const headers = splitPlanningCSVLine(lines[0], sep)
-    .map(h => h.replace(/^\uFEFF/, "").trim());
-
-  return lines.slice(1).map(line => {
-    const values = splitPlanningCSVLine(line, sep);
-    const row    = {};
-    headers.forEach((h, i) => { row[h] = (values[i] ?? "").trim(); });
-    return row;
-  });
-}
-
-// Parser d'una línia CSV que respecta camps entre cometes i cometes escapades.
-function splitPlanningCSVLine(line, sep) {
-  const values = [];
-  let value = '';
-  let insideQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    const next = line[i + 1];
-
-    if (char === '"') {
-      if (insideQuotes && next === '"') {
-        value += '"';
-        i++;
-      } else {
-        insideQuotes = !insideQuotes;
-      }
-    } else if (char === sep && !insideQuotes) {
-      values.push(value);
-      value = '';
-    } else {
-      value += char;
-    }
-  }
-
-  values.push(value);
-  return values;
+  return window.DashboardCsv.parse(text, { separator: 'auto' });
 }
 
 
@@ -356,11 +308,12 @@ async function confirmPlanningImport(onComplete) {
       window.dashboardStore.setPlanning(merge.rows);
     } else if (window.dashboardState) {
       window.dashboardState.planning = merge.rows;
+      if (typeof window.refreshDashboardUI === 'function') {
+        window.refreshDashboardUI();
+      }
     }
     if (token && typeof window.refreshDashboard === 'function') {
       await window.refreshDashboard();
-    } else if (typeof window.refreshDashboardUI === 'function') {
-      window.refreshDashboardUI();
     }
 
   } catch (err) {

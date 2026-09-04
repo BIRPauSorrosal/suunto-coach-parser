@@ -41,7 +41,10 @@ function initCharts(enrichedSessions, enrichedPlanning) {
   _lastSessions = enrichedSessions;
   _lastPlanning = enrichedPlanning;
 
-  destroyAll();
+  // Aquest mòdul només és propietari del gràfic de zones. Els gràfics de
+  // tendència de l'Overview tenen les seves pròpies claus gestionades per la
+  // vista i no s'han de destruir aquí.
+  window.DashboardComponents.destroyChart('zones');
   Chart.defaults.color = CHART_COLORS.text;
   Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
 

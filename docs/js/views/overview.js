@@ -283,7 +283,7 @@ function renderLoadTrend(sessions, planning) {
   const pillEl = document.getElementById('load-trend-pill');
   if (!canvas || !pillEl) return;
 
-  if (canvas._chartInstance) { canvas._chartInstance.destroy(); }
+  window.DashboardComponents.destroyChart('overview-load-trend');
 
   function blockLabel(endDate) {
     const months = ['gen','feb','mar','abr','mai','jun','jul','ago','set','oct','nov','des'];
@@ -359,7 +359,7 @@ function renderLoadTrend(sessions, planning) {
     <span class="trend-context">\u00b115% = en l\u00ednia | >+15% = pujada | <-15% = desc\u00e0rrega</span>
   `;
 
-  canvas._chartInstance = new Chart(canvas, {
+  window.DashboardComponents.createChart('overview-load-trend', canvas, {
     type: 'bar',
     data: {
       labels,
@@ -423,7 +423,7 @@ function renderCtlTrend(sessions) {
   const pillEl = document.getElementById('ctl-trend-pill');
   if (!canvas || !pillEl) return;
 
-  if (canvas._chartInstance) { canvas._chartInstance.destroy(); }
+  window.DashboardComponents.destroyChart('overview-ctl-trend');
 
   const CSS       = getComputedStyle(document.documentElement);
   const clrAccent = CSS.getPropertyValue('--accent').trim()    || '#22c55e';
@@ -523,7 +523,7 @@ function renderCtlTrend(sessions) {
     (i === 0 || i === ctlData.length - 1) ? 5 : 0
   );
 
-  canvas._chartInstance = new Chart(canvas, {
+  window.DashboardComponents.createChart('overview-ctl-trend', canvas, {
     type: 'line',
     data: {
       labels,

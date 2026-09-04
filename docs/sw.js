@@ -44,6 +44,7 @@ const PRECACHE_URLS = [
   './js/vendor/chart.umd.min.js',
   './js/lib/dashboard-config.js',
   './js/lib/dashboard-store.js',
+  './js/lib/csv.js',
   './js/lib/data-service.js',
   './js/lib/view-utils.js',
   './js/lib/ui-components.js',
@@ -103,10 +104,15 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const { request } = event;
   const url = request.url;
+  const pathname = new URL(url).pathname;
 
   if (request.method !== 'GET' || url.startsWith('chrome-extension')) return;
 
-  const isNetworkFirst = NETWORK_FIRST_PATTERNS.some(pattern => pattern.test(url));
+  // Les dades poden portar query params de cache-busting; classifiquem per
+  // pathname perquè continuïn tenint estratègia Network First.
+  const isNetworkFirst = NETWORK_FIRST_PATTERNS.some(pattern =>
+    pattern.test(url) || pattern.test(pathname)
+  );
 
   if (isNetworkFirst) {
     event.respondWith(
