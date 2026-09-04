@@ -8,10 +8,8 @@
 // ─── CONFIGURACIÓ GITHUB API ───────────────────────────────────
 
 const PLANNING_GITHUB_CONFIG = {
-  owner:  "BIRPauSorrosal",
-  repo:   "suunto-coach-parser",
-  branch: "main",
-  path:   "docs/data/planning.csv",
+  ...window.DashboardConfig.github,
+  path:   window.DashboardConfig.paths.planning.repository,
   get token() { return window.getGitHubToken ? window.getGitHubToken() : ''; },
 };
 
@@ -294,7 +292,10 @@ async function handlePlanningFileSelection(file, onDone) {
     return;
   }
 
-  const existing = Array.isArray(window.planningData) ? window.planningData : [];
+  const storeState = window.dashboardStore?.getState?.();
+  const existing = Array.isArray(storeState?.planning)
+    ? storeState.planning
+    : (Array.isArray(window.planningData) ? window.planningData : []);
   const merge    = mergePlanning(existing, incoming);
 
   _pendingMerge = merge;
@@ -351,7 +352,11 @@ async function confirmPlanningImport(onComplete) {
 
     // Actualitzar dades en memòria sense recarregar la pàgina
     window.planningData = merge.rows;
-    if (window.dashboardState) window.dashboardState.planning = merge.rows;
+    if (window.dashboardStore?.setPlanning) {
+      window.dashboardStore.setPlanning(merge.rows);
+    } else if (window.dashboardState) {
+      window.dashboardState.planning = merge.rows;
+    }
     if (token && typeof window.refreshDashboard === 'function') {
       await window.refreshDashboard();
     } else if (typeof window.refreshDashboardUI === 'function') {

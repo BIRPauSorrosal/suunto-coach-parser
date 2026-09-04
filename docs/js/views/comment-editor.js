@@ -141,7 +141,11 @@ async function saveSessionComment() {
     } else {
       // Sense token no podem escriure al repositori: descarreguem el CSV
       // complet ja actualitzat perquè l'usuari el pugui substituir manualment.
-      if (window.dashboardState) window.dashboardState.sessions = rows;
+      if (window.dashboardStore?.setSessions) {
+        window.dashboardStore.setSessions(rows);
+      } else if (window.dashboardState) {
+        window.dashboardState.sessions = rows;
+      }
       window.sessionsData = rows;
       if (typeof window.refreshDashboardUI === 'function') {
         window.refreshDashboardUI();

@@ -7,10 +7,8 @@
 
 // ─── CONFIGURACIÓ GITHUB API ─────────────────────────────────
 const GITHUB_CONFIG = {
-  owner:  "BIRPauSorrosal",
-  repo:   "suunto-coach-parser",
-  branch: "main",
-  path:   "docs/data/sessions.csv",
+  ...window.DashboardConfig.github,
+  path:   window.DashboardConfig.paths.sessions.repository,
   get token() { return window.getGitHubToken ? window.getGitHubToken() : ''; },
 };
 
@@ -186,7 +184,8 @@ async function fetchCurrentCSV() {
 
 // Llegeix el CSV local quan no hi ha token de GitHub.
 async function fetchLocalCSV() {
-  const response = await fetch(`./data/sessions.csv?t=${Date.now()}`, {
+  const localPath = window.DashboardConfig?.paths?.sessions?.local ?? './data/sessions.csv';
+  const response = await fetch(`${localPath}?t=${Date.now()}`, {
     cache: 'no-store',
   });
   if (!response.ok) {
@@ -201,8 +200,13 @@ async function readCurrentSessionsCSV() {
   const token = window.getGitHubToken ? window.getGitHubToken() : '';
   if (token) return fetchCurrentCSV();
 
-  if (Array.isArray(window.sessionsData) && window.sessionsData.length) {
-    return { content: objectsToCsv(window.sessionsData), sha: null };
+  const storeState = window.dashboardStore?.getState?.();
+  const sessions = Array.isArray(storeState?.sessions)
+    ? storeState.sessions
+    : window.sessionsData;
+
+  if (Array.isArray(sessions) && sessions.length) {
+    return { content: objectsToCsv(sessions), sha: null };
   }
 
   return { content: await fetchLocalCSV(), sha: null };
@@ -316,7 +320,11 @@ async function appendRowsToCSV(newRows) {
       }
       showNotice(`✅ ${newRows.length - duplicats.length} sessions afegides al repositori.`);
     } else {
-      if (window.dashboardState) window.dashboardState.sessions = merged;
+      if (window.dashboardStore?.setSessions) {
+        window.dashboardStore.setSessions(merged);
+      } else if (window.dashboardState) {
+        window.dashboardState.sessions = merged;
+      }
       window.sessionsData = merged;
       if (typeof window.refreshDashboardUI === 'function') {
         window.refreshDashboardUI();
