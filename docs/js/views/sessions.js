@@ -591,11 +591,10 @@ function buildSessChartConfig(byWeek, labels, sessions) {
 
 // ── Taula (desktop) ────────────────────────────────────────────────────────────
 function renderSessTable(sessions) {
-  const thead=document.getElementById('sess-thead');
-  const tbody=document.getElementById('sess-tbody');
+  const table=document.getElementById('sess-table');
   const title=document.getElementById('sess-table-title');
   const badge=document.getElementById('sess-count-badge');
-  if (!thead||!tbody) return;
+  if (!table) return;
   if (title) title.textContent=SESS_TYPE_LABELS[_sessType]||'Sessions';
   if (badge) badge.textContent=`${sessions.length} sessions`;
   const sb7  = document.getElementById('sess-export-7');
@@ -603,14 +602,16 @@ function renderSessTable(sessions) {
   if (sb7)  sb7.disabled  = !_sessSessions.length;
   if (sb90) sb90.disabled = !_sessSessions.length;
   const cols = getSessCols(_sessType);
-  thead.innerHTML = `<tr>${cols.map(c=>`<th${c.cls?` class="${c.cls}"`:''}>${c.label}</th>`).join('')}</tr>`;
-  if (!sessions.length) {
-    tbody.innerHTML = `<tr><td colspan="${cols.length}" class="empty-row">Cap sessió amb els filtres seleccionats.</td></tr>`;
-    return;
-  }
-  tbody.innerHTML = sessions
-    .map(s => `<tr>${cols.map(c=>`<td${c.cls?` class="${c.cls}"`:''}>${c.render(s)}</td>`).join('')}</tr>`)
-    .join('');
+  table.innerHTML = window.DashboardComponents.renderDataTable({
+    columns: cols,
+    rows: sessions,
+    emptyMessage: 'Cap sessió amb els filtres seleccionats.',
+    theadId: 'sess-thead',
+    tbodyId: 'sess-tbody',
+    wrap: false,
+  });
+
+  if (!sessions.length) return;
 
   bindSessCommentButtons();
 }
@@ -626,7 +627,10 @@ function renderSessCards(sessions) {
   if (!container) return;
 
   if (!sessions.length) {
-    container.innerHTML = '<p class="sess-cards-empty">Cap sessió amb els filtres seleccionats.</p>';
+    container.innerHTML = window.DashboardComponents.renderEmptyState(
+      'Cap sessió amb els filtres seleccionats.',
+      { className: 'sess-cards-empty' }
+    );
     return;
   }
 

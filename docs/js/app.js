@@ -1,6 +1,8 @@
 // docs/js/app.js
 // Orquestrador: càrrega de CSVs, estat global, router, helpers compartits.
 // Dep: lib/dashboard-config.js, lib/dashboard-store.js, lib/data-service.js,
+//      lib/view-utils.js,
+//      lib/ui-components.js,
 //      lib/formatters.js i lib/metrics.js (carregats abans via index.html)
 
 // ── Constants de classificació de sessions ────────────────────────────────────────────
@@ -445,7 +447,7 @@ function firstFinite(values) {
 }
 
 function setBadge(text)     { setText('load-badge', text); }
-function setText(id, value) { const el = document.getElementById(id); if (el) el.textContent = value; }
+function setText(id, value) { return window.DashboardViewUtils.setText(id, value); }
 
 // Re-renderitza tot quan l'usuari canvia la configuració de FC
 window.addEventListener('fc-config-changed', () => {

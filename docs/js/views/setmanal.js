@@ -114,7 +114,7 @@ function renderQualityBlock(week, weekSessions) {
   if (tbody) {
     tbody.innerHTML = sess.length
       ? sess.map(s => sessionRowQuality(s)).join('')
-      : `<tr><td colspan="9" class="empty-row muted-msg">Sense sessions de qualitat</td></tr>`;
+      : emptyWeekRow('Sense sessions de qualitat', 9);
   }
   setBlockStatus('sw-q-block', sess.length > 0);
 }
@@ -134,7 +134,7 @@ function renderZ2Block(week, weekSessions) {
   if (tbody) {
     tbody.innerHTML = sess.length
       ? sess.map(s => sessionRowZ2(s)).join('')
-      : `<tr><td colspan="7" class="empty-row muted-msg">Sense sessions Z2</td></tr>`;
+      : emptyWeekRow('Sense sessions Z2', 7);
   }
   setBlockStatus('sw-z2-block', sess.length > 0);
 }
@@ -152,7 +152,7 @@ function renderLongBlock(week, weekSessions) {
   if (tbody) {
     tbody.innerHTML = sess.length
       ? sess.map(s => sessionRowLong(s)).join('')
-      : `<tr><td colspan="8" class="empty-row muted-msg">Sense tirada llarga</td></tr>`;
+      : emptyWeekRow('Sense tirada llarga', 8);
   }
   setBlockStatus('sw-ll-block', sess.length > 0);
 }
@@ -167,7 +167,7 @@ function renderForcaBlock(week, weekSessions) {
   if (tbody) {
     tbody.innerHTML = sess.length
       ? sess.map(s => sessionRowExtra(s)).join('')
-      : `<tr><td colspan="5" class="empty-row muted-msg">Sense sessions de força</td></tr>`;
+      : emptyWeekRow('Sense sessions de força', 5);
   }
   setBlockStatus('sw-forca-block', sess.length > 0);
 }
@@ -183,7 +183,7 @@ function renderBiciBlock(week, weekSessions) {
   if (tbody) {
     tbody.innerHTML = sess.length
       ? sess.map(s => sessionRowBici(s)).join('')
-      : `<tr><td colspan="5" class="empty-row muted-msg">Sense sessions de bici estàtica</td></tr>`;
+      : emptyWeekRow('Sense sessions de bici estàtica', 5);
   }
   setBlockStatus('sw-bici-block', sess.length > 0);
 }
@@ -198,7 +198,7 @@ function renderAltresBlock(week, weekSessions) {
   if (tbody) {
     tbody.innerHTML = sess.length
       ? sess.map(s => sessionRowExtra(s)).join('')
-      : `<tr><td colspan="5" class="empty-row muted-msg">Sense activitats complementàries</td></tr>`;
+      : emptyWeekRow('Sense activitats complementàries', 5);
   }
   setBlockStatus('sw-altres-block', sess.length > 0);
 }
@@ -300,10 +300,16 @@ function sessionRowBici(s) {
 
 // ── Helpers locals ───────────────────────────────────────────────────────────────────────
 function setBlockStatus(id, done) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.classList.toggle('block--done',    done);
-  el.classList.toggle('block--pending', !done);
+  window.DashboardViewUtils.toggleClass(id, 'block--done', done);
+  window.DashboardViewUtils.toggleClass(id, 'block--pending', !done);
+}
+
+function emptyWeekRow(message, colspan) {
+  return window.DashboardComponents.renderEmptyState(message, {
+    tag: 'tr',
+    className: 'empty-row muted-msg',
+    colspan,
+  });
 }
 
 function formatFCRange(min, max) {
@@ -313,6 +319,5 @@ function formatFCRange(min, max) {
 }
 
 function setTextV(id, value) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = value;
+  return window.DashboardViewUtils.setText(id, value);
 }
