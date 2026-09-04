@@ -8,10 +8,8 @@
 // ─── CONFIGURACIÓ GITHUB API ───────────────────────────────────
 
 const PLANNING_GITHUB_CONFIG = {
-  owner:  "BIRPauSorrosal",
-  repo:   "suunto-coach-parser",
-  branch: "main",
-  path:   "docs/data/planning.csv",
+  ...window.DashboardConfig.github,
+  path:   window.DashboardConfig.paths.planning.repository,
   get token() { return window.getGitHubToken ? window.getGitHubToken() : ''; },
 };
 
@@ -53,14 +51,44 @@ function parseCSVText(text) {
   if (lines.length < 2) return [];
 
   const sep     = detectCSVSeparator(lines[0]);
-  const headers = lines[0].split(sep).map(h => h.replace(/^\uFEFF/, "").trim());
+  const headers = splitPlanningCSVLine(lines[0], sep)
+    .map(h => h.replace(/^\uFEFF/, "").trim());
 
   return lines.slice(1).map(line => {
-    const values = line.split(sep);
+    const values = splitPlanningCSVLine(line, sep);
     const row    = {};
     headers.forEach((h, i) => { row[h] = (values[i] ?? "").trim(); });
     return row;
   });
+}
+
+// Parser d'una línia CSV que respecta camps entre cometes i cometes escapades.
+function splitPlanningCSVLine(line, sep) {
+  const values = [];
+  let value = '';
+  let insideQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    const next = line[i + 1];
+
+    if (char === '"') {
+      if (insideQuotes && next === '"') {
+        value += '"';
+        i++;
+      } else {
+        insideQuotes = !insideQuotes;
+      }
+    } else if (char === sep && !insideQuotes) {
+      values.push(value);
+      value = '';
+    } else {
+      value += char;
+    }
+  }
+
+  values.push(value);
+  return values;
 }
 
 
@@ -264,7 +292,10 @@ async function handlePlanningFileSelection(file, onDone) {
     return;
   }
 
-  const existing = Array.isArray(window.planningData) ? window.planningData : [];
+  const storeState = window.dashboardStore?.getState?.();
+  const existing = Array.isArray(storeState?.planning)
+    ? storeState.planning
+    : (Array.isArray(window.planningData) ? window.planningData : []);
   const merge    = mergePlanning(existing, incoming);
 
   _pendingMerge = merge;
@@ -321,7 +352,16 @@ async function confirmPlanningImport(onComplete) {
 
     // Actualitzar dades en memòria sense recarregar la pàgina
     window.planningData = merge.rows;
-    if (typeof loadData === "function") loadData();
+    if (window.dashboardStore?.setPlanning) {
+      window.dashboardStore.setPlanning(merge.rows);
+    } else if (window.dashboardState) {
+      window.dashboardState.planning = merge.rows;
+    }
+    if (token && typeof window.refreshDashboard === 'function') {
+      await window.refreshDashboard();
+    } else if (typeof window.refreshDashboardUI === 'function') {
+      window.refreshDashboardUI();
+    }
 
   } catch (err) {
     console.error(err);

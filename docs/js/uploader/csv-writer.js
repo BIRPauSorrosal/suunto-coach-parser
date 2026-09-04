@@ -7,10 +7,8 @@
 
 // ─── CONFIGURACIÓ GITHUB API ─────────────────────────────────
 const GITHUB_CONFIG = {
-  owner:  "BIRPauSorrosal",
-  repo:   "suunto-coach-parser",
-  branch: "main",
-  path:   "docs/data/sessions.csv",
+  ...window.DashboardConfig.github,
+  path:   window.DashboardConfig.paths.sessions.repository,
   get token() { return window.getGitHubToken ? window.getGitHubToken() : ''; },
 };
 
@@ -184,6 +182,36 @@ async function fetchCurrentCSV() {
   return { content: decoded, sha: json.sha };
 }
 
+// Llegeix el CSV local quan no hi ha token de GitHub.
+async function fetchLocalCSV() {
+  const localPath = window.DashboardConfig?.paths?.sessions?.local ?? './data/sessions.csv';
+  const response = await fetch(`${localPath}?t=${Date.now()}`, {
+    cache: 'no-store',
+  });
+  if (!response.ok) {
+    throw new Error(`Error llegint el CSV local: ${response.status}`);
+  }
+  const buffer = await response.arrayBuffer();
+  return new TextDecoder('utf-8').decode(buffer);
+}
+
+// Retorna la font de sessions adequada al mode actual.
+async function readCurrentSessionsCSV() {
+  const token = window.getGitHubToken ? window.getGitHubToken() : '';
+  if (token) return fetchCurrentCSV();
+
+  const storeState = window.dashboardStore?.getState?.();
+  const sessions = Array.isArray(storeState?.sessions)
+    ? storeState.sessions
+    : window.sessionsData;
+
+  if (Array.isArray(sessions) && sessions.length) {
+    return { content: objectsToCsv(sessions), sha: null };
+  }
+
+  return { content: await fetchLocalCSV(), sha: null };
+}
+
 
 // ─── PUSH CSV A GITHUB ───────────────────────────────────────
 
@@ -269,16 +297,12 @@ async function appendRowsToCSV(newRows) {
   try {
     showNotice("Llegint CSV actual...");
 
-    let existingRows = [];
-    let sha          = null;
     const token      = window.getGitHubToken ? window.getGitHubToken() : '';
     const useGitHub  = !!token;
 
-    if (useGitHub) {
-      const { content, sha: fileSha } = await fetchCurrentCSV();
-      sha          = fileSha;
-      existingRows = content ? csvToObjects(content) : [];
-    }
+    const current      = await readCurrentSessionsCSV();
+    const sha          = current.sha;
+    const existingRows = current.content ? csvToObjects(current.content) : [];
 
     const { merged, duplicats } = mergeRows(existingRows, newRows);
 
@@ -291,13 +315,23 @@ async function appendRowsToCSV(newRows) {
     if (useGitHub) {
       showNotice("Pujant al repositori...");
       await pushCSVToGitHub(csvText, sha);
+      if (typeof window.refreshDashboard === 'function') {
+        await window.refreshDashboard();
+      }
       showNotice(`✅ ${newRows.length - duplicats.length} sessions afegides al repositori.`);
     } else {
+      if (window.dashboardStore?.setSessions) {
+        window.dashboardStore.setSessions(merged);
+      } else if (window.dashboardState) {
+        window.dashboardState.sessions = merged;
+      }
+      window.sessionsData = merged;
+      if (typeof window.refreshDashboardUI === 'function') {
+        window.refreshDashboardUI();
+      }
       downloadCSV(csvText);
       showNotice(`✅ CSV descarregat. ${duplicats.length ? `(${duplicats.length} duplicats ignorats)` : ""}`);
     }
-
-    if (typeof loadData === "function") loadData();
 
   } catch (err) {
     console.error(err);

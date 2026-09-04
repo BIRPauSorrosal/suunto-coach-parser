@@ -1,11 +1,9 @@
 // docs/js/app.js
 // Orquestrador: càrrega de CSVs, estat global, router, helpers compartits.
-// Dep: lib/formatters.js, lib/metrics.js (carregats abans via index.html)
-
-const DATA_SOURCES = {
-  sessions: ['./data/sessions.csv'],
-  planning: ['./data/planning.csv']
-};
+// Dep: lib/dashboard-config.js, lib/dashboard-store.js, lib/data-service.js,
+//      lib/view-utils.js,
+//      lib/ui-components.js,
+//      lib/formatters.js i lib/metrics.js (carregats abans via index.html)
 
 // ── Constants de classificació de sessions ────────────────────────────────────────────
 function isRunning(s)  { return RUNNING_TYPES.has(s.tipusKey); }
@@ -14,11 +12,12 @@ function isTestRace(s) { return TEST_RACE_TYPES.has(s.tipusKey); }
 function isBici(s)     { return BICI_TYPES.has(s.tipusKey); }
 function isOther(s)    { return !isRunning(s) && !isStrength(s) && !isTestRace(s) && !isBici(s); }
 
-const state = {
-  sessions: [],
-  planning: [],
-  sources:  {}
-};
+// L'estat i la càrrega de dades viuen en mòduls independents.
+const state = window.dashboardStore.getState();
+
+// Estat compartit mínim per als mòduls d'importació i d'edició.
+// L'aplicació continua utilitzant scripts clàssics, però aquesta referència
+// evita que els mòduls hagin de dependre de variables lèxiques d'aquest fitxer.
 
 // ── Router de vistes ─────────────────────────────────────────────────────────────────────────────
 // navigateTo: única funció que gestiona el canvi de vista.
@@ -111,17 +110,8 @@ async function loadDashboardData() {
   setBadge('Carregant dades...');
 
   try {
-    const [sessionsResult, planningResult] = await Promise.all([
-      fetchFirstAvailable(DATA_SOURCES.sessions),
-      fetchFirstAvailable(DATA_SOURCES.planning)
-    ]);
-
-    state.sessions = parseCSV(sessionsResult.text);
-    state.planning = parseCSV(planningResult.text);
-    state.sources  = {
-      sessions: sessionsResult.path,
-      planning: planningResult.path
-    };
+    const loaded = await window.DashboardDataService.load();
+    window.dashboardStore.setData(loaded);
 
     renderDashboard();
     updateStatus();
@@ -141,27 +131,36 @@ async function loadDashboardData() {
   }
 }
 
+// API pública de refresc utilitzada pels importadors i l'editor de comentaris.
+// `refreshDashboard()` torna a llegir la font de dades; `refreshDashboardUI()`
+// només torna a renderitzar l'estat que ja tenim en memòria (mode local).
+window.refreshDashboard = loadDashboardData;
+
+function refreshDashboardUI() {
+  renderDashboard();
+  updateStatus();
+  setBadge('Dades carregades');
+}
+
+window.refreshDashboardUI = refreshDashboardUI;
+
 // ── 🔧 FIX UTF-8: decodifica Base64 de l'API GitHub respectant UTF-8 ──────────────────────
 // atob() retorna Latin-1 i trenca accents (à, è, ç, etc.).
 // Aquesta funció converteix correctament Base64 → UTF-8.
+// ── Fetch ──────────────────────────────────────────────────────────────────────
 function base64ToUtf8(base64) {
-  const binary = atob(base64.replace(/\n/g, ''));
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return new TextDecoder('utf-8').decode(bytes);
+  return window.DashboardDataService.base64ToUtf8(base64);
 }
 
-// ── Fetch ──────────────────────────────────────────────────────────────────────
-async function fetchFirstAvailable(paths) {
+async function legacyFetchFirstAvailable(paths) {
   const token = window.getGitHubToken ? window.getGitHubToken() : '';
 
   if (token) {
     for (const path of paths) {
       try {
         const repoPath = path.replace(/^\.\//,  'docs/');
-        const apiUrl   = `https://api.github.com/repos/BIRPauSorrosal/suunto-coach-parser/contents/${repoPath}?ref=main`;
+        const { owner, repo, branch } = window.DashboardConfig.github;
+        const apiUrl   = `https://api.github.com/repos/${owner}/${repo}/contents/${repoPath}?ref=${branch}`;
 
         const res = await fetch(apiUrl, {
           headers: {
@@ -198,7 +197,7 @@ async function fetchFirstAvailable(paths) {
 }
 
 // ── Parser CSV ───────────────────────────────────────────────────────────────────────────
-function parseCSV(text) {
+function legacyParseCSV(text) {
   const rows = [];
   let row = [], value = '', insideQuotes = false;
 
@@ -234,6 +233,16 @@ function parseCSV(text) {
 }
 
 // ── Orquestració del render ─────────────────────────────────────────────────────────────────
+// Compatibilitat amb codi extern: les implementacions reals viuen a
+// DashboardDataService.
+async function fetchFirstAvailable(paths) {
+  return window.DashboardDataService.fetchFirstAvailable(paths);
+}
+
+function parseCSV(text) {
+  return window.DashboardDataService.parseCSV(text);
+}
+
 function renderDashboard() {
   const planning = state.planning
     .map(enrichPlanningRow)
@@ -250,6 +259,7 @@ function renderDashboard() {
   // Exposar les files RAW del planning perquè planning-uploader.js
   // pugui fer el merge sense dependre de les dades enriquides.
   window.planningData = state.planning;
+  window.sessionsData = state.sessions;
 
   renderOverviewView(sessions, planning);
   renderSetmanalView(sessions, planning);
@@ -369,7 +379,9 @@ function enrichSessionRow(row) {
 // ── Detecció setmana activa ──────────────────────────────────────────────────────────────────
 function detectActiveWeek(planning, sessions) {
   const now   = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 20, 0, 0);
+  // Les dates del planning es parsegen a mitjanit. Utilitzar també mitjanit
+  // aquí evita perdre la setmana activa durant el diumenge al vespre.
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
   const todayWeek = planning.find(w => today >= w.startDate && today <= w.endDate);
   if (todayWeek) return todayWeek;
@@ -435,7 +447,7 @@ function firstFinite(values) {
 }
 
 function setBadge(text)     { setText('load-badge', text); }
-function setText(id, value) { const el = document.getElementById(id); if (el) el.textContent = value; }
+function setText(id, value) { return window.DashboardViewUtils.setText(id, value); }
 
 // Re-renderitza tot quan l'usuari canvia la configuració de FC
 window.addEventListener('fc-config-changed', () => {

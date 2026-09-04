@@ -591,11 +591,10 @@ function buildSessChartConfig(byWeek, labels, sessions) {
 
 // ── Taula (desktop) ────────────────────────────────────────────────────────────
 function renderSessTable(sessions) {
-  const thead=document.getElementById('sess-thead');
-  const tbody=document.getElementById('sess-tbody');
+  const table=document.getElementById('sess-table');
   const title=document.getElementById('sess-table-title');
   const badge=document.getElementById('sess-count-badge');
-  if (!thead||!tbody) return;
+  if (!table) return;
   if (title) title.textContent=SESS_TYPE_LABELS[_sessType]||'Sessions';
   if (badge) badge.textContent=`${sessions.length} sessions`;
   const sb7  = document.getElementById('sess-export-7');
@@ -603,14 +602,16 @@ function renderSessTable(sessions) {
   if (sb7)  sb7.disabled  = !_sessSessions.length;
   if (sb90) sb90.disabled = !_sessSessions.length;
   const cols = getSessCols(_sessType);
-  thead.innerHTML = `<tr>${cols.map(c=>`<th${c.cls?` class="${c.cls}"`:''}>${c.label}</th>`).join('')}</tr>`;
-  if (!sessions.length) {
-    tbody.innerHTML = `<tr><td colspan="${cols.length}" class="empty-row">Cap sessió amb els filtres seleccionats.</td></tr>`;
-    return;
-  }
-  tbody.innerHTML = sessions
-    .map(s => `<tr>${cols.map(c=>`<td${c.cls?` class="${c.cls}"`:''}>${c.render(s)}</td>`).join('')}</tr>`)
-    .join('');
+  table.innerHTML = window.DashboardComponents.renderDataTable({
+    columns: cols,
+    rows: sessions,
+    emptyMessage: 'Cap sessió amb els filtres seleccionats.',
+    theadId: 'sess-thead',
+    tbodyId: 'sess-tbody',
+    wrap: false,
+  });
+
+  if (!sessions.length) return;
 
   bindSessCommentButtons();
 }
@@ -626,11 +627,15 @@ function renderSessCards(sessions) {
   if (!container) return;
 
   if (!sessions.length) {
-    container.innerHTML = '<p class="sess-cards-empty">Cap sessió amb els filtres seleccionats.</p>';
+    container.innerHTML = window.DashboardComponents.renderEmptyState(
+      'Cap sessió amb els filtres seleccionats.',
+      { className: 'sess-cards-empty' }
+    );
     return;
   }
 
   container.innerHTML = sessions.map(s => buildSessCard(s)).join('');
+  bindSessCommentButtons();
 }
 
 function buildSessCard(s) {
@@ -644,8 +649,9 @@ function buildSessCard(s) {
   const commentBtn = `<button
     class="ced-btn${hasComment ? ' ced-btn--has-comment' : ''} sess-card-comment"
     data-comment-arxiu="${safeName}"
+    data-comment-data="${esc(s.displayDate || '')}"
+    data-comment-tipus="${esc(s.tipus || '')}"
     title="${titleAttr}"
-    onclick="openSessionCommentEditor({ arxiu: '${esc(s.raw['Arxiu']||'')}', data: '${esc(s.displayDate||'')}', tipus: '${esc(s.tipus||'')}' })"
     aria-label="${titleAttr}"
   >
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -775,7 +781,7 @@ function getSessCardMetrics(s) {
 // ── Columna comentari (shared entre tots els tipus) ───────────────────────────
 function makeColComentari() {
   return {
-    label: '&#x270F;',
+    label: '✏',
     cls:   'sess-col-comment',
     render: s => {
       const comentari  = s.raw['Comentari'] || '';
@@ -787,8 +793,9 @@ function makeColComentari() {
       return `<button
         class="ced-btn${hasComment ? ' ced-btn--has-comment' : ''}"
         data-comment-arxiu="${safeName}"
+        data-comment-data="${esc(s.displayDate || '')}"
+        data-comment-tipus="${esc(s.tipus || '')}"
         title="${titleAttr}"
-        onclick="openSessionCommentEditor({ arxiu: '${esc(s.raw['Arxiu']||'')}', data: '${esc(s.displayDate||'')}', tipus: '${esc(s.tipus||'')}' })"
         aria-label="${titleAttr}"
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
@@ -866,10 +873,21 @@ function commentPreview(comment, max = 36) {
 }
 
 function bindSessCommentButtons() {
-  const tbody = document.getElementById('sess-tbody');
-  if (!tbody) return;
-  tbody.querySelectorAll('[data-comment-arxiu]').forEach(btn => {
+  const roots = [
+    document.getElementById('sess-tbody'),
+    document.getElementById('sess-cards'),
+  ].filter(Boolean);
+
+  roots.forEach(root => root.querySelectorAll('[data-comment-arxiu]').forEach(btn => {
     if (btn.dataset.commentBound) return;
     btn.dataset.commentBound = '1';
-  });
+    btn.addEventListener('click', () => {
+      if (typeof window.openSessionCommentEditor !== 'function') return;
+      window.openSessionCommentEditor({
+        arxiu: btn.dataset.commentArxiu || '',
+        data: btn.dataset.commentData || '',
+        tipus: btn.dataset.commentTipus || '',
+      });
+    });
+  }));
 }

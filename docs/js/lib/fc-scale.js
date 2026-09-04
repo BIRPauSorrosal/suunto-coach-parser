@@ -115,5 +115,8 @@ function fcBadgeHTML(fc) {
   const lvl = getFCZone(fc);
   const val = isFinite(fc) && fc > 0 ? `${Math.round(fc)} bpm` : '--';
   if (!lvl) return val;
-  return `<span class="metric-badge metric-badge--${lvl.cls}" title="${lvl.label}">${val}</span>`;
+  return window.DashboardComponents.renderBadge(val, {
+    className: `metric-badge metric-badge--${lvl.cls}`,
+    title: lvl.label,
+  });
 }

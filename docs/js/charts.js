@@ -32,8 +32,6 @@ const CHART_COLORS = {
   get zones() { return _fcZoneColors(0.85); },
 };
 
-const chartInstances = {};
-
 // Referència a les sessions actuals per poder re-renderitzar sense recarregar dades
 let _lastSessions  = null;
 let _lastPlanning  = null;
@@ -52,8 +50,7 @@ function initCharts(enrichedSessions, enrichedPlanning) {
 }
 
 function destroyAll() {
-  Object.values(chartInstances).forEach(chart => chart.destroy());
-  Object.keys(chartInstances).forEach(key => delete chartInstances[key]);
+  window.DashboardComponents.destroyAllCharts();
 }
 
 // ── Botó ⚙ al panell de zones ────────────────────────────────────────────────
@@ -107,7 +104,7 @@ function renderZonesChart(sessions) {
   const totalMinutes = totals.reduce((a, b) => a + b, 0);
   if (totalMinutes === 0) return;
 
-  chartInstances['zones'] = new Chart(ctx, {
+  window.DashboardComponents.createChart('zones', ctx, {
     type: 'doughnut',
     data: {
       labels: zoneLabels,

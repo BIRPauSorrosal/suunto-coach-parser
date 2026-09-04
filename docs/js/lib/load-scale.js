@@ -1,4 +1,5 @@
 // docs/js/lib/load-scale.js
+// Dep: ui-components.js (renderBadge)
 // Barems de càrrega: EPOC (Firstbeat) i TSS (Coggan & Allen)
 //
 // ─ Barem EPOC · sessió ───────────────────────────────────────────────────────
@@ -40,7 +41,10 @@ function _evalScale(val, scale) {
 // @returns {string} HTML string
 function _badgeHTML(displayVal, lvl) {
   if (!lvl) return displayVal;
-  return `<span class="metric-badge metric-badge--${lvl.cls}" title="${lvl.label}">${displayVal}</span>`;
+  return window.DashboardComponents.renderBadge(displayVal, {
+    className: `metric-badge metric-badge--${lvl.cls}`,
+    title: lvl.label,
+  });
 }
 
 

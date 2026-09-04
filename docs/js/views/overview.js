@@ -124,7 +124,7 @@ function renderSummary(activeWeek, weeklySessions) {
   // ─ Z1+Z2 ────────────────────────────────────────────────────────────────────────
   setText('z2-summary', z1z2Minutes ? `${formatNumber(z1z2Minutes)} min` : '\u2014');
   setText('z2-detail', activeWeek
-    ? `Ritme Z2: ${formatPace(activeWeek.z2PaceMin, '')}\u2013${formatPace(activeWeek.z2PaceMax)}`
+    ? `Ritme Z2: ${formatPace(activeWeek.z2RitmeMin, '')}\u2013${formatPace(activeWeek.z2RitmeMax)}`
     : 'Sense rang de ritme planificat');
 
   // ─ Tirada llarga ──────────────────────────────────────────────────────────────────
@@ -242,7 +242,9 @@ function renderEpocPanel(sessions) {
         <div class="epoc-bar-fill tss-${tssLvl.key}" style="width:${tssPct}%"></div>
       </div>
       <p class="epoc-label">
-        <span class="metric-badge metric-badge--${tssLvl.cls}">${esc(tssLvl.label)}</span>
+        ${window.DashboardComponents.renderBadge(tssLvl.label, {
+          className: `metric-badge metric-badge--${tssLvl.cls}`,
+        })}
         <span class="epoc-avg-detail">${countTxt} · mitjana ${tssAvgTxt}</span>
       </p>
     </div>
@@ -256,7 +258,9 @@ function renderEpocPanel(sessions) {
         <div class="epoc-bar-fill load-${epocLvl.key}" style="width:${epocPct}%"></div>
       </div>
       <p class="epoc-label">
-        <span class="metric-badge metric-badge--load-${epocLvl.key}">${esc(epocLvl.label)}</span>
+        ${window.DashboardComponents.renderBadge(epocLvl.label, {
+          className: `metric-badge metric-badge--load-${epocLvl.key}`,
+        })}
         <span class="epoc-avg-detail">${countTxt} · mitjana ${epocAvgTxt}</span>
       </p>
     </div>
