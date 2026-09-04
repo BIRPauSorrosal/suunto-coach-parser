@@ -82,7 +82,7 @@ async function openSessionCommentEditor({ arxiu, data, tipus }) {
 
   try {
     showNotice('Llegint comentari actual...');
-    const { content } = await fetchCurrentCSV();
+    const { content } = await readCurrentSessionsCSV();
     const rows = content ? csvToObjects(content) : [];
     const row  = rows.find(r => String(r['Arxiu'] ?? '') === arxiu);
 
@@ -124,7 +124,7 @@ async function saveSessionComment() {
   try {
     showNotice('Guardant comentari...');
 
-    const { content, sha } = await fetchCurrentCSV();
+    const { content, sha } = await readCurrentSessionsCSV();
     const rows = content ? csvToObjects(content) : [];
 
     const idx = rows.findIndex(r => String(r['Arxiu'] ?? '') === _sessionCommentContext.arxiu);
@@ -135,14 +135,26 @@ async function saveSessionComment() {
     rows[idx]['Comentari'] = text;
 
     const csvText = objectsToCsv(rows);
-    await pushCSVToGitHub(csvText, sha);
+    const token = window.getGitHubToken ? window.getGitHubToken() : '';
+    if (token) {
+      await pushCSVToGitHub(csvText, sha);
+    } else {
+      // Sense token no podem escriure al repositori: descarreguem el CSV
+      // complet ja actualitzat perquè l'usuari el pugui substituir manualment.
+      if (window.dashboardState) window.dashboardState.sessions = rows;
+      window.sessionsData = rows;
+      if (typeof window.refreshDashboardUI === 'function') {
+        window.refreshDashboardUI();
+      }
+      downloadCSV(csvText);
+    }
 
     showNotice('✅ Comentari guardat.');
 
     closeSessionCommentEditor();
 
-    if (typeof loadData === 'function') {
-      await loadData();
+    if (token && typeof window.refreshDashboard === 'function') {
+      await window.refreshDashboard();
     }
   } catch (err) {
     console.error(err);

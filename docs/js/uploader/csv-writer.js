@@ -184,6 +184,30 @@ async function fetchCurrentCSV() {
   return { content: decoded, sha: json.sha };
 }
 
+// Llegeix el CSV local quan no hi ha token de GitHub.
+async function fetchLocalCSV() {
+  const response = await fetch(`./data/sessions.csv?t=${Date.now()}`, {
+    cache: 'no-store',
+  });
+  if (!response.ok) {
+    throw new Error(`Error llegint el CSV local: ${response.status}`);
+  }
+  const buffer = await response.arrayBuffer();
+  return new TextDecoder('utf-8').decode(buffer);
+}
+
+// Retorna la font de sessions adequada al mode actual.
+async function readCurrentSessionsCSV() {
+  const token = window.getGitHubToken ? window.getGitHubToken() : '';
+  if (token) return fetchCurrentCSV();
+
+  if (Array.isArray(window.sessionsData) && window.sessionsData.length) {
+    return { content: objectsToCsv(window.sessionsData), sha: null };
+  }
+
+  return { content: await fetchLocalCSV(), sha: null };
+}
+
 
 // ─── PUSH CSV A GITHUB ───────────────────────────────────────
 
@@ -269,16 +293,12 @@ async function appendRowsToCSV(newRows) {
   try {
     showNotice("Llegint CSV actual...");
 
-    let existingRows = [];
-    let sha          = null;
     const token      = window.getGitHubToken ? window.getGitHubToken() : '';
     const useGitHub  = !!token;
 
-    if (useGitHub) {
-      const { content, sha: fileSha } = await fetchCurrentCSV();
-      sha          = fileSha;
-      existingRows = content ? csvToObjects(content) : [];
-    }
+    const current      = await readCurrentSessionsCSV();
+    const sha          = current.sha;
+    const existingRows = current.content ? csvToObjects(current.content) : [];
 
     const { merged, duplicats } = mergeRows(existingRows, newRows);
 
@@ -291,13 +311,19 @@ async function appendRowsToCSV(newRows) {
     if (useGitHub) {
       showNotice("Pujant al repositori...");
       await pushCSVToGitHub(csvText, sha);
+      if (typeof window.refreshDashboard === 'function') {
+        await window.refreshDashboard();
+      }
       showNotice(`✅ ${newRows.length - duplicats.length} sessions afegides al repositori.`);
     } else {
+      if (window.dashboardState) window.dashboardState.sessions = merged;
+      window.sessionsData = merged;
+      if (typeof window.refreshDashboardUI === 'function') {
+        window.refreshDashboardUI();
+      }
       downloadCSV(csvText);
       showNotice(`✅ CSV descarregat. ${duplicats.length ? `(${duplicats.length} duplicats ignorats)` : ""}`);
     }
-
-    if (typeof loadData === "function") loadData();
 
   } catch (err) {
     console.error(err);

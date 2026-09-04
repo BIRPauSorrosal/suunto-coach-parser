@@ -20,6 +20,11 @@ const state = {
   sources:  {}
 };
 
+// Estat compartit mínim per als mòduls d'importació i d'edició.
+// L'aplicació continua utilitzant scripts clàssics, però aquesta referència
+// evita que els mòduls hagin de dependre de variables lèxiques d'aquest fitxer.
+window.dashboardState = state;
+
 // ── Router de vistes ─────────────────────────────────────────────────────────────────────────────
 // navigateTo: única funció que gestiona el canvi de vista.
 // És cridada tant pels .nav-link (sidebar) com pels .bnav-item (bottom nav).
@@ -141,6 +146,19 @@ async function loadDashboardData() {
   }
 }
 
+// API pública de refresc utilitzada pels importadors i l'editor de comentaris.
+// `refreshDashboard()` torna a llegir la font de dades; `refreshDashboardUI()`
+// només torna a renderitzar l'estat que ja tenim en memòria (mode local).
+window.refreshDashboard = loadDashboardData;
+
+function refreshDashboardUI() {
+  renderDashboard();
+  updateStatus();
+  setBadge('Dades carregades');
+}
+
+window.refreshDashboardUI = refreshDashboardUI;
+
 // ── 🔧 FIX UTF-8: decodifica Base64 de l'API GitHub respectant UTF-8 ──────────────────────
 // atob() retorna Latin-1 i trenca accents (à, è, ç, etc.).
 // Aquesta funció converteix correctament Base64 → UTF-8.
@@ -250,6 +268,7 @@ function renderDashboard() {
   // Exposar les files RAW del planning perquè planning-uploader.js
   // pugui fer el merge sense dependre de les dades enriquides.
   window.planningData = state.planning;
+  window.sessionsData = state.sessions;
 
   renderOverviewView(sessions, planning);
   renderSetmanalView(sessions, planning);
@@ -369,7 +388,9 @@ function enrichSessionRow(row) {
 // ── Detecció setmana activa ──────────────────────────────────────────────────────────────────
 function detectActiveWeek(planning, sessions) {
   const now   = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 20, 0, 0);
+  // Les dates del planning es parsegen a mitjanit. Utilitzar també mitjanit
+  // aquí evita perdre la setmana activa durant el diumenge al vespre.
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
   const todayWeek = planning.find(w => today >= w.startDate && today <= w.endDate);
   if (todayWeek) return todayWeek;
