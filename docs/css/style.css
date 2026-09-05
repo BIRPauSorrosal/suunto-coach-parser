@@ -79,8 +79,14 @@
 .flex-reconciliation-item { display:flex; align-items:center; gap:12px; padding:10px; background:var(--surface); border-radius:7px; }
 .flex-reconciliation-item > div:first-child { min-width:180px; }
 .flex-reconciliation-item small { display:block; color:var(--text-muted); margin-top:3px; }
+.flex-reconciliation-item.is-confirmed { border-left:3px solid var(--accent); }
 .flex-reconciliation-match { flex:1; color:var(--accent); font-size:.82rem; }
 .flex-reconciliation-unmatched { flex:1; color:var(--text-muted); font-size:.82rem; }
+.flex-linked-activity { margin:8px 0; padding:6px 8px; border-left:2px solid var(--accent); background:rgba(34,197,94,.08); border-radius:5px; }
+.flex-linked-activity span { display:block; color:var(--accent); font-size:.62rem; text-transform:uppercase; }
+.flex-linked-activity strong { display:block; margin-top:2px; font-size:.72rem; }
+.flex-linked-activity small { color:var(--text-muted); }
+.flex-card-confirmed { color:var(--accent); font-size:.72rem; }
 .flex-unassigned-dropzone > .flex-plan-card { display:inline-block; width:210px; margin:8px 8px 0 0; vertical-align:top; }
 .flex-unassigned-dropzone { min-height:42px; padding:4px; border:1px dashed transparent; border-radius:8px; color:var(--text-muted); }
 .flex-unassigned-dropzone.is-over { border-color:var(--accent); background:var(--accent-soft); }
