@@ -29,8 +29,14 @@
         repository: 'docs/data/sessions.csv',
       },
       planning: {
-        local: './data/planning.csv',
+        local: './data/planning.json',
+        // El carregador ja usa JSON; l'importador legacy encara escriu CSV
+        // fins que sigui substituït en una fase posterior.
         repository: 'docs/data/planning.csv',
+      },
+      calendar: {
+        local: './data/calendar.json',
+        repository: 'docs/data/calendar.json',
       },
     },
   };
@@ -40,6 +46,7 @@
     paths: Object.freeze({
       sessions: Object.freeze(config.paths.sessions),
       planning: Object.freeze(config.paths.planning),
+      calendar: Object.freeze(config.paths.calendar),
     }),
   });
 })(window);

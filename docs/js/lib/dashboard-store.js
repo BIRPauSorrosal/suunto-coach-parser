@@ -5,6 +5,7 @@
   const state = {
     sessions: [],
     planning: [],
+    calendar: null,
     sources: {},
   };
 
@@ -19,9 +20,10 @@
       return state;
     },
 
-    setData({ sessions = [], planning = [], sources = {} } = {}) {
+    setData({ sessions = [], planning = [], calendar = null, sources = {} } = {}) {
       state.sessions = Array.isArray(sessions) ? sessions : [];
       state.planning = Array.isArray(planning) ? planning : [];
+      state.calendar = calendar && typeof calendar === 'object' ? calendar : null;
       state.sources = sources && typeof sources === 'object' ? sources : {};
       notify('data-loaded');
     },

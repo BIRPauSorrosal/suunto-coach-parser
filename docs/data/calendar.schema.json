@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://suunto-coach-parser.example/schemas/calendar-v1.json",
+  "title": "Suunto Coach calendar",
+  "type": "object",
+  "required": ["schema_version", "planning_source", "weeks"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "planning_source": { "type": "string", "const": "planning.json" },
+    "weeks": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/week" }
+    }
+  },
+  "$defs": {
+    "week": {
+      "type": "object",
+      "required": ["week_id", "week_code", "items", "removed_planning_session_ids"],
+      "properties": {
+        "week_id": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "week_code": { "type": "string", "pattern": "^\\d{4}-S\\d{2}$" },
+        "items": { "type": "array", "items": { "$ref": "#/$defs/item" } },
+        "removed_planning_session_ids": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "item": {
+      "type": "object",
+      "required": ["id", "kind", "day", "status"],
+      "properties": {
+        "id": { "type": "string" },
+        "planning_session_id": { "type": ["string", "null"] },
+        "kind": { "type": "string", "enum": ["planned", "manual"] },
+        "day": { "type": ["integer", "null"], "minimum": 0, "maximum": 6 },
+        "status": { "type": "string", "enum": ["pending", "done"] },
+        "type": { "type": "string" },
+        "sport": { "type": ["string", "null"] },
+        "variant": { "type": ["string", "null"] },
+        "title": { "type": "string" },
+        "detail": { "type": "string" }
+      }
+    }
+  }
+}

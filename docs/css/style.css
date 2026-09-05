@@ -75,7 +75,9 @@
 .flex-actual-card strong { display:block; margin:2px 0; }
 .flex-actual-card small { color:var(--text-muted); }
 .flex-unassigned, .flex-unmatched, .flex-history-note { margin-top:16px; }
-.flex-unassigned > .flex-plan-card { display:inline-block; width:210px; margin:8px 8px 0 0; vertical-align:top; }
+.flex-unassigned-dropzone > .flex-plan-card { display:inline-block; width:210px; margin:8px 8px 0 0; vertical-align:top; }
+.flex-unassigned-dropzone { min-height:42px; padding:4px; border:1px dashed transparent; border-radius:8px; color:var(--text-muted); }
+.flex-unassigned-dropzone.is-over { border-color:var(--accent); background:var(--accent-soft); }
 .flex-unassigned p + p, .flex-unmatched p + p, .flex-history-note p + p { color:var(--text-muted); font-size:.82rem; margin-top:4px; }
 
 @media(max-width:900px) {

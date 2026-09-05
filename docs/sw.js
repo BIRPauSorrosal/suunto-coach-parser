@@ -24,7 +24,7 @@ if (
 // • PATCH (v3.0.1, v3.0.2…) — fixes petits de CSS/JS, ajustos visuals
 // Qualsevol canvi al nom de CACHE_NAME invalida la cache anterior i força la
 // descàrrega de tots els assets nous al pròxim activate del SW.
-const CACHE_NAME = 'suunto-coach-v3.3.0';
+const CACHE_NAME = 'suunto-coach-v3.4.2';
 
 // Assets estàtics que es precachegen en instal·lar el SW
 const PRECACHE_URLS = [
@@ -58,6 +58,8 @@ const PRECACHE_URLS = [
   './js/lib/fc-scale.js',
   './js/lib/fc-config-modal.js',
   './js/lib/pmc-config.js',
+  './data/planning.json',
+  './data/calendar.json',
   './js/views/overview.js',
   './js/views/setmanal.js',
   './js/views/weekly-planner.js',

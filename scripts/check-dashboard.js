@@ -26,6 +26,10 @@ const required = [
   'docs/sw.js',
   'docs/data/sessions.csv',
   'docs/data/planning.csv',
+  'docs/data/planning.json',
+  'docs/data/planning.schema.json',
+  'docs/data/calendar.json',
+  'docs/data/calendar.schema.json',
   'docs/js/lib/dashboard-config.js',
   'docs/js/lib/dashboard-store.js',
   'docs/js/lib/data-service.js',
@@ -56,6 +60,31 @@ const planningHeader = firstCsvLine('docs/data/planning.csv');
 ['Setmana', 'Data_Inici', 'Data_Fi'].forEach(column => {
   if (!planningHeader.includes(column)) failures.push(`planning.csv no conté la columna ${column}`);
 });
+
+try {
+  const planningJson = JSON.parse(fs.readFileSync(path.join(docs, 'data/planning.json'), 'utf8'));
+  const weeks = planningJson.cycles.flatMap(cycle => cycle.weeks || []);
+  const sessions = weeks.flatMap(week => week.sessions || []);
+  const ids = sessions.map(session => session.id);
+  if (planningJson.schema_version !== 1 || !Array.isArray(planningJson.cycles)) {
+    failures.push('planning.json no té schema_version 1 o cycles');
+  }
+  if (new Set(ids).size !== ids.length) failures.push('planning.json conté IDs de sessió duplicats');
+  weeks.forEach(week => {
+    if (!/^\d{4}-S\d{2}$/.test(week.code || '')) failures.push(`Codi de setmana invàlid al planning.json: ${week.code || '--'}`);
+  });
+} catch (error) {
+  failures.push(`planning.json no és vàlid: ${error.message}`);
+}
+
+try {
+  const calendarJson = JSON.parse(fs.readFileSync(path.join(docs, 'data/calendar.json'), 'utf8'));
+  if (calendarJson.schema_version !== 1 || calendarJson.planning_source !== 'planning.json' || !calendarJson.weeks || typeof calendarJson.weeks !== 'object') {
+    failures.push('calendar.json no té schema_version 1, planning_source o weeks vàlids');
+  }
+} catch (error) {
+  failures.push(`calendar.json no és vàlid: ${error.message}`);
+}
 
 const html = fs.readFileSync(path.join(docs, 'index.html'), 'utf8');
 const scriptSources = [...html.matchAll(/<script[^>]+src=["']([^"']+)["']/g)].map(match => match[1]);

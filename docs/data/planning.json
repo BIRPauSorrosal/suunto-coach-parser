@@ -1,0 +1,2097 @@
+{
+  "schema_version": 1,
+  "season": 2026,
+  "source": "planning.csv",
+  "cycles": [
+    {
+      "id": "2026-construccio-01",
+      "name": "Construcció",
+      "start": "2026-03-23",
+      "end": "2026-05-31",
+      "weeks": [
+        {
+          "id": "2026-03-23",
+          "code": "2026-S13",
+          "start": "2026-03-23",
+          "end": "2026-03-29",
+          "phase": "Acumulació",
+          "summary": {
+            "weekly_km_target": 20.7,
+            "quality_km_target": 6.5,
+            "z2_km_target": 5.7,
+            "long_run_km_target": 8.5,
+            "strength_plan": "S1",
+            "padel_plan": "S"
+          },
+          "sessions": [
+            {
+              "id": "2026-S13-quality-01",
+              "type": "quality",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 6.5,
+              "series": 3,
+              "series_duration_min": 6,
+              "pace_min_km": 5.83,
+              "recovery_min": 2,
+              "heart_rate": {
+                "min": 164,
+                "max": 170
+              }
+            },
+            {
+              "id": "2026-S13-z2-01",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 5.7,
+              "duration_min": 45,
+              "pace_min_km": {
+                "min": 7.75,
+                "max": 8
+              },
+              "heart_rate": {
+                "min": 135,
+                "max": 145
+              }
+            },
+            {
+              "id": "2026-S13-long-run-01",
+              "type": "long-run",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 8.5,
+              "duration_min": 70,
+              "description": "Z2 continu o Trail suau",
+              "pace_min_km": null,
+              "heart_rate": {
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "id": "2026-S13-strength-01",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": "S1"
+            },
+            {
+              "id": "2026-S13-padel-01",
+              "type": "padel",
+              "sport": "padel",
+              "variant": null,
+              "day": null,
+              "label": "S"
+            }
+          ]
+        },
+        {
+          "id": "2026-03-30",
+          "code": "2026-S14",
+          "start": "2026-03-30",
+          "end": "2026-04-05",
+          "phase": "Acumulació",
+          "summary": {
+            "weekly_km_target": 22.3,
+            "quality_km_target": 7,
+            "z2_km_target": 6.3,
+            "long_run_km_target": 9,
+            "strength_plan": "S2",
+            "padel_plan": "S"
+          },
+          "sessions": [
+            {
+              "id": "2026-S14-quality-01",
+              "type": "quality",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 7,
+              "series": 2,
+              "series_duration_min": 10,
+              "pace_min_km": 5.92,
+              "recovery_min": 2.5,
+              "heart_rate": {
+                "min": 164,
+                "max": 170
+              }
+            },
+            {
+              "id": "2026-S14-z2-01",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 6.3,
+              "duration_min": 50,
+              "pace_min_km": {
+                "min": 7.75,
+                "max": 8
+              },
+              "heart_rate": {
+                "min": 135,
+                "max": 145
+              }
+            },
+            {
+              "id": "2026-S14-long-run-01",
+              "type": "long-run",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 9,
+              "duration_min": 75,
+              "description": "Z2 continu o Trail suau",
+              "pace_min_km": null,
+              "heart_rate": {
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "id": "2026-S14-strength-01",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": "S2"
+            },
+            {
+              "id": "2026-S14-padel-01",
+              "type": "padel",
+              "sport": "padel",
+              "variant": null,
+              "day": null,
+              "label": "S"
+            }
+          ]
+        },
+        {
+          "id": "2026-04-06",
+          "code": "2026-S15",
+          "start": "2026-04-06",
+          "end": "2026-04-12",
+          "phase": "Acumulació",
+          "summary": {
+            "weekly_km_target": 23.3,
+            "quality_km_target": 7.5,
+            "z2_km_target": 6.3,
+            "long_run_km_target": 9.5,
+            "strength_plan": "S3",
+            "padel_plan": "S"
+          },
+          "sessions": [
+            {
+              "id": "2026-S15-quality-01",
+              "type": "quality",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 7.5,
+              "series": 3,
+              "series_duration_min": 8,
+              "pace_min_km": 5.83,
+              "recovery_min": 2,
+              "heart_rate": {
+                "min": 164,
+                "max": 170
+              }
+            },
+            {
+              "id": "2026-S15-z2-01",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 6.3,
+              "duration_min": 50,
+              "pace_min_km": {
+                "min": 7.75,
+                "max": 8
+              },
+              "heart_rate": {
+                "min": 135,
+                "max": 145
+              }
+            },
+            {
+              "id": "2026-S15-long-run-01",
+              "type": "long-run",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 9.5,
+              "duration_min": 80,
+              "description": "Z2 continu o Trail suau",
+              "pace_min_km": null,
+              "heart_rate": {
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "id": "2026-S15-strength-01",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": "S3"
+            },
+            {
+              "id": "2026-S15-padel-01",
+              "type": "padel",
+              "sport": "padel",
+              "variant": null,
+              "day": null,
+              "label": "S"
+            }
+          ]
+        },
+        {
+          "id": "2026-04-13",
+          "code": "2026-S16",
+          "start": "2026-04-13",
+          "end": "2026-04-19",
+          "phase": "Descàrrega",
+          "summary": {
+            "weekly_km_target": 18.5,
+            "quality_km_target": 6,
+            "z2_km_target": 5,
+            "long_run_km_target": 7.5,
+            "strength_plan": "S5",
+            "padel_plan": "S"
+          },
+          "sessions": [
+            {
+              "id": "2026-S16-quality-01",
+              "type": "quality",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 6,
+              "series": 2,
+              "series_duration_min": 8,
+              "pace_min_km": 5.92,
+              "recovery_min": 2,
+              "heart_rate": {
+                "min": 162,
+                "max": 168
+              }
+            },
+            {
+              "id": "2026-S16-z2-01",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 5,
+              "duration_min": 40,
+              "pace_min_km": {
+                "min": 7.75,
+                "max": 8
+              },
+              "heart_rate": {
+                "min": 135,
+                "max": 145
+              }
+            },
+            {
+              "id": "2026-S16-long-run-01",
+              "type": "long-run",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 7.5,
+              "duration_min": 60,
+              "description": "Z2 pla i molt fàcil",
+              "pace_min_km": null,
+              "heart_rate": {
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "id": "2026-S16-strength-01",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": "S5"
+            },
+            {
+              "id": "2026-S16-padel-01",
+              "type": "padel",
+              "sport": "padel",
+              "variant": null,
+              "day": null,
+              "label": "S"
+            }
+          ]
+        },
+        {
+          "id": "2026-04-20",
+          "code": "2026-S17",
+          "start": "2026-04-20",
+          "end": "2026-04-26",
+          "phase": "Extensió",
+          "summary": {
+            "weekly_km_target": 23.8,
+            "quality_km_target": 7.5,
+            "z2_km_target": 6.3,
+            "long_run_km_target": 10,
+            "strength_plan": "S1",
+            "padel_plan": "S"
+          },
+          "sessions": [
+            {
+              "id": "2026-S17-quality-01",
+              "type": "quality",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 7.5,
+              "series": 2,
+              "series_duration_min": 12,
+              "pace_min_km": 5.92,
+              "recovery_min": 3,
+              "heart_rate": {
+                "min": 164,
+                "max": 170
+              }
+            },
+            {
+              "id": "2026-S17-z2-01",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 6.3,
+              "duration_min": 50,
+              "pace_min_km": {
+                "min": 7.75,
+                "max": 8
+              },
+              "heart_rate": {
+                "min": 135,
+                "max": 145
+              }
+            },
+            {
+              "id": "2026-S17-long-run-01",
+              "type": "long-run",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 10,
+              "duration_min": 85,
+              "description": "Z2 continu o Trail suau",
+              "pace_min_km": null,
+              "heart_rate": {
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "id": "2026-S17-strength-01",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": "S1"
+            },
+            {
+              "id": "2026-S17-padel-01",
+              "type": "padel",
+              "sport": "padel",
+              "variant": null,
+              "day": null,
+              "label": "S"
+            }
+          ]
+        },
+        {
+          "id": "2026-04-27",
+          "code": "2026-S18",
+          "start": "2026-04-27",
+          "end": "2026-05-03",
+          "phase": "Extensió",
+          "summary": {
+            "weekly_km_target": 26,
+            "quality_km_target": 8,
+            "z2_km_target": 7,
+            "long_run_km_target": 11,
+            "strength_plan": "S2",
+            "padel_plan": "S"
+          },
+          "sessions": [
+            {
+              "id": "2026-S18-quality-01",
+              "type": "quality",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 8,
+              "series": 3,
+              "series_duration_min": 10,
+              "pace_min_km": 5.92,
+              "recovery_min": 2.5,
+              "heart_rate": {
+                "min": 164,
+                "max": 170
+              }
+            },
+            {
+              "id": "2026-S18-z2-01",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 7,
+              "duration_min": 55,
+              "pace_min_km": {
+                "min": 7.75,
+                "max": 8
+              },
+              "heart_rate": {
+                "min": 135,
+                "max": 145
+              }
+            },
+            {
+              "id": "2026-S18-long-run-01",
+              "type": "long-run",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 11,
+              "duration_min": 90,
+              "description": "Z2 continu o Trail suau",
+              "pace_min_km": null,
+              "heart_rate": {
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "id": "2026-S18-strength-01",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": "S2"
+            },
+            {
+              "id": "2026-S18-padel-01",
+              "type": "padel",
+              "sport": "padel",
+              "variant": null,
+              "day": null,
+              "label": "S"
+            }
+          ]
+        },
+        {
+          "id": "2026-05-04",
+          "code": "2026-S19",
+          "start": "2026-05-04",
+          "end": "2026-05-10",
+          "phase": "Extensió",
+          "summary": {
+            "weekly_km_target": 27,
+            "quality_km_target": 8.5,
+            "z2_km_target": 7,
+            "long_run_km_target": 11.5,
+            "strength_plan": "S3",
+            "padel_plan": "S"
+          },
+          "sessions": [
+            {
+              "id": "2026-S19-quality-01",
+              "type": "quality",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 8.5,
+              "series": 2,
+              "series_duration_min": 15,
+              "pace_min_km": 5.92,
+              "recovery_min": 3,
+              "heart_rate": {
+                "min": 164,
+                "max": 170
+              }
+            },
+            {
+              "id": "2026-S19-z2-01",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 7,
+              "duration_min": 55,
+              "pace_min_km": {
+                "min": 7.75,
+                "max": 8
+              },
+              "heart_rate": {
+                "min": 135,
+                "max": 145
+              }
+            },
+            {
+              "id": "2026-S19-long-run-01",
+              "type": "long-run",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 11.5,
+              "duration_min": 95,
+              "description": "Z2 continu o Trail suau",
+              "pace_min_km": null,
+              "heart_rate": {
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "id": "2026-S19-strength-01",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": "S3"
+            },
+            {
+              "id": "2026-S19-padel-01",
+              "type": "padel",
+              "sport": "padel",
+              "variant": null,
+              "day": null,
+              "label": "S"
+            }
+          ]
+        },
+        {
+          "id": "2026-05-11",
+          "code": "2026-S20",
+          "start": "2026-05-11",
+          "end": "2026-05-17",
+          "phase": "Descàrrega",
+          "summary": {
+            "weekly_km_target": 19.5,
+            "quality_km_target": 6.5,
+            "z2_km_target": 5,
+            "long_run_km_target": 8,
+            "strength_plan": "S5",
+            "padel_plan": "S"
+          },
+          "sessions": [
+            {
+              "id": "2026-S20-quality-01",
+              "type": "quality",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 6.5,
+              "series": 2,
+              "series_duration_min": 10,
+              "pace_min_km": 5.92,
+              "recovery_min": 2,
+              "heart_rate": {
+                "min": 162,
+                "max": 168
+              }
+            },
+            {
+              "id": "2026-S20-z2-01",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 5,
+              "duration_min": 40,
+              "pace_min_km": {
+                "min": 7.75,
+                "max": 8
+              },
+              "heart_rate": {
+                "min": 135,
+                "max": 145
+              }
+            },
+            {
+              "id": "2026-S20-long-run-01",
+              "type": "long-run",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 8,
+              "duration_min": 65,
+              "description": "Z2 pla i molt fàcil",
+              "pace_min_km": null,
+              "heart_rate": {
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "id": "2026-S20-strength-01",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": "S5"
+            },
+            {
+              "id": "2026-S20-padel-01",
+              "type": "padel",
+              "sport": "padel",
+              "variant": null,
+              "day": null,
+              "label": "S"
+            }
+          ]
+        },
+        {
+          "id": "2026-05-18",
+          "code": "2026-S21",
+          "start": "2026-05-18",
+          "end": "2026-05-24",
+          "phase": "Consolidació",
+          "summary": {
+            "weekly_km_target": 27.6,
+            "quality_km_target": 8,
+            "z2_km_target": 7.6,
+            "long_run_km_target": 12,
+            "strength_plan": "S1 o S2",
+            "padel_plan": "S"
+          },
+          "sessions": [
+            {
+              "id": "2026-S21-quality-01",
+              "type": "quality",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 8,
+              "series": 1,
+              "series_duration_min": 20,
+              "pace_min_km": 5.97,
+              "recovery_min": 0,
+              "heart_rate": {
+                "min": 165,
+                "max": 170
+              }
+            },
+            {
+              "id": "2026-S21-z2-01",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 7.6,
+              "duration_min": 60,
+              "pace_min_km": {
+                "min": 7.75,
+                "max": 8
+              },
+              "heart_rate": {
+                "min": 135,
+                "max": 145
+              }
+            },
+            {
+              "id": "2026-S21-long-run-01",
+              "type": "long-run",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 12,
+              "duration_min": 100,
+              "description": "Z2 continu o Trail suau",
+              "pace_min_km": null,
+              "heart_rate": {
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "id": "2026-S21-strength-01",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": "S1 o S2"
+            },
+            {
+              "id": "2026-S21-padel-01",
+              "type": "padel",
+              "sport": "padel",
+              "variant": null,
+              "day": null,
+              "label": "S"
+            }
+          ]
+        },
+        {
+          "id": "2026-05-25",
+          "code": "2026-S22",
+          "start": "2026-05-25",
+          "end": "2026-05-31",
+          "phase": "Consolidació",
+          "summary": {
+            "weekly_km_target": 29.6,
+            "quality_km_target": 8.5,
+            "z2_km_target": 7.6,
+            "long_run_km_target": 13.5,
+            "strength_plan": "S3",
+            "padel_plan": "S"
+          },
+          "sessions": [
+            {
+              "id": "2026-S22-quality-01",
+              "type": "quality",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 8.5,
+              "series": 2,
+              "series_duration_min": 15,
+              "pace_min_km": 5.92,
+              "recovery_min": 3,
+              "heart_rate": {
+                "min": 164,
+                "max": 170
+              }
+            },
+            {
+              "id": "2026-S22-z2-01",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 7.6,
+              "duration_min": 60,
+              "pace_min_km": {
+                "min": 7.75,
+                "max": 8
+              },
+              "heart_rate": {
+                "min": 135,
+                "max": 145
+              }
+            },
+            {
+              "id": "2026-S22-long-run-01",
+              "type": "long-run",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 13.5,
+              "duration_min": 105,
+              "description": "Z2 continu o Trail suau",
+              "pace_min_km": null,
+              "heart_rate": {
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "id": "2026-S22-strength-01",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": "S3"
+            },
+            {
+              "id": "2026-S22-padel-01",
+              "type": "padel",
+              "sport": "padel",
+              "variant": null,
+              "day": null,
+              "label": "S"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2026-base-02",
+      "name": "BASE",
+      "start": "2026-06-01",
+      "end": "2026-09-20",
+      "weeks": [
+        {
+          "id": "2026-06-01",
+          "code": "2026-S23",
+          "start": "2026-06-01",
+          "end": "2026-06-07",
+          "phase": "Competició",
+          "summary": {
+            "weekly_km_target": 24.7,
+            "quality_km_target": 7.6,
+            "z2_km_target": 6.3,
+            "long_run_km_target": 10.8,
+            "strength_plan": "S1"
+          },
+          "sessions": [
+            {
+              "id": "2026-S23-quality-01",
+              "type": "quality",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 7.6,
+              "series": 1,
+              "series_duration_min": 20,
+              "pace_min_km": null,
+              "recovery_min": 0,
+              "heart_rate": {
+                "min": 168,
+                "max": 176
+              }
+            },
+            {
+              "id": "2026-S23-z2-01",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 6.3,
+              "duration_min": 45,
+              "pace_min_km": {
+                "min": 6.95,
+                "max": 7.35
+              },
+              "heart_rate": {
+                "min": 135,
+                "max": 145
+              }
+            },
+            {
+              "id": "2026-S23-long-run-01",
+              "type": "long-run",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 10.8,
+              "duration_min": 80,
+              "description": "Z2 estable",
+              "pace_min_km": null,
+              "heart_rate": {
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "id": "2026-S23-strength-01",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": "S1"
+            }
+          ]
+        },
+        {
+          "id": "2026-06-08",
+          "code": "2026-S24",
+          "start": "2026-06-08",
+          "end": "2026-06-14",
+          "phase": "Acumulació",
+          "summary": {
+            "weekly_km_target": 22.6,
+            "quality_km_target": 6.6,
+            "z2_km_target": 6,
+            "long_run_km_target": 10,
+            "strength_plan": "S5"
+          },
+          "sessions": [
+            {
+              "id": "2026-S24-quality-01",
+              "type": "quality",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 6.6,
+              "series": 2,
+              "series_duration_min": 8,
+              "pace_min_km": 5.35,
+              "recovery_min": 2,
+              "heart_rate": {
+                "min": 166,
+                "max": 172
+              }
+            },
+            {
+              "id": "2026-S24-z2-01",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 6,
+              "duration_min": 40,
+              "pace_min_km": {
+                "min": 6.55,
+                "max": 6.95
+              },
+              "heart_rate": {
+                "min": 141,
+                "max": 156
+              }
+            },
+            {
+              "id": "2026-S24-long-run-01",
+              "type": "long-run",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 10,
+              "duration_min": 70,
+              "description": "Z2 fàcil",
+              "pace_min_km": null,
+              "heart_rate": {
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "id": "2026-S24-strength-01",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": "S5"
+            }
+          ]
+        },
+        {
+          "id": "2026-06-15",
+          "code": "2026-S25",
+          "start": "2026-06-15",
+          "end": "2026-06-21",
+          "phase": "Acumulació",
+          "summary": {
+            "weekly_km_target": 26.8,
+            "quality_km_target": 7.6,
+            "z2_km_target": 7.2,
+            "long_run_km_target": 12,
+            "strength_plan": "S2"
+          },
+          "sessions": [
+            {
+              "id": "2026-S25-quality-01",
+              "type": "quality",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 7.6,
+              "series": 3,
+              "series_duration_min": 8,
+              "pace_min_km": 5.3,
+              "recovery_min": 2,
+              "heart_rate": {
+                "min": 166,
+                "max": 172
+              }
+            },
+            {
+              "id": "2026-S25-z2-01",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 7.2,
+              "duration_min": 50,
+              "pace_min_km": {
+                "min": 6.5,
+                "max": 6.9
+              },
+              "heart_rate": {
+                "min": 141,
+                "max": 156
+              }
+            },
+            {
+              "id": "2026-S25-long-run-01",
+              "type": "long-run",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 12,
+              "duration_min": 85,
+              "description": "Z2 estable",
+              "pace_min_km": null,
+              "heart_rate": {
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "id": "2026-S25-strength-01",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": "S2"
+            }
+          ]
+        },
+        {
+          "id": "2026-06-22",
+          "code": "2026-S26",
+          "start": "2026-06-22",
+          "end": "2026-06-28",
+          "phase": "Descàrrega",
+          "summary": {
+            "weekly_km_target": 23.3,
+            "quality_km_target": 7,
+            "z2_km_target": 5.8,
+            "long_run_km_target": 10.5,
+            "strength_plan": "S5"
+          },
+          "sessions": [
+            {
+              "id": "2026-S26-quality-01",
+              "type": "quality",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 7,
+              "series": 2,
+              "series_duration_min": 10,
+              "pace_min_km": 5.35,
+              "recovery_min": 2.5,
+              "heart_rate": {
+                "min": 165,
+                "max": 171
+              }
+            },
+            {
+              "id": "2026-S26-z2-01",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 5.8,
+              "duration_min": 40,
+              "pace_min_km": {
+                "min": 6.6,
+                "max": 7
+              },
+              "heart_rate": {
+                "min": 141,
+                "max": 156
+              }
+            },
+            {
+              "id": "2026-S26-long-run-01",
+              "type": "long-run",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 10.5,
+              "duration_min": 75,
+              "description": "Z2 fàcil",
+              "pace_min_km": null,
+              "heart_rate": {
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "id": "2026-S26-strength-01",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": "S5"
+            }
+          ]
+        },
+        {
+          "id": "2026-06-29",
+          "code": "2026-S27",
+          "start": "2026-06-29",
+          "end": "2026-07-05",
+          "phase": "Extensió",
+          "summary": {
+            "weekly_km_target": 29.2,
+            "quality_km_target": 8.2,
+            "z2_km_target": 8.2,
+            "long_run_km_target": 12.8,
+            "strength_plan": "S2"
+          },
+          "sessions": [
+            {
+              "id": "2026-S27-quality-01",
+              "type": "quality",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 8.2,
+              "series": 3,
+              "series_duration_min": 10,
+              "pace_min_km": 5.28,
+              "recovery_min": 2.5,
+              "heart_rate": {
+                "min": 166,
+                "max": 172
+              }
+            },
+            {
+              "id": "2026-S27-z2-01",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 8.2,
+              "duration_min": 55,
+              "pace_min_km": {
+                "min": 6.45,
+                "max": 6.85
+              },
+              "heart_rate": {
+                "min": 141,
+                "max": 156
+              }
+            },
+            {
+              "id": "2026-S27-long-run-01",
+              "type": "long-run",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 12.8,
+              "duration_min": 90,
+              "description": "Z2 estable",
+              "pace_min_km": null,
+              "heart_rate": {
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "id": "2026-S27-strength-01",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": "S2"
+            }
+          ]
+        },
+        {
+          "id": "2026-07-06",
+          "code": "2026-S28",
+          "start": "2026-07-06",
+          "end": "2026-07-12",
+          "phase": "Extensió",
+          "summary": {
+            "weekly_km_target": 30,
+            "quality_km_target": 8.5,
+            "z2_km_target": 8.3,
+            "long_run_km_target": 13.2,
+            "strength_plan": "S3"
+          },
+          "sessions": [
+            {
+              "id": "2026-S28-quality-01",
+              "type": "quality",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 8.5,
+              "series": 2,
+              "series_duration_min": 12,
+              "pace_min_km": 5.25,
+              "recovery_min": 3,
+              "heart_rate": {
+                "min": 166,
+                "max": 172
+              }
+            },
+            {
+              "id": "2026-S28-z2-01",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 8.3,
+              "duration_min": 55,
+              "pace_min_km": {
+                "min": 6.4,
+                "max": 6.8
+              },
+              "heart_rate": {
+                "min": 141,
+                "max": 156
+              }
+            },
+            {
+              "id": "2026-S28-long-run-01",
+              "type": "long-run",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 13.2,
+              "duration_min": 95,
+              "description": "Z2 estable",
+              "pace_min_km": null,
+              "heart_rate": {
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "id": "2026-S28-strength-01",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": "S3"
+            }
+          ]
+        },
+        {
+          "id": "2026-07-13",
+          "code": "2026-S29",
+          "start": "2026-07-13",
+          "end": "2026-07-19",
+          "phase": "Consolidació",
+          "summary": {
+            "weekly_km_target": 29.8,
+            "quality_km_target": 8.7,
+            "z2_km_target": 8.3,
+            "long_run_km_target": 12.8,
+            "strength_plan": "S3"
+          },
+          "sessions": [
+            {
+              "id": "2026-S29-quality-01",
+              "type": "quality",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 8.7,
+              "series": 2,
+              "series_duration_min": 12,
+              "pace_min_km": 5.22,
+              "recovery_min": 3,
+              "heart_rate": {
+                "min": 166,
+                "max": 172
+              }
+            },
+            {
+              "id": "2026-S29-z2-01",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 8.3,
+              "duration_min": 55,
+              "pace_min_km": {
+                "min": 6.4,
+                "max": 6.8
+              },
+              "heart_rate": {
+                "min": 141,
+                "max": 156
+              }
+            },
+            {
+              "id": "2026-S29-long-run-01",
+              "type": "long-run",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 12.8,
+              "duration_min": 90,
+              "description": "Z2 estable",
+              "pace_min_km": null,
+              "heart_rate": {
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "id": "2026-S29-strength-01",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": "S3"
+            }
+          ]
+        },
+        {
+          "id": "2026-08-17",
+          "code": "2026-S34",
+          "start": "2026-08-17",
+          "end": "2026-08-23",
+          "phase": "Acumulació",
+          "summary": {
+            "weekly_km_target": 16.5,
+            "z2_km_target": 10,
+            "long_run_km_target": 6.5,
+            "strength_plan": "2"
+          },
+          "sessions": [
+            {
+              "id": "2026-S34-z2-01",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 5,
+              "duration_min": 35,
+              "pace_min_km": {
+                "min": 6.75,
+                "max": 7.5
+              },
+              "heart_rate": {
+                "min": 141,
+                "max": 156
+              }
+            },
+            {
+              "id": "2026-S34-z2-02",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 5,
+              "duration_min": 35,
+              "pace_min_km": {
+                "min": 6.75,
+                "max": 7.5
+              },
+              "heart_rate": {
+                "min": 141,
+                "max": 156
+              }
+            },
+            {
+              "id": "2026-S34-long-run-01",
+              "type": "long-run",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 6.5,
+              "duration_min": 45,
+              "description": "Z2",
+              "pace_min_km": null,
+              "heart_rate": {
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "id": "2026-S34-strength-01",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": null
+            },
+            {
+              "id": "2026-S34-strength-02",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": null
+            }
+          ]
+        },
+        {
+          "id": "2026-08-24",
+          "code": "2026-S35",
+          "start": "2026-08-24",
+          "end": "2026-08-30",
+          "phase": "Acumulació",
+          "summary": {
+            "weekly_km_target": 18.6,
+            "z2_km_target": 11.5,
+            "long_run_km_target": 7.1,
+            "strength_plan": "2"
+          },
+          "sessions": [
+            {
+              "id": "2026-S35-z2-01",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 5.75,
+              "duration_min": 40,
+              "pace_min_km": {
+                "min": 6.75,
+                "max": 7.5
+              },
+              "heart_rate": {
+                "min": 141,
+                "max": 156
+              }
+            },
+            {
+              "id": "2026-S35-z2-02",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 5.75,
+              "duration_min": 40,
+              "pace_min_km": {
+                "min": 6.75,
+                "max": 7.5
+              },
+              "heart_rate": {
+                "min": 141,
+                "max": 156
+              }
+            },
+            {
+              "id": "2026-S35-long-run-01",
+              "type": "long-run",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 7.1,
+              "duration_min": 50,
+              "description": "Z2",
+              "pace_min_km": null,
+              "heart_rate": {
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "id": "2026-S35-strength-01",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": null
+            },
+            {
+              "id": "2026-S35-strength-02",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": null
+            }
+          ]
+        },
+        {
+          "id": "2026-08-31",
+          "code": "2026-S36",
+          "start": "2026-08-31",
+          "end": "2026-09-06",
+          "phase": "Acumulació",
+          "summary": {
+            "weekly_km_target": 20.6,
+            "z2_km_target": 12.1,
+            "long_run_km_target": 8.5,
+            "strength_plan": "2"
+          },
+          "sessions": [
+            {
+              "id": "2026-S36-z2-01",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 6.05,
+              "duration_min": 42.5,
+              "pace_min_km": {
+                "min": 6.75,
+                "max": 7.5
+              },
+              "heart_rate": {
+                "min": 141,
+                "max": 156
+              }
+            },
+            {
+              "id": "2026-S36-z2-02",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 6.05,
+              "duration_min": 42.5,
+              "pace_min_km": {
+                "min": 6.75,
+                "max": 7.5
+              },
+              "heart_rate": {
+                "min": 141,
+                "max": 156
+              }
+            },
+            {
+              "id": "2026-S36-long-run-01",
+              "type": "long-run",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 8.5,
+              "duration_min": 60,
+              "description": "Z2",
+              "pace_min_km": null,
+              "heart_rate": {
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "id": "2026-S36-strength-01",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": null
+            },
+            {
+              "id": "2026-S36-strength-02",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": null
+            }
+          ]
+        },
+        {
+          "id": "2026-09-07",
+          "code": "2026-S37",
+          "start": "2026-09-07",
+          "end": "2026-09-13",
+          "phase": "Extensió",
+          "summary": {
+            "weekly_km_target": 21.8,
+            "quality_km_target": 6,
+            "z2_km_target": 6.5,
+            "long_run_km_target": 9.3,
+            "strength_plan": "2"
+          },
+          "sessions": [
+            {
+              "id": "2026-S37-quality-01",
+              "type": "quality",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 6,
+              "series": 2,
+              "series_duration_min": 10,
+              "pace_min_km": null,
+              "recovery_min": 3,
+              "heart_rate": {
+                "min": 157,
+                "max": 170
+              }
+            },
+            {
+              "id": "2026-S37-z2-01",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 6.5,
+              "duration_min": 45,
+              "pace_min_km": {
+                "min": 6.75,
+                "max": 7.5
+              },
+              "heart_rate": {
+                "min": 141,
+                "max": 156
+              }
+            },
+            {
+              "id": "2026-S37-long-run-01",
+              "type": "long-run",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 9.3,
+              "duration_min": 65,
+              "description": "Z2",
+              "pace_min_km": null,
+              "heart_rate": {
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "id": "2026-S37-strength-01",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": null
+            },
+            {
+              "id": "2026-S37-strength-02",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": null
+            }
+          ]
+        },
+        {
+          "id": "2026-09-14",
+          "code": "2026-S38",
+          "start": "2026-09-14",
+          "end": "2026-09-20",
+          "phase": "Extensió",
+          "summary": {
+            "weekly_km_target": 23,
+            "quality_km_target": 6.5,
+            "z2_km_target": 6.5,
+            "long_run_km_target": 10,
+            "strength_plan": "2"
+          },
+          "sessions": [
+            {
+              "id": "2026-S38-quality-01",
+              "type": "quality",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 6.5,
+              "series": 3,
+              "series_duration_min": 8,
+              "pace_min_km": null,
+              "recovery_min": 2,
+              "heart_rate": {
+                "min": 157,
+                "max": 170
+              }
+            },
+            {
+              "id": "2026-S38-z2-01",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 6.5,
+              "duration_min": 45,
+              "pace_min_km": {
+                "min": 6.75,
+                "max": 7.5
+              },
+              "heart_rate": {
+                "min": 141,
+                "max": 156
+              }
+            },
+            {
+              "id": "2026-S38-long-run-01",
+              "type": "long-run",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 10,
+              "duration_min": 70,
+              "description": "Z2",
+              "pace_min_km": null,
+              "heart_rate": {
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "id": "2026-S38-strength-01",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": null
+            },
+            {
+              "id": "2026-S38-strength-02",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2026-recuperacio-03",
+      "name": "RECUPERACIÓ",
+      "start": "2026-09-21",
+      "end": "2026-10-04",
+      "weeks": [
+        {
+          "id": "2026-09-21",
+          "code": "2026-S39",
+          "start": "2026-09-21",
+          "end": "2026-09-27",
+          "phase": "Descàrrega",
+          "summary": {},
+          "sessions": []
+        },
+        {
+          "id": "2026-09-28",
+          "code": "2026-S40",
+          "start": "2026-09-28",
+          "end": "2026-10-04",
+          "phase": "Descàrrega",
+          "summary": {},
+          "sessions": []
+        }
+      ]
+    },
+    {
+      "id": "2026-base-04",
+      "name": "BASE",
+      "start": "2026-10-05",
+      "end": "2026-11-08",
+      "weeks": [
+        {
+          "id": "2026-10-05",
+          "code": "2026-S41",
+          "start": "2026-10-05",
+          "end": "2026-10-11",
+          "phase": "Recuperació",
+          "summary": {
+            "weekly_km_target": 14.2,
+            "z2_km_target": 7,
+            "long_run_km_target": 7.2,
+            "strength_plan": "1"
+          },
+          "sessions": [
+            {
+              "id": "2026-S41-z2-01",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 3.5,
+              "duration_min": 25,
+              "pace_min_km": {
+                "min": 6.75,
+                "max": 7.5
+              },
+              "heart_rate": {
+                "min": 141,
+                "max": 156
+              }
+            },
+            {
+              "id": "2026-S41-z2-02",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 3.5,
+              "duration_min": 25,
+              "pace_min_km": {
+                "min": 6.75,
+                "max": 7.5
+              },
+              "heart_rate": {
+                "min": 141,
+                "max": 156
+              }
+            },
+            {
+              "id": "2026-S41-long-run-01",
+              "type": "long-run",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 7.2,
+              "duration_min": 50,
+              "description": "Z2",
+              "pace_min_km": null,
+              "heart_rate": {
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "id": "2026-S41-strength-01",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": null
+            }
+          ]
+        },
+        {
+          "id": "2026-10-12",
+          "code": "2026-S42",
+          "start": "2026-10-12",
+          "end": "2026-10-18",
+          "phase": "Recuperació",
+          "summary": {
+            "weekly_km_target": 17.8,
+            "z2_km_target": 9.2,
+            "long_run_km_target": 8.6,
+            "strength_plan": "1"
+          },
+          "sessions": [
+            {
+              "id": "2026-S42-z2-01",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 4.6,
+              "duration_min": 32.5,
+              "pace_min_km": {
+                "min": 6.75,
+                "max": 7.5
+              },
+              "heart_rate": {
+                "min": 141,
+                "max": 156
+              }
+            },
+            {
+              "id": "2026-S42-z2-02",
+              "type": "z2",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 4.6,
+              "duration_min": 32.5,
+              "pace_min_km": {
+                "min": 6.75,
+                "max": 7.5
+              },
+              "heart_rate": {
+                "min": 141,
+                "max": 156
+              }
+            },
+            {
+              "id": "2026-S42-long-run-01",
+              "type": "long-run",
+              "sport": "running",
+              "variant": "road",
+              "day": null,
+              "distance_km": 8.6,
+              "duration_min": 60,
+              "description": "Z2",
+              "pace_min_km": null,
+              "heart_rate": {
+                "min": null,
+                "max": null
+              }
+            },
+            {
+              "id": "2026-S42-strength-01",
+              "type": "strength",
+              "sport": "strength",
+              "variant": null,
+              "day": null,
+              "session_type": null
+            }
+          ]
+        },
+        {
+          "id": "2026-10-19",
+          "code": "2026-S43",
+          "start": "2026-10-19",
+          "end": "2026-10-25",
+          "phase": "Acumulació",
+          "summary": {},
+          "sessions": []
+        },
+        {
+          "id": "2026-10-26",
+          "code": "2026-S44",
+          "start": "2026-10-26",
+          "end": "2026-11-01",
+          "phase": "Acumulació",
+          "summary": {},
+          "sessions": []
+        },
+        {
+          "id": "2026-11-02",
+          "code": "2026-S45",
+          "start": "2026-11-02",
+          "end": "2026-11-08",
+          "phase": "Extensió",
+          "summary": {},
+          "sessions": []
+        }
+      ]
+    },
+    {
+      "id": "2026-recuperacio-05",
+      "name": "RECUPERACIÓ",
+      "start": "2026-11-09",
+      "end": "2026-11-15",
+      "weeks": [
+        {
+          "id": "2026-11-09",
+          "code": "2026-S46",
+          "start": "2026-11-09",
+          "end": "2026-11-15",
+          "phase": "Descàrrega",
+          "summary": {},
+          "sessions": []
+        }
+      ]
+    },
+    {
+      "id": "2026-construccio-06",
+      "name": "CONSTRUCCIÓ",
+      "start": "2026-11-16",
+      "end": "2026-12-06",
+      "weeks": [
+        {
+          "id": "2026-11-16",
+          "code": "2026-S47",
+          "start": "2026-11-16",
+          "end": "2026-11-22",
+          "phase": "Acumulació",
+          "summary": {},
+          "sessions": []
+        },
+        {
+          "id": "2026-11-23",
+          "code": "2026-S48",
+          "start": "2026-11-23",
+          "end": "2026-11-29",
+          "phase": "Extensió",
+          "summary": {},
+          "sessions": []
+        },
+        {
+          "id": "2026-11-30",
+          "code": "2026-S49",
+          "start": "2026-11-30",
+          "end": "2026-12-06",
+          "phase": "Extensió",
+          "summary": {},
+          "sessions": []
+        }
+      ]
+    },
+    {
+      "id": "2026-recuperacio-07",
+      "name": "RECUPERACIÓ",
+      "start": "2026-12-07",
+      "end": "2026-12-13",
+      "weeks": [
+        {
+          "id": "2026-12-07",
+          "code": "2026-S50",
+          "start": "2026-12-07",
+          "end": "2026-12-13",
+          "phase": "Descàrrega",
+          "summary": {},
+          "sessions": []
+        }
+      ]
+    },
+    {
+      "id": "2026-construccio-08",
+      "name": "CONSTRUCCIÓ",
+      "start": "2026-12-14",
+      "end": "2026-12-27",
+      "weeks": [
+        {
+          "id": "2026-12-14",
+          "code": "2026-S51",
+          "start": "2026-12-14",
+          "end": "2026-12-20",
+          "phase": "Consolidació",
+          "summary": {},
+          "sessions": []
+        },
+        {
+          "id": "2026-12-21",
+          "code": "2026-S52",
+          "start": "2026-12-21",
+          "end": "2026-12-27",
+          "phase": "Consolidació",
+          "summary": {},
+          "sessions": []
+        }
+      ]
+    },
+    {
+      "id": "2026-pic-09",
+      "name": "PIC",
+      "start": "2026-12-28",
+      "end": "2027-01-10",
+      "weeks": [
+        {
+          "id": "2026-12-28",
+          "code": "2026-S53",
+          "start": "2026-12-28",
+          "end": "2027-01-03",
+          "phase": "Consolidació",
+          "summary": {},
+          "sessions": []
+        },
+        {
+          "id": "2027-01-04",
+          "code": "2027-S01",
+          "start": "2027-01-04",
+          "end": "2027-01-10",
+          "phase": "Consolidació",
+          "summary": {},
+          "sessions": []
+        }
+      ]
+    },
+    {
+      "id": "2027-recuperacio-10",
+      "name": "RECUPERACIÓ",
+      "start": "2027-01-11",
+      "end": "2027-01-17",
+      "weeks": [
+        {
+          "id": "2027-01-11",
+          "code": "2027-S02",
+          "start": "2027-01-11",
+          "end": "2027-01-17",
+          "phase": "Descàrrega",
+          "summary": {},
+          "sessions": []
+        }
+      ]
+    },
+    {
+      "id": "2027-competicio-11",
+      "name": "COMPETICIÓ",
+      "start": "2027-01-18",
+      "end": "2027-01-24",
+      "weeks": [
+        {
+          "id": "2027-01-18",
+          "code": "2027-S03",
+          "start": "2027-01-18",
+          "end": "2027-01-24",
+          "phase": "Competició",
+          "summary": {},
+          "sessions": []
+        }
+      ]
+    }
+  ]
+}

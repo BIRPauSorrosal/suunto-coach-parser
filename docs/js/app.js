@@ -48,7 +48,7 @@ function navigateTo(target) {
   const { sessions, planning } = chartData;
   if (target === 'overview')  renderOverviewView(sessions, planning);
   if (target === 'avui')      renderTodayView(sessions, planning);
-  if (target === 'setmanal')  renderFlexibleWeekView(sessions, planning);
+  if (target === 'setmanal')  renderFlexibleWeekView(sessions, planning, state.calendar);
   if (target === 'planning')  renderPlanningView(planning, sessions);
   if (target === 'sessions')  renderSessionsView(sessions);
 }
@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── Càrrega de dades ──────────────────────────────────────────────────────────────────
 async function loadDashboardData() {
   const requestId = ++loadRequestId;
-  setNotice('Llegint fitxers CSV...', 'info');
+  setNotice('Llegint fitxers de dades...', 'info');
   setBadge('Carregant dades...');
 
   try {
@@ -133,7 +133,7 @@ async function loadDashboardData() {
     console.error(error);
     setBadge('Error de càrrega');
     setNotice(
-      "No s'han pogut llegir els CSVs. Comprova que els fitxers existeixen.",
+      "No s'han pogut llegir les dades. Comprova planning.json i sessions.csv.",
       'error'
     );
     updateStatus(error.message);
@@ -291,7 +291,7 @@ function renderActiveView() {
   const target = document.querySelector('.view--active')?.dataset.view || 'overview';
   if (target === 'overview') renderOverviewView(sessions, planning);
   if (target === 'avui')     renderTodayView(sessions, planning);
-  if (target === 'setmanal') renderFlexibleWeekView(sessions, planning);
+  if (target === 'setmanal') renderFlexibleWeekView(sessions, planning, state.calendar);
   if (target === 'planning') renderPlanningView(planning, sessions);
   if (target === 'sessions') renderSessionsView(sessions);
 }
@@ -332,6 +332,9 @@ function enrichPlanningRow(row) {
 
   return {
     raw:          row,
+    code:         row['Setmana'] || '--',
+    sessions:     Array.isArray(row.__sessions) ? row.__sessions : [],
+    planningId:   row.__weekId || null,
 
     // Metadades
     setmana:      row['Setmana'] || '--',
@@ -432,8 +435,8 @@ function updateStatus(errorMessage = null) {
     ? `sessions.csv carregat (${state.sessions.length} files)`
     : 'sessions.csv no disponible');
   setText('status-planning', state.planning.length
-    ? `planning.csv carregat (${state.planning.length} files)`
-    : 'planning.csv no disponible');
+    ? `planning.json carregat (${state.planning.length} setmanes)`
+    : 'planning.json no disponible');
   setText('status-source', errorMessage
     ? `Error: ${errorMessage}`
     : `sessions: ${state.sources.sessions || '--'} · planning: ${state.sources.planning || '--'}`);

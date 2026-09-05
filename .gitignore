@@ -1,5 +1,9 @@
 # Arxius bruts de Suunto (JSONs originals d'exportació)
 *.json
+!docs/data/planning.json
+!docs/data/planning.schema.json
+!docs/data/calendar.json
+!docs/data/calendar.schema.json
 
 # Arxius binaris i temporals de Python
 __pycache__/

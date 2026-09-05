@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://suunto-coach-parser.example/schemas/planning-v1.json",
+  "title": "Suunto Coach planning",
+  "type": "object",
+  "required": ["schema_version", "cycles"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "season": { "type": "integer" },
+    "source": { "type": "string" },
+    "cycles": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/cycle" }
+    }
+  },
+  "$defs": {
+    "cycle": {
+      "type": "object",
+      "required": ["id", "name", "weeks"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "start": { "type": "string", "format": "date" },
+        "end": { "type": "string", "format": "date" },
+        "weeks": { "type": "array", "items": { "$ref": "#/$defs/week" } }
+      }
+    },
+    "week": {
+      "type": "object",
+      "required": ["id", "code", "start", "end", "phase", "sessions"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "code": { "type": "string", "pattern": "^\\d{4}-S\\d{2}$" },
+        "start": { "type": "string", "format": "date" },
+        "end": { "type": "string", "format": "date" },
+        "phase": { "type": "string" },
+        "summary": { "type": "object" },
+        "sessions": { "type": "array", "items": { "$ref": "#/$defs/session" } }
+      }
+    },
+    "session": {
+      "type": "object",
+      "required": ["id", "type", "sport", "variant"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^\\d{4}-S\\d{2}-[a-z0-9-]+-\\d{2}$" },
+        "type": { "type": "string" },
+        "sport": { "type": "string" },
+        "variant": { "type": ["string", "null"] },
+        "day": { "type": ["string", "null"] },
+        "session_type": { "type": ["string", "null"] },
+        "pace_min_km": {
+          "type": ["number", "null"]
+        },
+        "heart_rate": {
+          "type": "object",
+          "properties": {
+            "min": { "type": ["number", "null"] },
+            "max": { "type": ["number", "null"] }
+          }
+        }
+      }
+    }
+  }
+}
