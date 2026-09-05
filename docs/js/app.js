@@ -48,8 +48,7 @@ function navigateTo(target) {
   const { sessions, planning } = chartData;
   if (target === 'overview')  renderOverviewView(sessions, planning);
   if (target === 'avui')      renderTodayView(sessions, planning);
-  if (target === 'setmanal')  renderFlexibleWeekView(sessions, planning, state.calendar);
-  if (target === 'planning')  renderPlanningView(planning, sessions);
+  if (target === 'planning')  renderPlanningView(planning, sessions, state.calendar);
   if (target === 'sessions')  renderSessionsView(sessions);
 }
 
@@ -291,8 +290,7 @@ function renderActiveView() {
   const target = document.querySelector('.view--active')?.dataset.view || 'overview';
   if (target === 'overview') renderOverviewView(sessions, planning);
   if (target === 'avui')     renderTodayView(sessions, planning);
-  if (target === 'setmanal') renderFlexibleWeekView(sessions, planning, state.calendar);
-  if (target === 'planning') renderPlanningView(planning, sessions);
+  if (target === 'planning') renderPlanningView(planning, sessions, state.calendar);
   if (target === 'sessions') renderSessionsView(sessions);
 }
 

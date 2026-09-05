@@ -187,4 +187,11 @@
   }
   function addSession(sessions,planning,week,calendarDocument){const names=['Qualitat','Z2','Tirada llarga','Força','Bici estàtica','Altres'];const n=window.prompt(`Tipus d'activitat:\n${names.map((x,i)=>`${i+1}. ${x}`).join('\n')}`,'1'), types=['quality','z2','long','strength','bici','other'],type=types[Number(n)-1];if(!type)return;const detail=window.prompt('Descripció o objectiu (opcional):',TYPES[type][0]);if(detail===null)return;const d=window.prompt('Dia (1 dilluns – 7 diumenge):',String(({quality:2,z2:4,long:6,strength:3,bici:5,other:6}[type])));if(!/^[1-7]$/.test(d))return;const c=getCalendar(week,calendarDocument);c.items.push({id:`${week.key}-manual-${Date.now()}`,day:Number(d)-1,type,title:TYPES[type][0],detail:detail||TYPES[type][0],status:'pending',source:'manual'});saveCalendar(week,c);renderFlexibleWeekView(sessions,planning,calendarDocument);}
   window.renderFlexibleWeekView=renderFlexibleWeekView;
+  window.setFlexibleWeekByKey = (key, planning, sessions) => {
+    const sourcePlanning = Array.isArray(planning) ? planning : window.dashboardStore?.getState?.()?.planning || [];
+    const sourceSessions = Array.isArray(sessions) ? sessions : window.dashboardStore?.getState?.()?.sessions || [];
+    const weeks = window.WeekManager.timeline(sourcePlanning, sourceSessions);
+    const index = weeks.findIndex(week => week.key === key);
+    if (index >= 0) weekIndex = index;
+  };
 })();

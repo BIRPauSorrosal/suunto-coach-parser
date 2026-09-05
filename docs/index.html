@@ -44,7 +44,6 @@
       <nav class="sidebar-nav" aria-label="Navegació principal">
         <a href="#" class="nav-link active" data-target="avui"><span class="nav-icon">◎</span> Avui</a>
         <a href="#" class="nav-link" data-target="overview"><span class="nav-icon">◉</span> Overview</a>
-        <a href="#" class="nav-link" data-target="setmanal"><span class="nav-icon">◈</span> Setmana actual</a>
         <a href="#" class="nav-link" data-target="planning"><span class="nav-icon">◫</span> Planning</a>
         <a href="#" class="nav-link" data-target="sessions"><span class="nav-icon">◇</span> Sessions</a>
       </nav>
@@ -416,49 +415,14 @@
         </section>
       </section>
 
-      <!-- Vista: Setmana flexible -->
-      <section class="view" data-view="setmanal">
-        <header class="page-header">
-          <div>
-            <p class="eyebrow">Calendari flexible</p>
-            <h2 id="flex-week-label">--</h2>
-            <p class="page-subtitle"><span id="flex-week-range">--</span> · <span id="flex-week-context">--</span></p>
-          </div>
-          <div class="header-actions">
-            <button class="btn btn-ghost" id="flex-week-prev">◄ Anterior</button>
-            <button class="btn btn-ghost" id="flex-week-current">Setmana actual</button>
-            <span class="badge badge-muted" id="flex-week-counter">-- / --</span>
-            <button class="btn btn-ghost" id="flex-week-next">Següent ►</button>
-          </div>
-        </header>
-
-        <section class="flex-week-toolbar panel">
-          <div>
-            <p class="eyebrow">Organitza la setmana</p>
-            <p class="flex-week-help">Mou les sessions entre dies. Les sessions reals es mostren a sota i no modifiquen l’històric.</p>
-          </div>
-          <button class="btn btn-primary" id="flex-add-session">+ Afegir activitat</button>
-        </section>
-
-        <section class="flex-week-summary" id="flex-week-summary"></section>
-        <section class="flex-calendar" id="flex-calendar" aria-label="Calendari setmanal"></section>
-
-        <section class="flex-unassigned panel" id="flex-unassigned" hidden></section>
-        <section class="flex-unmatched panel" id="flex-unmatched" hidden></section>
-
-        <section class="flex-history-note panel">
-          <p class="eyebrow">Històric</p>
-          <p>Les setmanes antigues conserven el planning setmanal original i les activitats registrades. Només el calendari actual i les setmanes futures es poden reorganitzar.</p>
-        </section>
-      </section>
-
       <!-- Vista: Planning -->
       <section class="view" data-view="planning">
         <header class="page-header">
           <div><p class="eyebrow">Planificació</p><h2>Temporada</h2></div>
           <div class="header-actions">
             <button class="btn btn-ghost" id="btn-plan-yearly">Vista anual</button>
-            <button class="btn btn-ghost active" id="btn-plan-monthly">Vista mensual</button>
+            <button class="btn btn-ghost" id="btn-plan-monthly">Vista mensual</button>
+            <button class="btn btn-ghost active" id="btn-plan-weekly">Vista setmanal</button>
           </div>
         </header>
         <div id="planning-view-container"><p class="muted-msg">Carregant planning...</p></div>
@@ -576,10 +540,6 @@
     <a href="#" class="bnav-item" data-target="overview">
       <span class="bnav-icon">◉</span>
       <span class="bnav-label">Overview</span>
-    </a>
-    <a href="#" class="bnav-item" data-target="setmanal">
-      <span class="bnav-icon">◈</span>
-      <span class="bnav-label">Setmana</span>
     </a>
     <a href="#" class="bnav-item" data-target="planning">
       <span class="bnav-icon">◫</span>
