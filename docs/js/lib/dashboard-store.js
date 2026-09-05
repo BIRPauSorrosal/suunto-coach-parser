@@ -5,6 +5,7 @@
   const state = {
     sessions: [],
     planning: [],
+    planningDocument: null,
     calendar: null,
     sources: {},
   };
@@ -20,9 +21,10 @@
       return state;
     },
 
-    setData({ sessions = [], planning = [], calendar = null, sources = {} } = {}) {
+    setData({ sessions = [], planning = [], planningDocument = null, calendar = null, sources = {} } = {}) {
       state.sessions = Array.isArray(sessions) ? sessions : [];
       state.planning = Array.isArray(planning) ? planning : [];
+      state.planningDocument = planningDocument && typeof planningDocument === 'object' ? planningDocument : null;
       state.calendar = calendar && typeof calendar === 'object' ? calendar : null;
       state.sources = sources && typeof sources === 'object' ? sources : {};
       notify('data-loaded');
@@ -36,6 +38,11 @@
     setPlanning(planning) {
       state.planning = Array.isArray(planning) ? planning : [];
       notify('planning-updated');
+    },
+
+    setPlanningDocument(document) {
+      state.planningDocument = document && typeof document === 'object' ? document : null;
+      notify('planning-document-updated');
     },
 
     subscribe(listener) {

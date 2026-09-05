@@ -32,7 +32,7 @@
         local: './data/planning.json',
         // El carregador ja usa JSON; l'importador legacy encara escriu CSV
         // fins que sigui substituït en una fase posterior.
-        repository: 'docs/data/planning.csv',
+        repository: 'docs/data/planning.json',
       },
       calendar: {
         local: './data/calendar.json',

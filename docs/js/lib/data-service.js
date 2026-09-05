@@ -189,6 +189,7 @@
     return {
       sessions: parseCSV(sessionsResult.text),
       planning: normalizePlanningJSON(parsePlanningJSON(planningResult.text)),
+      planningDocument: parsePlanningJSON(planningResult.text),
       calendar: parseCalendarJSON(calendarResult.text),
       sources: {
         sessions: sessionsResult.path,
