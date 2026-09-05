@@ -1,5 +1,68 @@
 {
   "schema_version": 1,
   "planning_source": "planning.json",
-  "weeks": {}
+  "weeks": {
+    "2026-09-07": {
+      "week_id": "2026-09-07",
+      "week_code": "2026-S37",
+      "items": [
+        {
+          "id": "2026-S37-quality-01",
+          "day": null,
+          "type": "quality",
+          "title": "Qualitat",
+          "detail": "6 km · 2 sèries",
+          "status": "pending",
+          "source": "planning",
+          "kind": "planned",
+          "planning_session_id": "2026-S37-quality-01"
+        },
+        {
+          "id": "2026-S37-z2-01",
+          "day": null,
+          "type": "z2",
+          "title": "Z2",
+          "detail": "6,5 km · 45 min",
+          "status": "pending",
+          "source": "planning",
+          "kind": "planned",
+          "planning_session_id": "2026-S37-z2-01"
+        },
+        {
+          "id": "2026-S37-long-run-01",
+          "day": null,
+          "type": "long-run",
+          "title": "Tirada llarga",
+          "detail": "9,3 km · 65 min · Z2",
+          "status": "pending",
+          "source": "planning",
+          "kind": "planned",
+          "planning_session_id": "2026-S37-long-run-01"
+        },
+        {
+          "id": "2026-S37-strength-01",
+          "day": null,
+          "type": "strength",
+          "title": "Força",
+          "detail": "Força",
+          "status": "pending",
+          "source": "planning",
+          "kind": "planned",
+          "planning_session_id": "2026-S37-strength-01"
+        },
+        {
+          "id": "2026-S37-strength-02",
+          "day": null,
+          "type": "strength",
+          "title": "Força",
+          "detail": "Força",
+          "status": "pending",
+          "source": "planning",
+          "kind": "planned",
+          "planning_session_id": "2026-S37-strength-02"
+        }
+      ],
+      "removed_planning_session_ids": []
+    }
+  }
 }
