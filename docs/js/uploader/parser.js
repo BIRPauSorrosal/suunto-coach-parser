@@ -108,6 +108,8 @@ function parseBase(filename, data) {
     "Durada(min)":   Math.round(((header.Duration ?? 0) / 60) * 10) / 10,
     "Dist(km)":      Math.round(((header.Distance ?? 0) / 1000) * 100) / 100,
     "Desnivell(m)":  Math.round(header.Ascent ?? 0),
+    Feeling:          header.Feeling ?? null,
+    VO2max:           header.MAXVO2 ?? null,
     FCMitja:         fcMitja,
     FCMax:           fcMax,
     "Z1(min)":       Math.round(((zones.Zone1Duration ?? 0) / 60) * 10) / 10,
@@ -357,5 +359,79 @@ function parseGeneric(filename, data) {
 function parseSuuntoFile(filename, jsonData) {
   const parserFn = detectParser(filename);
   if (!parserFn) return null;
-  return parserFn(filename, jsonData);
+  const row = parserFn(filename, jsonData);
+  row.__session = sessionFromParsedRow(filename, row);
+  return row;
+}
+
+// Converteix la sortida històrica del parser al contracte canònic de
+// sessions.json. La variant es deixa a null: l'usuari la confirma a la UI.
+function sessionFromParsedRow(filename, row) {
+  const rawType = String(row.Tipus || '').trim();
+  const upper = rawType.toUpperCase();
+  let type = 'other';
+  let sport = 'other';
+  let subtype = null;
+
+  if (upper === 'Z2') { type = 'z2'; sport = 'running'; }
+  else if (upper === 'LLARGA' || upper === 'TRAIL') { type = 'long-run'; sport = 'running'; }
+  else if (upper === 'INTERVALS' || upper === 'TEMPO' || upper === 'QUALITAT') {
+    type = 'quality'; sport = 'running'; subtype = upper.toLowerCase();
+  } else if (upper.startsWith('FORÇA') || upper.startsWith('FORCA')) {
+    type = 'strength'; sport = 'strength'; subtype = rawType.replace(/^FORÇA?\s*/i, '') || null;
+  } else if (upper.startsWith('BICI')) { type = 'cycling'; sport = 'cycling'; }
+  else if (upper === 'TEST') { type = 'test'; sport = 'running'; }
+  else if (upper === 'TEST_BICI') { type = 'test'; sport = 'cycling'; }
+  else if (upper === 'CURSA') { type = 'race'; sport = 'running'; }
+  else if (upper === 'PADEL') { type = 'padel'; sport = 'padel'; }
+  else if (upper === 'HIKING') { type = 'hiking'; sport = 'hiking'; }
+  else if (upper === 'NATACIÓ' || upper === 'NATACIO') { type = 'swimming'; sport = 'swimming'; }
+
+  const numberOrNull = value => Number.isFinite(Number(value)) ? Number(value) : null;
+  const intervalRows = (() => {
+    try { return row.Series_Detall ? JSON.parse(row.Series_Detall) : []; }
+    catch (_) { return []; }
+  })();
+  const intervals = intervalRows.map(interval => ({
+    series: Number.isFinite(Number(interval.serie)) ? Number(interval.serie) : null,
+    distance_m: numberOrNull(interval.dist_m),
+    duration_min: numberOrNull(interval.dur_min),
+    pace_min_km: numberOrNull(interval.ritme),
+    heart_rate: {
+      average: numberOrNull(interval.fc_mitja),
+      max: numberOrNull(interval.fc_max),
+    },
+    cadence_spm: numberOrNull(interval.cadencia),
+  }));
+
+  return {
+    id: filename.replace(/\.json$/i, '').replace(/[^a-zA-Z0-9_-]+/g, '-'),
+    source_file: filename,
+    date: row.Data ? row.Data.split('/').reverse().join('-') : null,
+    type,
+    sport,
+    variant: null,
+    subtype,
+    feeling: numberOrNull(row.Feeling),
+    vo2max: numberOrNull(row.VO2max),
+    duration_min: numberOrNull(row['Durada(min)']),
+    distance_km: numberOrNull(row['Dist(km)']),
+    elevation_m: numberOrNull(row['Desnivell(m)']),
+    pace_min_km: numberOrNull(row['Ritme(min/km)']),
+    cadence_spm: numberOrNull(row['Cadencia(spm)']),
+    heart_rate: { average: numberOrNull(row.FCMitja), max: numberOrNull(row.FCMax) },
+    zones: {
+      z1_min: numberOrNull(row['Z1(min)']), z2_min: numberOrNull(row['Z2(min)']),
+      z3_min: numberOrNull(row['Z3(min)']), z4_min: numberOrNull(row['Z4(min)']),
+      z5_min: numberOrNull(row['Z5(min)']),
+    },
+    training_effect: {
+      pte: numberOrNull(row.PTE), epoc: numberOrNull(row.EPOC), load: numberOrNull(row.Carrega),
+    },
+    recovery: { hours: numberOrNull(row['Recup(h)']) },
+    calories: numberOrNull(row.Calories),
+    intervals,
+    notes: { comment: null },
+    planning_links: [],
+  };
 }

@@ -125,6 +125,23 @@ function renderResults(ok, errors) {
               title="Afegir comentari"
             >✏️</button>
           </div>
+          <div class="uploader-variant-row">
+            <label for="uploader-variant-${i}">Variant</label>
+            <select id="uploader-variant-${i}" class="uploader-variant-input">
+              <option value="">Sense especificar</option>
+              <option value="road">Road</option>
+              <option value="trail">Trail</option>
+              <option value="indoor">Indoor / estàtica</option>
+              <option value="outdoor">Outdoor / carretera</option>
+              <option value="S1">S1</option>
+              <option value="S2">S2</option>
+              <option value="S3">S3</option>
+              <option value="S4">S4</option>
+              <option value="S5">S5</option>
+              <option value="Pliometria">Pliometria</option>
+              <option value="Complementari">Complementari</option>
+            </select>
+          </div>
           <div class="uploader-comment-area" id="uploader-comment-area-${i}" style="display:none">
             <textarea
               id="uploader-comment-${i}"
@@ -199,6 +216,11 @@ function collectComments() {
     const ta = document.getElementById(`uploader-comment-${i}`);
     return ta ? ta.value.trim() : "";
   });
+}
+
+function collectVariants() {
+  return Array.from(document.querySelectorAll('#uploader-ok-list .uploader-variant-input'))
+    .map(select => select.value || null);
 }
 
 
@@ -296,7 +318,7 @@ function _bindEvents(dialog) {
     .addEventListener("click", async () => {
       setConfirmState("processing");
       const comments = collectComments();
-      await confirmImport(comments, closeUploaderModal);  // uploader.js
+      await confirmImport(comments, collectVariants(), closeUploaderModal);  // uploader.js
     });
 }
 

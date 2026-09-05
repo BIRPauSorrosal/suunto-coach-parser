@@ -12,8 +12,10 @@
     || (search.match(/[?&]env=([^&]+)/)?.[1] || '');
   const environment = requestedEnvironment === 'development' ? 'development' : 'production';
   const branches = Object.freeze({
-    production: 'main',
-    development: 'refactor/optimitzacio',
+    // Temporalment treballem contra la branca de funcionalitats. Quan es faci
+    // el merge final, production tornarà a apuntar a main.
+    production: 'feature/noves-millores',
+    development: 'feature/noves-millores',
   });
 
   const config = {
@@ -25,12 +27,18 @@
     },
     paths: {
       sessions: {
-        local: './data/sessions.csv',
-        repository: 'docs/data/sessions.csv',
+        local: './data/sessions.json',
+        repository: 'docs/data/sessions.json',
       },
       planning: {
-        local: './data/planning.csv',
-        repository: 'docs/data/planning.csv',
+        local: './data/planning.json',
+        // El carregador ja usa JSON; l'importador legacy encara escriu CSV
+        // fins que sigui substituït en una fase posterior.
+        repository: 'docs/data/planning.json',
+      },
+      calendar: {
+        local: './data/calendar.json',
+        repository: 'docs/data/calendar.json',
       },
     },
   };
@@ -40,6 +48,7 @@
     paths: Object.freeze({
       sessions: Object.freeze(config.paths.sessions),
       planning: Object.freeze(config.paths.planning),
+      calendar: Object.freeze(config.paths.calendar),
     }),
   });
 })(window);

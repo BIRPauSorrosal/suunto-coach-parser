@@ -32,7 +32,11 @@ Després, comprova manualment:
 - càrrega inicial i botó de recàrrega;
 - les quatre vistes i navegació mòbil;
 - estat sense dades;
-- importació i merge de CSV;
+- importació Suunto i merge acumulatiu a `sessions.json`;
+- importació i merge de planning a `planning.json`;
+- calendari setmanal: arrossegar, retornar a «Per assignar» i afegir/eliminar activitats manuals;
+- reconciliació: dues sessions del mateix tipus, confirmació i canvi de dia;
+- pestanya «Avui»: descans, sessió pendent, completada i activitat no planificada;
 - editor de comentaris amb i sense token;
 - gràfics després de recarregar dades;
 - consola del navegador sense errors.
@@ -44,6 +48,9 @@ El workflow `.github/workflows/dashboard-checks.yml` executa automàticament el 
 - Si la càrrega falla, comprova que l’aplicació s’estigui servint per HTTP i que `DashboardConfig` apunti a les rutes correctes.
 - Si Pages mostra una versió anterior, revisa l’estat del deploy i incrementa `CACHE_NAME` quan correspongui.
 - Si una activitat no es classifica, revisa `ACTIVITY_*_TYPES`, `PARSER_REGISTRY` i el nom del fitxer JSON.
+- Si una importació elimina l’històric, atura l’operació: el merge ha de partir de `sessions.json` complet i afegir-hi les noves sessions.
+- Si una activitat no queda associada, revisa `planning_links`, el `planning_session_id` i que cada sessió planificada tingui un ID únic.
+- Si un moviment del calendari desapareix, revisa l’estat local del navegador i no només `planning.json`.
 - Si una pujada GitHub falla, elimina i torna a configurar el token i comprova la branca i el repositori.
 
 ## Service worker

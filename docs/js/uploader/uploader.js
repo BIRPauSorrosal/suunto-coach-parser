@@ -145,16 +145,21 @@ async function handleFileSelection(files, onDone) {
  *                               proviùt per uploader-ui.js via collectComments()
  * @param {Function} onComplete — callback() quan acaba (per tancar modal, etc.)
  */
-async function confirmImport(comments, onComplete) {
+async function confirmImport(comments, variants, onComplete) {
   if (!_pendingRows.length) return;
 
   // Injectem el comentari a cada row. Si no n'hi ha, queda string buit.
   const rowsWithComments = _pendingRows.map((row, i) => ({
     ...row,
     Comentari: (comments && comments[i]) ? comments[i] : "",
+    __session: {
+      ...row.__session,
+      variant: variants?.[i] || null,
+      notes: { ...row.__session?.notes, comment: comments?.[i] || null },
+    },
   }));
 
-  await appendRowsToCSV(rowsWithComments);   // definit a csv-writer.js
+  await appendRowsToJSON(rowsWithComments);   // definit a csv-writer.js
   _pendingRows = [];
   onComplete();
 }

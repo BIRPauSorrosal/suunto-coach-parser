@@ -29,7 +29,7 @@ const PHASE_COLORS = {
 };
 const PHASE_DEFAULT = '#94a3b8';
 
-let planningViewLevel = 'monthly';
+let planningViewLevel = 'weekly';
 let planningYear      = new Date().getFullYear();
 let planningMonth     = new Date().getMonth();
 let planningWeekIndex = 0;
@@ -46,7 +46,7 @@ const escapePlanningText = value => window.DashboardComponents?.escapeHtml
     .replaceAll("'", '&#039;');
 
 // ── Punt d'entrada ──────────────────────────────────────────────────────────────
-function renderPlanningView(planning, sessions) {
+function renderPlanningView(planning, sessions, calendar) {
   if (!planning.length) return;
   const today  = new Date();
   const active = planning.find(w => today >= w.startDate && today <= w.endDate)
@@ -56,37 +56,75 @@ function renderPlanningView(planning, sessions) {
     planningYear      = active.startDate.getFullYear();
     planningWeekIndex = planning.indexOf(active);
   }
-  initPlanningNav(planning, sessions);
-  renderPlanningLevel(planning, sessions);
+  initPlanningNav(planning, sessions, calendar);
+  renderPlanningLevel(planning, sessions, calendar);
 }
 
 // ── Navegació de nivells ─────────────────────────────────────────────────────────
-function initPlanningNav(planning, sessions) {
-  ['btn-plan-yearly', 'btn-plan-monthly'].forEach(id => {
+function initPlanningNav(planning, sessions, calendar) {
+  ['btn-plan-yearly', 'btn-plan-monthly', 'btn-plan-weekly'].forEach(id => {
     const btn = document.getElementById(id);
     if (!btn) return;
     btn.replaceWith(btn.cloneNode(true));
   });
   document.getElementById('btn-plan-yearly')?.addEventListener('click', () => {
-    planningViewLevel = 'yearly'; renderPlanningLevel(planning, sessions);
+    planningViewLevel = 'yearly'; renderPlanningLevel(planning, sessions, calendar);
   });
   document.getElementById('btn-plan-monthly')?.addEventListener('click', () => {
-    planningViewLevel = 'monthly'; renderPlanningLevel(planning, sessions);
+    planningViewLevel = 'monthly'; renderPlanningLevel(planning, sessions, calendar);
+  });
+  document.getElementById('btn-plan-weekly')?.addEventListener('click', () => {
+    planningViewLevel = 'weekly'; renderPlanningLevel(planning, sessions, calendar);
   });
 }
 
-function renderPlanningLevel(planning, sessions) {
+function renderPlanningLevel(planning, sessions, calendar) {
   updateLevelButtons();
   const container = document.getElementById('planning-view-container');
   if (!container) return;
-  if (planningViewLevel === 'yearly')  renderYearlyView(container, planning, sessions);
-  if (planningViewLevel === 'monthly') renderMonthlyView(container, planning, sessions);
-  if (planningViewLevel === 'weekly')  renderWeeklyPlanView(container, planning, sessions);
+  if (planningViewLevel === 'yearly')  renderYearlyView(container, planning, sessions, calendar);
+  if (planningViewLevel === 'monthly') renderMonthlyView(container, planning, sessions, calendar);
+  if (planningViewLevel === 'weekly')  renderIntegratedWeeklyPlanView(container, planning, sessions, calendar);
 }
 
 function updateLevelButtons() {
   document.getElementById('btn-plan-yearly') ?.classList.toggle('active', planningViewLevel === 'yearly');
   document.getElementById('btn-plan-monthly')?.classList.toggle('active', planningViewLevel === 'monthly');
+  document.getElementById('btn-plan-weekly')?.classList.toggle('active', planningViewLevel === 'weekly');
+}
+
+function renderIntegratedWeeklyPlanView(container, planning, sessions, calendar) {
+  const selected = planning[planningWeekIndex];
+  const selectedKey = selected ? window.WeekManager.key(selected.startDate) : null;
+  container.innerHTML = `
+    <div class="planning-week-shell">
+      <header class="page-header planning-week-header">
+        <div>
+          <p class="eyebrow">Calendari flexible</p>
+          <h2 id="flex-week-label">--</h2>
+          <p class="page-subtitle"><span id="flex-week-range">--</span> · <span id="flex-week-context">--</span></p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-ghost" id="flex-week-prev">◄ Anterior</button>
+          <button class="btn btn-ghost" id="flex-week-current">Setmana actual</button>
+          <span class="badge badge-muted" id="flex-week-counter">-- / --</span>
+          <button class="btn btn-ghost" id="flex-week-next">Següent ►</button>
+        </div>
+      </header>
+      <section class="flex-week-toolbar panel">
+        <div>
+          <p class="eyebrow">Organitza la setmana</p>
+          <p class="flex-week-help">Mou les sessions entre dies. Les sessions reals es mostren a sota i no modifiquen l’històric.</p>
+        </div>
+        <button class="btn btn-primary" id="flex-add-session">+ Afegir activitat</button>
+      </section>
+      <section class="flex-week-summary" id="flex-week-summary"></section>
+      <section class="flex-calendar" id="flex-calendar" aria-label="Calendari setmanal"></section>
+      <section class="flex-unassigned panel" id="flex-unassigned" hidden></section>
+      <section class="flex-unmatched panel" id="flex-unmatched" hidden></section>
+    </div>`;
+  if (selectedKey && typeof window.setFlexibleWeekByKey === 'function') window.setFlexibleWeekByKey(selectedKey, planning, sessions);
+  window.renderFlexibleWeekView(sessions, planning, calendar);
 }
 
 // ── Genera les setmanes ISO de l'any (dilluns a diumenge) ──────────────────────
@@ -220,7 +258,7 @@ function renderYearlyView(container, planning, sessions) {
     el.addEventListener('click', () => {
       planningWeekIndex = parseInt(el.dataset.week, 10);
       planningViewLevel = 'weekly';
-      renderPlanningLevel(planning, sessions);
+      renderPlanningLevel(planning, sessions, window.dashboardStore?.getState?.().calendar);
     });
   });
 
@@ -233,10 +271,10 @@ function renderYearlyView(container, planning, sessions) {
   }
   function bindNavButtons(pl, sess) {
     document.getElementById('btn-year-prev')?.addEventListener('click', () => {
-      planningYear--; renderPlanningLevel(pl, sess);
+      planningYear--; renderPlanningLevel(pl, sess, window.dashboardStore?.getState?.().calendar);
     });
     document.getElementById('btn-year-next')?.addEventListener('click', () => {
-      planningYear++; renderPlanningLevel(pl, sess);
+      planningYear++; renderPlanningLevel(pl, sess, window.dashboardStore?.getState?.().calendar);
     });
   }
 }
@@ -317,18 +355,18 @@ function renderMonthlyView(container, planning, sessions) {
   document.getElementById('btn-month-prev')?.addEventListener('click', () => {
     planningMonth--;
     if (planningMonth < 0) { planningMonth = 11; planningYear--; }
-    renderPlanningLevel(planning, sessions);
+    renderPlanningLevel(planning, sessions, window.dashboardStore?.getState?.().calendar);
   });
   document.getElementById('btn-month-next')?.addEventListener('click', () => {
     planningMonth++;
     if (planningMonth > 11) { planningMonth = 0; planningYear++; }
-    renderPlanningLevel(planning, sessions);
+    renderPlanningLevel(planning, sessions, window.dashboardStore?.getState?.().calendar);
   });
   container.querySelectorAll('.plan-week-card[data-week]').forEach(el => {
     el.addEventListener('click', () => {
       planningWeekIndex = parseInt(el.dataset.week, 10);
       planningViewLevel = 'weekly';
-      renderPlanningLevel(planning, sessions);
+      renderPlanningLevel(planning, sessions, window.dashboardStore?.getState?.().calendar);
     });
   });
 }
@@ -460,10 +498,10 @@ function renderWeeklyPlanView(container, planning, sessions) {
     + '</div>';
 
   document.getElementById('btn-wplan-prev')?.addEventListener('click', () => {
-    if (planningWeekIndex > 0) { planningWeekIndex--; renderPlanningLevel(planning, sessions); }
+    if (planningWeekIndex > 0) { planningWeekIndex--; renderPlanningLevel(planning, sessions, window.dashboardStore?.getState?.().calendar); }
   });
   document.getElementById('btn-wplan-next')?.addEventListener('click', () => {
-    if (planningWeekIndex < planning.length - 1) { planningWeekIndex++; renderPlanningLevel(planning, sessions); }
+    if (planningWeekIndex < planning.length - 1) { planningWeekIndex++; renderPlanningLevel(planning, sessions, window.dashboardStore?.getState?.().calendar); }
   });
 }
 

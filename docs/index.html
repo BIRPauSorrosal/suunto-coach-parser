@@ -42,8 +42,8 @@
 
       <!-- 2. Pestanyes -->
       <nav class="sidebar-nav" aria-label="Navegació principal">
-        <a href="#" class="nav-link active" data-target="overview"><span class="nav-icon">◎</span> Overview</a>
-        <a href="#" class="nav-link" data-target="setmanal"><span class="nav-icon">◈</span> Setmana actual</a>
+        <a href="#" class="nav-link active" data-target="avui"><span class="nav-icon">◎</span> Avui</a>
+        <a href="#" class="nav-link" data-target="overview"><span class="nav-icon">◉</span> Overview</a>
         <a href="#" class="nav-link" data-target="planning"><span class="nav-icon">◫</span> Planning</a>
         <a href="#" class="nav-link" data-target="sessions"><span class="nav-icon">◇</span> Sessions</a>
       </nav>
@@ -55,8 +55,8 @@
       <section class="sidebar-panel">
         <h2>Estat dades</h2>
         <ul class="status-list">
-          <li><span class="dot dot-live"></span> <span id="status-sessions">sessions.csv pendent</span></li>
-          <li><span class="dot dot-live"></span> <span id="status-planning">planning.csv pendent</span></li>
+          <li><span class="dot dot-live"></span> <span id="status-sessions">sessions.json pendent</span></li>
+          <li><span class="dot dot-live"></span> <span id="status-planning">planning.json pendent</span></li>
           <li><span class="dot"></span> <span id="status-source">Origen no resolt</span></li>
           <li><span class="dot"></span> <span id="status-last-update">Sense actualització</span></li>
         </ul>
@@ -77,11 +77,11 @@
     <main class="main-content">
 
       <section class="notice-bar" id="notice-bar" role="status" aria-live="polite">
-        <p id="notice-text">Llegint fitxers CSV...</p>
+        <p id="notice-text">Llegint fitxers de dades...</p>
       </section>
 
       <!-- Vista: Overview -->
-      <section class="view view--active" data-view="overview">
+      <section class="view" data-view="overview">
         <header class="page-header">
           <div><p class="eyebrow">Dashboard web</p><h2>Seguiment d'entrenament</h2></div>
           <span class="badge badge-muted" id="load-badge">Inicialitzant...</span>
@@ -232,8 +232,8 @@
         </article>
       </section>
 
-      <!-- Vista: Setmana actual -->
-      <section class="view" data-view="setmanal">
+      <!-- Vista: Setmana actual (històric, substituïda pel calendari flexible) -->
+      <section class="view" data-view="setmanal-legacy">
         <header class="page-header">
           <div>
             <p class="eyebrow">Setmana actual</p>
@@ -402,13 +402,28 @@
         </div>
       </section>
 
+      <!-- Vista: Avui -->
+      <section class="view view--active" data-view="avui">
+        <header class="page-header">
+          <div><p class="eyebrow">Seguiment d’entrenament</p><h2>Avui</h2><p class="page-subtitle" id="today-date-label">--</p></div>
+          <span class="badge badge-muted" id="today-status-badge">Carregant...</span>
+        </header>
+        <section class="today-hero panel" id="today-hero"></section>
+        <section class="today-week panel">
+          <div class="panel-header"><div><p class="eyebrow">Context</p><h3>Setmana actual</h3></div><button class="btn btn-ghost btn-sm" id="today-open-week">Obrir calendari</button></div>
+          <div id="today-week-summary"></div>
+        </section>
+        <section class="today-upcoming panel" id="today-upcoming"></section>
+      </section>
+
       <!-- Vista: Planning -->
       <section class="view" data-view="planning">
         <header class="page-header">
           <div><p class="eyebrow">Planificació</p><h2>Temporada</h2></div>
           <div class="header-actions">
             <button class="btn btn-ghost" id="btn-plan-yearly">Vista anual</button>
-            <button class="btn btn-ghost active" id="btn-plan-monthly">Vista mensual</button>
+            <button class="btn btn-ghost" id="btn-plan-monthly">Vista mensual</button>
+            <button class="btn btn-ghost active" id="btn-plan-weekly">Vista setmanal</button>
           </div>
         </header>
         <div id="planning-view-container"><p class="muted-msg">Carregant planning...</p></div>
@@ -519,13 +534,13 @@
   </div>
 
   <nav class="bottom-nav" aria-label="Navegació mòbil">
-    <a href="#" class="bnav-item active" data-target="overview">
+    <a href="#" class="bnav-item active" data-target="avui">
       <span class="bnav-icon">◎</span>
-      <span class="bnav-label">Overview</span>
+      <span class="bnav-label">Avui</span>
     </a>
-    <a href="#" class="bnav-item" data-target="setmanal">
-      <span class="bnav-icon">◈</span>
-      <span class="bnav-label">Setmana</span>
+    <a href="#" class="bnav-item" data-target="overview">
+      <span class="bnav-icon">◉</span>
+      <span class="bnav-label">Overview</span>
     </a>
     <a href="#" class="bnav-item" data-target="planning">
       <span class="bnav-icon">◫</span>
@@ -545,6 +560,7 @@
   <script src="./js/lib/formatters.js"></script>
   <script src="./js/lib/dashboard-config.js"></script>
   <script src="./js/lib/dashboard-store.js"></script>
+  <script src="./js/lib/week-manager.js"></script>
   <script src="./js/lib/csv.js"></script>
   <script src="./js/lib/data-service.js"></script>
   <script src="./js/lib/view-utils.js"></script>
@@ -556,7 +572,8 @@
   <script src="./js/lib/fc-config-modal.js"></script>
   <script src="js/lib/pmc-config.js"></script>
   <script src="./js/views/overview.js"></script>
-  <script src="./js/views/setmanal.js"></script>
+  <script src="./js/views/weekly-planner.js"></script>
+  <script src="./js/views/today.js"></script>
   <script src="./js/views/planning.js"></script>
   <script src="js/views/comment-editor.js"></script>
   <script src="./js/views/sessions.js"></script>

@@ -832,6 +832,8 @@ function getSessCols(type) {
   const colFCSeries   = {label:'FC sèries',         render:s=>fcBadgeHTML(s.fcMitjaSeries)};
   const colSeries     = {label:'Sèries',            render:s=>{const n=toNumber(s.raw['Num_Series']);return typeof n==='number'&&n>0?String(Math.round(n)):'—';}};
   const colPTE        = {label:'PTE',               render:s=>{const p=toNumber(s.raw['PTE']);return typeof p==='number'&&p>0?fmtNum(p):'—';}};
+  const colFeeling    = {label:'Feeling',           render:s=>{const f=toNumber(s.raw.Feeling);return typeof f==='number'&&f>0?fmtNum(f):'--';}};
+  const colVo2max     = {label:'VO2max',            render:s=>{const v=toNumber(s.raw.VO2max);return typeof v==='number'&&v>0?fmtNum(v):'--';}};
   const colWatts      = {label:'Watts',             render:s=>{
     const w=toNumber(s.raw['Watts']||s.raw['Potencia(W)']||s.raw['Potència(W)']);
     return typeof w==='number'&&w>0?`${Math.round(w)} W`:'—';
@@ -850,12 +852,12 @@ function getSessCols(type) {
   switch (type) {
     case 'z2':       return [colData,colKm,colDurada,colRitme,colCad,colFC,colZ2min,colEpoc,colCarrega,colComentari];
     case 'quality':  return [colData,colTipus,colSeries,colDurSerie,colRitmeSeries,colFCSeries,colKm,colCarrega,colPTE,colComentari];
-    case 'long':     return [colData,colTipus,colKm,colDurada,colRitme,colFC,colDesnivell,colZ2min,colCarrega,colComentari];
-    case 'testrace': return [colData,colTipus,colKm,colDurada,colRitme,colFC,colDesnivell,colCarrega,colComentari];
+    case 'long':     return [colData,colTipus,colKm,colDurada,colRitme,colFC,colDesnivell,colFeeling,colVo2max,colZ2min,colCarrega,colComentari];
+    case 'testrace': return [colData,colTipus,colKm,colDurada,colRitme,colFC,colDesnivell,colFeeling,colVo2max,colCarrega,colComentari];
     case 'strength': return [colData,colTipus,colDurada,colFC,colCarrega,colEpoc,colRecup,colComentari];
     case 'bici':     return [colData,colTipus,colDurada,colFC,colCarrega,colEpoc,colWatts,colCad,colComentari];
     case 'other':    return [colData,colTipus,colDurada,colFC,colCarrega,colEpoc,colComentari];
-    default:         return [colData,colTipus,colKm,colDurada,colRitme,colFC,colCarrega,colEpoc,colComentari];
+    default:         return [colData,colTipus,colKm,colDurada,colRitme,colFC,colFeeling,colVo2max,colCarrega,colEpoc,colComentari];
   }
 }
 

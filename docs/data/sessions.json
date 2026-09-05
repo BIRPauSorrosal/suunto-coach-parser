@@ -3,6 +3,5672 @@
   "source": "suunto",
   "sessions": [
     {
+      "id": "260125-running-cursa",
+      "source_file": "260125_running_cursa.json",
+      "date": "2026-01-25",
+      "type": "race",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 56.4,
+      "distance_km": 10.11,
+      "elevation_m": 95,
+      "pace_min_km": 5.6,
+      "cadence_spm": 161,
+      "heart_rate": {
+        "average": 177,
+        "max": 197
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 0.5,
+        "z3_min": 3.9,
+        "z4_min": 47.1,
+        "z5_min": 5
+      },
+      "training_effect": {
+        "pte": 5,
+        "epoc": 275.2,
+        "load": 410.5
+      },
+      "recovery": {
+        "hours": 55.1
+      },
+      "calories": 1098,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260127-running-z2",
+      "source_file": "260127_running_z2.json",
+      "date": "2026-01-27",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 51.5,
+      "distance_km": 6,
+      "elevation_m": 35,
+      "pace_min_km": 8.58,
+      "cadence_spm": 147,
+      "heart_rate": {
+        "average": 152,
+        "max": 169
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 33.8,
+        "z3_min": 17.6,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.8,
+        "epoc": 71.8,
+        "load": 53.5
+      },
+      "recovery": {
+        "hours": 20.9
+      },
+      "calories": 726,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260130-running-qualitat-intervals",
+      "source_file": "260130_running_qualitat_intervals.json",
+      "date": "2026-01-30",
+      "type": "quality",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 40.9,
+      "distance_km": 6.53,
+      "elevation_m": 42,
+      "pace_min_km": 6.3,
+      "cadence_spm": 154,
+      "heart_rate": {
+        "average": 172,
+        "max": 198
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 3.7,
+        "z3_min": 13.5,
+        "z4_min": 12.4,
+        "z5_min": 11.2
+      },
+      "training_effect": {
+        "pte": 5,
+        "epoc": 185.1,
+        "load": 244.4
+      },
+      "recovery": {
+        "hours": 31.3
+      },
+      "calories": 770,
+      "intervals": [
+        {
+          "series": 1,
+          "distance_m": 1002,
+          "duration_min": 4.7,
+          "pace_min_km": 4.73,
+          "heart_rate": {
+            "average": 183,
+            "max": 198
+          },
+          "cadence_spm": 177
+        },
+        {
+          "series": 2,
+          "distance_m": 1001,
+          "duration_min": 5.1,
+          "pace_min_km": 5.08,
+          "heart_rate": {
+            "average": 183,
+            "max": 190
+          },
+          "cadence_spm": 171
+        },
+        {
+          "series": 3,
+          "distance_m": 1001,
+          "duration_min": 5.1,
+          "pace_min_km": 5.1,
+          "heart_rate": {
+            "average": 180,
+            "max": 189
+          },
+          "cadence_spm": 171
+        },
+        {
+          "series": 4,
+          "distance_m": 1020,
+          "duration_min": 5.3,
+          "pace_min_km": 5.19,
+          "heart_rate": {
+            "average": 184,
+            "max": 190
+          },
+          "cadence_spm": 165
+        }
+      ],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260131-hiking",
+      "source_file": "260131_hiking.json",
+      "date": "2026-01-31",
+      "type": "hiking",
+      "sport": "hiking",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 119.4,
+      "distance_km": 7,
+      "elevation_m": 223,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 94,
+        "max": 150
+      },
+      "zones": {
+        "z1_min": 100.7,
+        "z2_min": 18.7,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.2,
+        "epoc": 14.7,
+        "load": 16.7
+      },
+      "recovery": {
+        "hours": 6
+      },
+      "calories": 603,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260202-forca",
+      "source_file": "260202_força.json",
+      "date": "2026-02-02",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 34.4,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 113,
+        "max": 157
+      },
+      "zones": {
+        "z1_min": 26.1,
+        "z2_min": 8.1,
+        "z3_min": 0.2,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2,
+        "epoc": 10.9,
+        "load": 20.1
+      },
+      "recovery": {
+        "hours": 2.7
+      },
+      "calories": 276,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260208-bici-estatica",
+      "source_file": "260208_bici_estatica.json",
+      "date": "2026-02-08",
+      "type": "cycling",
+      "sport": "cycling",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 41.8,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 117,
+        "max": 129
+      },
+      "zones": {
+        "z1_min": 34.9,
+        "z2_min": 6.1,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.1,
+        "epoc": 12.4,
+        "load": 12.4
+      },
+      "recovery": {
+        "hours": 4
+      },
+      "calories": 377,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260213-forca",
+      "source_file": "260213_força.json",
+      "date": "2026-02-13",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 33.6,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 127,
+        "max": 161
+      },
+      "zones": {
+        "z1_min": 14.4,
+        "z2_min": 17.8,
+        "z3_min": 1.4,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.6,
+        "epoc": 24,
+        "load": 31.8
+      },
+      "recovery": {
+        "hours": 6
+      },
+      "calories": 349,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260214-bici-estatica",
+      "source_file": "260214_bici_estatica.json",
+      "date": "2026-02-14",
+      "type": "cycling",
+      "sport": "cycling",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 53.6,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 141,
+        "max": 172
+      },
+      "zones": {
+        "z1_min": 8.2,
+        "z2_min": 32.3,
+        "z3_min": 12.5,
+        "z4_min": 0.5,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.7,
+        "epoc": 62,
+        "load": 97.8
+      },
+      "recovery": {
+        "hours": 18.4
+      },
+      "calories": 685,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260215-running-z2",
+      "source_file": "260215_running_z2.json",
+      "date": "2026-02-15",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 53.5,
+      "distance_km": 5.57,
+      "elevation_m": 11,
+      "pace_min_km": 8.43,
+      "cadence_spm": 147,
+      "heart_rate": {
+        "average": 150,
+        "max": 169
+      },
+      "zones": {
+        "z1_min": 0.5,
+        "z2_min": 20.7,
+        "z3_min": 25.9,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 4.2,
+        "epoc": 83.4,
+        "load": 51.7
+      },
+      "recovery": {
+        "hours": 21.7
+      },
+      "calories": 714,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260216-padel",
+      "source_file": "260216_padel.json",
+      "date": "2026-02-16",
+      "type": "padel",
+      "sport": "padel",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 55.5,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 148,
+        "max": 204
+      },
+      "zones": {
+        "z1_min": 0.4,
+        "z2_min": 34.6,
+        "z3_min": 15,
+        "z4_min": 2.3,
+        "z5_min": 3.2
+      },
+      "training_effect": {
+        "pte": 4.1,
+        "epoc": 74.1,
+        "load": 134.1
+      },
+      "recovery": {
+        "hours": 23.7
+      },
+      "calories": 722,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260218-running-qualitat-tempo",
+      "source_file": "260218_running_qualitat_tempo.json",
+      "date": "2026-02-18",
+      "type": "quality",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 59.4,
+      "distance_km": 8.56,
+      "elevation_m": 47,
+      "pace_min_km": 6.92,
+      "cadence_spm": 160,
+      "heart_rate": {
+        "average": 163,
+        "max": 193
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 9.8,
+        "z3_min": 32.3,
+        "z4_min": 15.9,
+        "z5_min": 1.4
+      },
+      "training_effect": {
+        "pte": 5,
+        "epoc": 123.2,
+        "load": 207.3
+      },
+      "recovery": {
+        "hours": 36.9
+      },
+      "calories": 916,
+      "intervals": [
+        {
+          "series": 1,
+          "distance_m": 3431,
+          "duration_min": 20,
+          "pace_min_km": 5.83,
+          "heart_rate": {
+            "average": 173,
+            "max": 193
+          },
+          "cadence_spm": 166
+        }
+      ],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260220-forca",
+      "source_file": "260220_força.json",
+      "date": "2026-02-20",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 34.3,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 116,
+        "max": 152
+      },
+      "zones": {
+        "z1_min": 24.1,
+        "z2_min": 10.1,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.1,
+        "epoc": 12.1,
+        "load": 15.7
+      },
+      "recovery": {
+        "hours": 3.6
+      },
+      "calories": 279,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260221-running-tirada-llarga",
+      "source_file": "260221_running_tirada_llarga.json",
+      "date": "2026-02-21",
+      "type": "long-run",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 99.5,
+      "distance_km": 11.26,
+      "elevation_m": 293,
+      "pace_min_km": 8.83,
+      "cadence_spm": 133,
+      "heart_rate": {
+        "average": 151,
+        "max": 190
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 64.3,
+        "z3_min": 32.7,
+        "z4_min": 2.3,
+        "z5_min": 0.2
+      },
+      "training_effect": {
+        "pte": 4.1,
+        "epoc": 75.7,
+        "load": 114.8
+      },
+      "recovery": {
+        "hours": 47.4
+      },
+      "calories": 1281,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260222-running-z2",
+      "source_file": "260222_running_z2.json",
+      "date": "2026-02-22",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 46.7,
+      "distance_km": 5.61,
+      "elevation_m": 13,
+      "pace_min_km": 8.32,
+      "cadence_spm": 151,
+      "heart_rate": {
+        "average": 150,
+        "max": 172
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 35,
+        "z3_min": 11.6,
+        "z4_min": 0.1,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.8,
+        "epoc": 66.8,
+        "load": 59.3
+      },
+      "recovery": {
+        "hours": 18.3
+      },
+      "calories": 619,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260224-forca",
+      "source_file": "260224_força.json",
+      "date": "2026-02-24",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 34.3,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 117,
+        "max": 145
+      },
+      "zones": {
+        "z1_min": 21.9,
+        "z2_min": 12.4,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.2,
+        "epoc": 14.8,
+        "load": 28.2
+      },
+      "recovery": {
+        "hours": 4.2
+      },
+      "calories": 287,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260226-running-qualitat-intervals",
+      "source_file": "260226_running_qualitat_intervals.json",
+      "date": "2026-02-26",
+      "type": "quality",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 55.4,
+      "distance_km": 8.73,
+      "elevation_m": 42,
+      "pace_min_km": 6.21,
+      "cadence_spm": 156,
+      "heart_rate": {
+        "average": 163,
+        "max": 186
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 16.2,
+        "z3_min": 11.2,
+        "z4_min": 26.8,
+        "z5_min": 0.2
+      },
+      "training_effect": {
+        "pte": 5,
+        "epoc": 152.5,
+        "load": 211.4
+      },
+      "recovery": {
+        "hours": 35.8
+      },
+      "calories": 873,
+      "intervals": [
+        {
+          "series": 1,
+          "distance_m": 801,
+          "duration_min": 4.3,
+          "pace_min_km": 5.37,
+          "heart_rate": {
+            "average": 174,
+            "max": 183
+          },
+          "cadence_spm": 168
+        },
+        {
+          "series": 2,
+          "distance_m": 800,
+          "duration_min": 4.1,
+          "pace_min_km": 5.15,
+          "heart_rate": {
+            "average": 171,
+            "max": 186
+          },
+          "cadence_spm": 172
+        },
+        {
+          "series": 3,
+          "distance_m": 802,
+          "duration_min": 3.9,
+          "pace_min_km": 4.9,
+          "heart_rate": {
+            "average": 167,
+            "max": 179
+          },
+          "cadence_spm": 171
+        },
+        {
+          "series": 4,
+          "distance_m": 807,
+          "duration_min": 4,
+          "pace_min_km": 5,
+          "heart_rate": {
+            "average": 171,
+            "max": 183
+          },
+          "cadence_spm": 169
+        },
+        {
+          "series": 5,
+          "distance_m": 800,
+          "duration_min": 4.1,
+          "pace_min_km": 5.17,
+          "heart_rate": {
+            "average": 171,
+            "max": 180
+          },
+          "cadence_spm": 170
+        },
+        {
+          "series": 6,
+          "distance_m": 801,
+          "duration_min": 4.1,
+          "pace_min_km": 5.08,
+          "heart_rate": {
+            "average": 174,
+            "max": 184
+          },
+          "cadence_spm": 170
+        },
+        {
+          "series": 7,
+          "distance_m": 800,
+          "duration_min": 4.3,
+          "pace_min_km": 5.44,
+          "heart_rate": {
+            "average": 172,
+            "max": 181
+          },
+          "cadence_spm": 165
+        }
+      ],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260227-running-z2",
+      "source_file": "260227_running_z2.json",
+      "date": "2026-02-27",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 44,
+      "distance_km": 5.51,
+      "elevation_m": 11,
+      "pace_min_km": 7.99,
+      "cadence_spm": 151,
+      "heart_rate": {
+        "average": 149,
+        "max": 178
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 33.3,
+        "z3_min": 9.5,
+        "z4_min": 1.2,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.8,
+        "epoc": 65.8,
+        "load": 75.5
+      },
+      "recovery": {
+        "hours": 17.3
+      },
+      "calories": 583,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260301-running-tirada-llarga",
+      "source_file": "260301_running_tirada_llarga.json",
+      "date": "2026-03-01",
+      "type": "long-run",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 114.5,
+      "distance_km": 13.8,
+      "elevation_m": 119,
+      "pace_min_km": 8.25,
+      "cadence_spm": 143,
+      "heart_rate": {
+        "average": 151,
+        "max": 172
+      },
+      "zones": {
+        "z1_min": 0.1,
+        "z2_min": 78,
+        "z3_min": 36,
+        "z4_min": 0.4,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 4,
+        "epoc": 73,
+        "load": 108.8
+      },
+      "recovery": {
+        "hours": 54.3
+      },
+      "calories": 1458,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260303-running-qualitat-tempo",
+      "source_file": "260303_running_qualitat_tempo.json",
+      "date": "2026-03-03",
+      "type": "quality",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 36.1,
+      "distance_km": 5.68,
+      "elevation_m": 35,
+      "pace_min_km": 6.3,
+      "cadence_spm": 153,
+      "heart_rate": {
+        "average": 163,
+        "max": 182
+      },
+      "zones": {
+        "z1_min": 0.2,
+        "z2_min": 9.3,
+        "z3_min": 8.9,
+        "z4_min": 17.6,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 4.9,
+        "epoc": 111.9,
+        "load": 148.2
+      },
+      "recovery": {
+        "hours": 19.7
+      },
+      "calories": 573,
+      "intervals": [
+        {
+          "series": 1,
+          "distance_m": 2002,
+          "duration_min": 10.8,
+          "pace_min_km": 5.41,
+          "heart_rate": {
+            "average": 170,
+            "max": 180
+          },
+          "cadence_spm": 164
+        },
+        {
+          "series": 2,
+          "distance_m": 2002,
+          "duration_min": 11.1,
+          "pace_min_km": 5.56,
+          "heart_rate": {
+            "average": 171,
+            "max": 181
+          },
+          "cadence_spm": 163
+        }
+      ],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260304-padel-partit",
+      "source_file": "260304_padel_partit.json",
+      "date": "2026-03-04",
+      "type": "padel",
+      "sport": "padel",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 54.3,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 138,
+        "max": 207
+      },
+      "zones": {
+        "z1_min": 0.4,
+        "z2_min": 22,
+        "z3_min": 19.8,
+        "z4_min": 8.2,
+        "z5_min": 3.8
+      },
+      "training_effect": {
+        "pte": 4.4,
+        "epoc": 93.7,
+        "load": 185
+      },
+      "recovery": {
+        "hours": 30.4
+      },
+      "calories": 869,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260306-forca",
+      "source_file": "260306_força.json",
+      "date": "2026-03-06",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 50.6,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 113,
+        "max": 148
+      },
+      "zones": {
+        "z1_min": 39.1,
+        "z2_min": 11.5,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2,
+        "epoc": 10.6,
+        "load": 26.8
+      },
+      "recovery": {
+        "hours": 4.5
+      },
+      "calories": 387,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260308-bici-estatica",
+      "source_file": "260308_bici_estatica.json",
+      "date": "2026-03-08",
+      "type": "cycling",
+      "sport": "cycling",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 73.8,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 125,
+        "max": 144
+      },
+      "zones": {
+        "z1_min": 15.5,
+        "z2_min": 58.3,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.6,
+        "epoc": 24.9,
+        "load": 26.4
+      },
+      "recovery": {
+        "hours": 13.7
+      },
+      "calories": 690,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260311-padel-partit",
+      "source_file": "260311_padel_partit.json",
+      "date": "2026-03-10",
+      "type": "padel",
+      "sport": "padel",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 58.3,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 159,
+        "max": 208
+      },
+      "zones": {
+        "z1_min": 1.2,
+        "z2_min": 16.9,
+        "z3_min": 14.3,
+        "z4_min": 13.9,
+        "z5_min": 11.9
+      },
+      "training_effect": {
+        "pte": 5,
+        "epoc": 168.3,
+        "load": 268.6
+      },
+      "recovery": {
+        "hours": 40.5
+      },
+      "calories": 864,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260311-running-qualitat-tempo",
+      "source_file": "260311_running_qualitat_tempo.json",
+      "date": "2026-03-11",
+      "type": "quality",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 59.3,
+      "distance_km": 8.79,
+      "elevation_m": 100,
+      "pace_min_km": 6.73,
+      "cadence_spm": 155,
+      "heart_rate": {
+        "average": 159,
+        "max": 204
+      },
+      "zones": {
+        "z1_min": 0.3,
+        "z2_min": 19,
+        "z3_min": 32.7,
+        "z4_min": 5.8,
+        "z5_min": 1.6
+      },
+      "training_effect": {
+        "pte": 4.9,
+        "epoc": 117,
+        "load": 210.5
+      },
+      "recovery": {
+        "hours": 33
+      },
+      "calories": 881,
+      "intervals": [
+        {
+          "series": 1,
+          "distance_m": 1287,
+          "duration_min": 8,
+          "pace_min_km": 6.22,
+          "heart_rate": {
+            "average": 163,
+            "max": 174
+          },
+          "cadence_spm": 156
+        },
+        {
+          "series": 2,
+          "distance_m": 1338,
+          "duration_min": 8,
+          "pace_min_km": 5.98,
+          "heart_rate": {
+            "average": 166,
+            "max": 182
+          },
+          "cadence_spm": 159
+        },
+        {
+          "series": 3,
+          "distance_m": 1341,
+          "duration_min": 8,
+          "pace_min_km": 5.97,
+          "heart_rate": {
+            "average": 165,
+            "max": 185
+          },
+          "cadence_spm": 162
+        },
+        {
+          "series": 4,
+          "distance_m": 1237,
+          "duration_min": 8,
+          "pace_min_km": 6.47,
+          "heart_rate": {
+            "average": 162,
+            "max": 173
+          },
+          "cadence_spm": 159
+        }
+      ],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260312-forca",
+      "source_file": "260312_força.json",
+      "date": "2026-03-12",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 32,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 115,
+        "max": 141
+      },
+      "zones": {
+        "z1_min": 22.6,
+        "z2_min": 9.4,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.1,
+        "epoc": 13.3,
+        "load": 16.9
+      },
+      "recovery": {
+        "hours": 3.3
+      },
+      "calories": 273,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260313-running-z2",
+      "source_file": "260313_running_z2.json",
+      "date": "2026-03-13",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 44.5,
+      "distance_km": 5.58,
+      "elevation_m": 34,
+      "pace_min_km": 7.97,
+      "cadence_spm": 149,
+      "heart_rate": {
+        "average": 150,
+        "max": 169
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 33.5,
+        "z3_min": 10.9,
+        "z4_min": 0.1,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.7,
+        "epoc": 63.2,
+        "load": 65.4
+      },
+      "recovery": {
+        "hours": 17.5
+      },
+      "calories": 592,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260315-running-tirada-llarga",
+      "source_file": "260315_running_tirada_llarga.json",
+      "date": "2026-03-15",
+      "type": "long-run",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 108.7,
+      "distance_km": 13,
+      "elevation_m": 152,
+      "pace_min_km": 8.35,
+      "cadence_spm": 147,
+      "heart_rate": {
+        "average": 147,
+        "max": 173
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 94.2,
+        "z3_min": 14.3,
+        "z4_min": 0.2,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.7,
+        "epoc": 63.6,
+        "load": 80.9
+      },
+      "recovery": {
+        "hours": 44.6
+      },
+      "calories": 1315,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260316-running-z2",
+      "source_file": "260316_running_z2.json",
+      "date": "2026-03-16",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 46.4,
+      "distance_km": 5.65,
+      "elevation_m": 9,
+      "pace_min_km": 8.22,
+      "cadence_spm": 149,
+      "heart_rate": {
+        "average": 144,
+        "max": 164
+      },
+      "zones": {
+        "z1_min": 0.3,
+        "z2_min": 40.7,
+        "z3_min": 5.3,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.4,
+        "epoc": 49.5,
+        "load": 61.6
+      },
+      "recovery": {
+        "hours": 15.4
+      },
+      "calories": 564,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260317-forca",
+      "source_file": "260317_força.json",
+      "date": "2026-03-17",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 38.4,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 114,
+        "max": 159
+      },
+      "zones": {
+        "z1_min": 25.3,
+        "z2_min": 12.7,
+        "z3_min": 0.4,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.1,
+        "epoc": 12.4,
+        "load": 27.7
+      },
+      "recovery": {
+        "hours": 4.8
+      },
+      "calories": 296,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260319-running-test",
+      "source_file": "260319_running_test.json",
+      "date": "2026-03-19",
+      "type": "test",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 46.9,
+      "distance_km": 7.34,
+      "elevation_m": 0,
+      "pace_min_km": 6.39,
+      "cadence_spm": 159,
+      "heart_rate": {
+        "average": 156,
+        "max": 189
+      },
+      "zones": {
+        "z1_min": 0.8,
+        "z2_min": 23.3,
+        "z3_min": 7.9,
+        "z4_min": 14.5,
+        "z5_min": 0.4
+      },
+      "training_effect": {
+        "pte": 5,
+        "epoc": 122.4,
+        "load": 177.2
+      },
+      "recovery": {
+        "hours": 23.4
+      },
+      "calories": 683,
+      "intervals": [
+        {
+          "series": 1,
+          "distance_m": 3777,
+          "duration_min": 20,
+          "pace_min_km": 5.3,
+          "heart_rate": {
+            "average": 172,
+            "max": 189
+          },
+          "cadence_spm": 168
+        }
+      ],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260321-hiking",
+      "source_file": "260321_hiking.json",
+      "date": "2026-03-21",
+      "type": "hiking",
+      "sport": "hiking",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 261.4,
+      "distance_km": 14.86,
+      "elevation_m": 422,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 110,
+        "max": 199
+      },
+      "zones": {
+        "z1_min": 197.2,
+        "z2_min": 31,
+        "z3_min": 4.8,
+        "z4_min": 2.4,
+        "z5_min": 4
+      },
+      "training_effect": {
+        "pte": 2.9,
+        "epoc": 29.9,
+        "load": 104.7
+      },
+      "recovery": {
+        "hours": 23
+      },
+      "calories": 1500,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260321-padel",
+      "source_file": "260321_padel.json",
+      "date": "2026-03-21",
+      "type": "padel",
+      "sport": "padel",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 85.4,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 142,
+        "max": 195
+      },
+      "zones": {
+        "z1_min": 4.4,
+        "z2_min": 39.3,
+        "z3_min": 26.5,
+        "z4_min": 12.9,
+        "z5_min": 2.2
+      },
+      "training_effect": {
+        "pte": 4.3,
+        "epoc": 90.9,
+        "load": 148.9
+      },
+      "recovery": {
+        "hours": 42.7
+      },
+      "calories": 1187,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260323-running-z2",
+      "source_file": "260323_running_z2.json",
+      "date": "2026-03-23",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 45.6,
+      "distance_km": 5.65,
+      "elevation_m": 34,
+      "pace_min_km": 7.93,
+      "cadence_spm": 149,
+      "heart_rate": {
+        "average": 143,
+        "max": 172
+      },
+      "zones": {
+        "z1_min": 1.4,
+        "z2_min": 39.1,
+        "z3_min": 4.6,
+        "z4_min": 0.3,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.3,
+        "epoc": 46.2,
+        "load": 75.4
+      },
+      "recovery": {
+        "hours": 14.6
+      },
+      "calories": 545,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260324-forca-s1",
+      "source_file": "260324_força_s1.json",
+      "date": "2026-03-24",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": "S1",
+      "duration_min": 45.7,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 109,
+        "max": 146
+      },
+      "zones": {
+        "z1_min": 36.1,
+        "z2_min": 9.6,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 1.8,
+        "epoc": 8.6,
+        "load": 35.6
+      },
+      "recovery": {
+        "hours": 2.9
+      },
+      "calories": 318,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260325-running-qualitat-tempo",
+      "source_file": "260325_running_qualitat_tempo.json",
+      "date": "2026-03-25",
+      "type": "quality",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 53.3,
+      "distance_km": 7.43,
+      "elevation_m": 86,
+      "pace_min_km": 7.18,
+      "cadence_spm": 146,
+      "heart_rate": {
+        "average": 156,
+        "max": 187
+      },
+      "zones": {
+        "z1_min": 0.1,
+        "z2_min": 28.2,
+        "z3_min": 12.5,
+        "z4_min": 11.5,
+        "z5_min": 1
+      },
+      "training_effect": {
+        "pte": 4.7,
+        "epoc": 109.6,
+        "load": 147.8
+      },
+      "recovery": {
+        "hours": 26.6
+      },
+      "calories": 777,
+      "intervals": [
+        {
+          "series": 1,
+          "distance_m": 973,
+          "duration_min": 6,
+          "pace_min_km": 6.17,
+          "heart_rate": {
+            "average": 166,
+            "max": 174
+          },
+          "cadence_spm": 158
+        },
+        {
+          "series": 2,
+          "distance_m": 1052,
+          "duration_min": 6,
+          "pace_min_km": 5.7,
+          "heart_rate": {
+            "average": 172,
+            "max": 187
+          },
+          "cadence_spm": 166
+        },
+        {
+          "series": 3,
+          "distance_m": 1040,
+          "duration_min": 6,
+          "pace_min_km": 5.77,
+          "heart_rate": {
+            "average": 173,
+            "max": 187
+          },
+          "cadence_spm": 166
+        }
+      ],
+      "notes": {
+        "comment": "Terreny poc pla. S'ha corregut més per FC que per ritme objectiu."
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260331-running-longrun",
+      "source_file": "260331_running_longrun.json",
+      "date": "2026-03-31",
+      "type": "long-run",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 70.7,
+      "distance_km": 8.33,
+      "elevation_m": 75,
+      "pace_min_km": 8.49,
+      "cadence_spm": 141,
+      "heart_rate": {
+        "average": 152,
+        "max": 168
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 47.9,
+        "z3_min": 22.8,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.9,
+        "epoc": 77.4,
+        "load": 59.3
+      },
+      "recovery": {
+        "hours": 30
+      },
+      "calories": 938,
+      "intervals": [],
+      "notes": {
+        "comment": "Tirada llarga recuperada de l'anterior setmana. Post parón 4 dies. Sessió amb molt de vent."
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260401-running-tempo",
+      "source_file": "260401_running_tempo.json",
+      "date": "2026-04-01",
+      "type": "quality",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 49.3,
+      "distance_km": 7.09,
+      "elevation_m": 37,
+      "pace_min_km": 6.91,
+      "cadence_spm": 155,
+      "heart_rate": {
+        "average": 159,
+        "max": 187
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 19.7,
+        "z3_min": 13.6,
+        "z4_min": 15.7,
+        "z5_min": 0.1
+      },
+      "training_effect": {
+        "pte": 5,
+        "epoc": 126.5,
+        "load": 159.5
+      },
+      "recovery": {
+        "hours": 25.9
+      },
+      "calories": 750,
+      "intervals": [
+        {
+          "series": 1,
+          "distance_m": 1719,
+          "duration_min": 10,
+          "pace_min_km": 5.82,
+          "heart_rate": {
+            "average": 170,
+            "max": 181
+          },
+          "cadence_spm": 165
+        },
+        {
+          "series": 2,
+          "distance_m": 1648,
+          "duration_min": 10,
+          "pace_min_km": 6.07,
+          "heart_rate": {
+            "average": 171,
+            "max": 187
+          },
+          "cadence_spm": 162
+        }
+      ],
+      "notes": {
+        "comment": "Mala escollida la ruta. Masses pendents. S'ha corregut per FC enlloc de per ritme objectiu."
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260403-forca",
+      "source_file": "260403_força.json",
+      "date": "2026-04-03",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 36,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 122,
+        "max": 161
+      },
+      "zones": {
+        "z1_min": 17.5,
+        "z2_min": 18.2,
+        "z3_min": 0.3,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.4,
+        "epoc": 20.2,
+        "load": 26
+      },
+      "recovery": {
+        "hours": 5.3
+      },
+      "calories": 331,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260404-running-longrun",
+      "source_file": "260404_running_longrun.json",
+      "date": "2026-04-05",
+      "type": "long-run",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 76.9,
+      "distance_km": 10.24,
+      "elevation_m": 0,
+      "pace_min_km": 7.49,
+      "cadence_spm": 151,
+      "heart_rate": {
+        "average": 147,
+        "max": 163
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 67.1,
+        "z3_min": 9.8,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.6,
+        "epoc": 61.8,
+        "load": 115.6
+      },
+      "recovery": {
+        "hours": 30
+      },
+      "calories": 954,
+      "intervals": [],
+      "notes": {
+        "comment": "Més llarga per compensar no poder fer la sessió Z2. Recorregut majoritàriament de lleugera baixada."
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260406-running-longrun",
+      "source_file": "260406_running_longrun.json",
+      "date": "2026-04-06",
+      "type": "long-run",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 78.5,
+      "distance_km": 10,
+      "elevation_m": 61,
+      "pace_min_km": 7.79,
+      "cadence_spm": 150,
+      "heart_rate": {
+        "average": 149,
+        "max": 167
+      },
+      "zones": {
+        "z1_min": 0.5,
+        "z2_min": 58.1,
+        "z3_min": 19.9,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.9,
+        "epoc": 74.6,
+        "load": 100.9
+      },
+      "recovery": {
+        "hours": 32.7
+      },
+      "calories": 997,
+      "intervals": [],
+      "notes": {
+        "comment": "Bones sensacions. Pic HR entre km 5 i 6 pel sol i per lleugera pujada. Tornada posterior a HR objectiu."
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260407-padel",
+      "source_file": "260407_padel.json",
+      "date": "2026-04-07",
+      "type": "padel",
+      "sport": "padel",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 52.7,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 154,
+        "max": 194
+      },
+      "zones": {
+        "z1_min": 0.2,
+        "z2_min": 16.2,
+        "z3_min": 26.9,
+        "z4_min": 8.3,
+        "z5_min": 1.1
+      },
+      "training_effect": {
+        "pte": 4.5,
+        "epoc": 103.3,
+        "load": 175.4
+      },
+      "recovery": {
+        "hours": 26.1
+      },
+      "calories": 775,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260408-running-tempo",
+      "source_file": "260408_running_tempo.json",
+      "date": "2026-04-08",
+      "type": "quality",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 55.5,
+      "distance_km": 8.33,
+      "elevation_m": 46,
+      "pace_min_km": 6.64,
+      "cadence_spm": 158,
+      "heart_rate": {
+        "average": 156,
+        "max": 186
+      },
+      "zones": {
+        "z1_min": 0.3,
+        "z2_min": 26.3,
+        "z3_min": 14.9,
+        "z4_min": 13.4,
+        "z5_min": 0.5
+      },
+      "training_effect": {
+        "pte": 4.9,
+        "epoc": 119.7,
+        "load": 182.6
+      },
+      "recovery": {
+        "hours": 28.4
+      },
+      "calories": 801,
+      "intervals": [
+        {
+          "series": 1,
+          "distance_m": 1380,
+          "duration_min": 8,
+          "pace_min_km": 5.8,
+          "heart_rate": {
+            "average": 167,
+            "max": 180
+          },
+          "cadence_spm": 169
+        },
+        {
+          "series": 2,
+          "distance_m": 1472,
+          "duration_min": 8,
+          "pace_min_km": 5.43,
+          "heart_rate": {
+            "average": 169,
+            "max": 186
+          },
+          "cadence_spm": 172
+        },
+        {
+          "series": 3,
+          "distance_m": 1382,
+          "duration_min": 8,
+          "pace_min_km": 5.79,
+          "heart_rate": {
+            "average": 171,
+            "max": 185
+          },
+          "cadence_spm": 171
+        }
+      ],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260411-running-z2",
+      "source_file": "260411_running_z2.json",
+      "date": "2026-04-11",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 42.4,
+      "distance_km": 5.61,
+      "elevation_m": 32,
+      "pace_min_km": 7.56,
+      "cadence_spm": 151,
+      "heart_rate": {
+        "average": 145,
+        "max": 164
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 38.8,
+        "z3_min": 3.6,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.4,
+        "epoc": 54.8,
+        "load": 81.7
+      },
+      "recovery": {
+        "hours": 14.8
+      },
+      "calories": 533,
+      "intervals": [],
+      "notes": {
+        "comment": "Ruta de sempre, que comença a quedar-se curta degut a la millora de ritme i ppm"
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260412-forca",
+      "source_file": "260412_força.json",
+      "date": "2026-04-12",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 36,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 127,
+        "max": 168
+      },
+      "zones": {
+        "z1_min": 15.7,
+        "z2_min": 18.9,
+        "z3_min": 1.5,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.5,
+        "epoc": 25.4,
+        "load": 33.2
+      },
+      "recovery": {
+        "hours": 6
+      },
+      "calories": 338,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260413-running-qualitat-tempo",
+      "source_file": "260413_running_qualitat_tempo.json",
+      "date": "2026-04-13",
+      "type": "quality",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 41.5,
+      "distance_km": 6.06,
+      "elevation_m": 35,
+      "pace_min_km": 6.86,
+      "cadence_spm": 158,
+      "heart_rate": {
+        "average": 152,
+        "max": 184
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 23.9,
+        "z3_min": 12.7,
+        "z4_min": 4.8,
+        "z5_min": 0.1
+      },
+      "training_effect": {
+        "pte": 4.1,
+        "epoc": 87.6,
+        "load": 116.4
+      },
+      "recovery": {
+        "hours": 17.4
+      },
+      "calories": 576,
+      "intervals": [
+        {
+          "series": 1,
+          "distance_m": 1351,
+          "duration_min": 8,
+          "pace_min_km": 5.92,
+          "heart_rate": {
+            "average": 162,
+            "max": 174
+          },
+          "cadence_spm": 172
+        },
+        {
+          "series": 2,
+          "distance_m": 1379,
+          "duration_min": 8,
+          "pace_min_km": 5.8,
+          "heart_rate": {
+            "average": 168,
+            "max": 184
+          },
+          "cadence_spm": 171
+        }
+      ],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260415-padel",
+      "source_file": "260415_padel.json",
+      "date": "2026-04-15",
+      "type": "padel",
+      "sport": "padel",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 59.8,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 161,
+        "max": 196
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 12.9,
+        "z3_min": 22.3,
+        "z4_min": 23.9,
+        "z5_min": 0.7
+      },
+      "training_effect": {
+        "pte": 5,
+        "epoc": 164.7,
+        "load": 253
+      },
+      "recovery": {
+        "hours": 37.2
+      },
+      "calories": 941,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260416-running-z2",
+      "source_file": "260416_running_z2.json",
+      "date": "2026-04-16",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 42.8,
+      "distance_km": 5.45,
+      "elevation_m": 56,
+      "pace_min_km": 7.85,
+      "cadence_spm": 153,
+      "heart_rate": {
+        "average": 145,
+        "max": 163
+      },
+      "zones": {
+        "z1_min": 0.4,
+        "z2_min": 38,
+        "z3_min": 4.3,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.2,
+        "epoc": 48.9,
+        "load": 63.7
+      },
+      "recovery": {
+        "hours": 15
+      },
+      "calories": 541,
+      "intervals": [],
+      "notes": {
+        "comment": "Cames una mica cansades però 1 min/km més ràpid que la mateixa ruta fa 3 mesos i a les mateixes ppm. Ruta amb algunes pujades que han fet pujar una mica el temps."
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260417-running-longrun",
+      "source_file": "260417_running_longrun.json",
+      "date": "2026-04-17",
+      "type": "long-run",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 68.7,
+      "distance_km": 8.58,
+      "elevation_m": 40,
+      "pace_min_km": 8,
+      "cadence_spm": 151,
+      "heart_rate": {
+        "average": 146,
+        "max": 167
+      },
+      "zones": {
+        "z1_min": 0.2,
+        "z2_min": 61.2,
+        "z3_min": 7.2,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.3,
+        "epoc": 53.9,
+        "load": 64.2
+      },
+      "recovery": {
+        "hours": 24.8
+      },
+      "calories": 843,
+      "intervals": [],
+      "notes": {
+        "comment": "Inici més complicat però a partir del 2n km a HR objectiu de forma continua."
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260419-forca",
+      "source_file": "260419_força.json",
+      "date": "2026-04-19",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 41.6,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 107,
+        "max": 138
+      },
+      "zones": {
+        "z1_min": 36.5,
+        "z2_min": 5,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 1.7,
+        "epoc": 8.2,
+        "load": 23
+      },
+      "recovery": {
+        "hours": 2.7
+      },
+      "calories": 290,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260420-forca",
+      "source_file": "260420_força.json",
+      "date": "2026-04-20",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 42.4,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 103,
+        "max": 152
+      },
+      "zones": {
+        "z1_min": 38.1,
+        "z2_min": 4.2,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2,
+        "epoc": 13.1,
+        "load": 20.1
+      },
+      "recovery": {
+        "hours": 3
+      },
+      "calories": 322,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260421-running-z2",
+      "source_file": "260421_running_z2.json",
+      "date": "2026-04-21",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 47,
+      "distance_km": 6.52,
+      "elevation_m": 26,
+      "pace_min_km": 7.21,
+      "cadence_spm": 152,
+      "heart_rate": {
+        "average": 144,
+        "max": 159
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 44.2,
+        "z3_min": 2.8,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.3,
+        "epoc": 49.3,
+        "load": 102.7
+      },
+      "recovery": {
+        "hours": 15.5
+      },
+      "calories": 575,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260424-running-tempo",
+      "source_file": "260424_running_tempo.json",
+      "date": "2026-04-24",
+      "type": "quality",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 48.3,
+      "distance_km": 7.36,
+      "elevation_m": 30,
+      "pace_min_km": 6.52,
+      "cadence_spm": 153,
+      "heart_rate": {
+        "average": 160,
+        "max": 189
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 14.3,
+        "z3_min": 18.9,
+        "z4_min": 14.3,
+        "z5_min": 0.7
+      },
+      "training_effect": {
+        "pte": 4.9,
+        "epoc": 128.2,
+        "load": 161.4
+      },
+      "recovery": {
+        "hours": 25.2
+      },
+      "calories": 740,
+      "intervals": [
+        {
+          "series": 1,
+          "distance_m": 2024,
+          "duration_min": 12,
+          "pace_min_km": 5.93,
+          "heart_rate": {
+            "average": 168,
+            "max": 177
+          },
+          "cadence_spm": 163
+        },
+        {
+          "series": 2,
+          "distance_m": 2108,
+          "duration_min": 12,
+          "pace_min_km": 5.69,
+          "heart_rate": {
+            "average": 170,
+            "max": 189
+          },
+          "cadence_spm": 163
+        }
+      ],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260426-hiking",
+      "source_file": "260426_hiking.json",
+      "date": "2026-04-26",
+      "type": "hiking",
+      "sport": "hiking",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 129.6,
+      "distance_km": 7.8,
+      "elevation_m": 194,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 113,
+        "max": 180
+      },
+      "zones": {
+        "z1_min": 105.6,
+        "z2_min": 17.2,
+        "z3_min": 5.3,
+        "z4_min": 1.4,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.1,
+        "epoc": 44.2,
+        "load": 50
+      },
+      "recovery": {
+        "hours": 12
+      },
+      "calories": 930,
+      "intervals": [],
+      "notes": {
+        "comment": "Substitut de la tirada llarga per fer petita excursió amb la parella."
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260427-running-tempo",
+      "source_file": "260427_running_tempo.json",
+      "date": "2026-04-27",
+      "type": "quality",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 53.9,
+      "distance_km": 8.68,
+      "elevation_m": 49,
+      "pace_min_km": 6.23,
+      "cadence_spm": 152,
+      "heart_rate": {
+        "average": 157,
+        "max": 180
+      },
+      "zones": {
+        "z1_min": 0.1,
+        "z2_min": 21.1,
+        "z3_min": 20.5,
+        "z4_min": 12.3,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 4.7,
+        "epoc": 122.4,
+        "load": 173.3
+      },
+      "recovery": {
+        "hours": 26.8
+      },
+      "calories": 790,
+      "intervals": [
+        {
+          "series": 1,
+          "distance_m": 1767,
+          "duration_min": 10,
+          "pace_min_km": 5.66,
+          "heart_rate": {
+            "average": 164,
+            "max": 174
+          },
+          "cadence_spm": 159
+        },
+        {
+          "series": 2,
+          "distance_m": 1912,
+          "duration_min": 10,
+          "pace_min_km": 5.23,
+          "heart_rate": {
+            "average": 165,
+            "max": 180
+          },
+          "cadence_spm": 164
+        },
+        {
+          "series": 3,
+          "distance_m": 1805,
+          "duration_min": 10,
+          "pace_min_km": 5.54,
+          "heart_rate": {
+            "average": 168,
+            "max": 179
+          },
+          "cadence_spm": 162
+        }
+      ],
+      "notes": {
+        "comment": "Molt bones sensacions. Ritme més elevat de l'esperat mantenint la franja de pulsasions prou controlada."
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260428-forca",
+      "source_file": "260428_força.json",
+      "date": "2026-04-28",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 34.7,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 118,
+        "max": 151
+      },
+      "zones": {
+        "z1_min": 21.1,
+        "z2_min": 13.6,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.2,
+        "epoc": 19.6,
+        "load": 22.5
+      },
+      "recovery": {
+        "hours": 4.7
+      },
+      "calories": 311,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260429-running-z2",
+      "source_file": "260429_running_z2.json",
+      "date": "2026-04-29",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 52.1,
+      "distance_km": 7.02,
+      "elevation_m": 24,
+      "pace_min_km": 7.27,
+      "cadence_spm": 151,
+      "heart_rate": {
+        "average": 147,
+        "max": 171
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 45.2,
+        "z3_min": 5.9,
+        "z4_min": 0.1,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.3,
+        "epoc": 57.3,
+        "load": 88.3
+      },
+      "recovery": {
+        "hours": 18.3
+      },
+      "calories": 650,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260501-running-trail",
+      "source_file": "260501_running_trail.json",
+      "date": "2026-05-01",
+      "type": "long-run",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 97,
+      "distance_km": 11.09,
+      "elevation_m": 303,
+      "pace_min_km": 8.66,
+      "cadence_spm": 130,
+      "heart_rate": {
+        "average": 152,
+        "max": 173
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 60.7,
+        "z3_min": 36.1,
+        "z4_min": 0.2,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 4,
+        "epoc": 88.7,
+        "load": 87.8
+      },
+      "recovery": {
+        "hours": 42.5
+      },
+      "calories": 1259,
+      "intervals": [],
+      "notes": {
+        "comment": "Molta calor. Trail amb poques zones planes. Generalment pujada i baixada."
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260503-running-longrun",
+      "source_file": "260503_running_longrun.json",
+      "date": "2026-05-03",
+      "type": "long-run",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 74.4,
+      "distance_km": 10.11,
+      "elevation_m": 105,
+      "pace_min_km": 7.36,
+      "cadence_spm": 148,
+      "heart_rate": {
+        "average": 148,
+        "max": 173
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 61,
+        "z3_min": 13.1,
+        "z4_min": 0.2,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.6,
+        "epoc": 68.6,
+        "load": 105.7
+      },
+      "recovery": {
+        "hours": 28.8
+      },
+      "calories": 937,
+      "intervals": [],
+      "notes": {
+        "comment": "Recuperació tirada llarga setmana anterior. Molt bones sensacions en un terreny amb alguna pujada però de baixada suau en la part central de l’activitat."
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260504-hiking",
+      "source_file": "260504_hiking.json",
+      "date": "2026-05-04",
+      "type": "hiking",
+      "sport": "hiking",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 76.1,
+      "distance_km": 5.29,
+      "elevation_m": 40,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 134,
+        "max": 197
+      },
+      "zones": {
+        "z1_min": 25.5,
+        "z2_min": 35.1,
+        "z3_min": 5.7,
+        "z4_min": 5.3,
+        "z5_min": 4.4
+      },
+      "training_effect": {
+        "pte": 4.1,
+        "epoc": 95,
+        "load": 142.3
+      },
+      "recovery": {
+        "hours": 21.5
+      },
+      "calories": 777,
+      "intervals": [],
+      "notes": {
+        "comment": "Pulsasions més elevades degut a un mal funcionament del rellotge a la part intermitja de la ruta. Trekking suau de recuperació."
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260406-forca",
+      "source_file": "260406_forca.json",
+      "date": "2026-05-05",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 41.2,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 115,
+        "max": 158
+      },
+      "zones": {
+        "z1_min": 30.1,
+        "z2_min": 10.9,
+        "z3_min": 0.1,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.1,
+        "epoc": 13.9,
+        "load": 18.3
+      },
+      "recovery": {
+        "hours": 4.1
+      },
+      "calories": 323,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260506-running-tempo",
+      "source_file": "260506_running_tempo.json",
+      "date": "2026-05-06",
+      "type": "quality",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 54,
+      "distance_km": 8.55,
+      "elevation_m": 51,
+      "pace_min_km": 6.31,
+      "cadence_spm": 155,
+      "heart_rate": {
+        "average": 160,
+        "max": 179
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 17.4,
+        "z3_min": 15.2,
+        "z4_min": 21.4,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 5,
+        "epoc": 127.3,
+        "load": 186.5
+      },
+      "recovery": {
+        "hours": 29.7
+      },
+      "calories": 818,
+      "intervals": [
+        {
+          "series": 1,
+          "distance_m": 2714,
+          "duration_min": 15,
+          "pace_min_km": 5.53,
+          "heart_rate": {
+            "average": 170,
+            "max": 179
+          },
+          "cadence_spm": 163
+        },
+        {
+          "series": 2,
+          "distance_m": 2680,
+          "duration_min": 15,
+          "pace_min_km": 5.6,
+          "heart_rate": {
+            "average": 169,
+            "max": 179
+          },
+          "cadence_spm": 164
+        }
+      ],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260510-hiking",
+      "source_file": "260510_hiking.json",
+      "date": "2026-05-10",
+      "type": "hiking",
+      "sport": "hiking",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 176.7,
+      "distance_km": 12.46,
+      "elevation_m": 331,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 132,
+        "max": 207
+      },
+      "zones": {
+        "z1_min": 77.1,
+        "z2_min": 62.5,
+        "z3_min": 19.2,
+        "z4_min": 8.9,
+        "z5_min": 7.6
+      },
+      "training_effect": {
+        "pte": 3.7,
+        "epoc": 68.8,
+        "load": 203
+      },
+      "recovery": {
+        "hours": 49.2
+      },
+      "calories": 1642,
+      "intervals": [],
+      "notes": {
+        "comment": "Excursió amb bones sensacions. Error de lectura de pulsasions del rellotge en un tram, donant un resultat molt mes elevat de la realitat"
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260511-running-tempo",
+      "source_file": "260511_running_tempo.json",
+      "date": "2026-05-11",
+      "type": "quality",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 41.9,
+      "distance_km": 6.52,
+      "elevation_m": 46,
+      "pace_min_km": 6.38,
+      "cadence_spm": 153,
+      "heart_rate": {
+        "average": 157,
+        "max": 181
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 15.8,
+        "z3_min": 19.6,
+        "z4_min": 6.5,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 4.5,
+        "epoc": 102.8,
+        "load": 142.6
+      },
+      "recovery": {
+        "hours": 20
+      },
+      "calories": 624,
+      "intervals": [
+        {
+          "series": 1,
+          "distance_m": 1818,
+          "duration_min": 10,
+          "pace_min_km": 5.5,
+          "heart_rate": {
+            "average": 164,
+            "max": 178
+          },
+          "cadence_spm": 161
+        },
+        {
+          "series": 2,
+          "distance_m": 1813,
+          "duration_min": 10,
+          "pace_min_km": 5.52,
+          "heart_rate": {
+            "average": 167,
+            "max": 181
+          },
+          "cadence_spm": 164
+        }
+      ],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260514-running-z2",
+      "source_file": "260514_running_z2.json",
+      "date": "2026-05-14",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 41.6,
+      "distance_km": 5.56,
+      "elevation_m": 34,
+      "pace_min_km": 7.46,
+      "cadence_spm": 154,
+      "heart_rate": {
+        "average": 149,
+        "max": 164
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 33.3,
+        "z3_min": 8.3,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.6,
+        "epoc": 65.4,
+        "load": 86
+      },
+      "recovery": {
+        "hours": 15.6
+      },
+      "calories": 549,
+      "intervals": [],
+      "notes": {
+        "comment": "No molt bones sensacions. Tampoc ajudava que feia força vent"
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260515-forca",
+      "source_file": "260515_forca.json",
+      "date": "2026-05-15",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 42.2,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 101,
+        "max": 160
+      },
+      "zones": {
+        "z1_min": 36.6,
+        "z2_min": 5.4,
+        "z3_min": 0.2,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 1.6,
+        "epoc": 6.8,
+        "load": 11.8
+      },
+      "recovery": {
+        "hours": 2.3
+      },
+      "calories": 246,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260516-bici-estatica-test",
+      "source_file": "260516_bici_estatica_test.json",
+      "date": "2026-05-16",
+      "type": "cycling",
+      "sport": "cycling",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 29.9,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": 0,
+      "cadence_spm": 0,
+      "heart_rate": {
+        "average": 128,
+        "max": 166
+      },
+      "zones": {
+        "z1_min": 14.2,
+        "z2_min": 12.4,
+        "z3_min": 3.3,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.9,
+        "epoc": 34.7,
+        "load": 44.4
+      },
+      "recovery": {
+        "hours": 5.8
+      },
+      "calories": 319,
+      "intervals": [],
+      "notes": {
+        "comment": "Test rampa. FTP 219"
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260517-running-longrun",
+      "source_file": "260517_running_longrun.json",
+      "date": "2026-05-17",
+      "type": "long-run",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 60,
+      "distance_km": 8.6,
+      "elevation_m": 51,
+      "pace_min_km": 6.97,
+      "cadence_spm": 155,
+      "heart_rate": {
+        "average": 147,
+        "max": 176
+      },
+      "zones": {
+        "z1_min": 0.1,
+        "z2_min": 52.5,
+        "z3_min": 7.1,
+        "z4_min": 0.2,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.6,
+        "epoc": 62.5,
+        "load": 138.9
+      },
+      "recovery": {
+        "hours": 22.9
+      },
+      "calories": 760,
+      "intervals": [],
+      "notes": {
+        "comment": "Bones sensacions però una mica de fatiga muscular"
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260519-forca",
+      "source_file": "260519_forca.json",
+      "date": "2026-05-19",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 45.6,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 100,
+        "max": 136
+      },
+      "zones": {
+        "z1_min": 43.3,
+        "z2_min": 2.2,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 1.5,
+        "epoc": 5.9,
+        "load": 17.9
+      },
+      "recovery": {
+        "hours": 1.7
+      },
+      "calories": 273,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260520-running-tempo",
+      "source_file": "260520_running_tempo.json",
+      "date": "2026-05-20",
+      "type": "quality",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 53.5,
+      "distance_km": 8.58,
+      "elevation_m": 39,
+      "pace_min_km": 6.22,
+      "cadence_spm": 156,
+      "heart_rate": {
+        "average": 174,
+        "max": 174
+      },
+      "zones": {
+        "z1_min": 0.3,
+        "z2_min": 24.3,
+        "z3_min": 14.6,
+        "z4_min": 14.3,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 4.5,
+        "epoc": 112.5,
+        "load": 156
+      },
+      "recovery": {
+        "hours": 26
+      },
+      "calories": 782,
+      "intervals": [
+        {
+          "series": 1,
+          "distance_m": 3927,
+          "duration_min": 20,
+          "pace_min_km": 5.09,
+          "heart_rate": {
+            "average": 170,
+            "max": 178
+          },
+          "cadence_spm": 164
+        }
+      ],
+      "notes": {
+        "comment": "Primer dia amb sensor de pit per pulsasions. Millors resultats"
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260521-running-z2",
+      "source_file": "260521_running_z2.json",
+      "date": "2026-05-21",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 56.4,
+      "distance_km": 7.53,
+      "elevation_m": 50,
+      "pace_min_km": 7.47,
+      "cadence_spm": 149,
+      "heart_rate": {
+        "average": 149,
+        "max": 161
+      },
+      "zones": {
+        "z1_min": 0.2,
+        "z2_min": 48,
+        "z3_min": 8.1,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.7,
+        "epoc": 75.6,
+        "load": 86.7
+      },
+      "recovery": {
+        "hours": 21.4
+      },
+      "calories": 735,
+      "intervals": [],
+      "notes": {
+        "comment": "Primer dia de mes calor"
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260523-hiking",
+      "source_file": "260523_hiking.json",
+      "date": "2026-05-23",
+      "type": "hiking",
+      "sport": "hiking",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 164.5,
+      "distance_km": 5.09,
+      "elevation_m": 316,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 133,
+        "max": 176
+      },
+      "zones": {
+        "z1_min": 43.1,
+        "z2_min": 97.1,
+        "z3_min": 21,
+        "z4_min": 1.6,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.2,
+        "epoc": 48.4,
+        "load": 60.6
+      },
+      "recovery": {
+        "hours": 41
+      },
+      "calories": 1534,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260525-running-longrun",
+      "source_file": "260525_running_longrun.json",
+      "date": "2026-05-25",
+      "type": "long-run",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 88.7,
+      "distance_km": 11.92,
+      "elevation_m": 70,
+      "pace_min_km": 7.42,
+      "cadence_spm": 151,
+      "heart_rate": {
+        "average": 150,
+        "max": 161
+      },
+      "zones": {
+        "z1_min": 0.2,
+        "z2_min": 74.5,
+        "z3_min": 13.9,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.9,
+        "epoc": 77.4,
+        "load": 118.6
+      },
+      "recovery": {
+        "hours": 37.6
+      },
+      "calories": 1135,
+      "intervals": [],
+      "notes": {
+        "comment": "Longrun de la setmana anterior recuperada el dilluns. Molta calor."
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260527-forca",
+      "source_file": "260527_forca.json",
+      "date": "2026-05-27",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 70.7,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 110,
+        "max": 157
+      },
+      "zones": {
+        "z1_min": 53.3,
+        "z2_min": 17.2,
+        "z3_min": 0.2,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.1,
+        "epoc": 16.8,
+        "load": 33.9
+      },
+      "recovery": {
+        "hours": 5.8
+      },
+      "calories": 480,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260526-running-z2",
+      "source_file": "260526_running_z2.json",
+      "date": "2026-05-26",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 50.3,
+      "distance_km": 7.51,
+      "elevation_m": 38,
+      "pace_min_km": 6.67,
+      "cadence_spm": 158,
+      "heart_rate": {
+        "average": 144,
+        "max": 152
+      },
+      "zones": {
+        "z1_min": 0.4,
+        "z2_min": 49.9,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.4,
+        "epoc": 55.3,
+        "load": 118.4
+      },
+      "recovery": {
+        "hours": 17.8
+      },
+      "calories": 622,
+      "intervals": [],
+      "notes": {
+        "comment": "A primera hora del mati i en dejú. Molt bones sensacions"
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260530-running-tempo",
+      "source_file": "260530_running_tempo.json",
+      "date": "2026-05-30",
+      "type": "quality",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 52.6,
+      "distance_km": 8.58,
+      "elevation_m": 32,
+      "pace_min_km": 6.1,
+      "cadence_spm": 154,
+      "heart_rate": {
+        "average": 159,
+        "max": 177
+      },
+      "zones": {
+        "z1_min": 0,
+        "z2_min": 17.3,
+        "z3_min": 21.6,
+        "z4_min": 13.6,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 4.8,
+        "epoc": 132,
+        "load": 172.3
+      },
+      "recovery": {
+        "hours": 26.3
+      },
+      "calories": 788,
+      "intervals": [
+        {
+          "series": 1,
+          "distance_m": 2777,
+          "duration_min": 15,
+          "pace_min_km": 5.4,
+          "heart_rate": {
+            "average": 165,
+            "max": 173
+          },
+          "cadence_spm": 161
+        },
+        {
+          "series": 2,
+          "distance_m": 2705,
+          "duration_min": 15,
+          "pace_min_km": 5.54,
+          "heart_rate": {
+            "average": 169,
+            "max": 177
+          },
+          "cadence_spm": 162
+        }
+      ],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260601-running-test",
+      "source_file": "260601_running_test.json",
+      "date": "2026-06-01",
+      "type": "test",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 43.5,
+      "distance_km": 7.57,
+      "elevation_m": 0,
+      "pace_min_km": 5.76,
+      "cadence_spm": 151,
+      "heart_rate": {
+        "average": 162,
+        "max": 183
+      },
+      "zones": {
+        "z1_min": 0.4,
+        "z2_min": 14.5,
+        "z3_min": 8.5,
+        "z4_min": 20,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 5,
+        "epoc": 153.3,
+        "load": 185.4
+      },
+      "recovery": {
+        "hours": 23.3
+      },
+      "calories": 694,
+      "intervals": [
+        {
+          "series": 1,
+          "distance_m": 4096,
+          "duration_min": 20,
+          "pace_min_km": 4.88,
+          "heart_rate": {
+            "average": 174,
+            "max": 183
+          },
+          "cadence_spm": 159
+        }
+      ],
+      "notes": {
+        "comment": "Test a pista atletisme. Bones sensacions i a un ritme una mica mes elevat del que tenia previst. Baixada de pulsasions fins a 140ppm als 3 min posteriors al test."
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260604-running-z2",
+      "source_file": "260604_running_z2.json",
+      "date": "2026-06-04",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 45,
+      "distance_km": 6.28,
+      "elevation_m": 39,
+      "pace_min_km": 7.19,
+      "cadence_spm": 156,
+      "heart_rate": {
+        "average": 147,
+        "max": 158
+      },
+      "zones": {
+        "z1_min": 2.9,
+        "z2_min": 41.9,
+        "z3_min": 0.1,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.6,
+        "epoc": 76,
+        "load": 82.1
+      },
+      "recovery": {
+        "hours": 16
+      },
+      "calories": 582,
+      "intervals": [],
+      "notes": {
+        "comment": "Alguna molèstia muscular"
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260603-forca",
+      "source_file": "260603_forca.json",
+      "date": "2026-06-03",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 43.8,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 112,
+        "max": 156
+      },
+      "zones": {
+        "z1_min": 42.8,
+        "z2_min": 0.9,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 1.9,
+        "epoc": 13.2,
+        "load": 22.5
+      },
+      "recovery": {
+        "hours": 3.2
+      },
+      "calories": 327,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260606-bici-estatica",
+      "source_file": "260606_bici_estatica.json",
+      "date": "2026-06-06",
+      "type": "cycling",
+      "sport": "cycling",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 69.7,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 124,
+        "max": 137
+      },
+      "zones": {
+        "z1_min": 69.6,
+        "z2_min": 0,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.3,
+        "epoc": 20.8,
+        "load": 19.5
+      },
+      "recovery": {
+        "hours": 10.1
+      },
+      "calories": 642,
+      "intervals": [],
+      "notes": {
+        "comment": "Substitució longrun per sessió de bici per evitar impacte respecte les molèsties de la setmana. Bones sensacions."
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260608-running-z2",
+      "source_file": "260608_running_z2.json",
+      "date": "2026-06-08",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 37.8,
+      "distance_km": 5.53,
+      "elevation_m": 40,
+      "pace_min_km": 6.81,
+      "cadence_spm": 158,
+      "heart_rate": {
+        "average": 145,
+        "max": 163
+      },
+      "zones": {
+        "z1_min": 12,
+        "z2_min": 23.4,
+        "z3_min": 2.4,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.2,
+        "epoc": 49.7,
+        "load": 87.6
+      },
+      "recovery": {
+        "hours": 12.3
+      },
+      "calories": 476,
+      "intervals": [],
+      "notes": {
+        "comment": "Bones sensacions durant la cursa però molèsties posteriors a l activitat"
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260610-bici-estatica",
+      "source_file": "260610_bici_estatica.json",
+      "date": "2026-06-10",
+      "type": "cycling",
+      "sport": "cycling",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 30,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 122,
+        "max": 143
+      },
+      "zones": {
+        "z1_min": 29.3,
+        "z2_min": 0.7,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.3,
+        "epoc": 23.6,
+        "load": 30
+      },
+      "recovery": {
+        "hours": 5
+      },
+      "calories": 297,
+      "intervals": [],
+      "notes": {
+        "comment": "Session de bicicleta per fer volum i evitar impacte Per les molestéis"
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260610-forca-s5",
+      "source_file": "260610_forca_s5.json",
+      "date": "2026-06-10",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": "S5",
+      "duration_min": 34.6,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 98,
+        "max": 135
+      },
+      "zones": {
+        "z1_min": 34.5,
+        "z2_min": 0,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 1.4,
+        "epoc": 5.5,
+        "load": 13.2
+      },
+      "recovery": {
+        "hours": 0.9
+      },
+      "calories": 201,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260615-forca-s5",
+      "source_file": "260615_forca_s5.json",
+      "date": "2026-06-15",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": "S5",
+      "duration_min": 40.1,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 109,
+        "max": 150
+      },
+      "zones": {
+        "z1_min": 39.6,
+        "z2_min": 0.5,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 1.8,
+        "epoc": 11.8,
+        "load": 18.3
+      },
+      "recovery": {
+        "hours": 3.1
+      },
+      "calories": 299,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260617-bici-estatica",
+      "source_file": "260617_bici_estatica.json",
+      "date": "2026-06-17",
+      "type": "cycling",
+      "sport": "cycling",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 47.2,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 124,
+        "max": 146
+      },
+      "zones": {
+        "z1_min": 46.5,
+        "z2_min": 0.6,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.4,
+        "epoc": 24.9,
+        "load": 31.1
+      },
+      "recovery": {
+        "hours": 7.2
+      },
+      "calories": 467,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260616-running-z2",
+      "source_file": "260616_running_z2.json",
+      "date": "2026-06-16",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 43.5,
+      "distance_km": 6.18,
+      "elevation_m": 28,
+      "pace_min_km": 7.02,
+      "cadence_spm": 154,
+      "heart_rate": {
+        "average": 144,
+        "max": 156
+      },
+      "zones": {
+        "z1_min": 16.9,
+        "z2_min": 26.5,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.3,
+        "epoc": 60,
+        "load": 86.1
+      },
+      "recovery": {
+        "hours": 13.8
+      },
+      "calories": 539,
+      "intervals": [],
+      "notes": {
+        "comment": "Han tornat les petites molèsties al peu cap al km 4. Faré 1 setmana mes d’activitats sense impacte per reposar"
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260618-forca",
+      "source_file": "260618_forca.json",
+      "date": "2026-06-18",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 30.7,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 119,
+        "max": 148
+      },
+      "zones": {
+        "z1_min": 29.5,
+        "z2_min": 1.2,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2,
+        "epoc": 14.9,
+        "load": 29.4
+      },
+      "recovery": {
+        "hours": 3.6
+      },
+      "calories": 273,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260622-forca",
+      "source_file": "260622_forca.json",
+      "date": "2026-06-22",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 30.3,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 91,
+        "max": 132
+      },
+      "zones": {
+        "z1_min": 30.3,
+        "z2_min": 0,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 1.3,
+        "epoc": 4.4,
+        "load": 5.7
+      },
+      "recovery": {
+        "hours": 0.3
+      },
+      "calories": 168,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260623-bici-estatica",
+      "source_file": "260623_bici_estatica.json",
+      "date": "2026-06-23",
+      "type": "cycling",
+      "sport": "cycling",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 55,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 126,
+        "max": 142
+      },
+      "zones": {
+        "z1_min": 54.9,
+        "z2_min": 0,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.2,
+        "epoc": 20,
+        "load": 22.1
+      },
+      "recovery": {
+        "hours": 8.3
+      },
+      "calories": 520,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260629-forca",
+      "source_file": "260629_forca.json",
+      "date": "2026-06-29",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 31.7,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 104,
+        "max": 134
+      },
+      "zones": {
+        "z1_min": 31.7,
+        "z2_min": 0,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 1.7,
+        "epoc": 9.8,
+        "load": 22.4
+      },
+      "recovery": {
+        "hours": 1.8
+      },
+      "calories": 212,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260629-running-z2",
+      "source_file": "260629_running_z2.json",
+      "date": "2026-06-29",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 23,
+      "distance_km": 3.09,
+      "elevation_m": 19,
+      "pace_min_km": 7.48,
+      "cadence_spm": 152,
+      "heart_rate": {
+        "average": 138,
+        "max": 155
+      },
+      "zones": {
+        "z1_min": 17.5,
+        "z2_min": 5.4,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.7,
+        "epoc": 33,
+        "load": 41.1
+      },
+      "recovery": {
+        "hours": 6.1
+      },
+      "calories": 279,
+      "intervals": [],
+      "notes": {
+        "comment": "Test per analitzar molèsties"
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260701-running-z2",
+      "source_file": "260701_running_z2.json",
+      "date": "2026-07-01",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 8,
+      "distance_km": 1.16,
+      "elevation_m": 0,
+      "pace_min_km": 6.95,
+      "cadence_spm": 153,
+      "heart_rate": {
+        "average": 137,
+        "max": 147
+      },
+      "zones": {
+        "z1_min": 6.6,
+        "z2_min": 1.3,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.2,
+        "epoc": 18,
+        "load": 21.7
+      },
+      "recovery": {
+        "hours": 2.1
+      },
+      "calories": 102,
+      "intervals": [],
+      "notes": {
+        "comment": "Petites molèsties novament. S’atura la sessió"
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260622-bici-estatica",
+      "source_file": "260622_bici_estatica.json",
+      "date": "2026-06-22",
+      "type": "cycling",
+      "sport": "cycling",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 30,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 122,
+        "max": 141
+      },
+      "zones": {
+        "z1_min": 30,
+        "z2_min": 0,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.2,
+        "epoc": 19,
+        "load": 19.3
+      },
+      "recovery": {
+        "hours": 4.1
+      },
+      "calories": 289,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260619-bici-estatica",
+      "source_file": "260619_bici_estatica.json",
+      "date": "2026-06-19",
+      "type": "cycling",
+      "sport": "cycling",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 67.1,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 132,
+        "max": 150
+      },
+      "zones": {
+        "z1_min": 63.5,
+        "z2_min": 2.7,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.6,
+        "epoc": 30.7,
+        "load": 46.4
+      },
+      "recovery": {
+        "hours": 14.7
+      },
+      "calories": 679,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260630-bici-estatica",
+      "source_file": "260630_bici_estatica.json",
+      "date": "2026-06-30",
+      "type": "cycling",
+      "sport": "cycling",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 55.3,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 137,
+        "max": 137
+      },
+      "zones": {
+        "z1_min": 42.3,
+        "z2_min": 11.6,
+        "z3_min": 1.2,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.1,
+        "epoc": 45,
+        "load": 61.9
+      },
+      "recovery": {
+        "hours": 12.4
+      },
+      "calories": 594,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260626-forca",
+      "source_file": "260626_forca.json",
+      "date": "2026-06-26",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 31.2,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 118,
+        "max": 159
+      },
+      "zones": {
+        "z1_min": 29.3,
+        "z2_min": 1.6,
+        "z3_min": 0.3,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.1,
+        "epoc": 15.6,
+        "load": 18.4
+      },
+      "recovery": {
+        "hours": 3.3
+      },
+      "calories": 254,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260806-bici-estatica",
+      "source_file": "260806_bici_estatica.json",
+      "date": "2026-08-06",
+      "type": "cycling",
+      "sport": "cycling",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 42.6,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 124,
+        "max": 140
+      },
+      "zones": {
+        "z1_min": 42.5,
+        "z2_min": 0,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.3,
+        "epoc": 20,
+        "load": 21.4
+      },
+      "recovery": {
+        "hours": 6.4
+      },
+      "calories": 407,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260809-running-z2",
+      "source_file": "260809_running_z2.json",
+      "date": "2026-08-09",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 24.7,
+      "distance_km": 3.01,
+      "elevation_m": 19,
+      "pace_min_km": 8.17,
+      "cadence_spm": 144,
+      "heart_rate": {
+        "average": 160,
+        "max": 178
+      },
+      "zones": {
+        "z1_min": 0.5,
+        "z2_min": 5.1,
+        "z3_min": 18,
+        "z4_min": 1.1,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 4,
+        "epoc": 82.6,
+        "load": 54.6
+      },
+      "recovery": {
+        "hours": 11.1
+      },
+      "calories": 392,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260810-natacio-mar",
+      "source_file": "260810_natacio_mar.json",
+      "date": "2026-08-10",
+      "type": "swimming",
+      "sport": "swimming",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 15.5,
+      "distance_km": 0.46,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 147,
+        "max": 196
+      },
+      "zones": {
+        "z1_min": 6.9,
+        "z2_min": 1.7,
+        "z3_min": 1.9,
+        "z4_min": 1.4,
+        "z5_min": 2.5
+      },
+      "training_effect": {
+        "pte": 3,
+        "epoc": 36.6,
+        "load": 79.2
+      },
+      "recovery": {
+        "hours": 5.1
+      },
+      "calories": 209,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260807-forca",
+      "source_file": "260807_forca.json",
+      "date": "2026-08-07",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 47.2,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 126,
+        "max": 159
+      },
+      "zones": {
+        "z1_min": 42.1,
+        "z2_min": 4.7,
+        "z3_min": 0.3,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.5,
+        "epoc": 24.6,
+        "load": 41.6
+      },
+      "recovery": {
+        "hours": 8
+      },
+      "calories": 466,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260811-running-z2",
+      "source_file": "260811_running_z2.json",
+      "date": "2026-08-11",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 31,
+      "distance_km": 4.01,
+      "elevation_m": 0,
+      "pace_min_km": 7.7,
+      "cadence_spm": 153,
+      "heart_rate": {
+        "average": 150,
+        "max": 160
+      },
+      "zones": {
+        "z1_min": 1.9,
+        "z2_min": 28.1,
+        "z3_min": 0.9,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.8,
+        "epoc": 71.6,
+        "load": 61.1
+      },
+      "recovery": {
+        "hours": 12.1
+      },
+      "calories": 424,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260803-bici-estatica",
+      "source_file": "260803_bici_estatica.json",
+      "date": "2026-08-03",
+      "type": "cycling",
+      "sport": "cycling",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 35.4,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 119,
+        "max": 137
+      },
+      "zones": {
+        "z1_min": 35.4,
+        "z2_min": 0,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.1,
+        "epoc": 15.1,
+        "load": 17
+      },
+      "recovery": {
+        "hours": 4.1
+      },
+      "calories": 320,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260713-bici-estatica",
+      "source_file": "260713_bici_estatica.json",
+      "date": "2026-07-13",
+      "type": "cycling",
+      "sport": "cycling",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 31.1,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 126,
+        "max": 178
+      },
+      "zones": {
+        "z1_min": 24.3,
+        "z2_min": 3.2,
+        "z3_min": 2.5,
+        "z4_min": 1.1,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.9,
+        "epoc": 40.7,
+        "load": 45.7
+      },
+      "recovery": {
+        "hours": 5.6
+      },
+      "calories": 331,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260717-bici-estatica",
+      "source_file": "260717_bici_estatica.json",
+      "date": "2026-07-17",
+      "type": "cycling",
+      "sport": "cycling",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 34,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 136,
+        "max": 154
+      },
+      "zones": {
+        "z1_min": 20.1,
+        "z2_min": 13.8,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3,
+        "epoc": 44.6,
+        "load": 59.6
+      },
+      "recovery": {
+        "hours": 8.5
+      },
+      "calories": 397,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260712-bici-estatica",
+      "source_file": "260712_bici_estatica.json",
+      "date": "2026-07-12",
+      "type": "cycling",
+      "sport": "cycling",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 52.3,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 122,
+        "max": 139
+      },
+      "zones": {
+        "z1_min": 52.2,
+        "z2_min": 0,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.2,
+        "epoc": 19.5,
+        "load": 21.3
+      },
+      "recovery": {
+        "hours": 6.9
+      },
+      "calories": 475,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260706-bici-estatica",
+      "source_file": "260706_bici_estatica.json",
+      "date": "2026-07-06",
+      "type": "cycling",
+      "sport": "cycling",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 53.3,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 122,
+        "max": 150
+      },
+      "zones": {
+        "z1_min": 51.2,
+        "z2_min": 2.1,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.3,
+        "epoc": 22.6,
+        "load": 25.7
+      },
+      "recovery": {
+        "hours": 6.8
+      },
+      "calories": 487,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260705-forca",
+      "source_file": "260705_forca.json",
+      "date": "2026-07-05",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 41.2,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 112,
+        "max": 149
+      },
+      "zones": {
+        "z1_min": 40.2,
+        "z2_min": 1,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 1.9,
+        "epoc": 12.8,
+        "load": 18.7
+      },
+      "recovery": {
+        "hours": 3
+      },
+      "calories": 311,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260703-forca",
+      "source_file": "260703_forca.json",
+      "date": "2026-07-03",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 44.4,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 115,
+        "max": 158
+      },
+      "zones": {
+        "z1_min": 40.4,
+        "z2_min": 3.8,
+        "z3_min": 0.2,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.1,
+        "epoc": 17,
+        "load": 31
+      },
+      "recovery": {
+        "hours": 4.4
+      },
+      "calories": 333,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260708-bici-estatica",
+      "source_file": "260708_bici_estatica.json",
+      "date": "2026-07-08",
+      "type": "cycling",
+      "sport": "cycling",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 63.1,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 84,
+        "max": 116
+      },
+      "zones": {
+        "z1_min": 54.7,
+        "z2_min": 3.2,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.4,
+        "epoc": 26.4,
+        "load": 29.6
+      },
+      "recovery": {
+        "hours": 8.9
+      },
+      "calories": 566,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260808-bici-estatica",
+      "source_file": "260808_bici_estatica.json",
+      "date": "2026-08-08",
+      "type": "cycling",
+      "sport": "cycling",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 70.7,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 131,
+        "max": 147
+      },
+      "zones": {
+        "z1_min": 68,
+        "z2_min": 2.7,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.7,
+        "epoc": 28.4,
+        "load": 29.9
+      },
+      "recovery": {
+        "hours": 15.9
+      },
+      "calories": 718,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260812-running-z2",
+      "source_file": "260812_running_z2.json",
+      "date": "2026-08-12",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 29.1,
+      "distance_km": 3.89,
+      "elevation_m": 0,
+      "pace_min_km": 7.49,
+      "cadence_spm": 154,
+      "heart_rate": {
+        "average": 144,
+        "max": 156
+      },
+      "zones": {
+        "z1_min": 6.4,
+        "z2_min": 22.6,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.5,
+        "epoc": 57.4,
+        "load": 68.3
+      },
+      "recovery": {
+        "hours": 10.2
+      },
+      "calories": 375,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260804-forca",
+      "source_file": "260804_forca.json",
+      "date": "2026-08-04",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 48.4,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 119,
+        "max": 169
+      },
+      "zones": {
+        "z1_min": 43.5,
+        "z2_min": 3.6,
+        "z3_min": 1.3,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.6,
+        "epoc": 26.3,
+        "load": 33.9
+      },
+      "recovery": {
+        "hours": 5.7
+      },
+      "calories": 394,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260728-hiking",
+      "source_file": "260728_hiking.json",
+      "date": "2026-07-28",
+      "type": "hiking",
+      "sport": "hiking",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 93.1,
+      "distance_km": 4.13,
+      "elevation_m": 64,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 109,
+        "max": 183
+      },
+      "zones": {
+        "z1_min": 87.4,
+        "z2_min": 5,
+        "z3_min": 0.4,
+        "z4_min": 0.1,
+        "z5_min": 0.1
+      },
+      "training_effect": {
+        "pte": 2.2,
+        "epoc": 18.6,
+        "load": 34.5
+      },
+      "recovery": {
+        "hours": 7.1
+      },
+      "calories": 598,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260721-hiking",
+      "source_file": "260721_hiking.json",
+      "date": "2026-07-21",
+      "type": "hiking",
+      "sport": "hiking",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 216,
+      "distance_km": 8.62,
+      "elevation_m": 259,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 120,
+        "max": 204
+      },
+      "zones": {
+        "z1_min": 156.6,
+        "z2_min": 17.9,
+        "z3_min": 5.7,
+        "z4_min": 0.7,
+        "z5_min": 5.6
+      },
+      "training_effect": {
+        "pte": 3.3,
+        "epoc": 54.4,
+        "load": 95.2
+      },
+      "recovery": {
+        "hours": 27.2
+      },
+      "calories": 1355,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260720-hiking",
+      "source_file": "260720_hiking.json",
+      "date": "2026-07-20",
+      "type": "hiking",
+      "sport": "hiking",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 75.5,
+      "distance_km": 4.64,
+      "elevation_m": 69,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 130,
+        "max": 203
+      },
+      "zones": {
+        "z1_min": 53.7,
+        "z2_min": 12.7,
+        "z3_min": 2.4,
+        "z4_min": 1.2,
+        "z5_min": 5.4
+      },
+      "training_effect": {
+        "pte": 3.6,
+        "epoc": 76.5,
+        "load": 114.1
+      },
+      "recovery": {
+        "hours": 17.2
+      },
+      "calories": 729,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260715-bici-estatica",
+      "source_file": "260715_bici_estatica.json",
+      "date": "2026-07-15",
+      "type": "cycling",
+      "sport": "cycling",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 74.3,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 125,
+        "max": 138
+      },
+      "zones": {
+        "z1_min": 70.7,
+        "z2_min": 0,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.3,
+        "epoc": 23.5,
+        "load": 19.7
+      },
+      "recovery": {
+        "hours": 10.6
+      },
+      "calories": 678,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260714-forca",
+      "source_file": "260714_forca.json",
+      "date": "2026-07-14",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 46.1,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 111,
+        "max": 147
+      },
+      "zones": {
+        "z1_min": 45.2,
+        "z2_min": 1,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 1.9,
+        "epoc": 12,
+        "load": 32
+      },
+      "recovery": {
+        "hours": 3.8
+      },
+      "calories": 341,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260813-running-z2",
+      "source_file": "260813_running_z2.json",
+      "date": "2026-08-13",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 29.6,
+      "distance_km": 4.01,
+      "elevation_m": 19,
+      "pace_min_km": 7.39,
+      "cadence_spm": 154,
+      "heart_rate": {
+        "average": 146,
+        "max": 159
+      },
+      "zones": {
+        "z1_min": 6.3,
+        "z2_min": 22.7,
+        "z3_min": 0.6,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.6,
+        "epoc": 62.6,
+        "load": 79.1
+      },
+      "recovery": {
+        "hours": 10.2
+      },
+      "calories": 383,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260815-running-z2",
+      "source_file": "260815_running_z2.json",
+      "date": "2026-08-15",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 40.9,
+      "distance_km": 5.58,
+      "elevation_m": 34,
+      "pace_min_km": 7.31,
+      "cadence_spm": 150,
+      "heart_rate": {
+        "average": 144,
+        "max": 156
+      },
+      "zones": {
+        "z1_min": 14.9,
+        "z2_min": 25.9,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.6,
+        "epoc": 62.5,
+        "load": 93.5
+      },
+      "recovery": {
+        "hours": 14.1
+      },
+      "calories": 516,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260817-forca-s1",
+      "source_file": "260817_forca_s1.json",
+      "date": "2026-08-17",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": "S1",
+      "duration_min": 44.6,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 109,
+        "max": 141
+      },
+      "zones": {
+        "z1_min": 44.6,
+        "z2_min": 0,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 1.7,
+        "epoc": 8,
+        "load": 20
+      },
+      "recovery": {
+        "hours": 3
+      },
+      "calories": 308,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260818-running-z2",
+      "source_file": "260818_running_z2.json",
+      "date": "2026-08-18",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 42.1,
+      "distance_km": 5.58,
+      "elevation_m": 31,
+      "pace_min_km": 7.52,
+      "cadence_spm": 150,
+      "heart_rate": {
+        "average": 147,
+        "max": 160
+      },
+      "zones": {
+        "z1_min": 8.6,
+        "z2_min": 30.5,
+        "z3_min": 2.9,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.9,
+        "epoc": 78.5,
+        "load": 77.1
+      },
+      "recovery": {
+        "hours": 15.5
+      },
+      "calories": 558,
+      "intervals": [],
+      "notes": {
+        "comment": "Més calor que l activitat anterior. Pujada final caminant."
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260821-running-longrun",
+      "source_file": "260821_running_longrun.json",
+      "date": "2026-08-21",
+      "type": "long-run",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 45.5,
+      "distance_km": 6.23,
+      "elevation_m": 29,
+      "pace_min_km": 7.3,
+      "cadence_spm": 150,
+      "heart_rate": {
+        "average": 145,
+        "max": 159
+      },
+      "zones": {
+        "z1_min": 11.5,
+        "z2_min": 33.8,
+        "z3_min": 0.2,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.5,
+        "epoc": 61.6,
+        "load": 90.8
+      },
+      "recovery": {
+        "hours": 16
+      },
+      "calories": 571,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260821-forca-pilo",
+      "source_file": "260821_forca_pilo.json",
+      "date": "2026-08-21",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 12.6,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 129,
+        "max": 148
+      },
+      "zones": {
+        "z1_min": 11.9,
+        "z2_min": 0.6,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.1,
+        "epoc": 15.5,
+        "load": 20.1
+      },
+      "recovery": {
+        "hours": 2.6
+      },
+      "calories": 137,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260820-forca-complementari",
+      "source_file": "260820_forca_complementari.json",
+      "date": "2026-08-20",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 53.5,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 115,
+        "max": 151
+      },
+      "zones": {
+        "z1_min": 51.1,
+        "z2_min": 2.3,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.2,
+        "epoc": 17.2,
+        "load": 32.3
+      },
+      "recovery": {
+        "hours": 5.6
+      },
+      "calories": 414,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260823-running-z2",
+      "source_file": "260823_running_z2.json",
+      "date": "2026-08-23",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 26.6,
+      "distance_km": 3.48,
+      "elevation_m": 10,
+      "pace_min_km": 7.63,
+      "cadence_spm": 147,
+      "heart_rate": {
+        "average": 142,
+        "max": 158
+      },
+      "zones": {
+        "z1_min": 12.3,
+        "z2_min": 14.1,
+        "z3_min": 0.1,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.1,
+        "epoc": 43.5,
+        "load": 54.5
+      },
+      "recovery": {
+        "hours": 8.5
+      },
+      "calories": 334,
+      "intervals": [],
+      "notes": {
+        "comment": "Petita variació amb zona de muntanya i pujades caminant"
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260824-forca-s2",
+      "source_file": "260824_forca_s2.json",
+      "date": "2026-08-24",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": "S2",
+      "duration_min": 35.1,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 113,
+        "max": 143
+      },
+      "zones": {
+        "z1_min": 34.9,
+        "z2_min": 0.2,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 1.9,
+        "epoc": 11.9,
+        "load": 26.7
+      },
+      "recovery": {
+        "hours": 2.3
+      },
+      "calories": 280,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260826-running-longrun",
+      "source_file": "260826_running_longrun.json",
+      "date": "2026-08-26",
+      "type": "long-run",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 53.2,
+      "distance_km": 6.83,
+      "elevation_m": 41,
+      "pace_min_km": 7.78,
+      "cadence_spm": 144,
+      "heart_rate": {
+        "average": 150,
+        "max": 163
+      },
+      "zones": {
+        "z1_min": 2.7,
+        "z2_min": 44.9,
+        "z3_min": 5.6,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.9,
+        "epoc": 80.8,
+        "load": 61.5
+      },
+      "recovery": {
+        "hours": 21
+      },
+      "calories": 707,
+      "intervals": [],
+      "notes": {
+        "comment": "Primera sessió de tarda, on noto que puja mes ràpidament les pulsacions"
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260827-running-z2",
+      "source_file": "260827_running_z2.json",
+      "date": "2026-08-27",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 50.3,
+      "distance_km": 6.25,
+      "elevation_m": 44,
+      "pace_min_km": 7.84,
+      "cadence_spm": 145,
+      "heart_rate": {
+        "average": 147,
+        "max": 164
+      },
+      "zones": {
+        "z1_min": 9.9,
+        "z2_min": 34.9,
+        "z3_min": 4.3,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.7,
+        "epoc": 67.7,
+        "load": 70
+      },
+      "recovery": {
+        "hours": 18.8
+      },
+      "calories": 651,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260828-running-z2",
+      "source_file": "260828_running_z2.json",
+      "date": "2026-08-28",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 41.1,
+      "distance_km": 5.55,
+      "elevation_m": 38,
+      "pace_min_km": 7.41,
+      "cadence_spm": 151,
+      "heart_rate": {
+        "average": 146,
+        "max": 159
+      },
+      "zones": {
+        "z1_min": 8.2,
+        "z2_min": 32.6,
+        "z3_min": 0.3,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.6,
+        "epoc": 66.9,
+        "load": 79.9
+      },
+      "recovery": {
+        "hours": 15.1
+      },
+      "calories": 529,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260829-forca-complementaria",
+      "source_file": "260829_forca_complementaria.json",
+      "date": "2026-08-29",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 44.9,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 117,
+        "max": 159
+      },
+      "zones": {
+        "z1_min": 42.6,
+        "z2_min": 2.2,
+        "z3_min": 0.1,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.3,
+        "epoc": 19.7,
+        "load": 35.2
+      },
+      "recovery": {
+        "hours": 5.8
+      },
+      "calories": 386,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260831-running-z2",
+      "source_file": "260831_running_z2.json",
+      "date": "2026-08-31",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 42.6,
+      "distance_km": 6.2,
+      "elevation_m": 25,
+      "pace_min_km": 6.86,
+      "cadence_spm": 152,
+      "heart_rate": {
+        "average": 144,
+        "max": 156
+      },
+      "zones": {
+        "z1_min": 12.2,
+        "z2_min": 30.3,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.5,
+        "epoc": 61.6,
+        "load": 101.9
+      },
+      "recovery": {
+        "hours": 14.4
+      },
+      "calories": 534,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260901-forca-s3",
+      "source_file": "260901_forca_s3.json",
+      "date": "2026-09-01",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": "S3",
+      "duration_min": 70,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 116,
+        "max": 158
+      },
+      "zones": {
+        "z1_min": 64.2,
+        "z2_min": 5.4,
+        "z3_min": 0.4,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2.4,
+        "epoc": 24,
+        "load": 50.9
+      },
+      "recovery": {
+        "hours": 7.7
+      },
+      "calories": 533,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260903-running-z2",
+      "source_file": "260903_running_z2.json",
+      "date": "2026-09-03",
+      "type": "z2",
+      "sport": "running",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 42.4,
+      "distance_km": 6.19,
+      "elevation_m": 39,
+      "pace_min_km": 6.85,
+      "cadence_spm": 156,
+      "heart_rate": {
+        "average": 145,
+        "max": 159
+      },
+      "zones": {
+        "z1_min": 10,
+        "z2_min": 31.9,
+        "z3_min": 0.4,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.5,
+        "epoc": 63.8,
+        "load": 101.2
+      },
+      "recovery": {
+        "hours": 14.6
+      },
+      "calories": 535,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
+      "id": "260902-forca-complementaria",
+      "source_file": "260902_forca_complementaria.json",
+      "date": "2026-09-02",
+      "type": "strength",
+      "sport": "strength",
+      "variant": null,
+      "subtype": null,
+      "duration_min": 28.9,
+      "distance_km": 0,
+      "elevation_m": 0,
+      "pace_min_km": null,
+      "cadence_spm": null,
+      "heart_rate": {
+        "average": 112,
+        "max": 163
+      },
+      "zones": {
+        "z1_min": 27.3,
+        "z2_min": 1.4,
+        "z3_min": 0.2,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 2,
+        "epoc": 13.9,
+        "load": 23.7
+      },
+      "recovery": {
+        "hours": 2.5
+      },
+      "calories": 227,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    },
+    {
       "id": "260905_running_longrun",
       "source_file": "260905_running_longrun.json",
       "date": "2026-09-05",
