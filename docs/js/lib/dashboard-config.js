@@ -14,7 +14,7 @@
   const branches = Object.freeze({
     // Temporalment treballem contra la branca de funcionalitats. Quan es faci
     // el merge final, production tornarà a apuntar a main.
-    production: 'feature/noves-millores',
+    production: 'main',
     development: 'feature/noves-millores',
   });
 
