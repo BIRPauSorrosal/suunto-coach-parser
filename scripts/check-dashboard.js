@@ -30,6 +30,8 @@ const required = [
   'docs/data/planning.schema.json',
   'docs/data/calendar.json',
   'docs/data/calendar.schema.json',
+  'docs/data/sessions.schema.json',
+  'docs/data/sessions.json',
   'docs/js/lib/dashboard-config.js',
   'docs/js/lib/dashboard-store.js',
   'docs/js/lib/data-service.js',
@@ -84,6 +86,23 @@ try {
   }
 } catch (error) {
   failures.push(`calendar.json no és vàlid: ${error.message}`);
+}
+
+try {
+  const sessionsJson = JSON.parse(fs.readFileSync(path.join(docs, 'data/sessions.json'), 'utf8'));
+  const sessions = sessionsJson.sessions || [];
+  const ids = sessions.map(session => session.id);
+  if (sessionsJson.schema_version !== 1 || sessionsJson.source !== 'suunto' || !Array.isArray(sessionsJson.sessions)) {
+    failures.push('sessions.json no té schema_version 1, source o sessions vàlids');
+  }
+  if (new Set(ids).size !== ids.length) failures.push('sessions.json conté IDs duplicats');
+  sessions.forEach(session => {
+    if (!session.id || !/^\d{4}-\d{2}-\d{2}$/.test(session.date || '') || !session.type || !session.sport) {
+      failures.push(`Activitat incompleta a sessions.json: ${session.id || '--'}`);
+    }
+  });
+} catch (error) {
+  failures.push(`sessions.json no és vàlid: ${error.message}`);
 }
 
 const html = fs.readFileSync(path.join(docs, 'index.html'), 'utf8');

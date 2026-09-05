@@ -8,9 +8,11 @@
 // ─── CONFIGURACIÓ GITHUB API ─────────────────────────────────
 const GITHUB_CONFIG = {
   ...window.DashboardConfig.github,
-  path:   window.DashboardConfig.paths.sessions.repository,
+  // Aquest escriptor continua sent legacy fins que l'importador es migri a JSON.
+  path:   'docs/data/sessions.csv',
   get token() { return window.getGitHubToken ? window.getGitHubToken() : ''; },
 };
+const JSON_SESSIONS_PATH = 'docs/data/sessions.json';
 
 
 // ─── 🔧 FIX UTF-8: helpers de codificació ────────────────────
@@ -151,7 +153,7 @@ async function fetchCurrentCSV() {
 
 // Llegeix el CSV local quan no hi ha token de GitHub.
 async function fetchLocalCSV() {
-  const localPath = window.DashboardConfig?.paths?.sessions?.local ?? './data/sessions.csv';
+  const localPath = './data/sessions.csv';
   const response = await fetch(`${localPath}?t=${Date.now()}`, {
     cache: 'no-store',
   });
@@ -297,6 +299,104 @@ async function appendRowsToCSV(newRows) {
   } catch (err) {
     console.error(err);
     showNotice(`❌ Error: ${err.message}`, true);
+  }
+}
+
+function sessionDocumentFromRows(rows) {
+  return rows.map(row => row.__session).filter(session => session && session.id);
+}
+
+async function readCurrentSessionsJSON() {
+  const token = window.getGitHubToken ? window.getGitHubToken() : '';
+  if (token) {
+    const { owner, repo, branch } = GITHUB_CONFIG;
+    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${JSON_SESSIONS_PATH}?ref=${branch}`;
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } });
+    if (res.status !== 404) {
+      if (!res.ok) throw new Error(`Error llegint sessions.json: ${res.status}`);
+      const payload = await res.json();
+      const document = JSON.parse(base64ToUtf8(payload.content));
+      if (!document || document.schema_version !== 1 || document.source !== 'suunto' || !Array.isArray(document.sessions)) {
+        throw new Error('El sessions.json del repositori no té un esquema vàlid');
+      }
+      return { document, sha: payload.sha };
+    }
+    // La branca pot no tenir encara el fitxer. Continuem amb el document
+    // carregat localment, que conserva l'històric, i la pujada el crearà després.
+  }
+  const storeDocument = window.dashboardStore?.getState?.()?.sessionsDocument;
+  if (storeDocument) {
+    if (storeDocument.schema_version !== 1 || storeDocument.source !== 'suunto' || !Array.isArray(storeDocument.sessions)) {
+      throw new Error('El sessions.json carregat no té un esquema vàlid');
+    }
+    return { document: storeDocument, sha: null };
+  }
+  const response = await fetch(`./data/sessions.json?t=${Date.now()}`, { cache: 'no-store' });
+  if (!response.ok) throw new Error(`Error llegint sessions.json local: ${response.status}`);
+  const document = await response.json();
+  if (!document || document.schema_version !== 1 || document.source !== 'suunto' || !Array.isArray(document.sessions)) {
+    throw new Error('El sessions.json local no té un esquema vàlid');
+  }
+  return { document, sha: null };
+}
+
+async function pushSessionsJSONToGitHub(document, sha) {
+  const { owner, repo, branch, token } = GITHUB_CONFIG;
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${JSON_SESSIONS_PATH}`;
+  const body = {
+    message: `[dashboard] Afegides ${new Date().toLocaleDateString('ca-ES')} sessions via uploader`,
+    content: utf8ToBase64(JSON.stringify(document, null, 2) + '\n'), branch,
+    ...(sha ? { sha } : {}),
+  };
+  const res = await fetch(url, { method: 'PUT', headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(`Error pujant sessions.json: ${res.status} — ${error.message ?? res.statusText}`);
+  }
+}
+
+function downloadSessionsJSON(sessionsDocument) {
+  const blob = new Blob([JSON.stringify(sessionsDocument, null, 2) + '\n'], { type: 'application/json;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url; link.download = 'sessions.json'; link.click(); URL.revokeObjectURL(url);
+}
+
+async function appendRowsToJSON(newRows) {
+  if (!newRows.length) return;
+  try {
+    showNotice('Llegint sessions.json actual...');
+    const current = await readCurrentSessionsJSON();
+    const existing = Array.isArray(current.document.sessions) ? current.document.sessions : [];
+    const loadedSessions = window.dashboardStore?.getState?.()?.sessions;
+    if (!existing.length && Array.isArray(loadedSessions) && loadedSessions.length) {
+      throw new Error('S’ha aturat la importació: el document base no conté l’històric carregat');
+    }
+    const existingIds = new Set(existing.map(session => session.id));
+    const duplicates = [];
+    const additions = [];
+    const parsedSessions = sessionDocumentFromRows(newRows);
+    if (parsedSessions.length !== newRows.length) {
+      throw new Error('S’ha aturat la importació: falta la conversió JSON d’una activitat');
+    }
+    parsedSessions.forEach(session => {
+      if (existingIds.has(session.id)) duplicates.push(session.id);
+      else { additions.push(session); existingIds.add(session.id); }
+    });
+    const document = { ...current.document, schema_version: 1, source: 'suunto', sessions: [...existing, ...additions] };
+    const token = window.getGitHubToken ? window.getGitHubToken() : '';
+    if (token) {
+      showNotice('Pujant sessions.json al repositori...');
+      await pushSessionsJSONToGitHub(document, current.sha);
+      if (typeof window.refreshDashboard === 'function') await window.refreshDashboard();
+      showNotice(`✅ ${additions.length} sessions afegides al repositori${duplicates.length ? ` (${duplicates.length} duplicats ignorats)` : ''}.`);
+    } else {
+      window.dashboardStore?.setData?.({ ...window.dashboardStore.getState(), sessions: window.DashboardDataService.normalizeSessionsJSON(document), sessionsDocument: document });
+      downloadSessionsJSON(document);
+      showNotice(`✅ sessions.json descarregat. ${additions.length} sessions afegides${duplicates.length ? ` (${duplicates.length} duplicats ignorats)` : ''}.`);
+    }
+  } catch (err) {
+    console.error(err); showNotice(`❌ Error: ${err.message}`, true);
   }
 }
 

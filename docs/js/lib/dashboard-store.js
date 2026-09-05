@@ -4,6 +4,7 @@
 (function (global) {
   const state = {
     sessions: [],
+    sessionsDocument: null,
     planning: [],
     planningDocument: null,
     calendar: null,
@@ -21,8 +22,9 @@
       return state;
     },
 
-    setData({ sessions = [], planning = [], planningDocument = null, calendar = null, sources = {} } = {}) {
+    setData({ sessions = [], sessionsDocument = null, planning = [], planningDocument = null, calendar = null, sources = {} } = {}) {
       state.sessions = Array.isArray(sessions) ? sessions : [];
+      state.sessionsDocument = sessionsDocument && typeof sessionsDocument === 'object' ? sessionsDocument : null;
       state.planning = Array.isArray(planning) ? planning : [];
       state.planningDocument = planningDocument && typeof planningDocument === 'object' ? planningDocument : null;
       state.calendar = calendar && typeof calendar === 'object' ? calendar : null;

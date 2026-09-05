@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://suunto-coach-parser.example/schemas/sessions-v1.json",
+  "title": "Suunto Coach sessions",
+  "type": "object",
+  "required": ["schema_version", "source", "sessions"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "source": { "type": "string", "const": "suunto" },
+    "sessions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/session" }
+    }
+  },
+  "$defs": {
+    "nullableNumber": { "type": ["number", "null"] },
+    "heartRate": {
+      "type": "object",
+      "required": ["average", "max"],
+      "properties": {
+        "average": { "$ref": "#/$defs/nullableNumber" },
+        "max": { "$ref": "#/$defs/nullableNumber" }
+      },
+      "additionalProperties": false
+    },
+    "zones": {
+      "type": "object",
+      "properties": {
+        "z1_min": { "$ref": "#/$defs/nullableNumber" },
+        "z2_min": { "$ref": "#/$defs/nullableNumber" },
+        "z3_min": { "$ref": "#/$defs/nullableNumber" },
+        "z4_min": { "$ref": "#/$defs/nullableNumber" },
+        "z5_min": { "$ref": "#/$defs/nullableNumber" }
+      },
+      "additionalProperties": false
+    },
+    "trainingEffect": {
+      "type": "object",
+      "properties": {
+        "pte": { "$ref": "#/$defs/nullableNumber" },
+        "epoc": { "$ref": "#/$defs/nullableNumber" },
+        "load": { "$ref": "#/$defs/nullableNumber" }
+      },
+      "additionalProperties": false
+    },
+    "recovery": {
+      "type": "object",
+      "properties": {
+        "hours": { "$ref": "#/$defs/nullableNumber" }
+      },
+      "additionalProperties": false
+    },
+    "interval": {
+      "type": "object",
+      "required": ["series", "distance_m", "duration_min", "pace_min_km", "heart_rate", "cadence_spm"],
+      "properties": {
+        "series": { "type": ["integer", "null"], "minimum": 1 },
+        "distance_m": { "$ref": "#/$defs/nullableNumber" },
+        "duration_min": { "$ref": "#/$defs/nullableNumber" },
+        "pace_min_km": { "$ref": "#/$defs/nullableNumber" },
+        "heart_rate": { "$ref": "#/$defs/heartRate" },
+        "cadence_spm": { "$ref": "#/$defs/nullableNumber" }
+      },
+      "additionalProperties": false
+    },
+    "planningLink": {
+      "type": "object",
+      "required": ["planning_session_id", "confidence"],
+      "properties": {
+        "planning_session_id": { "type": "string" },
+        "confidence": { "type": "string", "enum": ["suggested", "confirmed"] }
+      },
+      "additionalProperties": false
+    },
+    "session": {
+      "type": "object",
+      "required": ["id", "date", "type", "sport", "variant"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "source_file": { "type": ["string", "null"] },
+        "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "type": { "type": "string", "minLength": 1 },
+        "sport": { "type": "string", "minLength": 1 },
+        "variant": { "type": ["string", "null"] },
+        "subtype": { "type": ["string", "null"] },
+        "feeling": { "$ref": "#/$defs/nullableNumber" },
+        "vo2max": { "$ref": "#/$defs/nullableNumber" },
+        "duration_min": { "$ref": "#/$defs/nullableNumber" },
+        "distance_km": { "$ref": "#/$defs/nullableNumber" },
+        "elevation_m": { "$ref": "#/$defs/nullableNumber" },
+        "pace_min_km": { "$ref": "#/$defs/nullableNumber" },
+        "cadence_spm": { "$ref": "#/$defs/nullableNumber" },
+        "heart_rate": { "$ref": "#/$defs/heartRate" },
+        "zones": { "$ref": "#/$defs/zones" },
+        "training_effect": { "$ref": "#/$defs/trainingEffect" },
+        "recovery": { "$ref": "#/$defs/recovery" },
+        "calories": { "$ref": "#/$defs/nullableNumber" },
+        "intervals": { "type": "array", "items": { "$ref": "#/$defs/interval" } },
+        "notes": {
+          "type": "object",
+          "properties": { "comment": { "type": ["string", "null"] } },
+          "additionalProperties": false
+        },
+        "planning_links": { "type": "array", "items": { "$ref": "#/$defs/planningLink" } }
+      },
+      "additionalProperties": false
+    }
+  }
+}

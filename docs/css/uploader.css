@@ -245,6 +245,24 @@
 
 
 /* ── Àrea de comentari col·lapsable ─────────────────────────── */
+.uploader-variant-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: .8rem;
+}
+.uploader-variant-input {
+  min-width: 150px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 5px 8px;
+}
+
 .uploader-comment-area {
   padding:       4px 10px 8px;
   border-top:    1px solid var(--border);

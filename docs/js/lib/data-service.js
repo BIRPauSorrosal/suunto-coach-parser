@@ -38,6 +38,106 @@
     return global.DashboardCsv.parse(text, { separator: ',' });
   }
 
+  function assertSessionsDocument(document) {
+    if (!document || document.schema_version !== 1 || document.source !== 'suunto' || !Array.isArray(document.sessions)) {
+      throw new Error('sessions.json no té un esquema vàlid (schema_version/source/sessions)');
+    }
+    const seenIds = new Set();
+    document.sessions.forEach(session => {
+      if (!session || !session.id || !session.date || !session.type || !session.sport || !('variant' in session)) {
+        throw new Error(`Activitat incompleta a sessions.json: ${session?.id || 'desconeguda'}`);
+      }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(session.date)) {
+        throw new Error(`Data no vàlida a sessions.json: ${session.id}`);
+      }
+      if (seenIds.has(session.id)) throw new Error(`ID duplicat a sessions.json: ${session.id}`);
+      seenIds.add(session.id);
+    });
+    return document;
+  }
+
+  function parseSessionsJSON(text) {
+    let document;
+    try { document = JSON.parse(text); }
+    catch (_) { throw new Error('sessions.json no conté JSON vàlid'); }
+    return assertSessionsDocument(document);
+  }
+
+  function average(values) {
+    const numbers = values.filter(value => typeof value === 'number' && Number.isFinite(value));
+    return numbers.length ? numbers.reduce((total, value) => total + value, 0) / numbers.length : null;
+  }
+
+  // Manté el model pla que consumeixen les vistes mentre la resta de l'app
+  // migra progressivament al model estructurat de sessions.json.
+  function normalizeSessionsJSON(document) {
+    return document.sessions.map(session => {
+      const intervals = Array.isArray(session.intervals) ? session.intervals : [];
+      const qualityType = session.type === 'quality'
+        ? (intervals.length ? 'INTERVALS' : 'TEMPO')
+        : null;
+      const type = session.type === 'long-run'
+        ? (session.variant === 'trail' ? 'TRAIL' : 'LLARGA')
+        : session.type === 'z2' ? 'Z2'
+        : session.type === 'strength' ? `FORÇA${session.subtype ? ` ${session.subtype}` : ''}`
+        : session.type === 'cycling' ? (session.variant === 'indoor' ? 'BICI ESTÀTICA' : 'BICI')
+        : session.type === 'race' ? 'CURSA'
+        : session.type === 'test' ? 'TEST'
+        : session.type === 'padel' ? 'PADEL'
+        : session.type === 'hiking' ? 'HIKING'
+        : session.type === 'swimming' ? 'NATACIÓ'
+        : qualityType || 'ALTRES';
+      const heartRate = session.heart_rate || {};
+      const zones = session.zones || {};
+      const effect = session.training_effect || {};
+      const recovery = session.recovery || {};
+      const notes = session.notes || {};
+      const seriesRows = intervals.map(interval => ({
+        dist_m: interval.distance_m,
+        dur_min: interval.duration_min,
+        ritme: interval.pace_min_km,
+        fc_mitja: interval.heart_rate?.average,
+        fc_max: interval.heart_rate?.max,
+        cadencia: interval.cadence_spm,
+        serie: interval.series,
+      }));
+      return {
+        Arxiu: session.source_file || session.id,
+        Data: session.date,
+        Tipus: type,
+        'Durada(min)': session.duration_min,
+        'Dist(km)': session.distance_km,
+        'Desnivell(m)': session.elevation_m,
+        Feeling: session.feeling,
+        VO2max: session.vo2max,
+        Carrega: effect.load,
+        'Z1(min)': zones.z1_min,
+        'Z2(min)': zones.z2_min,
+        'Z3(min)': zones.z3_min,
+        'Z4(min)': zones.z4_min,
+        'Z5(min)': zones.z5_min,
+        FCMitja: heartRate.average,
+        FCMax: heartRate.max,
+        'Ritme(min/km)': session.pace_min_km,
+        Num_Series: intervals.length || null,
+        Durada_Mitja_Series: average(intervals.map(interval => interval.duration_min)),
+        Rec_Mitja_Min: null,
+        Ritme_Mitja_Series: average(intervals.map(interval => interval.pace_min_km)),
+        Consistencia_Ritme: null,
+        FC_Mitja_Series: average(intervals.map(interval => interval.heart_rate?.average)),
+        FC_Max_Mitja_Series: average(intervals.map(interval => interval.heart_rate?.max)),
+        Cadencia_Mitja_Series: average(intervals.map(interval => interval.cadence_spm)),
+        EPOC: effect.epoc,
+        'Recup(h)': recovery.hours,
+        Calories: session.calories,
+        'Cadencia(spm)': session.cadence_spm,
+        Series_Detall: seriesRows.length ? JSON.stringify(seriesRows) : '',
+        Comentari: notes.comment || '',
+        __activity: session,
+      };
+    });
+  }
+
   function assertPlanningDocument(document) {
     if (!document || document.schema_version !== 1 || !Array.isArray(document.cycles)) {
       throw new Error('planning.json no té un esquema vàlid (schema_version/cycles)');
@@ -176,7 +276,7 @@
       }
     }
 
-    throw lastError || new Error('Cap ruta vàlida per al CSV');
+    throw lastError || new Error('Cap ruta vàlida per al fitxer de dades');
   }
 
   async function load() {
@@ -186,10 +286,13 @@
       fetchFirstAvailable(DATA_SOURCES.calendar),
     ]);
 
+    const sessionsDocument = parseSessionsJSON(sessionsResult.text);
+    const planningDocument = parsePlanningJSON(planningResult.text);
     return {
-      sessions: parseCSV(sessionsResult.text),
-      planning: normalizePlanningJSON(parsePlanningJSON(planningResult.text)),
-      planningDocument: parsePlanningJSON(planningResult.text),
+      sessions: normalizeSessionsJSON(sessionsDocument),
+      sessionsDocument,
+      planning: normalizePlanningJSON(planningDocument),
+      planningDocument,
       calendar: parseCalendarJSON(calendarResult.text),
       sources: {
         sessions: sessionsResult.path,
@@ -203,9 +306,11 @@
     DATA_SOURCES,
     base64ToUtf8,
     parseCSV,
+    parseSessionsJSON,
     parsePlanningJSON,
     parseCalendarJSON,
     normalizePlanningJSON,
+    normalizeSessionsJSON,
     fetchFirstAvailable,
     load,
   });

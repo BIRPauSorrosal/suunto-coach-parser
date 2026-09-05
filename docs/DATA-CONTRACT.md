@@ -1,6 +1,21 @@
-# Contracte de dades CSV
+# Contracte de dades
+
+## `sessions.json`
+
+És la font principal d’activitats realitzades. Utilitza el contracte definit a
+[`data/sessions.schema.json`](data/sessions.schema.json), amb una activitat per
+objecte dins de `sessions`. Cada activitat té un `id` estable, una data ISO,
+`type`, `sport` i `variant`, i pot incloure mètriques, zones, intervals,
+comentaris i enllaços amb el planning.
+
+L’aplicació carrega aquest fitxer i el normalitza temporalment al model pla que
+encara utilitzen algunes vistes. El `sessions.csv` es conserva provisionalment
+com a format legacy de l’importador d’activitats, però ja no és la font de
+lectura del dashboard.
 
 ## `sessions.csv`
+
+Format legacy de compatibilitat i importació. No és la font principal del dashboard.
 
 És la font d’activitats realitzades. La primera fila defineix els noms de columna. Els camps poden contenir comes, cometes escapades (`""`) i salts de línia si estan entre cometes.
 

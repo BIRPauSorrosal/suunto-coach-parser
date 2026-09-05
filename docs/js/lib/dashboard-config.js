@@ -12,8 +12,10 @@
     || (search.match(/[?&]env=([^&]+)/)?.[1] || '');
   const environment = requestedEnvironment === 'development' ? 'development' : 'production';
   const branches = Object.freeze({
-    production: 'main',
-    development: 'refactor/optimitzacio',
+    // Temporalment treballem contra la branca de funcionalitats. Quan es faci
+    // el merge final, production tornarà a apuntar a main.
+    production: 'feature/noves-millores',
+    development: 'feature/noves-millores',
   });
 
   const config = {
@@ -25,8 +27,8 @@
     },
     paths: {
       sessions: {
-        local: './data/sessions.csv',
-        repository: 'docs/data/sessions.csv',
+        local: './data/sessions.json',
+        repository: 'docs/data/sessions.json',
       },
       planning: {
         local: './data/planning.json',
