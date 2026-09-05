@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "source": "suunto",
+  "sessions": [
+    {
+      "id": "260905_running_longrun",
+      "source_file": "260905_running_longrun.json",
+      "date": "2026-09-05",
+      "type": "long-run",
+      "sport": "running",
+      "variant": "road",
+      "subtype": null,
+      "feeling": 5,
+      "vo2max": 42.6,
+      "duration_min": 62.9,
+      "distance_km": 8.57,
+      "elevation_m": 40,
+      "pace_min_km": 7.33,
+      "cadence_spm": 154,
+      "heart_rate": {
+        "average": 148,
+        "max": 160
+      },
+      "zones": {
+        "z1_min": 4.4,
+        "z2_min": 57.9,
+        "z3_min": 0.6,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.7,
+        "epoc": 75.1,
+        "load": 80.4
+      },
+      "recovery": {
+        "hours": 24.1
+      },
+      "calories": 809,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
+    }
+  ]
+}
