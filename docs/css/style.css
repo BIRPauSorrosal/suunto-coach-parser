@@ -75,6 +75,17 @@
 .flex-actual-card strong { display:block; margin:2px 0; }
 .flex-actual-card small { color:var(--text-muted); }
 .flex-unassigned, .flex-unmatched, .flex-history-note { margin-top:16px; }
+.flex-manual-modal { position:fixed; inset:0; z-index:1000; display:grid; place-items:center; padding:20px; background:rgba(2,8,23,.78); }
+.flex-manual-dialog { width:min(520px,100%); max-height:calc(100vh - 40px); overflow:auto; background:var(--surface-2); border:1px solid var(--border); border-radius:16px; box-shadow:0 18px 60px rgba(0,0,0,.4); }
+.flex-manual-header { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; padding:20px 22px 14px; border-bottom:1px solid var(--border); }
+.flex-manual-header h3 { margin:4px 0 0; }
+.flex-manual-form { display:grid; gap:14px; padding:20px 22px 22px; }
+.flex-manual-form label { display:grid; gap:6px; color:var(--text-muted); font-size:.8rem; }
+.flex-manual-form input, .flex-manual-form select, .flex-manual-form textarea { width:100%; box-sizing:border-box; color:var(--text); background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 11px; font:inherit; }
+.flex-manual-form textarea { resize:vertical; }
+.flex-manual-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.flex-manual-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:4px; }
+@media (max-width:560px) { .flex-manual-grid { grid-template-columns:1fr; } }
 .flex-reconciliation-list { display:grid; gap:8px; margin-top:10px; }
 .flex-reconciliation-item { display:flex; align-items:center; gap:12px; padding:10px; background:var(--surface); border-radius:7px; }
 .flex-reconciliation-item > div:first-child { min-width:180px; }

@@ -258,7 +258,7 @@
     if (realWeek.length) { const reconciliationHtml = renderReconciliationPanel(realWeek, week); unmatched.hidden = !reconciliationHtml; unmatched.innerHTML = reconciliationHtml; }
     bind(sessions, planning, week, calendar, canEdit, calendarDocument);
   }
-  function card(item, canEdit, sessions=[]) { const meta=TYPES[item.type]||TYPES.other; const real=linkedActivity(item,sessions); const completed=item.status==='done'||!!real; return `<div class="flex-plan-card${completed?' is-done':''}${real?' has-linked-activity':''}" draggable="${canEdit}" data-plan-id="${esc(item.id)}" style="--card-color:${meta[1]}"><div class="flex-card-top"><span class="flex-card-type">${esc(item.title||meta[0])}</span><span class="flex-card-source">${item.source==='manual'?'Afegida':'Pla'}</span></div><strong>${esc(item.detail||meta[0])}</strong>${real?`<div class="flex-linked-activity"><span>✓ Realitzada</span><strong>${esc(real.tipus||'Activitat')} · ${real.distancia?fmt(real.distancia)+' km':''}${real.durada?' · '+fmt(real.durada)+' min':''}</strong><small>${esc(real.displayDate||'')}</small></div>`:''}<div class="flex-card-actions">${canEdit?`${real?'<span class="flex-card-confirmed">✓ Realitzada</span>':`<button type="button" data-action="toggle" data-id="${esc(item.id)}">${item.status==='done'?'↩ Pendent':'Marcar feta'}</button>`}<button type="button" data-action="delete" data-id="${esc(item.id)}">×</button>`:`<span>${completed?'✓ Realitzada':'Històric'}</span>`}</div></div>`; }
+  function card(item, canEdit, sessions=[]) { const meta=TYPES[item.type]||TYPES.other; const real=linkedActivity(item,sessions); const completed=item.status==='done'||!!real; return `<div class="flex-plan-card${completed?' is-done':''}${real?' has-linked-activity':''}" draggable="${canEdit}" data-plan-id="${esc(item.id)}" style="--card-color:${meta[1]}"><div class="flex-card-top"><span class="flex-card-type">${esc(item.title||meta[0])}</span><span class="flex-card-source">${item.source==='manual'?'Afegida':'Pla'}</span></div><strong>${esc(item.detail||meta[0])}</strong>${real?`<div class="flex-linked-activity"><span>✓ Realitzada</span><strong>${esc(real.tipus||'Activitat')} · ${real.distancia?fmt(real.distancia)+' km':''}${real.durada?' · '+fmt(real.durada)+' min':''}</strong><small>${esc(real.displayDate||'')}</small></div>`:''}<div class="flex-card-actions">${canEdit?`${real?'<span class="flex-card-confirmed">✓ Realitzada</span>':`<button type="button" data-action="toggle" data-id="${esc(item.id)}">${item.status==='done'?'↩ Pendent':'Marcar feta'}</button>`}<button type="button" data-action="delete" data-id="${esc(item.id)}" aria-label="Eliminar activitat" title="Eliminar activitat">×</button>`:`<span>${completed?'✓ Realitzada':'Històric'}</span>`}</div></div>`; }
   function actualCard(s) { return `<div class="flex-actual-card"><span>Registrada</span><strong>${esc(s.tipus||'Activitat')}</strong><small>${s.durada?fmt(s.durada)+' min':''}${s.distancia?' · '+fmt(s.distancia)+' km':''}</small></div>`; }
   function bind(sessions, planning, week, calendar, canEdit, calendarDocument) {
     ['flex-week-prev','flex-week-next','flex-week-current','flex-add-session'].forEach(id => { const el=document.getElementById(id); if(el) el.replaceWith(el.cloneNode(true)); });
@@ -266,12 +266,46 @@
     document.getElementById('flex-week-next')?.addEventListener('click',()=>{weekIndex++;renderFlexibleWeekView(sessions,planning,calendarDocument);});
     document.getElementById('flex-week-current')?.addEventListener('click',()=>{weekIndex=window.WeekManager.findCurrent(window.WeekManager.timeline(planning,sessions));renderFlexibleWeekView(sessions,planning,calendarDocument);});
     document.getElementById('flex-add-session')?.addEventListener('click',()=>addSession(sessions,planning,week,calendarDocument));
-    document.getElementById('flex-calendar')?.addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(!b||!canEdit)return;const i=calendar.items.find(x=>x.id===b.dataset.id);if(!i)return;if(b.dataset.action==='delete'){calendar.items=calendar.items.filter(x=>x.id!==i.id);if(i.source==='planning')calendar.removedPlanning=[...(calendar.removedPlanning||[]),i.id];}else i.status=i.status==='done'?'pending':'done';saveCalendar(week,calendar);renderFlexibleWeekView(sessions,planning,calendarDocument);});
+    document.getElementById('flex-calendar')?.addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(!b||!canEdit)return;const i=calendar.items.find(x=>x.id===b.dataset.id);if(!i)return;if(b.dataset.action==='delete'){if(i.source==='manual'&&!window.confirm('Vols eliminar aquesta activitat manual?'))return;calendar.items=calendar.items.filter(x=>x.id!==i.id);if(i.source==='planning')calendar.removedPlanning=[...(calendar.removedPlanning||[]),i.id];}else i.status=i.status==='done'?'pending':'done';saveCalendar(week,calendar);renderFlexibleWeekView(sessions,planning,calendarDocument);});
     document.getElementById('flex-unmatched')?.addEventListener('click',e=>{const b=e.target.closest('[data-reconcile-session]');if(!b||b.disabled)return;confirmReconciliation(b.dataset.reconcileSession,b.dataset.reconcilePlan,sessions,planning,week,calendar,calendarDocument);});
     document.querySelectorAll('[data-plan-id]').forEach(c=>c.addEventListener('dragstart',e=>{if(canEdit)e.dataTransfer.setData('text/plain',c.dataset.planId);}));
     [...document.querySelectorAll('[data-drop-day]'), document.querySelector('[data-drop-unassigned]')].filter(Boolean).forEach(z=>{z.addEventListener('dragover',e=>{if(canEdit){e.preventDefault();z.classList.add('is-over');}});z.addEventListener('dragleave',()=>z.classList.remove('is-over'));z.addEventListener('drop',e=>{e.preventDefault();z.classList.remove('is-over');if(!canEdit)return;const i=calendar.items.find(x=>x.id===e.dataTransfer.getData('text/plain'));if(i){i.day=z.dataset.dropUnassigned!==undefined?null:Number(z.dataset.dropDay);saveCalendar(week,calendar);renderFlexibleWeekView(sessions,planning,calendarDocument);}});});
   }
-  function addSession(sessions,planning,week,calendarDocument){const names=['Qualitat','Z2','Tirada llarga','Força','Bici estàtica','Altres'];const n=window.prompt(`Tipus d'activitat:\n${names.map((x,i)=>`${i+1}. ${x}`).join('\n')}`,'1'), types=['quality','z2','long','strength','bici','other'],type=types[Number(n)-1];if(!type)return;const detail=window.prompt('Descripció o objectiu (opcional):',TYPES[type][0]);if(detail===null)return;const d=window.prompt('Dia (1 dilluns – 7 diumenge):',String(({quality:2,z2:4,long:6,strength:3,bici:5,other:6}[type])));if(!/^[1-7]$/.test(d))return;const c=getCalendar(week,calendarDocument,sessions);c.items.push({id:`${week.key}-manual-${Date.now()}`,day:Number(d)-1,type,title:TYPES[type][0],detail:detail||TYPES[type][0],status:'pending',source:'manual'});saveCalendar(week,c);renderFlexibleWeekView(sessions,planning,calendarDocument);}
+  function manualVariantOptions(type) {
+    const variants = {
+      quality: [['', 'Sense especificar']], z2: [['', 'Sense especificar']], long: [['road', 'Road'], ['trail', 'Trail']],
+      strength: [['', 'Sense especificar'], ['S1', 'S1'], ['S2', 'S2'], ['S3', 'S3'], ['S4', 'S4'], ['S5', 'S5'], ['Pilometria', 'Pilometria'], ['Complementari', 'Complementari']],
+      bici: [['', 'Sense especificar'], ['indoor', 'Indoor / estàtica'], ['outdoor', 'Outdoor / carretera']], other: [['', 'Sense especificar']]
+    };
+    return (variants[type] || variants.other).map(([value, label]) => `<option value="${esc(value)}">${esc(label)}</option>`).join('');
+  }
+
+  function addSession(sessions, planning, week, calendarDocument) {
+    const modal = document.createElement('div'); modal.className = 'flex-manual-modal';
+    modal.innerHTML = `<div class="flex-manual-dialog" role="dialog" aria-modal="true" aria-labelledby="flex-manual-title">
+      <div class="flex-manual-header"><div><p class="eyebrow">Calendari manual</p><h3 id="flex-manual-title">Afegir activitat</h3></div><button type="button" class="btn btn-ghost btn-sm" data-manual-close aria-label="Tancar">×</button></div>
+      <form class="flex-manual-form"><label>Tipus<select name="type" required>${[['quality','Qualitat'],['z2','Z2'],['long','Tirada llarga'],['strength','Força'],['bici','Bici estàtica'],['other','Altres']].map(([v,l]) => `<option value="${v}">${l}</option>`).join('')}</select></label>
+        <label>Variant / subtipus<select name="variant">${manualVariantOptions('quality')}</select></label>
+        <label>Dia<select name="day" required>${DAYS.map((day, index) => `<option value="${index}" ${index === (defaultDay('quality') ?? 0) ? 'selected' : ''}>${day}</option>`).join('')}</select></label>
+        <label>Descripció<input name="detail" placeholder="Objectiu o descripció"></label>
+        <div class="flex-manual-grid"><label>Distància (km)<input name="distance" type="number" min="0" step="0.1" placeholder="Opcional"></label><label>Durada (min)<input name="duration" type="number" min="0" step="1" placeholder="Opcional"></label></div>
+        <label>Observacions<textarea name="notes" rows="3" placeholder="Comentaris opcionals"></textarea></label>
+        <div class="flex-manual-actions"><button type="button" class="btn btn-ghost" data-manual-close>Cancel·lar</button><button type="submit" class="btn btn-primary">Afegir al calendari</button></div></form></div>`;
+    document.body.appendChild(modal);
+    const form = modal.querySelector('form'), typeSelect = form.elements.type, variantSelect = form.elements.variant, daySelect = form.elements.day;
+    const refreshDefaults = () => { const type = typeSelect.value; variantSelect.innerHTML = manualVariantOptions(type); daySelect.value = String(defaultDay(type) ?? 0); };
+    typeSelect.addEventListener('change', refreshDefaults);
+    modal.querySelectorAll('[data-manual-close]').forEach(button => button.addEventListener('click', () => modal.remove()));
+    modal.addEventListener('click', event => { if (event.target === modal) modal.remove(); });
+    form.addEventListener('submit', event => {
+      event.preventDefault(); const data = new FormData(form), type = data.get('type'), detail = String(data.get('detail') || '').trim();
+      const item = { id: `${week.key}-manual-${Date.now()}`, day: Number(data.get('day')), type, title: TYPES[type][0], detail: detail || TYPES[type][0], status: 'pending', source: 'manual', variant: data.get('variant') || null, notes: String(data.get('notes') || '').trim() || null };
+      const distance = Number(data.get('distance')), duration = Number(data.get('duration'));
+      if (Number.isFinite(distance) && distance > 0) item.distance_km = distance;
+      if (Number.isFinite(duration) && duration > 0) item.duration_min = duration;
+      const c = getCalendar(week, calendarDocument, sessions); c.items.push(item); saveCalendar(week, c); modal.remove(); renderFlexibleWeekView(sessions, planning, calendarDocument);
+    });
+  }
   window.renderFlexibleWeekView=renderFlexibleWeekView;
   window.setFlexibleWeekByKey = (key, planning, sessions) => {
     const sourcePlanning = Array.isArray(planning) ? planning : window.dashboardStore?.getState?.()?.planning || [];
