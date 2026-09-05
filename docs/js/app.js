@@ -47,10 +47,13 @@ function navigateTo(target) {
   if (!chartData) return;
   const { sessions, planning } = chartData;
   if (target === 'overview')  renderOverviewView(sessions, planning);
-  if (target === 'setmanal')  renderSetmanalView(sessions, planning);
+  if (target === 'avui')      renderTodayView(sessions, planning);
+  if (target === 'setmanal')  renderFlexibleWeekView(sessions, planning);
   if (target === 'planning')  renderPlanningView(planning, sessions);
   if (target === 'sessions')  renderSessionsView(sessions);
 }
+
+window.navigateTo = navigateTo;
 
 function initRouter() {
   // — Sidebar nav —
@@ -287,7 +290,8 @@ function renderActiveView() {
   const { sessions, planning } = chartData;
   const target = document.querySelector('.view--active')?.dataset.view || 'overview';
   if (target === 'overview') renderOverviewView(sessions, planning);
-  if (target === 'setmanal') renderSetmanalView(sessions, planning);
+  if (target === 'avui')     renderTodayView(sessions, planning);
+  if (target === 'setmanal') renderFlexibleWeekView(sessions, planning);
   if (target === 'planning') renderPlanningView(planning, sessions);
   if (target === 'sessions') renderSessionsView(sessions);
 }
