@@ -75,6 +75,12 @@
 .flex-actual-card strong { display:block; margin:2px 0; }
 .flex-actual-card small { color:var(--text-muted); }
 .flex-unassigned, .flex-unmatched, .flex-history-note { margin-top:16px; }
+.flex-reconciliation-list { display:grid; gap:8px; margin-top:10px; }
+.flex-reconciliation-item { display:flex; align-items:center; gap:12px; padding:10px; background:var(--surface); border-radius:7px; }
+.flex-reconciliation-item > div:first-child { min-width:180px; }
+.flex-reconciliation-item small { display:block; color:var(--text-muted); margin-top:3px; }
+.flex-reconciliation-match { flex:1; color:var(--accent); font-size:.82rem; }
+.flex-reconciliation-unmatched { flex:1; color:var(--text-muted); font-size:.82rem; }
 .flex-unassigned-dropzone > .flex-plan-card { display:inline-block; width:210px; margin:8px 8px 0 0; vertical-align:top; }
 .flex-unassigned-dropzone { min-height:42px; padding:4px; border:1px dashed transparent; border-radius:8px; color:var(--text-muted); }
 .flex-unassigned-dropzone.is-over { border-color:var(--accent); background:var(--accent-soft); }
