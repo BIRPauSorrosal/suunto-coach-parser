@@ -62,7 +62,6 @@ const PRECACHE_URLS = [
   './data/calendar.json',
   './data/sessions.json',
   './js/views/overview.js',
-  './js/views/setmanal.js',
   './js/views/weekly-planner.js',
   './js/views/today.js',
   './js/views/planning.js',
