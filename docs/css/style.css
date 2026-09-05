@@ -117,6 +117,24 @@
 .today-hero h3 { font-size:1.35rem; margin-top:5px; }
 .today-hero-detail { font-size:1rem; margin-top:8px; }
 .today-hero-note { color:var(--text-muted); font-size:.8rem; margin-top:14px; }
+.today-session-list { display:grid; gap:10px; margin-top:16px; }
+.today-session-card { display:flex; justify-content:space-between; gap:18px; align-items:flex-start; padding:14px 16px; background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:9px; }
+.today-session-card.is-complete { border-left-color:var(--accent); background:rgba(34,197,94,.08); }
+.today-session-card--unplanned { border-left-color:var(--yellow); background:rgba(234,179,8,.06); }
+.today-session-status, .today-real-detail span { display:block; color:var(--accent); font-size:.68rem; text-transform:uppercase; letter-spacing:.04em; }
+.today-session-card--unplanned .today-session-status { color:var(--yellow); }
+.today-session-card h4 { margin:4px 0 3px; font-size:1rem; }
+.today-session-card p { margin:0; color:var(--text-muted); font-size:.82rem; }
+.today-real-detail { min-width:210px; padding:9px 11px; background:rgba(34,197,94,.08); border-radius:7px; }
+.today-real-detail strong { display:block; margin-top:3px; font-size:.78rem; }
+.today-upcoming-list { display:grid; gap:8px; }
+.today-upcoming-item { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:11px 13px; background:var(--surface); border:1px solid var(--border); border-radius:8px; }
+.today-upcoming-item span, .today-upcoming-item small { display:block; color:var(--text-muted); font-size:.72rem; }
+.today-upcoming-item strong { display:block; margin-top:3px; }
+.today-upcoming-item b { color:var(--text-muted); font-size:.72rem; white-space:nowrap; }
+.today-upcoming-item b.is-complete { color:var(--accent); }
+.today-empty-upcoming { color:var(--text-muted); margin:0; }
+@media(max-width:600px) { .today-session-card { display:block; } .today-real-detail { min-width:0; margin-top:10px; } }
 .today-week-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
 .today-week-grid span { display:block; color:var(--text-muted); font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; }
 .today-week-grid strong { display:block; margin-top:4px; font-size:.9rem; }
