@@ -5627,7 +5627,12 @@
       "notes": {
         "comment": null
       },
-      "planning_links": []
+      "planning_links": [
+        {
+          "planning_session_id": "2026-S36-z2-01",
+          "confidence": "confirmed"
+        }
+      ]
     },
     {
       "id": "260902-forca-complementaria",
