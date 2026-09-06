@@ -132,7 +132,8 @@
         used.add(savedItem.id);
         const savedDay = dayIndex(savedItem.day) ?? item.day;
         const linkedDay = linkedDayForItem(item, week, sessions);
-        const forceUnassigned = week.key >= UNASSIGNED_FROM && (current?.version || 0) < 5;
+        const hasAssignedDay = Array.isArray(current?.items) && current.items.some(savedItem => savedItem.day !== null && savedItem.day !== undefined);
+        const forceUnassigned = week.key >= UNASSIGNED_FROM && (current?.version || 0) < 5 && !hasAssignedDay;
         const migrateOldLongRun = current?.version < 4 && (item.type === 'long-run' || item.type === 'long') && savedDay === 6;
         return { ...item, day: linkedDay ?? (forceUnassigned ? null : (migrateOldLongRun ? 5 : savedDay)), status: linkedDay !== null || savedItem.status === 'done' ? 'done' : 'pending' };
       });
