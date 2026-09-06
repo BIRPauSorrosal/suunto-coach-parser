@@ -5707,7 +5707,12 @@
       "notes": {
         "comment": null
       },
-      "planning_links": []
+      "planning_links": [
+        {
+          "planning_session_id": "2026-S36-long-run-01",
+          "confidence": "confirmed"
+        }
+      ]
     }
   ]
 }
