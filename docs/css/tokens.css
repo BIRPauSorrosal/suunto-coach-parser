@@ -1,0 +1,70 @@
+/* Suunto Coach - Performance / Dark Analytics design tokens */
+:root {
+  --color-bg: #0B0F14;
+  --color-surface: #121820;
+  --color-surface-elevated: #18212B;
+  --color-surface-subtle: #0F151C;
+  --color-text-primary: #F4F7FA;
+  --color-text-secondary: #A5B0BC;
+  --color-text-muted: #6F7C89;
+  --color-text-disabled: #4D5863;
+  --color-accent: #55D6BE;
+  --color-warning: #F5B942;
+  --color-danger: #FF6B6B;
+  --color-brand-red: #FF4B4B;
+  --zone-z1: #55D6BE;
+  --zone-z2: #39C6E6;
+  --zone-z3: #F5B942;
+  --zone-z4: #FF7A59;
+  --zone-z5: #FF4B4B;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.14);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --layout-sidebar-width: 220px;
+  --layout-content-max-width: 1600px;
+  --font-family-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  /* Compatibility aliases for the current CSS and JS-generated markup. */
+  --bg: var(--color-bg);
+  --surface: var(--color-surface);
+  --surface-2: var(--color-surface-elevated);
+  --border: var(--color-border);
+  --text: var(--color-text-primary);
+  --text-muted: var(--color-text-secondary);
+  --accent: var(--color-accent);
+  --accent-soft: rgba(85, 214, 190, 0.14);
+  --blue: var(--zone-z2);
+  --blue-soft: rgba(57, 198, 230, 0.14);
+  --orange: var(--zone-z4);
+  --purple: #B58CFF;
+  --cyan: var(--zone-z2);
+  --yellow: var(--color-warning);
+  --red: var(--color-danger);
+  --radius: var(--radius-md);
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.16);
+  --sidebar-w: var(--layout-sidebar-width);
+  --font: var(--font-family-sans);
+
+  --load-vlow: var(--zone-z2);
+  --load-vlow-soft: rgba(57, 198, 230, 0.14);
+  --load-low: var(--zone-z1);
+  --load-low-soft: rgba(85, 214, 190, 0.14);
+  --load-mid: var(--zone-z3);
+  --load-mid-soft: rgba(245, 185, 66, 0.14);
+  --load-high: var(--zone-z4);
+  --load-high-soft: rgba(255, 122, 89, 0.14);
+  --load-vhigh: var(--zone-z5);
+  --load-vhigh-soft: rgba(255, 75, 75, 0.14);
+}
