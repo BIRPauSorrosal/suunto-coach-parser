@@ -110,6 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('sync-now-btn-mobile')?.addEventListener('click', event => runSyncFromButton(event.currentTarget));
   document.getElementById('sync-resolve-btn')?.addEventListener('click', resolveSyncConflicts);
   document.getElementById('sync-resolve-btn-mobile')?.addEventListener('click', resolveSyncConflicts);
+  lastAutoRefreshAt = Date.now();
   loadDashboardData();
 });
 
@@ -156,6 +157,7 @@ function updateSyncStatus(detail = {}) {
 
 async function resolveSyncConflicts() {
   const conflicts = (window.SyncQueue?.list?.() || []).filter(item => item.conflict);
+  let remoteSelected = false;
   for (const operation of conflicts) {
     const description = operation.kind === 'calendar'
       ? `la setmana ${operation.key}`
@@ -164,8 +166,10 @@ async function resolveSyncConflicts() {
       `Hi ha un conflicte amb ${description}.\n\n` +
       `Accepta per conservar el canvi local o Cancel·la per descartar-lo i conservar la versió remota.`
     );
-    window.SyncQueue?.resolve(operation.queue_key, keepLocal ? 'local' : 'remote');
+    if (!keepLocal) remoteSelected = true;
+    await window.SyncQueue?.resolve(operation.queue_key, keepLocal ? 'local' : 'remote');
   }
+  if (conflicts.length) await loadDashboardData({ silent: true, force: remoteSelected });
   updateSyncStatus();
 }
 
@@ -173,30 +177,40 @@ async function resolveSyncConflicts() {
   .forEach(eventName => window.addEventListener(eventName, event => updateSyncStatus(event.detail)));
 
 // ── Càrrega de dades ──────────────────────────────────────────────────────────────────
-async function loadDashboardData() {
+async function loadDashboardData({ silent = false, force = false } = {}) {
   const requestId = ++loadRequestId;
-  setNotice('Llegint fitxers de dades...', 'info');
-  setBadge('Carregant dades...');
+  if (!silent) {
+    lastAutoRefreshAt = Date.now();
+    setNotice('Llegint fitxers de dades...', 'info');
+    setBadge('Carregant dades...');
+  }
 
   try {
-    const loaded = await window.DashboardDataService.load();
+    const loaded = await window.DashboardDataService.refreshRemoteData();
     if (requestId !== loadRequestId) return;
+    if (!force && silent && hasSameRemoteRevisions(loaded.revisions, lastRemoteRevisions)) {
+      window.SessionsSync?.queueLocalLinks(loaded.sessions);
+      return;
+    }
+    lastRemoteRevisions = loaded.revisions || null;
     window.dashboardStore.setData(loaded);
-    if (loaded.settings?.settings?.heart_rate) applyFCConfig(loaded.settings.settings.heart_rate);
+    const remoteHeartRate = loaded.settings?.settings?.heart_rate;
+    const preferredHeartRate = window.SettingsSync?.preferredHeartRate(remoteHeartRate) || remoteHeartRate;
+    if (preferredHeartRate) applyFCConfig(preferredHeartRate);
     window.SessionsSync?.queueLocalLinks(loaded.sessions);
 
     renderDashboard();
     updateStatus();
-    setBadge('Dades carregades');
-    setNotice(
+    if (!silent) setBadge('Dades carregades');
+    if (!silent) setNotice(
       `Dades carregades correctament. Sessions: ${state.sessions.length} · Planning: ${state.planning.length}`,
       'info'
     );
   } catch (error) {
     if (requestId !== loadRequestId) return;
     console.error(error);
-    setBadge('Error de càrrega');
-    setNotice(
+    if (!silent) setBadge('Error de càrrega');
+    if (!silent) setNotice(
       "No s'han pogut llegir les dades. Comprova planning.json i sessions.json.",
       'error'
     );
@@ -207,6 +221,39 @@ async function loadDashboardData() {
 // API pública de refresc utilitzada pels importadors i l'editor de comentaris.
 // `refreshDashboard()` torna a llegir la font de dades; `refreshDashboardUI()`
 // només torna a renderitzar l'estat que ja tenim en memòria (mode local).
+const AUTO_REFRESH_MIN_INTERVAL = 30 * 1000;
+const PLANNING_POLL_INTERVAL = 60 * 1000;
+let lastAutoRefreshAt = 0;
+let autoRefreshPromise = null;
+let lastRemoteRevisions = null;
+
+async function refreshWhenVisible(reason) {
+  if (document.visibilityState === 'hidden') return;
+  const now = Date.now();
+  if (autoRefreshPromise || now - lastAutoRefreshAt < AUTO_REFRESH_MIN_INTERVAL) return;
+  lastAutoRefreshAt = now;
+  autoRefreshPromise = loadDashboardData({ silent: true, reason });
+  try { await autoRefreshPromise; }
+  finally { autoRefreshPromise = null; }
+}
+
+function hasSameRemoteRevisions(next, previous) {
+  if (!next || !previous) return false;
+  const keys = ['sessions', 'planning', 'calendar', 'settings'];
+  return keys.every(key => next[key] && previous[key] && next[key] === previous[key]);
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') refreshWhenVisible('visibilitychange');
+});
+window.addEventListener('focus', () => refreshWhenVisible('focus'));
+window.addEventListener('pageshow', () => refreshWhenVisible('pageshow'));
+window.setInterval(() => {
+  if (document.querySelector('.view--active')?.dataset.view === 'planning') {
+    refreshWhenVisible('planning-poll');
+  }
+}, PLANNING_POLL_INTERVAL);
+
 window.refreshDashboard = loadDashboardData;
 
 function refreshDashboardUI() {
@@ -216,6 +263,15 @@ function refreshDashboardUI() {
 }
 
 window.refreshDashboardUI = refreshDashboardUI;
+
+// Les edicions del calendari i les associacions confirmades es guarden
+// primer al navegador. Notifiquem també aquestes mutacions perquè Avui,
+// Overview i Sessions reflecteixin immediatament el mateix estat que Planning.
+window.addEventListener('dashboard-local-change', () => {
+  if (!chartData) return;
+  renderAllViews();
+  updateStatus();
+});
 
 // Les actualitzacions locals dels importadors passen pel store i provoquen
 // un únic render de la vista activa. La càrrega inicial continua sent explícita
@@ -346,7 +402,10 @@ function renderDashboard() {
   // pugui fer el merge sense dependre de les dades enriquides.
   // Les files RAW es consulten directament des del store pels importadors.
 
-  renderActiveView();
+  // Les dades poden haver canviat en una altra pestanya o dispositiu mentre
+  // l'usuari continua mirant la vista actual. Refresquem totes les vistes
+  // perquè cap d'elles conservi una fotografia antiga de l'estat.
+  renderAllViews();
 }
 
 function renderActiveView() {
@@ -357,6 +416,20 @@ function renderActiveView() {
   if (target === 'avui')     renderTodayView(sessions, planning);
   if (target === 'planning') renderPlanningView(planning, sessions, state.calendar);
   if (target === 'sessions') renderSessionsView(sessions);
+}
+
+function renderAllViews() {
+  if (!chartData) return;
+
+  // Els gràfics tenen instàncies associades al canvas. Destruïm-les una sola
+  // vegada abans de reconstruir qualsevol vista, incloses les ocultes.
+  window.DashboardComponents?.destroyAllCharts();
+
+  const { sessions, planning } = chartData;
+  renderOverviewView(sessions, planning);
+  renderTodayView(sessions, planning);
+  renderPlanningView(planning, sessions, state.calendar);
+  renderSessionsView(sessions);
 }
 
 // ── Enriquiment de files ──────────────────────────────────────────────────────────────────
@@ -548,5 +621,5 @@ function setText(id, value) { return window.DashboardViewUtils.setText(id, value
 
 // Re-renderitza tot quan l'usuari canvia la configuració de FC
 window.addEventListener('fc-config-changed', () => {
-  renderActiveView();
+  renderAllViews();
 });

@@ -9,6 +9,7 @@
   };
   const UNASSIGNED_FROM = '2026-09-07'; // 2026-S37
   let weekIndex = null;
+  let currentTimeline = [];
 
   const esc = v => String(v ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
   const fmt = v => Number.isFinite(Number(v)) ? new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 }).format(Number(v)) : '--';
@@ -156,9 +157,7 @@
     // així un moviment manual no es perd fins que es sincronitza al repositori.
     const local = all[key];
     const remote = calendarDocument?.weeks?.[key];
-    const hasPendingLocalChanges = local?.sync_status === 'pending';
-    const localIsNewer = local?.updated_at && (!remote?.updated_at || local.updated_at > remote.updated_at);
-    const source = hasPendingLocalChanges || localIsNewer ? local : (remote || local || old);
+    const source = window.CalendarSync?.preferLocal(local, remote) || old;
     const result = reconcileCalendar(week, source, sessions);
     all[key] = result;
     if (old && old !== source) delete all[planOf(week).setmana];
@@ -168,6 +167,9 @@
   function saveCalendar(week, calendar) {
     const saved = { ...calendar, version: 5, updated_at: new Date().toISOString(), sync_status: 'pending' };
     const all = read(); all[week.key] = saved; write(all);
+    window.dispatchEvent(new CustomEvent('dashboard-local-change', {
+      detail: { kind: 'calendar', key: week.key }
+    }));
     const sync = window.CalendarSync?.saveWeek(week, saved);
     if (sync?.then) sync.then(result => {
       if (!result || result.status !== 'synced') return;
@@ -191,11 +193,12 @@
   }
 
   function activityLinks(real) {
-    if (real.raw?.__activity?.planning_links?.length) return real.raw.__activity.planning_links;
     try {
       const saved = JSON.parse(localStorage.getItem('suunto-coach-session-links-v1') || '{}');
-      return saved[real.raw?.__activity?.id] || [];
+      const id = real.raw?.__activity?.id;
+      if (Object.prototype.hasOwnProperty.call(saved, id)) return Array.isArray(saved[id]) ? saved[id] : [];
     } catch (_) { return []; }
+    return real.raw?.__activity?.planning_links || [];
   }
 
   function reconciliationCandidates(realWeek, week) {
@@ -250,12 +253,16 @@
     const store = window.dashboardStore?.getState?.();
     if (store?.sessionsDocument) store.sessionsDocument.sessions = store.sessionsDocument.sessions.map(session => session.id === sessionId ? { ...session, planning_links: activity.planning_links } : session);
     window.SessionsSync?.savePlanningLinks(sessionId, activity.planning_links);
+    window.dispatchEvent(new CustomEvent('dashboard-local-change', {
+      detail: { kind: 'sessions', key: sessionId }
+    }));
     renderFlexibleWeekView(sessions, planning, calendarDocument);
   }
 
   function renderFlexibleWeekView(sessions, planning, calendarDocument) {
     const weeks = window.WeekManager.timeline(planning, sessions);
     if (!weeks.length) return;
+    currentTimeline = weeks;
     if (weekIndex === null || weekIndex >= weeks.length) weekIndex = window.WeekManager.findCurrent(weeks);
     const week = weeks[weekIndex], plan = planOf(week), calendar = getCalendar(week, calendarDocument, sessions), canEdit = editable(week);
     const today = iso(new Date()), days = Array.from({length:7}, (_, i) => { const d = new Date(week.startDate); d.setDate(d.getDate()+i); return d; });
@@ -324,10 +331,12 @@
     });
   }
   window.renderFlexibleWeekView=renderFlexibleWeekView;
+  window.getFlexibleWeekKey = () => currentTimeline[weekIndex]?.key || null;
   window.setFlexibleWeekByKey = (key, planning, sessions) => {
     const sourcePlanning = Array.isArray(planning) ? planning : window.dashboardStore?.getState?.()?.planning || [];
     const sourceSessions = Array.isArray(sessions) ? sessions : window.dashboardStore?.getState?.()?.sessions || [];
     const weeks = window.WeekManager.timeline(sourcePlanning, sourceSessions);
+    currentTimeline = weeks;
     const index = weeks.findIndex(week => week.key === key);
     if (index >= 0) weekIndex = index;
   };

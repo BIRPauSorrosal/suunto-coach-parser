@@ -265,7 +265,7 @@
           const json = await response.json();
           const text = base64ToUtf8(json.content);
           if (!text.trim()) throw new Error(`Fitxer buit: ${repoPath}`);
-          return { path, text };
+          return { path, text, revision: json.sha || response.headers.get('ETag') || null, source: 'github-api' };
         } catch (error) {
           console.warn('[data-service] Fallback a Pages:', error.message);
         }
@@ -282,7 +282,7 @@
         const buffer = await response.arrayBuffer();
         const text = new TextDecoder('utf-8').decode(buffer);
         if (!text.trim()) throw new Error(`Fitxer buit a ${path}`);
-        return { path, text };
+        return { path, text, revision: response.headers.get('ETag') || null, source: 'pages' };
       } catch (error) {
         lastError = error;
       }
@@ -291,30 +291,43 @@
     throw lastError || new Error('Cap ruta vàlida per al fitxer de dades');
   }
 
+  let loadPromise = null;
   async function load() {
-    const [sessionsResult, planningResult, calendarResult, settingsResult] = await Promise.all([
-      fetchFirstAvailable(DATA_SOURCES.sessions),
-      fetchFirstAvailable(DATA_SOURCES.planning),
-      fetchFirstAvailable(DATA_SOURCES.calendar),
-      fetchFirstAvailable(DATA_SOURCES.settings),
-    ]);
+    if (loadPromise) return loadPromise;
+    loadPromise = (async () => {
+      const [sessionsResult, planningResult, calendarResult, settingsResult] = await Promise.all([
+        fetchFirstAvailable(DATA_SOURCES.sessions),
+        fetchFirstAvailable(DATA_SOURCES.planning),
+        fetchFirstAvailable(DATA_SOURCES.calendar),
+        fetchFirstAvailable(DATA_SOURCES.settings),
+      ]);
 
-    const sessionsDocument = parseSessionsJSON(sessionsResult.text);
-    const planningDocument = parsePlanningJSON(planningResult.text);
-    return {
-      sessions: normalizeSessionsJSON(sessionsDocument),
-      sessionsDocument,
-      planning: normalizePlanningJSON(planningDocument),
-      planningDocument,
-      calendar: parseCalendarJSON(calendarResult.text),
-      settings: parseSettingsJSON(settingsResult.text),
-      sources: {
-        sessions: sessionsResult.path,
-        planning: planningResult.path,
-        calendar: calendarResult.path,
-        settings: settingsResult.path,
-      },
-    };
+      const sessionsDocument = parseSessionsJSON(sessionsResult.text);
+      const planningDocument = parsePlanningJSON(planningResult.text);
+      return {
+        sessions: normalizeSessionsJSON(sessionsDocument),
+        sessionsDocument,
+        planning: normalizePlanningJSON(planningDocument),
+        planningDocument,
+        calendar: parseCalendarJSON(calendarResult.text),
+        settings: parseSettingsJSON(settingsResult.text),
+        loaded_at: new Date().toISOString(),
+        sources: {
+          sessions: sessionsResult.path,
+          planning: planningResult.path,
+          calendar: calendarResult.path,
+          settings: settingsResult.path,
+        },
+        revisions: {
+          sessions: sessionsResult.revision,
+          planning: planningResult.revision,
+          calendar: calendarResult.revision,
+          settings: settingsResult.revision,
+        },
+      };
+    })();
+    try { return await loadPromise; }
+    finally { loadPromise = null; }
   }
 
   global.DashboardDataService = Object.freeze({
@@ -329,5 +342,6 @@
     normalizeSessionsJSON,
     fetchFirstAvailable,
     load,
+    refreshRemoteData: load,
   });
 })(window);

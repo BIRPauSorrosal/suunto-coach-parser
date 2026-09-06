@@ -5,6 +5,7 @@
   const write = queue => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(queue)); } catch (_) {} };
   const keyOf = operation => `${operation.kind}:${operation.key}`;
   const notify = detail => global.dispatchEvent(new CustomEvent('sync-queue-status', { detail: { pending: read().length, ...detail } }));
+  let retryPromise = null;
 
   function enqueue(operation) {
     const queue = read(), queueKey = keyOf(operation), index = queue.findIndex(item => (item.queue_key || keyOf(item)) === queueKey);
@@ -30,26 +31,41 @@
   }
 
   async function retry() {
-    const queue = read();
-    notify({ status: queue.length ? 'syncing' : 'idle' });
-    for (const operation of queue) {
-      if (operation.conflict) continue;
-      try {
-        let result;
-        if (operation.kind === 'calendar') result = await global.CalendarSync?.saveWeek(operation.week, operation.value, true);
-        if (operation.kind === 'sessions') result = await global.SessionsSync?.savePlanningLinks(operation.key, operation.links, true);
-        if (operation.kind === 'settings') result = await global.SettingsSync?.saveHeartRate(operation.config, true);
-        if (result?.status === 'synced') complete(operation);
-      } catch (_) { /* queda a la cua per al proper intent */ }
-    }
-    notify({ status: read().length ? 'pending' : 'idle' });
+    if (retryPromise) return retryPromise;
+    retryPromise = (async () => {
+      const queue = read();
+      notify({ status: queue.length ? 'syncing' : 'idle' });
+      for (const operation of queue) {
+        if (operation.conflict) continue;
+        try {
+          let result;
+          if (operation.kind === 'calendar') result = await global.CalendarSync?.saveWeek(operation.week, operation.value, true);
+          if (operation.kind === 'sessions') result = await global.SessionsSync?.savePlanningLinks(operation.key, operation.links, true);
+          if (operation.kind === 'settings') result = await global.SettingsSync?.saveHeartRate(operation.config, true);
+          if (result?.status === 'synced') complete(operation);
+        } catch (_) { /* queda a la cua per al proper intent */ }
+      }
+      notify({ status: read().length ? 'pending' : 'idle' });
+    })();
+    try { return await retryPromise; }
+    finally { retryPromise = null; }
   }
 
-  function resolve(queueKey, choice) {
+  async function resolve(queueKey, choice) {
     const queue = read(), item = queue.find(operation => (operation.queue_key || keyOf(operation)) === queueKey);
     if (!item) return;
-    if (choice === 'remote') { complete(queueKey); return; }
-    if (choice === 'local') { item.conflict = false; write(queue); retry(); }
+    if (choice === 'remote') {
+      if (item.kind === 'calendar') global.CalendarSync?.discardLocalWeek(item.key);
+      if (item.kind === 'sessions') global.SessionsSync?.discardLocalLinks(item.key);
+      if (item.kind === 'settings') global.SettingsSync?.discardLocal();
+      complete(queueKey);
+      return { status: 'discarded-local' };
+    }
+    if (choice === 'local') {
+      item.conflict = false;
+      write(queue);
+      return retry();
+    }
   }
 
   const list = () => read().map(operation => ({ ...operation }));

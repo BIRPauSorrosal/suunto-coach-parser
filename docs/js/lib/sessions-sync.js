@@ -41,6 +41,15 @@
     return operations.length;
   }
 
+  function discardLocalLinks(sessionId) {
+    try {
+      const key = 'suunto-coach-session-links-v1';
+      const links = JSON.parse(localStorage.getItem(key) || '{}');
+      delete links[sessionId];
+      localStorage.setItem(key, JSON.stringify(links));
+    } catch (_) {}
+  }
+
   async function savePlanningLinks(sessionId, planningLinks, fromQueue = false) {
     const config = global.DashboardConfig, token = global.getGitHubToken?.();
     if (!token) { if (!fromQueue) global.SyncQueue?.enqueue({ kind: 'sessions', key: sessionId, links: planningLinks }); global.dispatchEvent(new CustomEvent('sessions-sync-status', { detail: { status: 'pending', sessionId } })); return { status: 'pending' }; }
@@ -68,5 +77,5 @@
     }
   }
 
-  global.SessionsSync = Object.freeze({ savePlanningLinks, queueLocalLinks });
+  global.SessionsSync = Object.freeze({ savePlanningLinks, queueLocalLinks, discardLocalLinks });
 })(window);
