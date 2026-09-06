@@ -51,11 +51,21 @@
     finally { retryPromise = null; }
   }
 
-  function resolve(queueKey, choice) {
+  async function resolve(queueKey, choice) {
     const queue = read(), item = queue.find(operation => (operation.queue_key || keyOf(operation)) === queueKey);
     if (!item) return;
-    if (choice === 'remote') { complete(queueKey); return; }
-    if (choice === 'local') { item.conflict = false; write(queue); retry(); }
+    if (choice === 'remote') {
+      if (item.kind === 'calendar') global.CalendarSync?.discardLocalWeek(item.key);
+      if (item.kind === 'sessions') global.SessionsSync?.discardLocalLinks(item.key);
+      if (item.kind === 'settings') global.SettingsSync?.discardLocal();
+      complete(queueKey);
+      return { status: 'discarded-local' };
+    }
+    if (choice === 'local') {
+      item.conflict = false;
+      write(queue);
+      return retry();
+    }
   }
 
   const list = () => read().map(operation => ({ ...operation }));

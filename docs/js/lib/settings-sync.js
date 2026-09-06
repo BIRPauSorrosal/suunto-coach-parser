@@ -10,6 +10,7 @@
     const local = readLocalState();
     return local?.status === 'pending' && local.config ? local.config : remote;
   };
+  const discardLocal = () => { try { localStorage.removeItem(LOCAL_STATE_KEY); } catch (_) {} };
   async function saveHeartRate(config, fromQueue = false) {
     const token = global.getGitHubToken?.(), cfg = global.DashboardConfig;
     if (!fromQueue) writeLocalState(config, 'pending');
@@ -27,5 +28,5 @@
       global.dispatchEvent(new CustomEvent('settings-sync-status', { detail: { status: 'synced' } })); if (!fromQueue) global.SyncQueue?.complete({ kind: 'settings', key: 'heart_rate' }); return { status: 'synced' };
     } catch (error) { console.error('[settings-sync]', error); if (fromQueue && error.conflict) global.SyncQueue?.markConflict({ kind: 'settings', key: 'heart_rate' }); if (!fromQueue) global.SyncQueue?.enqueue({ kind: 'settings', key: 'heart_rate', config: { fcMax: config.fcMax, zones: [...config.zones] }, conflict: Boolean(error.conflict) }); global.dispatchEvent(new CustomEvent('settings-sync-status', { detail: { status: error.conflict ? 'conflict' : 'error', error: error.message } })); return { status: 'error', error: error.message }; }
   }
-  global.SettingsSync = Object.freeze({ saveHeartRate, preferredHeartRate });
+  global.SettingsSync = Object.freeze({ saveHeartRate, preferredHeartRate, discardLocal });
 })(window);

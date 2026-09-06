@@ -157,6 +157,7 @@ function updateSyncStatus(detail = {}) {
 
 async function resolveSyncConflicts() {
   const conflicts = (window.SyncQueue?.list?.() || []).filter(item => item.conflict);
+  let remoteSelected = false;
   for (const operation of conflicts) {
     const description = operation.kind === 'calendar'
       ? `la setmana ${operation.key}`
@@ -165,8 +166,10 @@ async function resolveSyncConflicts() {
       `Hi ha un conflicte amb ${description}.\n\n` +
       `Accepta per conservar el canvi local o Cancel·la per descartar-lo i conservar la versió remota.`
     );
-    window.SyncQueue?.resolve(operation.queue_key, keepLocal ? 'local' : 'remote');
+    if (!keepLocal) remoteSelected = true;
+    await window.SyncQueue?.resolve(operation.queue_key, keepLocal ? 'local' : 'remote');
   }
+  if (conflicts.length) await loadDashboardData({ silent: true, force: remoteSelected });
   updateSyncStatus();
 }
 
@@ -174,7 +177,7 @@ async function resolveSyncConflicts() {
   .forEach(eventName => window.addEventListener(eventName, event => updateSyncStatus(event.detail)));
 
 // ── Càrrega de dades ──────────────────────────────────────────────────────────────────
-async function loadDashboardData({ silent = false } = {}) {
+async function loadDashboardData({ silent = false, force = false } = {}) {
   const requestId = ++loadRequestId;
   if (!silent) {
     lastAutoRefreshAt = Date.now();
@@ -185,7 +188,7 @@ async function loadDashboardData({ silent = false } = {}) {
   try {
     const loaded = await window.DashboardDataService.refreshRemoteData();
     if (requestId !== loadRequestId) return;
-    if (silent && hasSameRemoteRevisions(loaded.revisions, lastRemoteRevisions)) {
+    if (!force && silent && hasSameRemoteRevisions(loaded.revisions, lastRemoteRevisions)) {
       window.SessionsSync?.queueLocalLinks(loaded.sessions);
       return;
     }
