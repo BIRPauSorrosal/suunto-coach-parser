@@ -106,26 +106,32 @@ window.closeBnavDrawer = closeBnavDrawer;
 document.addEventListener('DOMContentLoaded', () => {
   initRouter();
   document.getElementById('reload-data-btn').addEventListener('click', loadDashboardData);
-  document.getElementById('sync-now-btn')?.addEventListener('click', async event => {
-    const button = event.currentTarget;
-    button.classList.add('is-syncing');
-    button.disabled = true;
-    button.textContent = 'Sincronitzant...';
-    try { await window.SyncQueue?.retry(); }
-    finally {
-      button.classList.remove('is-syncing');
-      button.disabled = false;
-      button.textContent = 'Sincronitzar canvis';
-    }
-  });
+  document.getElementById('sync-now-btn')?.addEventListener('click', event => runSyncFromButton(event.currentTarget));
+  document.getElementById('sync-now-btn-mobile')?.addEventListener('click', event => runSyncFromButton(event.currentTarget));
   document.getElementById('sync-resolve-btn')?.addEventListener('click', resolveSyncConflicts);
+  document.getElementById('sync-resolve-btn-mobile')?.addEventListener('click', resolveSyncConflicts);
   loadDashboardData();
 });
+
+async function runSyncFromButton(button) {
+  if (!button) return;
+  button.classList.add('is-syncing');
+  button.disabled = true;
+  button.textContent = 'Sincronitzant...';
+  try { await window.SyncQueue?.retry(); }
+  finally {
+    button.classList.remove('is-syncing');
+    button.disabled = false;
+    button.textContent = 'Sincronitzar canvis';
+  }
+}
 
 function updateSyncStatus(detail = {}) {
   const status = document.getElementById('status-sync');
   const statusItem = document.getElementById('sync-status-item');
   const resolveButton = document.getElementById('sync-resolve-btn');
+  const mobileStatus = document.getElementById('mobile-sync-status');
+  const mobileResolveButton = document.getElementById('sync-resolve-btn-mobile');
   if (!status) return;
   const pending = detail.pending ?? window.SyncQueue?.pending?.() ?? 0;
   const conflict = detail.status === 'conflict' || (window.SyncQueue?.list?.() || []).some(item => item.conflict);
@@ -140,6 +146,12 @@ function updateSyncStatus(detail = {}) {
       : state === 'error' ? 'Error de sincronització'
       : state === 'synced' ? 'Canvis sincronitzats' : 'Sense canvis pendents';
   resolveButton?.toggleAttribute('hidden', !conflict);
+  mobileResolveButton?.toggleAttribute('hidden', !conflict);
+  if (mobileStatus) {
+    mobileStatus.textContent = status.textContent;
+    mobileStatus.classList.toggle('is-conflict', conflict || state === 'error');
+    mobileStatus.classList.toggle('is-pending', state === 'pending' || state === 'syncing');
+  }
 }
 
 async function resolveSyncConflicts() {

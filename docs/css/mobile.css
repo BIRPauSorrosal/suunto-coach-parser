@@ -392,6 +392,15 @@
     padding: 12px 16px;
   }
 
+  .bnav-sync-status {
+    margin: 2px 0 0;
+    color: var(--text-muted);
+    font-size: .75rem;
+    text-align: center;
+  }
+  .bnav-sync-status.is-conflict { color: var(--red); }
+  .bnav-sync-status.is-pending { color: var(--yellow); }
+
   .bnav-overlay {
     display: none;
     position: fixed;

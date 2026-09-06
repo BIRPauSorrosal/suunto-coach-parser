@@ -535,6 +535,13 @@
       <button type="button" class="btn btn-ghost" onclick="openGitHubTokenModal(); closeBnavDrawer()">
         ⚙️ Token GitHub
       </button>
+      <p class="bnav-sync-status" id="mobile-sync-status" aria-live="polite">Canvis sincronitzats</p>
+      <button type="button" class="btn btn-ghost" id="sync-now-btn-mobile">
+        Sincronitzar canvis
+      </button>
+      <button type="button" class="btn btn-ghost" id="sync-resolve-btn-mobile" hidden>
+        Resoldre conflictes
+      </button>
       <button type="button" class="btn btn-primary" id="reload-data-btn-mobile"
               onclick="loadDashboardData(); closeBnavDrawer()">
         Recarregar dades
