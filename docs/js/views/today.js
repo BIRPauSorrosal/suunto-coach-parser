@@ -47,6 +47,67 @@
     return [session.distancia ? `${fmt(session.distancia)} km` : '', session.durada ? `${fmt(session.durada)} min` : ''].filter(Boolean).join(' · ') || 'Dades no disponibles';
   }
 
+  function latestValue(sessions, key) {
+    return [...sessions].filter(session => Number.isFinite(Number(session[key])) && Number(session[key]) > 0)
+      .sort((a, b) => b.date - a.date)[0] || null;
+  }
+
+  function formAssessment(tsb) {
+    const thresholds = typeof PMC_CONFIG !== 'undefined' ? PMC_CONFIG.TSB_THRESHOLDS : null;
+    if (!thresholds || !Number.isFinite(tsb)) return 'Sense dades de forma';
+    if (tsb > thresholds.fresc) return 'Fresc';
+    if (tsb >= thresholds.optim_min) return 'Forma òptima';
+    if (tsb >= thresholds.productiu_min) return 'Productiu';
+    if (tsb >= thresholds.fatigat_min) return 'Fatigat';
+    return 'Sobrecarregat';
+  }
+
+  function renderPerformance(sessions) {
+    const grid = document.getElementById('today-kpi-grid');
+    const feelingEl = document.getElementById('today-feeling');
+    const chart = document.getElementById('chart-today-load');
+    if (!grid || !feelingEl || !chart) return;
+
+    const pmc = typeof buildPMCData === 'function' ? buildPMCData(sessions) : [];
+    const current = pmc[pmc.length - 1] || null;
+    const latestVo2 = latestValue(sessions, 'vo2max');
+    const latestFeeling = latestValue(sessions, 'feeling');
+    const metric = (label, value, context, className = '') => `<article class="today-kpi ${className}"><span class="today-kpi-label">${label}</span><strong class="today-kpi-value">${value}</strong><span class="today-kpi-context">${context}</span></article>`;
+    grid.innerHTML = [
+      metric('CTL', current ? current.ctl.toFixed(1) : '—', 'Forma', 'today-kpi--fitness'),
+      metric('ATL', current ? current.atl.toFixed(1) : '—', 'Fatiga', 'today-kpi--fatigue'),
+      metric('TSB', current ? `${current.tsb >= 0 ? '+' : ''}${current.tsb.toFixed(1)}` : '—', 'Estat', 'today-kpi--form'),
+      metric('VO₂max', latestVo2 ? Number(latestVo2.vo2max).toFixed(1) : '—', latestVo2 ? 'Rendiment · ml/kg/min' : 'Rendiment · Sense dades', 'today-kpi--performance'),
+      metric('TSS 7 dies', current ? Math.round(pmc.slice(-7).reduce((sum, day) => sum + day.tss, 0)) : '—', 'Càrrega', 'today-kpi--load')
+    ].join('');
+
+    const feelingValue = latestFeeling ? Number(latestFeeling.feeling) : null;
+    const feelingLabel = feelingValue === null ? 'Sense registre' : feelingValue >= 4 ? 'Bona' : feelingValue === 3 ? 'Neutra' : 'Baixa';
+    const last7Load = pmc.slice(-7).reduce((sum, day) => sum + day.tss, 0);
+    const previous7Load = pmc.slice(-14, -7).reduce((sum, day) => sum + day.tss, 0);
+    const loadDiff = previous7Load > 0 ? ((last7Load - previous7Load) / previous7Load) * 100 : null;
+    const trendText = loadDiff === null ? 'Sense referència anterior' : loadDiff > 15 ? `Càrrega en augment (+${Math.round(loadDiff)}%)` : loadDiff < -15 ? `Setmana de descàrrega (${Math.round(loadDiff)}%)` : `Càrrega estable (${loadDiff >= 0 ? '+' : ''}${Math.round(loadDiff)}%)`;
+    const formText = current ? formAssessment(current.tsb) : 'Sense dades de forma';
+    feelingEl.innerHTML = `<div class="panel-header"><div><p class="eyebrow">Dada subjectiva</p><h3 id="today-feeling-title">Com et sents?</h3></div><span class="today-feeling-mark" aria-hidden="true">${feelingValue === null ? '—' : feelingValue >= 4 ? '☺' : feelingValue === 3 ? '◌' : '↓'}</span></div><div class="today-feeling-body"><strong>${feelingLabel}</strong>${feelingValue === null ? '<span>No registrat</span>' : `<span>${feelingValue} / 5</span>`}</div><div class="today-load-context"><div><span>Càrrega respecte als 7 dies anteriors</span><strong>${trendText}</strong></div><div><span>Lectura actual</span><strong>${formText}</strong></div></div>`;
+
+    if (!current || typeof Chart === 'undefined' || !window.DashboardComponents) return;
+    window.DashboardComponents.destroyChart('today-pmc');
+    const css = getComputedStyle(document.documentElement);
+    const accent = css.getPropertyValue('--color-accent').trim() || '#55D6BE';
+    const danger = css.getPropertyValue('--color-danger').trim() || '#FF6B6B';
+    const warning = css.getPropertyValue('--color-warning').trim() || '#F5B942';
+    const muted = css.getPropertyValue('--color-text-muted').trim() || '#6F7C89';
+    window.DashboardComponents.createChart('today-pmc', chart, {
+      type: 'line',
+      data: { labels: pmc.slice(-42).map(day => day.label), datasets: [
+        { label: 'CTL', data: pmc.slice(-42).map(day => day.ctl), borderColor: accent, backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 0, tension: .25 },
+        { label: 'ATL', data: pmc.slice(-42).map(day => day.atl), borderColor: danger, backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 0, tension: .25 },
+        { label: 'TSB', data: pmc.slice(-42).map(day => day.tsb), borderColor: warning, backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 0, tension: .25 }
+      ] },
+      options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { labels: { color: muted, usePointStyle: true, boxWidth: 8 } } }, scales: { x: { display: false }, y: { grid: { color: 'rgba(255,255,255,.06)' }, ticks: { color: muted, maxTicksLimit: 5 } } } }
+    });
+  }
+
   function plannedCard(item, real) {
     const title = item.title || typeLabels[item.type] || 'Sessió planificada';
     const detail = [item.detail && item.detail !== title ? item.detail : '', item.variant || '', item.distance_km ? `${fmt(item.distance_km)} km` : '', item.duration_min ? `${fmt(item.duration_min)} min` : ''].filter(Boolean).join(' · ') || title;
@@ -58,6 +119,7 @@
   }
 
   function renderTodayView(sessions, planning) {
+    renderPerformance(sessions);
     const weeks = window.WeekManager.timeline(planning, sessions), index = window.WeekManager.findCurrent(weeks), week = weeks[index];
     if (!week) return;
     const calendar = window.dashboardStore?.getState?.().calendar;

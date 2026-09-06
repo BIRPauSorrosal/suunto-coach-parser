@@ -9,6 +9,13 @@
 @media (max-width: 767px) {
 
   /* ── Ocultar sidebar ──────────────────────────────────────── */
+  .view.view--active[data-view="avui"] { display: flex; flex-direction: column; }
+  .view.view--active[data-view="avui"] .today-training-grid { order: 1; }
+  .view.view--active[data-view="avui"] .today-performance { order: 2; }
+  .view.view--active[data-view="avui"] .today-load { order: 3; }
+  .view.view--active[data-view="avui"] .today-week { order: 4; }
+  .view.view--active[data-view="avui"] .today-upcoming { order: 5; }
+
   .sidebar { display: none; }
 
   /* ── App shell: columna vertical ─────────────────────────── */
@@ -156,6 +163,14 @@
   .hero-value    { font-size: 1.5rem; }
   .sess-kpi-value { font-size: 1.2rem; }
   .panel-header  { margin-bottom: 14px; }
+
+  .today-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .today-kpi { padding: 12px; }
+  .today-kpi-value { font-size: 24px; }
+  .today-kpi--performance { grid-column: 1 / -1; }
+  .today-training-grid { grid-template-columns: 1fr; gap: 0; }
+  .today-training-grid > .panel { margin-bottom: 14px; }
+  .today-load .chart-wrap--today-load { height: 180px; }
 
   .chart-wrap         { height: 180px; }
   .chart-wrap--tall   { height: 220px; }

@@ -419,7 +419,24 @@
           <div><p class="eyebrow">Seguiment d’entrenament</p><h2>Avui</h2><p class="page-subtitle" id="today-date-label">--</p></div>
           <span class="badge badge-muted" id="today-status-badge">Carregant...</span>
         </header>
-        <section class="today-hero panel" id="today-hero"></section>
+        <section class="today-performance panel" aria-labelledby="today-performance-title">
+          <div class="panel-header">
+            <div><p class="eyebrow">Dades objectives</p><h3 id="today-performance-title">Resum de rendiment</h3></div>
+            <span class="badge badge-muted">Forma · Fatiga · Estat · Càrrega</span>
+          </div>
+          <div class="today-kpi-grid" id="today-kpi-grid"></div>
+        </section>
+        <section class="today-load panel" aria-labelledby="today-load-title">
+          <div class="panel-header">
+            <div><p class="eyebrow">Forma · Fatiga · Estat</p><h3 id="today-load-title">Càrrega d’entrenament</h3></div>
+            <span class="badge badge-muted">PMC · 42 dies / 7 dies</span>
+          </div>
+          <div class="chart-wrap chart-wrap--today-load"><canvas id="chart-today-load"></canvas></div>
+        </section>
+        <div class="today-training-grid">
+          <section class="today-hero panel" id="today-hero"></section>
+          <section class="today-feeling panel" id="today-feeling" aria-labelledby="today-feeling-title"></section>
+        </div>
         <section class="today-week panel">
           <div class="panel-header"><div><p class="eyebrow">Context</p><h3>Setmana actual</h3></div><button class="btn btn-ghost btn-sm" id="today-open-week">Obrir calendari</button></div>
           <div id="today-week-summary"></div>

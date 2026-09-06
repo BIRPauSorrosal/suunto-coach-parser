@@ -113,6 +113,17 @@
 }
 
 /* ── Avui ─────────────────────────────────────────────────────────────── */
+.today-kpi-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; }
+.today-kpi { min-width:0; padding:16px; background:var(--color-surface-subtle); border:1px solid var(--color-border); border-radius:var(--radius-sm); }
+.today-kpi-label, .today-kpi-context { display:block; text-transform:uppercase; letter-spacing:.06em; font-size:11px; font-weight:500; color:var(--color-text-muted); }
+.today-kpi-value { display:block; margin:8px 0 3px; color:var(--color-text-primary); font-size:28px; line-height:1.1; font-weight:650; letter-spacing:-.02em; }
+.today-kpi--fitness .today-kpi-value, .today-kpi--performance .today-kpi-value { color:var(--color-accent); }
+.today-kpi--fatigue .today-kpi-value { color:var(--color-danger); }
+.today-kpi--form .today-kpi-value { color:var(--color-warning); }
+.today-kpi-context { color:var(--color-text-secondary); text-transform:none; letter-spacing:0; }
+.today-load .chart-wrap--today-load { height:220px; }
+.today-training-grid { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(260px,1fr); gap:20px; align-items:stretch; }
+.today-training-grid > .panel { margin-bottom:20px; }
 .today-hero { margin-bottom:16px; border-left:3px solid var(--accent); padding:24px; }
 .today-hero h3 { font-size:1.35rem; margin-top:5px; }
 .today-hero-detail { font-size:1rem; margin-top:8px; }
@@ -138,6 +149,15 @@
 .today-week-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
 .today-week-grid span { display:block; color:var(--text-muted); font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; }
 .today-week-grid strong { display:block; margin-top:4px; font-size:.9rem; }
+.today-feeling { border-left:3px solid var(--color-accent); }
+.today-feeling-mark { display:grid; place-items:center; width:42px; height:42px; border-radius:50%; background:rgba(85,214,190,.1); color:var(--color-accent); font-size:1.45rem; }
+.today-feeling-body { display:flex; flex-direction:column; justify-content:center; min-height:118px; }
+.today-feeling-body strong { color:var(--color-text-primary); font-size:24px; font-weight:650; }
+.today-feeling-body span { color:var(--color-text-secondary); margin-top:4px; }
+.today-load-context { display:grid; gap:10px; margin-top:16px; padding-top:16px; border-top:1px solid var(--color-border); }
+.today-load-context div { display:flex; flex-direction:column; gap:2px; }
+.today-load-context span { color:var(--color-text-muted); font-size:11px; }
+.today-load-context strong { color:var(--color-text-secondary); font-size:13px; font-weight:600; }
 @media(max-width:600px) { .today-week-grid { grid-template-columns:repeat(2,1fr); gap:14px 10px; } .today-hero { padding:18px 15px; } }
 
 html { font-size: 16px; }
