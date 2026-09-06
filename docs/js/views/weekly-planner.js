@@ -159,7 +159,7 @@
     write(all);
     return result;
   }
-  function saveCalendar(week, calendar) { const all = read(); all[week.key] = { ...calendar, version: 5 }; write(all); }
+  function saveCalendar(week, calendar) { const saved = { ...calendar, version: 5 }; const all = read(); all[week.key] = saved; write(all); window.CalendarSync?.saveWeek(week, saved); }
   function editable(week) { return new Date() <= week.endDate; }
   function actualOn(sessions, date) { const key = iso(date); return sessions.filter(s => iso(s.date) === key && !activityLinks(s).some(link => link.confidence === 'confirmed')); }
 
