@@ -31,6 +31,7 @@
 
   async function retry() {
     const queue = read();
+    notify({ status: queue.length ? 'syncing' : 'idle' });
     for (const operation of queue) {
       if (operation.conflict) continue;
       try {

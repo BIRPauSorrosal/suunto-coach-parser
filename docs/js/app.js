@@ -106,23 +106,39 @@ window.closeBnavDrawer = closeBnavDrawer;
 document.addEventListener('DOMContentLoaded', () => {
   initRouter();
   document.getElementById('reload-data-btn').addEventListener('click', loadDashboardData);
-  document.getElementById('sync-now-btn')?.addEventListener('click', () => window.SyncQueue?.retry());
+  document.getElementById('sync-now-btn')?.addEventListener('click', async event => {
+    const button = event.currentTarget;
+    button.classList.add('is-syncing');
+    button.disabled = true;
+    button.textContent = 'Sincronitzant...';
+    try { await window.SyncQueue?.retry(); }
+    finally {
+      button.classList.remove('is-syncing');
+      button.disabled = false;
+      button.textContent = 'Sincronitzar canvis';
+    }
+  });
   document.getElementById('sync-resolve-btn')?.addEventListener('click', resolveSyncConflicts);
   loadDashboardData();
 });
 
 function updateSyncStatus(detail = {}) {
   const status = document.getElementById('status-sync');
+  const statusItem = document.getElementById('sync-status-item');
   const resolveButton = document.getElementById('sync-resolve-btn');
   if (!status) return;
   const pending = detail.pending ?? window.SyncQueue?.pending?.() ?? 0;
   const conflict = detail.status === 'conflict' || (window.SyncQueue?.list?.() || []).some(item => item.conflict);
+  const state = conflict ? 'conflict' : detail.status === 'error' ? 'error' : detail.status === 'syncing' ? 'syncing' : pending ? 'pending' : detail.status === 'synced' ? 'synced' : 'idle';
+  statusItem?.setAttribute('data-sync-state', state);
   status.textContent = conflict
     ? `Conflictes pendents (${pending})`
+    : state === 'syncing'
+      ? 'Sincronitzant canvis...'
     : pending
       ? `${pending} canvi${pending === 1 ? '' : 's'} pendent${pending === 1 ? '' : 's'}`
-      : detail.status === 'synced' ? 'Canvis sincronitzats' : 'Sense canvis pendents';
-  status.previousElementSibling?.classList.toggle('dot-live', Boolean(pending));
+      : state === 'error' ? 'Error de sincronització'
+      : state === 'synced' ? 'Canvis sincronitzats' : 'Sense canvis pendents';
   resolveButton?.toggleAttribute('hidden', !conflict);
 }
 
