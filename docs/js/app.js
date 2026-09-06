@@ -264,6 +264,15 @@ function refreshDashboardUI() {
 
 window.refreshDashboardUI = refreshDashboardUI;
 
+// Les edicions del calendari i les associacions confirmades es guarden
+// primer al navegador. Notifiquem també aquestes mutacions perquè Avui,
+// Overview i Sessions reflecteixin immediatament el mateix estat que Planning.
+window.addEventListener('dashboard-local-change', () => {
+  if (!chartData) return;
+  renderAllViews();
+  updateStatus();
+});
+
 // Les actualitzacions locals dels importadors passen pel store i provoquen
 // un únic render de la vista activa. La càrrega inicial continua sent explícita
 // perquè permet mostrar els estats de loading/error abans de renderitzar.
@@ -393,7 +402,10 @@ function renderDashboard() {
   // pugui fer el merge sense dependre de les dades enriquides.
   // Les files RAW es consulten directament des del store pels importadors.
 
-  renderActiveView();
+  // Les dades poden haver canviat en una altra pestanya o dispositiu mentre
+  // l'usuari continua mirant la vista actual. Refresquem totes les vistes
+  // perquè cap d'elles conservi una fotografia antiga de l'estat.
+  renderAllViews();
 }
 
 function renderActiveView() {
@@ -404,6 +416,20 @@ function renderActiveView() {
   if (target === 'avui')     renderTodayView(sessions, planning);
   if (target === 'planning') renderPlanningView(planning, sessions, state.calendar);
   if (target === 'sessions') renderSessionsView(sessions);
+}
+
+function renderAllViews() {
+  if (!chartData) return;
+
+  // Els gràfics tenen instàncies associades al canvas. Destruïm-les una sola
+  // vegada abans de reconstruir qualsevol vista, incloses les ocultes.
+  window.DashboardComponents?.destroyAllCharts();
+
+  const { sessions, planning } = chartData;
+  renderOverviewView(sessions, planning);
+  renderTodayView(sessions, planning);
+  renderPlanningView(planning, sessions, state.calendar);
+  renderSessionsView(sessions);
 }
 
 // ── Enriquiment de files ──────────────────────────────────────────────────────────────────
@@ -595,5 +621,5 @@ function setText(id, value) { return window.DashboardViewUtils.setText(id, value
 
 // Re-renderitza tot quan l'usuari canvia la configuració de FC
 window.addEventListener('fc-config-changed', () => {
-  renderActiveView();
+  renderAllViews();
 });

@@ -49,7 +49,11 @@ const escapePlanningText = value => window.DashboardComponents?.escapeHtml
 function renderPlanningView(planning, sessions, calendar) {
   if (!planning.length) return;
   const today  = new Date(); today.setHours(12, 0, 0, 0);
-  const active = planning.find(w => {
+  const selectedKey = window.getFlexibleWeekKey?.();
+  const selected = selectedKey
+    ? planning.find(w => window.WeekManager.key(w.startDate) === selectedKey)
+    : null;
+  const active = selected || planning.find(w => {
     const start = new Date(w.startDate); start.setHours(0, 0, 0, 0);
     const end = new Date(w.endDate); end.setHours(23, 59, 59, 999);
     return today >= start && today <= end;
