@@ -106,8 +106,43 @@ window.closeBnavDrawer = closeBnavDrawer;
 document.addEventListener('DOMContentLoaded', () => {
   initRouter();
   document.getElementById('reload-data-btn').addEventListener('click', loadDashboardData);
+  document.getElementById('sync-now-btn')?.addEventListener('click', () => window.SyncQueue?.retry());
+  document.getElementById('sync-resolve-btn')?.addEventListener('click', resolveSyncConflicts);
   loadDashboardData();
 });
+
+function updateSyncStatus(detail = {}) {
+  const status = document.getElementById('status-sync');
+  const resolveButton = document.getElementById('sync-resolve-btn');
+  if (!status) return;
+  const pending = detail.pending ?? window.SyncQueue?.pending?.() ?? 0;
+  const conflict = detail.status === 'conflict' || (window.SyncQueue?.list?.() || []).some(item => item.conflict);
+  status.textContent = conflict
+    ? `Conflictes pendents (${pending})`
+    : pending
+      ? `${pending} canvi${pending === 1 ? '' : 's'} pendent${pending === 1 ? '' : 's'}`
+      : detail.status === 'synced' ? 'Canvis sincronitzats' : 'Sense canvis pendents';
+  status.previousElementSibling?.classList.toggle('dot-live', Boolean(pending));
+  resolveButton?.toggleAttribute('hidden', !conflict);
+}
+
+async function resolveSyncConflicts() {
+  const conflicts = (window.SyncQueue?.list?.() || []).filter(item => item.conflict);
+  for (const operation of conflicts) {
+    const description = operation.kind === 'calendar'
+      ? `la setmana ${operation.key}`
+      : operation.kind === 'sessions' ? `la sessió ${operation.key}` : 'les zones cardíaques';
+    const keepLocal = window.confirm(
+      `Hi ha un conflicte amb ${description}.\n\n` +
+      `Accepta per conservar el canvi local o Cancel·la per descartar-lo i conservar la versió remota.`
+    );
+    window.SyncQueue?.resolve(operation.queue_key, keepLocal ? 'local' : 'remote');
+  }
+  updateSyncStatus();
+}
+
+['sync-queue-status', 'calendar-sync-status', 'sessions-sync-status', 'settings-sync-status']
+  .forEach(eventName => window.addEventListener(eventName, event => updateSyncStatus(event.detail)));
 
 // ── Càrrega de dades ──────────────────────────────────────────────────────────────────
 async function loadDashboardData() {

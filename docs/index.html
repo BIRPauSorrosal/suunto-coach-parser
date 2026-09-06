@@ -57,6 +57,7 @@
         <ul class="status-list">
           <li><span class="dot dot-live"></span> <span id="status-sessions">sessions.json pendent</span></li>
           <li><span class="dot dot-live"></span> <span id="status-planning">planning.json pendent</span></li>
+          <li><span class="dot"></span> <span id="status-sync">Canvis sincronitzats</span></li>
           <li><span class="dot"></span> <span id="status-source">Origen no resolt</span></li>
           <li><span class="dot"></span> <span id="status-last-update">Sense actualització</span></li>
         </ul>
@@ -66,6 +67,12 @@
       <div class="sidebar-actions">
         <button type="button" class="btn btn-ghost btn-sidebar" id="gh-token-btn"
                 onclick="openGitHubTokenModal()">&#x2699;&#xFE0F; Token GitHub</button>
+        <button type="button" class="btn btn-ghost btn-sidebar" id="sync-now-btn">
+          Sincronitzar canvis
+        </button>
+        <button type="button" class="btn btn-ghost btn-sidebar" id="sync-resolve-btn" hidden>
+          Resoldre conflictes
+        </button>
         <!-- importar activitats, importar planning i recarregar s'insereixen via JS -->
         <button type="button" class="btn btn-primary btn-sidebar" id="reload-data-btn">
           Recarregar dades
@@ -561,6 +568,7 @@
   <script src="./js/lib/dashboard-config.js"></script>
   <script src="./js/lib/dashboard-store.js"></script>
   <script src="./js/lib/week-manager.js"></script>
+  <script src="./js/lib/sync-queue.js"></script>
   <script src="./js/lib/calendar-sync.js"></script>
   <script src="./js/lib/sessions-sync.js"></script>
   <script src="./js/lib/csv.js"></script>

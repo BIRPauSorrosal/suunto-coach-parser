@@ -34,9 +34,9 @@
     return { document: JSON.parse(decode(json.content)), sha: json.sha };
   }
 
-  async function saveWeek(week, value) {
+  async function saveWeek(week, value, fromQueue = false) {
     const token = global.getGitHubToken?.();
-    if (!token) { global.dispatchEvent(new CustomEvent('calendar-sync-status', { detail: { status: 'local-only' } })); return { status: 'local-only' }; }
+    if (!token) { if (!fromQueue) global.SyncQueue?.enqueue({ kind: 'calendar', key: week.key, week, value }); global.dispatchEvent(new CustomEvent('calendar-sync-status', { detail: { status: 'pending', week: week.key } })); return { status: 'pending' }; }
     try {
       const remote = await readRemote();
       const document = remote.document || { schema_version: 1, planning_source: 'planning.json', weeks: {} };
@@ -44,12 +44,15 @@
       document.weeks[week.key] = toRemoteWeek(week, value);
       const config = global.DashboardConfig, { owner, repo, branch } = config.github, path = config.paths.calendar.repository;
       const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, { method: 'PUT', headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify({ message: `[dashboard] Actualitza calendari ${week.planning?.setmana || week.key}`, content: encode(JSON.stringify(document, null, 2) + '\n'), branch, ...(remote.sha ? { sha: remote.sha } : {}) }) });
-      if (!response.ok) throw new Error(`Error pujant calendar.json: ${response.status}`);
+      if (!response.ok) { const error = new Error(`Error pujant calendar.json: ${response.status}`); error.conflict = response.status === 409; throw error; }
       global.dispatchEvent(new CustomEvent('calendar-sync-status', { detail: { status: 'synced', week: week.key } }));
+      if (!fromQueue) global.SyncQueue?.complete({ kind: 'calendar', key: week.key });
       return { status: 'synced' };
     } catch (error) {
       console.error('[calendar-sync]', error);
-      global.dispatchEvent(new CustomEvent('calendar-sync-status', { detail: { status: 'error', error: error.message, week: week.key } }));
+      if (fromQueue && error.conflict) global.SyncQueue?.markConflict({ kind: 'calendar', key: week.key });
+      if (!fromQueue) global.SyncQueue?.enqueue({ kind: 'calendar', key: week.key, week, value, conflict: Boolean(error.conflict) });
+      global.dispatchEvent(new CustomEvent('calendar-sync-status', { detail: { status: error.conflict ? 'conflict' : 'error', error: error.message, week: week.key } }));
       return { status: 'error', error: error.message };
     }
   }
