@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "settings": {
+    "heart_rate": {
+      "fcMax": 185,
+      "zones": [111, 130, 148, 167, 185]
+    }
+  }
+}

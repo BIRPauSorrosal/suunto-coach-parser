@@ -40,6 +40,10 @@
         local: './data/calendar.json',
         repository: 'docs/data/calendar.json',
       },
+      settings: {
+        local: './data/settings.json',
+        repository: 'docs/data/settings.json',
+      },
     },
   };
 
@@ -49,6 +53,7 @@
       sessions: Object.freeze(config.paths.sessions),
       planning: Object.freeze(config.paths.planning),
       calendar: Object.freeze(config.paths.calendar),
+      settings: Object.freeze(config.paths.settings),
     }),
   });
 })(window);

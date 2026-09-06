@@ -79,6 +79,14 @@ function saveFCConfig(cfg) {
   } catch (_) { /* mode privat o quota excedida */ }
 }
 
+function applyFCConfig(cfg) {
+  if (!cfg || !Number.isInteger(cfg.fcMax) || !Array.isArray(cfg.zones) || cfg.zones.length !== 5) return false;
+  FC_CONFIG.fcMax = cfg.fcMax;
+  FC_CONFIG.zones = [...cfg.zones];
+  saveFCConfig(FC_CONFIG);
+  return true;
+}
+
 /**
  * Retorna els BPM calculats per defecte per a un fcMax donat.
  * Útil per pre-emplenar el modal de configuració.

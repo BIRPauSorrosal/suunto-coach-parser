@@ -119,6 +119,7 @@ async function loadDashboardData() {
     const loaded = await window.DashboardDataService.load();
     if (requestId !== loadRequestId) return;
     window.dashboardStore.setData(loaded);
+    if (loaded.settings?.settings?.heart_rate) applyFCConfig(loaded.settings.settings.heart_rate);
 
     renderDashboard();
     updateStatus();

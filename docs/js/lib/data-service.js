@@ -8,6 +8,7 @@
     sessions: [config.paths.sessions.local],
     planning: [config.paths.planning.local],
     calendar: [config.paths.calendar.local],
+    settings: [config.paths.settings.local],
   });
   const GITHUB_CONFIG = config.github;
   const REQUEST_TIMEOUT_MS = 10000;
@@ -182,6 +183,17 @@
     return document;
   }
 
+  function parseSettingsJSON(text) {
+    let document;
+    try { document = JSON.parse(text); }
+    catch (_) { throw new Error('settings.json no conté JSON vàlid'); }
+    const heartRate = document?.settings?.heart_rate;
+    if (document?.schema_version !== 1 || !heartRate || !Number.isInteger(heartRate.fcMax) || !Array.isArray(heartRate.zones) || heartRate.zones.length !== 5 || heartRate.zones.some(value => !Number.isInteger(value) || value <= 0)) {
+      throw new Error('settings.json no té un esquema vàlid');
+    }
+    return document;
+  }
+
   function sum(values) {
     const numbers = values.filter(value => typeof value === 'number' && Number.isFinite(value));
     return numbers.length ? numbers.reduce((total, value) => total + value, 0) : null;
@@ -280,10 +292,11 @@
   }
 
   async function load() {
-    const [sessionsResult, planningResult, calendarResult] = await Promise.all([
+    const [sessionsResult, planningResult, calendarResult, settingsResult] = await Promise.all([
       fetchFirstAvailable(DATA_SOURCES.sessions),
       fetchFirstAvailable(DATA_SOURCES.planning),
       fetchFirstAvailable(DATA_SOURCES.calendar),
+      fetchFirstAvailable(DATA_SOURCES.settings),
     ]);
 
     const sessionsDocument = parseSessionsJSON(sessionsResult.text);
@@ -294,10 +307,12 @@
       planning: normalizePlanningJSON(planningDocument),
       planningDocument,
       calendar: parseCalendarJSON(calendarResult.text),
+      settings: parseSettingsJSON(settingsResult.text),
       sources: {
         sessions: sessionsResult.path,
         planning: planningResult.path,
         calendar: calendarResult.path,
+        settings: settingsResult.path,
       },
     };
   }
@@ -309,6 +324,7 @@
     parseSessionsJSON,
     parsePlanningJSON,
     parseCalendarJSON,
+    parseSettingsJSON,
     normalizePlanningJSON,
     normalizeSessionsJSON,
     fetchFirstAvailable,

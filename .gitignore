@@ -6,6 +6,8 @@
 !docs/data/calendar.schema.json
 !docs/data/sessions.schema.json
 !docs/data/sessions.json
+!docs/data/settings.schema.json
+!docs/data/settings.json
 
 # Arxius binaris i temporals de Python
 __pycache__/
