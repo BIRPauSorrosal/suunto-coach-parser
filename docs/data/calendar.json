@@ -64,6 +64,95 @@
         }
       ],
       "removed_planning_session_ids": []
+    },
+    "2026-08-31": {
+      "week_id": "2026-08-31",
+      "week_code": "2026-S36",
+      "updated_at": "2026-09-06T08:07:13.389Z",
+      "items": [
+        {
+          "id": "2026-S36-z2-01",
+          "day": 3,
+          "type": "z2",
+          "title": "Z2",
+          "detail": "6,1 km · 42,5 min",
+          "status": "done",
+          "source": "planning",
+          "kind": "planned",
+          "planning_session_id": "2026-S36-z2-01"
+        },
+        {
+          "id": "2026-S36-z2-02",
+          "day": 0,
+          "type": "z2",
+          "title": "Z2",
+          "detail": "6,1 km · 42,5 min",
+          "status": "done",
+          "source": "planning",
+          "kind": "planned",
+          "planning_session_id": "2026-S36-z2-02"
+        },
+        {
+          "id": "2026-S36-long-run-01",
+          "day": 5,
+          "type": "long-run",
+          "title": "Tirada llarga",
+          "detail": "8,5 km · 60 min · Z2",
+          "status": "done",
+          "source": "planning",
+          "kind": "planned",
+          "planning_session_id": "2026-S36-long-run-01"
+        },
+        {
+          "id": "2026-S36-strength-01",
+          "day": 2,
+          "type": "strength",
+          "title": "Força",
+          "detail": "Força",
+          "status": "done",
+          "source": "planning",
+          "kind": "planned",
+          "planning_session_id": "2026-S36-strength-01"
+        },
+        {
+          "id": "2026-S36-strength-02",
+          "day": 1,
+          "type": "strength",
+          "title": "Força",
+          "detail": "Força",
+          "status": "done",
+          "source": "planning",
+          "kind": "planned",
+          "planning_session_id": "2026-S36-strength-02"
+        },
+        {
+          "id": "2026-08-31-manual-1788631230731",
+          "day": 6,
+          "type": "bici",
+          "title": "Bici estàtica",
+          "detail": "Bici estàtica",
+          "status": "pending",
+          "source": "manual",
+          "variant": "indoor",
+          "notes": null,
+          "kind": "manual",
+          "planning_session_id": null
+        },
+        {
+          "id": "2026-08-31-manual-1788631249799",
+          "day": 6,
+          "type": "strength",
+          "title": "Força",
+          "detail": "Força",
+          "status": "pending",
+          "source": "manual",
+          "variant": "Pilometria",
+          "notes": null,
+          "kind": "manual",
+          "planning_session_id": null
+        }
+      ],
+      "removed_planning_session_ids": []
     }
   }
 }
