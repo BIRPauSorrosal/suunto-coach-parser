@@ -18,6 +18,7 @@
   const toRemoteWeek = (week, value) => ({
     week_id: value.week_id || week.key,
     week_code: value.week_code || week.planning?.setmana || week.key,
+    updated_at: value.updated_at || new Date().toISOString(),
     items: (value.items || []).map(normalizeItem),
     removed_planning_session_ids: value.removedPlanning || value.removed_planning_session_ids || [],
   });
@@ -35,7 +36,7 @@
 
   async function saveWeek(week, value) {
     const token = global.getGitHubToken?.();
-    if (!token) { global.dispatchEvent(new CustomEvent('calendar-sync-status', { detail: { status: 'local-only' } })); return; }
+    if (!token) { global.dispatchEvent(new CustomEvent('calendar-sync-status', { detail: { status: 'local-only' } })); return { status: 'local-only' }; }
     try {
       const remote = await readRemote();
       const document = remote.document || { schema_version: 1, planning_source: 'planning.json', weeks: {} };
@@ -45,9 +46,11 @@
       const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, { method: 'PUT', headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify({ message: `[dashboard] Actualitza calendari ${week.planning?.setmana || week.key}`, content: encode(JSON.stringify(document, null, 2) + '\n'), branch, ...(remote.sha ? { sha: remote.sha } : {}) }) });
       if (!response.ok) throw new Error(`Error pujant calendar.json: ${response.status}`);
       global.dispatchEvent(new CustomEvent('calendar-sync-status', { detail: { status: 'synced', week: week.key } }));
+      return { status: 'synced' };
     } catch (error) {
       console.error('[calendar-sync]', error);
       global.dispatchEvent(new CustomEvent('calendar-sync-status', { detail: { status: 'error', error: error.message, week: week.key } }));
+      return { status: 'error', error: error.message };
     }
   }
 
