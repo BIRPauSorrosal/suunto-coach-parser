@@ -216,29 +216,8 @@ function paMetric(label, value, modifier = '') {
   return `<div class="pa-kpi ${modifier}"><span>${escapePlanningText(label)}</span><strong>${escapePlanningText(value)}</strong></div>`;
 }
 function paLoad(session) { return paValue(session, 'load') || 0; }
-function paActivityType(session) {
-  const canonical = session?.raw?.__activity || session?.__activity || {};
-  const rawType = String(canonical.type || session?.tipusKey || '').toLowerCase();
-  const label = String(session?.tipusKey || '').toUpperCase();
-  if (['test', 'race'].includes(rawType) || ['TEST', 'CURSA'].includes(label)) return 'test';
-  if (['long-run', 'long'].includes(rawType) || ['LLARGA', 'TRAIL'].includes(label)) return 'long';
-  if (rawType === 'z2' || label === 'Z2') return 'z2';
-  if (rawType === 'quality' || ['INTERVALS', 'TEMPO'].includes(label)) return 'quality';
-  if (rawType === 'strength' || label.startsWith('FOR')) return 'strength';
-  if (['cycling', 'bici'].includes(rawType) || label === 'BICI') return 'bici';
-  return 'other';
-}
-function paActivityColor(session) {
-  return {
-    test: 'var(--color-danger)',
-    quality: 'var(--orange)',
-    z2: 'var(--accent)',
-    long: 'var(--blue)',
-    strength: 'var(--purple)',
-    bici: 'var(--cyan)',
-    other: 'var(--yellow)',
-  }[paActivityType(session)];
-}
+function paActivityType(session) { return activityToneKey(session); }
+function paActivityColor(session) { return activityToneColor(session); }
 function paLinks(session) {
   const canonical = session?.raw?.__activity || session?.__activity || {};
   try {

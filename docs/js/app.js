@@ -49,6 +49,7 @@ function navigateTo(target) {
   if (target === 'overview')  renderOverviewView(sessions, planning);
   if (target === 'avui')      renderTodayView(sessions, planning);
   if (target === 'planning')  renderPlanningView(planning, sessions, state.calendar);
+  if (target === 'activities') renderActivitiesView(sessions, planning);
   if (target === 'sessions')  renderSessionsView(sessions);
 }
 
@@ -415,6 +416,7 @@ function renderActiveView() {
   if (target === 'overview') renderOverviewView(sessions, planning);
   if (target === 'avui')     renderTodayView(sessions, planning);
   if (target === 'planning') renderPlanningView(planning, sessions, state.calendar);
+  if (target === 'activities') renderActivitiesView(sessions, planning);
   if (target === 'sessions') renderSessionsView(sessions);
 }
 
@@ -429,6 +431,7 @@ function renderAllViews() {
   renderOverviewView(sessions, planning);
   renderTodayView(sessions, planning);
   renderPlanningView(planning, sessions, state.calendar);
+  renderActivitiesView(sessions, planning);
   renderSessionsView(sessions);
 }
 

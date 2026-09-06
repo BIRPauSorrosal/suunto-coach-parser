@@ -25,6 +25,7 @@
   <link rel="stylesheet" href="./css/style.css">
   <link rel="stylesheet" href="./css/session-detail-drawer.css">
   <link rel="stylesheet" href="./css/planning-overview.css">
+  <link rel="stylesheet" href="./css/activities.css">
   <link rel="stylesheet" href="./css/load-scale.css">
   <link rel="stylesheet" href="./css/fc-config-modal.css">
   <link rel="stylesheet" href="./css/fc-scale.css">
@@ -49,6 +50,7 @@
         <a href="#" class="nav-link active" data-target="avui"><span class="nav-icon">◎</span> Avui</a>
         <a href="#" class="nav-link" data-target="overview"><span class="nav-icon">◉</span> Overview</a>
         <a href="#" class="nav-link" data-target="planning"><span class="nav-icon">◫</span> Planning</a>
+        <a href="#" class="nav-link" data-target="activities"><span class="nav-icon">▣</span> Activitats</a>
         <a href="#" class="nav-link" data-target="sessions"><span class="nav-icon">◇</span> Sessions</a>
       </nav>
 
@@ -459,10 +461,18 @@
         <div id="planning-view-container"><p class="muted-msg">Carregant planning...</p></div>
       </section>
 
+      <!-- Vista: Activitats -->
+      <section class="view" data-view="activities">
+        <header class="page-header">
+          <div><p class="eyebrow">Historial</p><h2>Activitats</h2><p class="page-subtitle">Què he fet?</p></div>
+        </header>
+        <div id="activities-view-container"><p class="muted-msg">Carregant activitats...</p></div>
+      </section>
+
       <!-- Vista: Sessions -->
       <section class="view" data-view="sessions">
         <header class="page-header">
-          <div><p class="eyebrow">Historial</p><h2>Sessions</h2></div>
+          <div><p class="eyebrow">Anàlisi</p><h2>Sessions</h2><p class="page-subtitle">Evolució per tipus i càrrega</p></div>
         </header>
         <div class="sess-filters">
           <div class="sess-filter-group">
@@ -583,6 +593,10 @@
       <span class="bnav-icon">◫</span>
       <span class="bnav-label">Planning</span>
     </a>
+    <a href="#" class="bnav-item" data-target="activities">
+      <span class="bnav-icon">▣</span>
+      <span class="bnav-label">Activitats</span>
+    </a>
     <a href="#" class="bnav-item" data-target="sessions">
       <span class="bnav-icon">◇</span>
       <span class="bnav-label">Sessions</span>
@@ -619,6 +633,7 @@
   <script src="./js/views/planning.js"></script>
   <script src="js/views/comment-editor.js"></script>
   <script src="./js/views/sessions.js"></script>
+  <script src="./js/views/activities.js"></script>
   <script src="./js/charts.js"></script>
   <script src="./js/lib/github-token-modal.js"></script>
   <script src="./js/uploader/parser.js"></script>

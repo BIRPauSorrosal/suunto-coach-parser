@@ -1,0 +1,61 @@
+/* Activity Log — historial real dins del sistema Performance / Dark Analytics. */
+.activity-log-toolbar { display: grid; grid-template-columns: minmax(210px, 1.6fr) repeat(7, minmax(105px, 1fr)) auto; gap: 8px; align-items: end; margin-bottom: 16px; padding: 12px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.activity-log-toolbar label, .activity-log-search label { display: grid; gap: 5px; color: var(--color-text-muted); font-size: 10px; font-weight: 650; letter-spacing: .04em; text-transform: uppercase; }
+.activity-log-toolbar select, .activity-log-toolbar input { width: 100%; min-width: 0; height: 34px; padding: 0 9px; background: var(--color-surface-subtle); border: 1px solid var(--color-border); border-radius: var(--radius-sm); color: var(--color-text-primary); font: inherit; font-size: 12px; }
+.activity-log-toolbar input::placeholder { color: var(--color-text-muted); }
+.activity-log-toolbar select:focus-visible, .activity-log-toolbar input:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+.activity-log-search { min-width: 0; }
+.activity-log-clear { height: 34px; white-space: nowrap; }
+.activity-log-filter-state { align-self: center; color: var(--color-text-muted); font-size: 10px; font-weight: 650; white-space: nowrap; }
+.activity-log-clear:disabled { cursor: default; opacity: .55; }
+.activity-log-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 20px; }
+.activity-log-summary > div { padding: 13px 15px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.activity-log-summary span { display: block; color: var(--color-text-muted); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+.activity-log-summary strong { display: block; margin-top: 6px; color: var(--color-text-primary); font-size: 21px; }
+.activity-log-group { margin-bottom: 22px; }
+.activity-log-group__header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 9px; }
+.activity-log-group__header h3 { margin: 0; color: var(--color-text-primary); font-size: 14px; }
+.activity-log-group__header span { color: var(--color-text-muted); font-size: 11px; }
+.activity-log-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.activity-log-card { position: relative; min-width: 0; padding: 15px 16px 13px; overflow: hidden; background: var(--color-surface); border: 1px solid var(--color-border); border-left: 3px solid var(--activity-log-color); border-radius: var(--radius-md); color: inherit; text-align: left; cursor: pointer; transition: border-color .15s ease, background .15s ease, transform .15s ease; }
+.activity-log-card:hover { background: var(--color-surface-elevated); border-color: var(--activity-log-color); transform: translateY(-1px); }
+.activity-log-card:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.activity-log-card--emphasis { border-width: 1px 1px 1px 4px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--activity-log-color) 20%, transparent); }
+.activity-log-card__top, .activity-log-card__title { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.activity-log-card__top time { color: var(--color-text-muted); font-size: 11px; }
+.activity-log-status, .activity-log-tone { display: inline-flex; align-items: center; max-width: 52%; padding: 3px 7px; border: 1px solid color-mix(in srgb, var(--activity-log-color) 60%, var(--color-border)); border-radius: var(--radius-pill); color: var(--activity-log-color); font-size: 9px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.activity-log-status.is-planned { color: var(--color-accent); border-color: color-mix(in srgb, var(--color-accent) 50%, var(--color-border)); }
+.activity-log-card__title { align-items: flex-start; margin-top: 14px; }
+.activity-log-card__title h3 { margin: 3px 0 0; color: var(--color-text-primary); font-size: 17px; }
+.activity-log-type { margin: 0; color: var(--activity-log-color); font-size: 11px; font-weight: 750; }
+.activity-log-card--emphasis .activity-log-type { letter-spacing: .03em; }
+.activity-log-subtitle { min-height: 16px; margin: 7px 0 12px; color: var(--color-text-secondary); font-size: 12px; }
+.activity-log-metrics { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; padding-top: 11px; border-top: 1px solid var(--color-border); }
+.activity-log-metrics span { display: block; color: var(--color-text-muted); font-size: 9px; text-transform: uppercase; }
+.activity-log-metrics strong { display: block; margin-top: 4px; overflow: hidden; color: var(--color-text-primary); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.activity-log-open { display: block; margin-top: 12px; color: var(--color-text-muted); font-size: 10px; }
+.activity-log-empty { padding: 42px 24px; background: var(--color-surface); border: 1px dashed var(--color-border-strong); border-radius: var(--radius-md); text-align: center; }
+.activity-log-empty h3 { margin: 0; color: var(--color-text-primary); font-size: 16px; }
+.activity-log-empty p { margin: 7px 0 0; color: var(--color-text-muted); font-size: 12px; }
+
+@media (max-width: 1180px) {
+  .activity-log-toolbar { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .activity-log-search { grid-column: span 2; }
+  .activity-log-filter-state { justify-self: start; }
+}
+@media (max-width: 760px) {
+  .activity-log-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .activity-log-search { grid-column: 1 / -1; }
+  .activity-log-clear { width: 100%; }
+  .activity-log-filter-state { grid-column: 1 / -1; }
+  .activity-log-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .activity-log-grid { grid-template-columns: 1fr; }
+  .activity-log-card { padding: 13px 13px 12px; }
+  .activity-log-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 420px) {
+  .activity-log-toolbar { grid-template-columns: 1fr; }
+  .activity-log-summary strong { font-size: 18px; }
+  .activity-log-card__title h3 { font-size: 15px; }
+  .activity-log-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

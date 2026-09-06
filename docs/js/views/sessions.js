@@ -614,6 +614,7 @@ function renderSessTable(sessions) {
   if (!sessions.length) return;
 
   bindSessCommentButtons();
+  bindSessDetailTriggers(sessions);
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -636,6 +637,7 @@ function renderSessCards(sessions) {
 
   container.innerHTML = sessions.map(s => buildSessCard(s)).join('');
   bindSessCommentButtons();
+  bindSessDetailTriggers(sessions);
 }
 
 function buildSessCard(s) {
@@ -669,8 +671,9 @@ function buildSessCard(s) {
     </div>`
   ).join('');
 
+  const activityId = s.raw?.__activity?.id || s.raw?.id || s.raw?.Arxiu || '';
   return `
-    <div class="sess-card">
+    <div class="sess-card session-detail-trigger" data-activity-id="${esc(activityId)}" role="button" tabindex="0" aria-label="Obrir el detall de ${esc(s.tipus || 'l’activitat')}">
       <div class="sess-card-header">
         <span class="sess-card-date">${esc(s.displayDate)}</span>
         <span class="sess-card-tipus">${esc(s.tipus)}</span>
@@ -680,6 +683,43 @@ function buildSessCard(s) {
         ${metricsHTML}
       </div>
     </div>`;
+}
+
+function sessionDetailPlanningItem(session) {
+  const canonical = session?.raw?.__activity || session?.__activity || {};
+  const link = (canonical.planning_links || []).find(item => item.confidence === 'confirmed' && item.planning_session_id);
+  if (!link) return null;
+  const planning = window.dashboardStore?.getState?.()?.planning || [];
+  return planning.flatMap(week => Array.isArray(week.__sessions) ? week.__sessions : []).find(item => item.id === link.planning_session_id) || null;
+}
+
+function openSessionDetailFromList(session) {
+  if (!session || typeof window.openSessionDetailDrawer !== 'function') return;
+  window.openSessionDetailDrawer(session, sessionDetailPlanningItem(session));
+}
+
+function bindSessDetailTriggers(sessions) {
+  const body = document.getElementById('sess-tbody');
+  if (body) {
+    [...body.querySelectorAll('tr:not(.empty-row)')].forEach((row, index) => {
+      const session = sessions[index];
+      if (!session || row.dataset.detailBound) return;
+      row.dataset.detailBound = '1';
+      row.classList.add('session-detail-trigger');
+      row.tabIndex = 0;
+      row.setAttribute('aria-label', `Obrir el detall de ${session.tipus || 'l’activitat'}`);
+      row.addEventListener('click', event => { if (!event.target.closest('[data-comment-arxiu]')) openSessionDetailFromList(session); });
+      row.addEventListener('keydown', event => { if ((event.key === 'Enter' || event.key === ' ') && !event.target.closest('[data-comment-arxiu]')) { event.preventDefault(); openSessionDetailFromList(session); } });
+    });
+  }
+  const cards = document.getElementById('sess-cards');
+  cards?.querySelectorAll('.session-detail-trigger').forEach(card => {
+    if (card.dataset.detailBound) return;
+    card.dataset.detailBound = '1';
+    const session = sessions.find(item => String(item.raw?.__activity?.id || item.raw?.id || item.raw?.Arxiu || '') === card.dataset.activityId);
+    card.addEventListener('click', event => { if (!event.target.closest('[data-comment-arxiu]')) openSessionDetailFromList(session); });
+    card.addEventListener('keydown', event => { if ((event.key === 'Enter' || event.key === ' ') && !event.target.closest('[data-comment-arxiu]')) { event.preventDefault(); openSessionDetailFromList(session); } });
+  });
 }
 
 // Mètriques per tipus de sessió — prioritzem les més rellevants en mòbil

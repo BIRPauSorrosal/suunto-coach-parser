@@ -394,6 +394,9 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 #sess-table td    { padding:9px 12px; border-bottom:1px solid rgba(51,65,85,.5); white-space:nowrap; }
 #sess-table tbody tr:hover { background:var(--surface-2); }
 #sess-table tbody tr:last-child td { border-bottom:none; }
+.session-detail-trigger { cursor: pointer; }
+#sess-table tbody tr.session-detail-trigger:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+#sess-table tbody tr.session-detail-trigger:hover { background: var(--surface-2); }
 .empty-row        { text-align:center; color:var(--text-muted); padding:24px !important; }
 .sess-trend-panel { margin-bottom:20px; }
 
