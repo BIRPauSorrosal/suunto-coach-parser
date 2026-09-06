@@ -5,7 +5,7 @@
     "2026-09-07": {
       "week_id": "2026-09-07",
       "week_code": "2026-S37",
-      "updated_at": "2026-09-06T08:49:34.719Z",
+      "updated_at": "2026-09-06T08:49:46.703Z",
       "items": [
         {
           "id": "2026-S37-quality-01",
@@ -20,7 +20,7 @@
         },
         {
           "id": "2026-S37-z2-01",
-          "day": null,
+          "day": 0,
           "type": "z2",
           "title": "Z2",
           "detail": "6,5 km · 45 min",
@@ -31,7 +31,7 @@
         },
         {
           "id": "2026-S37-long-run-01",
-          "day": null,
+          "day": 3,
           "type": "long-run",
           "title": "Tirada llarga",
           "detail": "9,3 km · 65 min · Z2",
@@ -42,7 +42,7 @@
         },
         {
           "id": "2026-S37-strength-01",
-          "day": null,
+          "day": 2,
           "type": "strength",
           "title": "Força",
           "detail": "Força",
@@ -53,7 +53,7 @@
         },
         {
           "id": "2026-S37-strength-02",
-          "day": null,
+          "day": 3,
           "type": "strength",
           "title": "Força",
           "detail": "Força",
