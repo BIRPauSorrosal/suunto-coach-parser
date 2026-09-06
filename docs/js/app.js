@@ -179,7 +179,7 @@ async function loadDashboardData() {
   setBadge('Carregant dades...');
 
   try {
-    const loaded = await window.DashboardDataService.load();
+    const loaded = await window.DashboardDataService.refreshRemoteData();
     if (requestId !== loadRequestId) return;
     window.dashboardStore.setData(loaded);
     if (loaded.settings?.settings?.heart_rate) applyFCConfig(loaded.settings.settings.heart_rate);
