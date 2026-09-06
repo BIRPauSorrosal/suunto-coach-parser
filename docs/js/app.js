@@ -171,6 +171,7 @@ async function loadDashboardData() {
     if (requestId !== loadRequestId) return;
     window.dashboardStore.setData(loaded);
     if (loaded.settings?.settings?.heart_rate) applyFCConfig(loaded.settings.settings.heart_rate);
+    window.SessionsSync?.queueLocalLinks(loaded.sessions);
 
     renderDashboard();
     updateStatus();

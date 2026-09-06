@@ -10,6 +10,37 @@
     return new TextDecoder('utf-8').decode(Uint8Array.from(binary, char => char.charCodeAt(0)));
   };
 
+  const sameLinks = (left, right) => JSON.stringify(left || []) === JSON.stringify(right || []);
+
+  function localLinks() {
+    try {
+      const value = JSON.parse(localStorage.getItem('suunto-coach-session-links-v1') || '{}');
+      return value && typeof value === 'object' ? value : {};
+    } catch (_) { return {}; }
+  }
+
+  function sessionIdentity(session) {
+    return session?.raw?.__activity?.id || session?.raw?.__activity?.source_file || session?.id || session?.Arxiu;
+  }
+
+  function queueLocalLinks(sessions) {
+    const saved = localLinks();
+    const operations = [];
+    Object.entries(saved).forEach(([sessionId, links]) => {
+      if (!Array.isArray(links)) return;
+      const session = (sessions || []).find(item => String(sessionIdentity(item)) === String(sessionId));
+      if (!session) return;
+      const remoteLinks = session.raw?.__activity?.planning_links || [];
+      if (!sameLinks(remoteLinks, links)) {
+        const operation = { kind: 'sessions', key: sessionId, links };
+        global.SyncQueue?.enqueue(operation);
+        operations.push(operation);
+      }
+    });
+    if (operations.length) global.SyncQueue?.retry();
+    return operations.length;
+  }
+
   async function savePlanningLinks(sessionId, planningLinks, fromQueue = false) {
     const config = global.DashboardConfig, token = global.getGitHubToken?.();
     if (!token) { if (!fromQueue) global.SyncQueue?.enqueue({ kind: 'sessions', key: sessionId, links: planningLinks }); global.dispatchEvent(new CustomEvent('sessions-sync-status', { detail: { status: 'pending', sessionId } })); return { status: 'pending' }; }
@@ -37,5 +68,5 @@
     }
   }
 
-  global.SessionsSync = Object.freeze({ savePlanningLinks });
+  global.SessionsSync = Object.freeze({ savePlanningLinks, queueLocalLinks });
 })(window);
