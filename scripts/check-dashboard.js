@@ -32,6 +32,8 @@ const required = [
   'docs/data/calendar.schema.json',
   'docs/data/sessions.schema.json',
   'docs/data/sessions.json',
+  'docs/data/settings.json',
+  'docs/data/settings.schema.json',
   'docs/js/lib/dashboard-config.js',
   'docs/js/lib/dashboard-store.js',
   'docs/js/lib/data-service.js',
@@ -89,7 +91,7 @@ try {
 }
 
 try {
-  const sessionsJson = JSON.parse(fs.readFileSync(path.join(docs, 'data/sessions.json'), 'utf8'));
+const sessionsJson = JSON.parse(fs.readFileSync(path.join(docs, 'data/sessions.json'), 'utf8'));
   const sessions = sessionsJson.sessions || [];
   const ids = sessions.map(session => session.id);
   if (sessionsJson.schema_version !== 1 || sessionsJson.source !== 'suunto' || !Array.isArray(sessionsJson.sessions)) {
@@ -103,6 +105,16 @@ try {
   });
 } catch (error) {
   failures.push(`sessions.json no és vàlid: ${error.message}`);
+}
+
+try {
+  const settingsJson = JSON.parse(fs.readFileSync(path.join(docs, 'data/settings.json'), 'utf8'));
+  const heartRate = settingsJson.settings?.heart_rate;
+  if (settingsJson.schema_version !== 1 || !heartRate || !Number.isInteger(heartRate.fcMax) || !Array.isArray(heartRate.zones) || heartRate.zones.length !== 5) {
+    failures.push('settings.json no té una configuració de zones cardíaques vàlida');
+  }
+} catch (error) {
+  failures.push(`settings.json no és vàlid: ${error.message}`);
 }
 
 const html = fs.readFileSync(path.join(docs, 'index.html'), 'utf8');

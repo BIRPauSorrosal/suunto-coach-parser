@@ -32,6 +32,7 @@
     week_code: value.week_code || (/^\d{4}-\d{2}-\d{2}$/.test(key) ? weekCode(key) : null),
     items: Array.isArray(value.items) ? value.items.map(migrateItem) : [],
     removedPlanning: value.removedPlanning || value.removed_planning_session_ids || [],
+    sync_status: value.sync_status || null,
   });
   const read = () => {
     try {
@@ -152,14 +153,28 @@
     const old = planOf(week).setmana && all[planOf(week).setmana];
     // La còpia local d'una edició recent té prioritat sobre el fitxer carregat;
     // així un moviment manual no es perd fins que es sincronitza al repositori.
-    const source = all[key] || calendarDocument?.weeks?.[key] || old;
+    const local = all[key];
+    const remote = calendarDocument?.weeks?.[key];
+    const hasPendingLocalChanges = local?.sync_status === 'pending';
+    const localIsNewer = local?.updated_at && (!remote?.updated_at || local.updated_at > remote.updated_at);
+    const source = hasPendingLocalChanges || localIsNewer ? local : (remote || local || old);
     const result = reconcileCalendar(week, source, sessions);
     all[key] = result;
     if (old && old !== source) delete all[planOf(week).setmana];
     write(all);
     return result;
   }
-  function saveCalendar(week, calendar) { const all = read(); all[week.key] = { ...calendar, version: 5 }; write(all); }
+  function saveCalendar(week, calendar) {
+    const saved = { ...calendar, version: 5, updated_at: new Date().toISOString(), sync_status: 'pending' };
+    const all = read(); all[week.key] = saved; write(all);
+    const sync = window.CalendarSync?.saveWeek(week, saved);
+    if (sync?.then) sync.then(result => {
+      if (!result || result.status !== 'synced') return;
+      const latest = read()[week.key];
+      if (!latest || latest.updated_at !== saved.updated_at) return;
+      const current = read(); current[week.key] = { ...latest, sync_status: 'synced' }; write(current);
+    });
+  }
   function editable(week) { return new Date() <= week.endDate; }
   function actualOn(sessions, date) { const key = iso(date); return sessions.filter(s => iso(s.date) === key && !activityLinks(s).some(link => link.confidence === 'confirmed')); }
 
@@ -233,6 +248,7 @@
     } catch (_) {}
     const store = window.dashboardStore?.getState?.();
     if (store?.sessionsDocument) store.sessionsDocument.sessions = store.sessionsDocument.sessions.map(session => session.id === sessionId ? { ...session, planning_links: activity.planning_links } : session);
+    window.SessionsSync?.savePlanningLinks(sessionId, activity.planning_links);
     renderFlexibleWeekView(sessions, planning, calendarDocument);
   }
 

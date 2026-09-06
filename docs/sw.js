@@ -24,7 +24,7 @@ if (
 // • PATCH (v3.0.1, v3.0.2…) — fixes petits de CSS/JS, ajustos visuals
 // Qualsevol canvi al nom de CACHE_NAME invalida la cache anterior i força la
 // descàrrega de tots els assets nous al pròxim activate del SW.
-const CACHE_NAME = 'suunto-coach-v4.0.0';
+const CACHE_NAME = 'suunto-coach-v4.1.0';
 
 // Assets estàtics que es precachegen en instal·lar el SW
 const PRECACHE_URLS = [
@@ -45,6 +45,10 @@ const PRECACHE_URLS = [
   './js/lib/dashboard-config.js',
   './js/lib/dashboard-store.js',
   './js/lib/week-manager.js',
+  './js/lib/sync-queue.js',
+  './js/lib/calendar-sync.js',
+  './js/lib/sessions-sync.js',
+  './js/lib/settings-sync.js',
   './js/lib/csv.js',
   './js/lib/data-service.js',
   './js/lib/view-utils.js',
@@ -61,6 +65,7 @@ const PRECACHE_URLS = [
   './data/planning.json',
   './data/calendar.json',
   './data/sessions.json',
+  './data/settings.json',
   './js/views/overview.js',
   './js/views/weekly-planner.js',
   './js/views/today.js',

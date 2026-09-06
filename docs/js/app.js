@@ -106,8 +106,59 @@ window.closeBnavDrawer = closeBnavDrawer;
 document.addEventListener('DOMContentLoaded', () => {
   initRouter();
   document.getElementById('reload-data-btn').addEventListener('click', loadDashboardData);
+  document.getElementById('sync-now-btn')?.addEventListener('click', async event => {
+    const button = event.currentTarget;
+    button.classList.add('is-syncing');
+    button.disabled = true;
+    button.textContent = 'Sincronitzant...';
+    try { await window.SyncQueue?.retry(); }
+    finally {
+      button.classList.remove('is-syncing');
+      button.disabled = false;
+      button.textContent = 'Sincronitzar canvis';
+    }
+  });
+  document.getElementById('sync-resolve-btn')?.addEventListener('click', resolveSyncConflicts);
   loadDashboardData();
 });
+
+function updateSyncStatus(detail = {}) {
+  const status = document.getElementById('status-sync');
+  const statusItem = document.getElementById('sync-status-item');
+  const resolveButton = document.getElementById('sync-resolve-btn');
+  if (!status) return;
+  const pending = detail.pending ?? window.SyncQueue?.pending?.() ?? 0;
+  const conflict = detail.status === 'conflict' || (window.SyncQueue?.list?.() || []).some(item => item.conflict);
+  const state = conflict ? 'conflict' : detail.status === 'error' ? 'error' : detail.status === 'syncing' ? 'syncing' : pending ? 'pending' : detail.status === 'synced' ? 'synced' : 'idle';
+  statusItem?.setAttribute('data-sync-state', state);
+  status.textContent = conflict
+    ? `Conflictes pendents (${pending})`
+    : state === 'syncing'
+      ? 'Sincronitzant canvis...'
+    : pending
+      ? `${pending} canvi${pending === 1 ? '' : 's'} pendent${pending === 1 ? '' : 's'}`
+      : state === 'error' ? 'Error de sincronització'
+      : state === 'synced' ? 'Canvis sincronitzats' : 'Sense canvis pendents';
+  resolveButton?.toggleAttribute('hidden', !conflict);
+}
+
+async function resolveSyncConflicts() {
+  const conflicts = (window.SyncQueue?.list?.() || []).filter(item => item.conflict);
+  for (const operation of conflicts) {
+    const description = operation.kind === 'calendar'
+      ? `la setmana ${operation.key}`
+      : operation.kind === 'sessions' ? `la sessió ${operation.key}` : 'les zones cardíaques';
+    const keepLocal = window.confirm(
+      `Hi ha un conflicte amb ${description}.\n\n` +
+      `Accepta per conservar el canvi local o Cancel·la per descartar-lo i conservar la versió remota.`
+    );
+    window.SyncQueue?.resolve(operation.queue_key, keepLocal ? 'local' : 'remote');
+  }
+  updateSyncStatus();
+}
+
+['sync-queue-status', 'calendar-sync-status', 'sessions-sync-status', 'settings-sync-status']
+  .forEach(eventName => window.addEventListener(eventName, event => updateSyncStatus(event.detail)));
 
 // ── Càrrega de dades ──────────────────────────────────────────────────────────────────
 async function loadDashboardData() {
@@ -119,6 +170,7 @@ async function loadDashboardData() {
     const loaded = await window.DashboardDataService.load();
     if (requestId !== loadRequestId) return;
     window.dashboardStore.setData(loaded);
+    if (loaded.settings?.settings?.heart_rate) applyFCConfig(loaded.settings.settings.heart_rate);
 
     renderDashboard();
     updateStatus();

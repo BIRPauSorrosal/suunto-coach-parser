@@ -249,6 +249,7 @@
     FC_CONFIG.fcMax = result.fcMax;
     FC_CONFIG.zones = result.zones;
     saveFCConfig(FC_CONFIG);
+    window.SettingsSync?.saveHeartRate(FC_CONFIG);
 
     // 2. Tanca el modal de forma SÍNCRONA (sense esperar transitionend)
     const overlay = document.getElementById(OVERLAY_ID);

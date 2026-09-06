@@ -8,6 +8,7 @@
     planning: [],
     planningDocument: null,
     calendar: null,
+    settings: null,
     sources: {},
   };
 
@@ -22,12 +23,13 @@
       return state;
     },
 
-    setData({ sessions = [], sessionsDocument = null, planning = [], planningDocument = null, calendar = null, sources = {} } = {}) {
+    setData({ sessions = [], sessionsDocument = null, planning = [], planningDocument = null, calendar = null, settings = null, sources = {} } = {}) {
       state.sessions = Array.isArray(sessions) ? sessions : [];
       state.sessionsDocument = sessionsDocument && typeof sessionsDocument === 'object' ? sessionsDocument : null;
       state.planning = Array.isArray(planning) ? planning : [];
       state.planningDocument = planningDocument && typeof planningDocument === 'object' ? planningDocument : null;
       state.calendar = calendar && typeof calendar === 'object' ? calendar : null;
+      state.settings = settings && typeof settings === 'object' ? settings : null;
       state.sources = sources && typeof sources === 'object' ? sources : {};
       notify('data-loaded');
     },
