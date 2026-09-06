@@ -66,9 +66,10 @@
       "removed_planning_session_ids": []
     },
     "2026-08-31": {
+      "version": 5,
       "week_id": "2026-08-31",
       "week_code": "2026-S36",
-      "updated_at": "2026-09-06T08:07:13.389Z",
+      "updated_at": "2026-09-06T09:09:45.929Z",
       "items": [
         {
           "id": "2026-S36-z2-01",
