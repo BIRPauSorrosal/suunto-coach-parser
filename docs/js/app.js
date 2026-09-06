@@ -185,6 +185,11 @@ async function loadDashboardData({ silent = false } = {}) {
   try {
     const loaded = await window.DashboardDataService.refreshRemoteData();
     if (requestId !== loadRequestId) return;
+    if (silent && hasSameRemoteRevisions(loaded.revisions, lastRemoteRevisions)) {
+      window.SessionsSync?.queueLocalLinks(loaded.sessions);
+      return;
+    }
+    lastRemoteRevisions = loaded.revisions || null;
     window.dashboardStore.setData(loaded);
     const remoteHeartRate = loaded.settings?.settings?.heart_rate;
     const preferredHeartRate = window.SettingsSync?.preferredHeartRate(remoteHeartRate) || remoteHeartRate;
@@ -214,8 +219,10 @@ async function loadDashboardData({ silent = false } = {}) {
 // `refreshDashboard()` torna a llegir la font de dades; `refreshDashboardUI()`
 // només torna a renderitzar l'estat que ja tenim en memòria (mode local).
 const AUTO_REFRESH_MIN_INTERVAL = 30 * 1000;
+const PLANNING_POLL_INTERVAL = 60 * 1000;
 let lastAutoRefreshAt = 0;
 let autoRefreshPromise = null;
+let lastRemoteRevisions = null;
 
 async function refreshWhenVisible(reason) {
   if (document.visibilityState === 'hidden') return;
@@ -227,11 +234,22 @@ async function refreshWhenVisible(reason) {
   finally { autoRefreshPromise = null; }
 }
 
+function hasSameRemoteRevisions(next, previous) {
+  if (!next || !previous) return false;
+  const keys = ['sessions', 'planning', 'calendar', 'settings'];
+  return keys.every(key => next[key] && previous[key] && next[key] === previous[key]);
+}
+
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') refreshWhenVisible('visibilitychange');
 });
 window.addEventListener('focus', () => refreshWhenVisible('focus'));
 window.addEventListener('pageshow', () => refreshWhenVisible('pageshow'));
+window.setInterval(() => {
+  if (document.querySelector('.view--active')?.dataset.view === 'planning') {
+    refreshWhenVisible('planning-poll');
+  }
+}, PLANNING_POLL_INTERVAL);
 
 window.refreshDashboard = loadDashboardData;
 
