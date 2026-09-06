@@ -110,6 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('sync-now-btn-mobile')?.addEventListener('click', event => runSyncFromButton(event.currentTarget));
   document.getElementById('sync-resolve-btn')?.addEventListener('click', resolveSyncConflicts);
   document.getElementById('sync-resolve-btn-mobile')?.addEventListener('click', resolveSyncConflicts);
+  lastAutoRefreshAt = Date.now();
   loadDashboardData();
 });
 
@@ -173,10 +174,13 @@ async function resolveSyncConflicts() {
   .forEach(eventName => window.addEventListener(eventName, event => updateSyncStatus(event.detail)));
 
 // ── Càrrega de dades ──────────────────────────────────────────────────────────────────
-async function loadDashboardData() {
+async function loadDashboardData({ silent = false } = {}) {
   const requestId = ++loadRequestId;
-  setNotice('Llegint fitxers de dades...', 'info');
-  setBadge('Carregant dades...');
+  if (!silent) {
+    lastAutoRefreshAt = Date.now();
+    setNotice('Llegint fitxers de dades...', 'info');
+    setBadge('Carregant dades...');
+  }
 
   try {
     const loaded = await window.DashboardDataService.refreshRemoteData();
@@ -189,16 +193,16 @@ async function loadDashboardData() {
 
     renderDashboard();
     updateStatus();
-    setBadge('Dades carregades');
-    setNotice(
+    if (!silent) setBadge('Dades carregades');
+    if (!silent) setNotice(
       `Dades carregades correctament. Sessions: ${state.sessions.length} · Planning: ${state.planning.length}`,
       'info'
     );
   } catch (error) {
     if (requestId !== loadRequestId) return;
     console.error(error);
-    setBadge('Error de càrrega');
-    setNotice(
+    if (!silent) setBadge('Error de càrrega');
+    if (!silent) setNotice(
       "No s'han pogut llegir les dades. Comprova planning.json i sessions.json.",
       'error'
     );
@@ -209,6 +213,26 @@ async function loadDashboardData() {
 // API pública de refresc utilitzada pels importadors i l'editor de comentaris.
 // `refreshDashboard()` torna a llegir la font de dades; `refreshDashboardUI()`
 // només torna a renderitzar l'estat que ja tenim en memòria (mode local).
+const AUTO_REFRESH_MIN_INTERVAL = 30 * 1000;
+let lastAutoRefreshAt = 0;
+let autoRefreshPromise = null;
+
+async function refreshWhenVisible(reason) {
+  if (document.visibilityState === 'hidden') return;
+  const now = Date.now();
+  if (autoRefreshPromise || now - lastAutoRefreshAt < AUTO_REFRESH_MIN_INTERVAL) return;
+  lastAutoRefreshAt = now;
+  autoRefreshPromise = loadDashboardData({ silent: true, reason });
+  try { await autoRefreshPromise; }
+  finally { autoRefreshPromise = null; }
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') refreshWhenVisible('visibilitychange');
+});
+window.addEventListener('focus', () => refreshWhenVisible('focus'));
+window.addEventListener('pageshow', () => refreshWhenVisible('pageshow'));
+
 window.refreshDashboard = loadDashboardData;
 
 function refreshDashboardUI() {
