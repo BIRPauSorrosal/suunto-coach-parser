@@ -163,7 +163,7 @@ function setPlanningConfirmState(state) {
   const states = {
     idle:       { text: "Importar planning", disabled: false },
     validating: { text: "Validant...",        disabled: true  },
-    processing: { text: "Processant...",      disabled: true  },
+    processing: { text: "Important...",       disabled: true  },
   };
   const s = states[state] ?? states.idle;
   btn.textContent = s.text;
@@ -194,6 +194,10 @@ function _bindPlanningEvents(dialog) {
     .addEventListener("click", closePlanningUploaderModal);
   document.getElementById("planning-uploader-cancel-btn")
     .addEventListener("click", closePlanningUploaderModal);
+  dialog.addEventListener('cancel', event => {
+    event.preventDefault();
+    closePlanningUploaderModal();
+  });
 
   dialog.addEventListener("click", e => {
     if (e.target === dialog) closePlanningUploaderModal();
@@ -232,9 +236,10 @@ function _bindPlanningEvents(dialog) {
 
   // ── Confirmar ──
   document.getElementById("planning-uploader-confirm-btn")
-    .addEventListener("click", () => {
+    .addEventListener("click", async () => {
       setPlanningConfirmState("processing");
-      confirmPlanningImport(closePlanningUploaderModal);
+      const result = await confirmPlanningImport(closePlanningUploaderModal);
+      if (!result?.ok) setPlanningConfirmState("idle");
     });
 }
 

@@ -235,6 +235,13 @@
     return sessions.find(real => activityLinks(real).some(link => link.confidence === 'confirmed' && link.planning_session_id === planningId));
   }
 
+  function plannedSessionFor(item, planning, week) {
+    const planningId = item?.planning_session_id || item?.id;
+    if (!planningId) return null;
+    const plans = [...(planning || []), week?.planning].filter(Boolean);
+    return plans.flatMap(plan => plan.__sessions || plan.sessions || plan.raw?.__sessions || []).find(session => session.id === planningId) || null;
+  }
+
   function confirmReconciliation(sessionId, planningId, sessions, planning, week, calendar, calendarDocument) {
     const real = sessions.find(session => session.raw?.__activity?.id === sessionId);
     if (!real?.raw?.__activity) return;
@@ -277,19 +284,35 @@
     const realWeek=sessions.filter(s => s.date>=week.startDate && s.date<=week.endDate), done=calendar.items.filter(i=>i.status==='done'||linkedActivity(i,sessions)).length;
     document.getElementById('flex-week-summary').innerHTML=`<div class="flex-summary-card"><span>Sessions previstes</span><strong>${calendar.items.length}</strong></div><div class="flex-summary-card"><span>Completades</span><strong>${done}</strong></div><div class="flex-summary-card"><span>Activitats registrades</span><strong>${realWeek.length}</strong></div><div class="flex-summary-card"><span>Km reals</span><strong>${fmt(realWeek.reduce((n,s)=>n+(s.distancia||0),0))} km</strong></div>`;
     document.getElementById('flex-calendar').innerHTML=days.map((date, day)=>`<article class="flex-day${iso(date)===today?' flex-day--today':''}" data-day="${day}"><header class="flex-day-header"><div><span class="flex-day-name">${DAYS[day]}</span><span class="flex-day-date">${dateText(date)}</span></div>${iso(date)===today?'<span class="badge">Avui</span>':''}</header><div class="flex-day-dropzone" data-drop-day="${day}">${calendar.items.filter(i=>i.day===day).map(i=>card(i,canEdit,sessions)).join('')}${actualOn(sessions,date).map(actualCard).join('')}${!calendar.items.some(i=>i.day===day)&&!actualOn(sessions,date).length?'<p class="flex-day-empty">Descans / sense activitat</p>':''}</div></article>`).join('');
-    const unassigned=calendar.items.filter(i=>i.day===null||i.day===undefined), box=document.getElementById('flex-unassigned'); box.hidden=!unassigned.length&&!canEdit; box.innerHTML=`<p class="eyebrow">Per assignar</p><div class="flex-unassigned-dropzone" data-drop-unassigned="true">${unassigned.length?unassigned.map(i=>card(i,canEdit)).join(''):'Arrossega aquí les sessions que encara no vulguis assignar'}</div>`;
+    const unassigned=calendar.items.filter(i=>i.day===null||i.day===undefined), box=document.getElementById('flex-unassigned'); box.hidden=!unassigned.length&&!canEdit; box.innerHTML=`<p class="eyebrow">Per assignar</p><div class="flex-unassigned-dropzone" data-drop-unassigned="true">${unassigned.length?unassigned.map(i=>card(i,canEdit,sessions)).join(''):'Arrossega aquí les sessions que encara no vulguis assignar'}</div>`;
     const unmatched=document.getElementById('flex-unmatched'); unmatched.hidden=!realWeek.length; if(realWeek.length) unmatched.innerHTML=`<p class="eyebrow">Activitats registrades</p><p>${realWeek.length} activitat${realWeek.length===1?'':'s'} trobada${realWeek.length===1?'':'es'} aquesta setmana. La seva associació amb el planning es podrà confirmar en la propera etapa.</p>`;
     if (realWeek.length) { const reconciliationHtml = renderReconciliationPanel(realWeek, week); unmatched.hidden = !reconciliationHtml; unmatched.innerHTML = reconciliationHtml; }
     bind(sessions, planning, week, calendar, canEdit, calendarDocument);
   }
-  function card(item, canEdit, sessions=[]) { const meta=TYPES[item.type]||TYPES.other; const real=linkedActivity(item,sessions); const completed=item.status==='done'||!!real; return `<div class="flex-plan-card${completed?' is-done':''}${real?' has-linked-activity':''}" draggable="${canEdit}" data-plan-id="${esc(item.id)}" style="--card-color:${meta[1]}"><div class="flex-card-top"><span class="flex-card-type">${esc(item.title||meta[0])}</span><span class="flex-card-source">${item.source==='manual'?'Afegida':'Pla'}</span></div><strong>${esc(item.detail||meta[0])}</strong>${real?`<div class="flex-linked-activity"><span>✓ Realitzada</span><strong>${esc(real.tipus||'Activitat')} · ${real.distancia?fmt(real.distancia)+' km':''}${real.durada?' · '+fmt(real.durada)+' min':''}</strong><small>${esc(real.displayDate||'')}</small></div>`:''}<div class="flex-card-actions">${canEdit?`${real?'<span class="flex-card-confirmed">✓ Realitzada</span>':`<button type="button" data-action="toggle" data-id="${esc(item.id)}">${item.status==='done'?'↩ Pendent':'Marcar feta'}</button>`}<button type="button" data-action="delete" data-id="${esc(item.id)}" aria-label="Eliminar activitat" title="Eliminar activitat">×</button>`:`<span>${completed?'✓ Realitzada':'Històric'}</span>`}</div></div>`; }
-  function actualCard(s) { return `<div class="flex-actual-card"><span>Registrada</span><strong>${esc(s.tipus||'Activitat')}</strong><small>${s.durada?fmt(s.durada)+' min':''}${s.distancia?' · '+fmt(s.distancia)+' km':''}</small></div>`; }
+  function card(item, canEdit, sessions=[]) { const meta=TYPES[item.type]||TYPES.other; const real=linkedActivity(item,sessions); const completed=item.status==='done'||!!real; const activityId=real?.raw?.__activity?.id || real?.raw?.id || ''; return `<div class="flex-plan-card${completed?' is-done':''}${real?' has-linked-activity':''}" draggable="${canEdit}" data-plan-id="${esc(item.id)}" style="--card-color:${meta[1]}"><div class="flex-card-top"><span class="flex-card-type">${esc(item.title||meta[0])}</span><span class="flex-card-source">${item.source==='manual'?'Afegida':'Pla'}</span></div><strong>${esc(item.detail||meta[0])}</strong>${real?`<div class="flex-linked-activity session-detail-trigger" data-activity-id="${esc(activityId)}" role="button" tabindex="0" aria-label="Obrir el detall de l’activitat"><span>✓ Realitzada</span><strong>${esc(real.tipus||'Activitat')} · ${real.distancia?fmt(real.distancia)+' km':''}${real.durada?' · '+fmt(real.durada)+' min':''}</strong><small>${esc(real.displayDate||'')}</small></div>`:''}<div class="flex-card-actions">${canEdit?`${real?'<span class="flex-card-confirmed">✓ Realitzada</span>':`<button type="button" data-action="toggle" data-id="${esc(item.id)}">${item.status==='done'?'↩ Pendent':'Marcar feta'}</button>`}<button type="button" data-action="delete" data-id="${esc(item.id)}" aria-label="Eliminar activitat" title="Eliminar activitat">×</button>`:`<span>${completed?'✓ Realitzada':'Històric'}</span>`}</div></div>`; }
+  function actualCard(s) { const activityId=s.raw?.__activity?.id || s.raw?.id || ''; return `<div class="flex-actual-card session-detail-trigger" data-activity-id="${esc(activityId)}" role="button" tabindex="0" aria-label="Obrir el detall de l’activitat"><span>Registrada</span><strong>${esc(s.tipus||'Activitat')}</strong><small>${s.durada?fmt(s.durada)+' min':''}${s.distancia?' · '+fmt(s.distancia)+' km':''}</small></div>`; }
   function bind(sessions, planning, week, calendar, canEdit, calendarDocument) {
     ['flex-week-prev','flex-week-next','flex-week-current','flex-add-session'].forEach(id => { const el=document.getElementById(id); if(el) el.replaceWith(el.cloneNode(true)); });
     document.getElementById('flex-week-prev')?.addEventListener('click',()=>{weekIndex--;renderFlexibleWeekView(sessions,planning,calendarDocument);});
     document.getElementById('flex-week-next')?.addEventListener('click',()=>{weekIndex++;renderFlexibleWeekView(sessions,planning,calendarDocument);});
     document.getElementById('flex-week-current')?.addEventListener('click',()=>{weekIndex=window.WeekManager.findCurrent(window.WeekManager.timeline(planning,sessions));renderFlexibleWeekView(sessions,planning,calendarDocument);});
     document.getElementById('flex-add-session')?.addEventListener('click',()=>addSession(sessions,planning,week,calendarDocument));
+    const openActivity = trigger => {
+      const activityId = trigger?.dataset.activityId;
+      const activity = sessions.find(session => (session.raw?.__activity?.id || session.raw?.id) === activityId);
+      if (!activity || typeof window.openSessionDetailDrawer !== 'function') return;
+      const planItem = trigger.closest('[data-plan-id]') ? calendar.items.find(item => item.id === trigger.closest('[data-plan-id]').dataset.planId) : null;
+      window.openSessionDetailDrawer(activity, plannedSessionFor(planItem, planning, week) || planItem, { planningItem: planItem });
+    };
+    document.getElementById('flex-calendar')?.addEventListener('click', event => {
+      const trigger = event.target.closest('.session-detail-trigger[data-activity-id]');
+      if (trigger && !event.target.closest('[data-action]')) openActivity(trigger);
+    });
+    document.getElementById('flex-calendar')?.addEventListener('keydown', event => {
+      const trigger = event.target.closest('.session-detail-trigger[data-activity-id]');
+      if (!trigger || (event.key !== 'Enter' && event.key !== ' ')) return;
+      event.preventDefault(); openActivity(trigger);
+    });
     document.getElementById('flex-calendar')?.addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(!b||!canEdit)return;const i=calendar.items.find(x=>x.id===b.dataset.id);if(!i)return;if(b.dataset.action==='delete'){if(i.source==='manual'&&!window.confirm('Vols eliminar aquesta activitat manual?'))return;calendar.items=calendar.items.filter(x=>x.id!==i.id);if(i.source==='planning')calendar.removedPlanning=[...(calendar.removedPlanning||[]),i.id];}else i.status=i.status==='done'?'pending':'done';saveCalendar(week,calendar);renderFlexibleWeekView(sessions,planning,calendarDocument);});
     document.getElementById('flex-unmatched')?.addEventListener('click',e=>{const b=e.target.closest('[data-reconcile-session]');if(!b||b.disabled)return;confirmReconciliation(b.dataset.reconcileSession,b.dataset.reconcilePlan,sessions,planning,week,calendar,calendarDocument);});
     document.querySelectorAll('[data-plan-id]').forEach(c=>c.addEventListener('dragstart',e=>{if(canEdit)e.dataTransfer.setData('text/plain',c.dataset.planId);}));

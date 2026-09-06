@@ -1,0 +1,15 @@
+/* Shared base layer for the Performance design system. */
+*, *::before, *::after { box-sizing: border-box; }
+html { font-size: 16px; }
+body {
+  min-height: 100vh;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+button, input, select, textarea { font: inherit; }
+::selection { background: rgba(85, 214, 190, 0.24); color: var(--color-text-primary); }

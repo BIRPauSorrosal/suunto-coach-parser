@@ -233,7 +233,7 @@ function setConfirmState(state) {
   const states = {
     idle:        { text: "Importar",       disabled: false },
     validating:  { text: "Validant...",    disabled: true  },
-    processing:  { text: "Processant...",  disabled: true  },
+    processing:  { text: "Important...",   disabled: true  },
   };
   const s = states[state] ?? states.idle;
   btn.textContent = s.text;
@@ -262,6 +262,10 @@ function _bindEvents(dialog) {
     .addEventListener("click", closeUploaderModal);
   document.getElementById("uploader-cancel-btn")
     .addEventListener("click", closeUploaderModal);
+  dialog.addEventListener('cancel', event => {
+    event.preventDefault();
+    closeUploaderModal();
+  });
 
   // Clic fora del diàleg: només tanca si el clic és exactament
   // sobre el backdrop del <dialog> (e.target === dialog),
@@ -318,7 +322,8 @@ function _bindEvents(dialog) {
     .addEventListener("click", async () => {
       setConfirmState("processing");
       const comments = collectComments();
-      await confirmImport(comments, collectVariants(), closeUploaderModal);  // uploader.js
+      const result = await confirmImport(comments, collectVariants(), closeUploaderModal);  // uploader.js
+      if (!result?.ok) setConfirmState("idle");
     });
 }
 

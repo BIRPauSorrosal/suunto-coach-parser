@@ -84,6 +84,99 @@
     </div>`;
   }
 
+  const toastTimers = new WeakMap();
+
+  function showToast({ type = 'info', message = '', duration = 4200 } = {}) {
+    if (!message) return null;
+    let container = document.getElementById('app-toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'app-toast-container';
+      container.className = 'app-toast-container';
+      container.setAttribute('aria-live', 'polite');
+      container.setAttribute('aria-atomic', 'false');
+      document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `app-toast app-toast--${['success', 'info', 'warning', 'error'].includes(type) ? type : 'info'}`;
+    toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+    toast.innerHTML = `<span class="app-toast__message"></span><button type="button" class="app-toast__close" aria-label="Tanca la notificació">×</button>`;
+    toast.querySelector('.app-toast__message').textContent = message;
+    toast.querySelector('.app-toast__close').addEventListener('click', () => dismissToast(toast));
+    container.appendChild(toast);
+
+    const timer = setTimeout(() => dismissToast(toast), duration);
+    toastTimers.set(toast, timer);
+    requestAnimationFrame(() => toast.classList.add('is-visible'));
+    return toast;
+  }
+
+  function dismissToast(toast) {
+    if (!toast) return;
+    const timer = toastTimers.get(toast);
+    if (timer) clearTimeout(timer);
+    toastTimers.delete(toast);
+    toast.classList.remove('is-visible');
+    setTimeout(() => toast.remove(), 180);
+  }
+
+  function confirmAction({
+    title = 'Confirma l’acció',
+    message = '',
+    confirmLabel = 'Confirma',
+    cancelLabel = 'Cancel·la',
+    destructive = false,
+  } = {}) {
+    return new Promise(resolve => {
+      let dialog = document.getElementById('ui-confirm-dialog');
+      if (!dialog) {
+        dialog = document.createElement('dialog');
+        dialog.id = 'ui-confirm-dialog';
+        dialog.className = 'ui-confirm-dialog';
+        dialog.innerHTML = `
+          <form method="dialog" class="ui-confirm-dialog__surface">
+            <header class="ui-confirm-dialog__header"><h3 id="ui-confirm-title"></h3></header>
+            <div class="ui-confirm-dialog__body"><p id="ui-confirm-message"></p></div>
+            <footer class="ui-confirm-dialog__footer">
+              <button type="button" class="btn btn-ghost" id="ui-confirm-cancel"></button>
+              <button type="button" class="btn btn-primary" id="ui-confirm-accept"></button>
+            </footer>
+          </form>`;
+        document.body.appendChild(dialog);
+      }
+
+      dialog.querySelector('#ui-confirm-title').textContent = title;
+      dialog.querySelector('#ui-confirm-message').textContent = message;
+      dialog.querySelector('#ui-confirm-cancel').textContent = cancelLabel;
+      dialog.querySelector('#ui-confirm-accept').textContent = confirmLabel;
+      dialog.querySelector('#ui-confirm-accept').classList.toggle('btn-danger', destructive);
+
+      let settled = false;
+      const finish = value => {
+        if (settled) return;
+        settled = true;
+        if (dialog.open) dialog.close();
+        resolve(value);
+      };
+      dialog.querySelector('#ui-confirm-cancel').onclick = () => finish(false);
+      dialog.querySelector('#ui-confirm-accept').onclick = () => finish(true);
+      dialog.oncancel = event => { event.preventDefault(); finish(false); };
+      dialog.onclick = event => { if (event.target === dialog) finish(false); };
+      dialog.showModal();
+      dialog.querySelector('#ui-confirm-cancel').focus();
+    });
+  }
+
+  function confirmMessage(message) {
+    return confirmAction({
+      title: 'Conflicte de sincronització',
+      message,
+      confirmLabel: 'Conserva el canvi local',
+      cancelLabel: 'Conserva la versió remota',
+    });
+  }
+
   function destroyChart(key) {
     const chart = chartInstances.get(key);
     if (!chart) return;
@@ -111,6 +204,10 @@
     renderMetricCard,
     renderDataTable,
     renderModal,
+    showToast,
+    dismissToast,
+    confirmAction,
+    confirmMessage,
     createChart,
     destroyChart,
     destroyAllCharts,

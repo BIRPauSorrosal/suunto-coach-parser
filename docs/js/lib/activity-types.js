@@ -41,3 +41,31 @@ const TEST_BICI_TYPES = new Set(["TEST_BICI"]);
 const BICI_TYPES      = new Set(["BICI ESTÀTICA", "TEST_BICI"]);
 const PADEL_TYPES     = new Set(["PADEL", "TENIS", "TENNIS"]);
 const STRENGTH_RE     = /^FOR[\u00c7C]A/i;
+
+// Paleta compartida per a les vistes d'activitats i planificació.
+const ACTIVITY_TONE_COLORS = Object.freeze({
+  test: 'var(--color-danger)',
+  quality: 'var(--orange)',
+  z2: 'var(--accent)',
+  long: 'var(--blue)',
+  strength: 'var(--purple)',
+  bici: 'var(--cyan)',
+  other: 'var(--yellow)',
+});
+
+function activityToneKey(value) {
+  const canonical = value?.raw?.__activity || value?.__activity || {};
+  const rawType = String(canonical.type || '').toLowerCase();
+  const label = String(value?.tipusKey || (typeof value === 'string' ? value : '')).toUpperCase();
+  if (['test', 'race'].includes(rawType) || TEST_RACE_TYPES.has(label) || TEST_BICI_TYPES.has(label)) return 'test';
+  if (['long-run', 'long'].includes(rawType) || LONG_TYPES.has(label)) return 'long';
+  if (rawType === 'z2' || label === 'Z2') return 'z2';
+  if (rawType === 'quality' || QUALITY_TYPES.has(label)) return 'quality';
+  if (rawType === 'strength' || STRENGTH_RE.test(label)) return 'strength';
+  if (['cycling', 'bici'].includes(rawType) || BICI_TYPES.has(label)) return 'bici';
+  return 'other';
+}
+
+function activityToneColor(value) {
+  return ACTIVITY_TONE_COLORS[activityToneKey(value)] || ACTIVITY_TONE_COLORS.other;
+}

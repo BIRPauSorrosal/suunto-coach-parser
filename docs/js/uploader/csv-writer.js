@@ -241,7 +241,10 @@ function showNotice(msg, isError = false) {
   const bar  = document.getElementById("notice-bar");
   const text = document.getElementById("notice-text");
   if (!bar || !text) return;
-  text.textContent      = msg;
+  const displayMessage = isError && /error|failed|undefined/i.test(String(msg))
+    ? 'No s’ha pogut completar l’acció. Revisa les dades o la connexió.'
+    : msg;
+  text.textContent      = displayMessage;
   bar.style.display     = "block";
   bar.style.background  = isError ? "var(--color-error, #c0392b)" : "";
   setTimeout(() => { bar.style.display = "none"; }, 5000);
@@ -363,7 +366,7 @@ function downloadSessionsJSON(sessionsDocument) {
 }
 
 async function appendRowsToJSON(newRows) {
-  if (!newRows.length) return;
+  if (!newRows.length) return { ok: false, error: 'No hi ha activitats noves per importar.' };
   try {
     showNotice('Llegint sessions.json actual...');
     const current = await readCurrentSessionsJSON();
@@ -395,8 +398,10 @@ async function appendRowsToJSON(newRows) {
       downloadSessionsJSON(document);
       showNotice(`✅ sessions.json descarregat. ${additions.length} sessions afegides${duplicates.length ? ` (${duplicates.length} duplicats ignorats)` : ''}.`);
     }
+    return { ok: true, added: additions.length, duplicates: duplicates.length };
   } catch (err) {
     console.error(err); showNotice(`❌ Error: ${err.message}`, true);
+    return { ok: false, error: err.message };
   }
 }
 
