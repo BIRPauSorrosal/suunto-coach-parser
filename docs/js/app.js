@@ -107,20 +107,37 @@ window.closeBnavDrawer = closeBnavDrawer;
 document.addEventListener('DOMContentLoaded', () => {
   initRouter();
   document.getElementById('reload-data-btn').addEventListener('click', loadDashboardData);
+  document.getElementById('data-state-import')?.addEventListener('click', () => window.openUploaderModal?.());
   document.getElementById('sync-now-btn')?.addEventListener('click', event => runSyncFromButton(event.currentTarget));
   document.getElementById('sync-now-btn-mobile')?.addEventListener('click', event => runSyncFromButton(event.currentTarget));
   document.getElementById('sync-resolve-btn')?.addEventListener('click', resolveSyncConflicts);
   document.getElementById('sync-resolve-btn-mobile')?.addEventListener('click', resolveSyncConflicts);
+  updateSyncStatus();
   lastAutoRefreshAt = Date.now();
   loadDashboardData();
 });
 
 async function runSyncFromButton(button) {
   if (!button) return;
+  if (!window.getGitHubToken?.()) {
+    window.DashboardComponents?.showToast({ type: 'warning', message: 'Connecta GitHub abans de sincronitzar.' });
+    window.openGitHubTokenModal?.();
+    return;
+  }
   button.classList.add('is-syncing');
   button.disabled = true;
   button.textContent = 'Sincronitzant...';
-  try { await window.SyncQueue?.retry(); }
+  try {
+    await window.SyncQueue?.retry();
+    const pending = window.SyncQueue?.pending?.() || 0;
+    window.DashboardComponents?.showToast({
+      type: pending ? 'warning' : 'success',
+      message: pending ? `${pending} canvi${pending === 1 ? '' : 's'} pendent${pending === 1 ? '' : 's'} per sincronitzar.` : 'Sincronització completada.',
+    });
+  } catch (error) {
+    console.error('[sync]', error);
+    window.DashboardComponents?.showToast({ type: 'error', message: 'No s’ha pogut sincronitzar. Revisa la connexió i el token de GitHub.' });
+  }
   finally {
     button.classList.remove('is-syncing');
     button.disabled = false;
@@ -137,7 +154,8 @@ function updateSyncStatus(detail = {}) {
   if (!status) return;
   const pending = detail.pending ?? window.SyncQueue?.pending?.() ?? 0;
   const conflict = detail.status === 'conflict' || (window.SyncQueue?.list?.() || []).some(item => item.conflict);
-  const state = conflict ? 'conflict' : detail.status === 'error' ? 'error' : detail.status === 'syncing' ? 'syncing' : pending ? 'pending' : detail.status === 'synced' ? 'synced' : 'idle';
+  const connected = Boolean(window.getGitHubToken?.());
+  const state = conflict ? 'conflict' : detail.status === 'error' ? 'error' : detail.status === 'syncing' ? 'syncing' : pending ? 'pending' : detail.status === 'synced' ? 'synced' : connected ? 'connected' : 'disconnected';
   statusItem?.setAttribute('data-sync-state', state);
   status.textContent = conflict
     ? `Conflictes pendents (${pending})`
@@ -147,6 +165,10 @@ function updateSyncStatus(detail = {}) {
       ? `${pending} canvi${pending === 1 ? '' : 's'} pendent${pending === 1 ? '' : 's'}`
       : state === 'error' ? 'Error de sincronització'
       : state === 'synced' ? 'Canvis sincronitzats' : 'Sense canvis pendents';
+  if (state === 'connected') status.textContent = 'GitHub connectat';
+  if (state === 'disconnected') status.textContent = 'GitHub no connectat';
+  if (state === 'synced') status.textContent = 'Sincronització completada';
+  if (state === 'error') status.textContent = 'No s’ha pogut sincronitzar';
   resolveButton?.toggleAttribute('hidden', !conflict);
   mobileResolveButton?.toggleAttribute('hidden', !conflict);
   if (mobileStatus) {
@@ -163,7 +185,7 @@ async function resolveSyncConflicts() {
     const description = operation.kind === 'calendar'
       ? `la setmana ${operation.key}`
       : operation.kind === 'sessions' ? `la sessió ${operation.key}` : 'les zones cardíaques';
-    const keepLocal = window.confirm(
+    const keepLocal = await window.DashboardComponents?.confirmMessage?.(
       `Hi ha un conflicte amb ${description}.\n\n` +
       `Accepta per conservar el canvi local o Cancel·la per descartar-lo i conservar la versió remota.`
     );
@@ -176,12 +198,20 @@ async function resolveSyncConflicts() {
 
 ['sync-queue-status', 'calendar-sync-status', 'sessions-sync-status', 'settings-sync-status']
   .forEach(eventName => window.addEventListener(eventName, event => updateSyncStatus(event.detail)));
+window.addEventListener('gh-token-changed', () => {
+  updateSyncStatus();
+  window.DashboardComponents?.showToast({
+    type: window.getGitHubToken?.() ? 'success' : 'info',
+    message: window.getGitHubToken?.() ? 'GitHub connectat.' : 'GitHub desconnectat.',
+  });
+});
 
 // ── Càrrega de dades ──────────────────────────────────────────────────────────────────
 async function loadDashboardData({ silent = false, force = false } = {}) {
   const requestId = ++loadRequestId;
   if (!silent) {
     lastAutoRefreshAt = Date.now();
+    setDataState('loading');
     setNotice('Llegint fitxers de dades...', 'info');
     setBadge('Carregant dades...');
   }
@@ -202,6 +232,7 @@ async function loadDashboardData({ silent = false, force = false } = {}) {
 
     renderDashboard();
     updateStatus();
+    setDataState(state.sessions.length || state.planning.length ? 'ready' : 'empty');
     if (!silent) setBadge('Dades carregades');
     if (!silent) setNotice(
       `Dades carregades correctament. Sessions: ${state.sessions.length} · Planning: ${state.planning.length}`,
@@ -210,6 +241,7 @@ async function loadDashboardData({ silent = false, force = false } = {}) {
   } catch (error) {
     if (requestId !== loadRequestId) return;
     console.error(error);
+    if (!chartData) setDataState('error');
     if (!silent) setBadge('Error de càrrega');
     if (!silent) setNotice(
       "No s'han pogut llegir les dades. Comprova planning.json i sessions.json.",
@@ -572,16 +604,21 @@ function detectActiveWeek(planning, sessions) {
 
 // ── Status sidebar ──────────────────────────────────────────────────────────────────────
 function updateStatus(errorMessage = null) {
-  setText('status-sessions', state.sessions.length
-    ? `sessions.json carregat (${state.sessions.length} activitats)`
-    : 'sessions.json no disponible');
-  setText('status-planning', state.planning.length
-    ? `planning.json carregat (${state.planning.length} setmanes)`
-    : 'planning.json no disponible');
+  const sessionsStatus = document.getElementById('status-sessions');
+  const planningStatus = document.getElementById('status-planning');
+  setText('status-sessions', state.sessions.length ? `${state.sessions.length} activitats` : 'Sessions no disponibles');
+  setText('status-planning', state.planning.length ? `${state.planning.length} setmanes` : 'Planning no disponible');
+  if (sessionsStatus) sessionsStatus.title = state.sources.sessions || 'sessions.json';
+  if (planningStatus) planningStatus.title = state.sources.planning || 'planning.json';
   setText('status-source', errorMessage
     ? `Error: ${errorMessage}`
     : `sessions: ${state.sources.sessions || '--'} · planning: ${state.sources.planning || '--'}`);
   setText('status-last-update', `Actualitzat: ${new Date().toLocaleString('ca-ES')}`);
+  if (errorMessage) {
+    const source = document.getElementById('status-source');
+    if (source) source.title = errorMessage;
+    setText('status-source', 'No s’han pogut carregar les dades');
+  }
 }
 
 // ── Helpers UI ──────────────────────────────────────────────────────────────────────
@@ -596,6 +633,26 @@ function setNotice(message, type = 'info') {
 }
 
 // ── Helpers de dades ───────────────────────────────────────────────────────────────────
+function setDataState(status) {
+  const panel = document.getElementById('data-state-panel');
+  if (!panel) return;
+  const title = document.getElementById('data-state-title');
+  const message = document.getElementById('data-state-message');
+  const action = document.getElementById('data-state-import');
+  const content = {
+    loading: ['Carregant dades...', 'Estem llegint les dades del dashboard.', '◌'],
+    empty: ['No hi ha dades disponibles', 'Importa activitats per començar a construir el teu historial.', '!'],
+    error: ['No s’han pogut carregar les dades', 'Revisa les fonts de dades o torna-ho a provar.', '!'],
+    ready: ['', '', ''],
+  }[status] || ['No s’han pogut carregar les dades', 'Revisa les fonts de dades o torna-ho a provar.', '!'];
+  panel.dataset.state = status;
+  panel.hidden = status === 'ready';
+  if (title) title.textContent = content[0];
+  if (message) message.textContent = content[1];
+  panel.querySelector('.data-state-panel__icon')?.replaceChildren(document.createTextNode(content[2]));
+  if (action) action.hidden = status !== 'empty';
+}
+
 function parseDate(value) {
   if (!value) return null;
   const s = String(value).trim();

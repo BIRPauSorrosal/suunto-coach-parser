@@ -1,6 +1,6 @@
 // docs/js/views/comment-editor.js
 // Editor de comentaris de sessions
-// Depèn de: csv-writer.js (fetchCurrentCSV, csvToObjects, objectsToCsv, pushCSVToGitHub, showNotice)
+// Depèn de: csv-writer.js (sessions.json helpers i showNotice)
 
 function ensureSessionCommentDialog() {
   if (document.getElementById('session-comment-dialog')) return;
@@ -49,6 +49,10 @@ function ensureSessionCommentDialog() {
   dialog.addEventListener('click', e => {
     if (e.target === dialog) closeSessionCommentEditor();
   });
+  dialog.addEventListener('cancel', e => {
+    e.preventDefault();
+    closeSessionCommentEditor();
+  });
 
   document.getElementById('session-comment-close')
     .addEventListener('click', closeSessionCommentEditor);
@@ -82,16 +86,15 @@ async function openSessionCommentEditor({ arxiu, data, tipus }) {
 
   try {
     showNotice('Llegint comentari actual...');
-    const { content } = await readCurrentSessionsCSV();
-    const rows = content ? csvToObjects(content) : [];
-    const row  = rows.find(r => String(r['Arxiu'] ?? '') === arxiu);
+    const { document: sessionsDocument } = await readCurrentSessionsJSON();
+    const session = sessionsDocument.sessions.find(item => String(item.source_file || item.id) === String(arxiu));
 
-    if (!row) {
-      showNotice('❌ No s’ha trobat la sessió al CSV.', true);
+    if (!session) {
+      showNotice('❌ No s’ha trobat l’activitat a sessions.json.', true);
       return;
     }
 
-    ta.value = row['Comentari'] ?? '';
+    ta.value = session.notes?.comment ?? '';
     dialog.showModal();
     ta.focus();
     ta.setSelectionRange(ta.value.length, ta.value.length);
@@ -102,6 +105,7 @@ async function openSessionCommentEditor({ arxiu, data, tipus }) {
     };
   } catch (err) {
     console.error(err);
+    window.DashboardComponents?.showToast({ type: 'error', message: 'No s’ha pogut obrir l’editor. Revisa la connexió i torna-ho a provar.' });
     showNotice(`❌ Error obrint l’editor: ${err.message}`, true);
   }
 }
@@ -124,38 +128,45 @@ async function saveSessionComment() {
   try {
     showNotice('Guardant comentari...');
 
-    const { content, sha } = await readCurrentSessionsCSV();
-    const rows = content ? csvToObjects(content) : [];
-
-    const idx = rows.findIndex(r => String(r['Arxiu'] ?? '') === _sessionCommentContext.arxiu);
+    const { document: sessionsDocument, sha } = await readCurrentSessionsJSON();
+    const idx = sessionsDocument.sessions.findIndex(item => String(item.source_file || item.id) === String(_sessionCommentContext.arxiu));
     if (idx === -1) {
-      throw new Error('No s’ha trobat la sessió a editar.');
+      throw new Error('No s’ha trobat l’activitat a editar.');
     }
 
-    rows[idx]['Comentari'] = text;
-
-    const csvText = objectsToCsv(rows);
+    const updatedDocument = {
+      ...sessionsDocument,
+      sessions: sessionsDocument.sessions.map((session, sessionIndex) => sessionIndex === idx
+        ? { ...session, notes: { ...(session.notes || {}), comment: text } }
+        : session),
+    };
     const token = window.getGitHubToken ? window.getGitHubToken() : '';
     if (token) {
-      await pushCSVToGitHub(csvText, sha);
+      await pushSessionsJSONToGitHub(updatedDocument, sha);
     } else {
-      // Sense token no podem escriure al repositori: descarreguem el CSV
-      // complet ja actualitzat perquè l'usuari el pugui substituir manualment.
-      if (window.dashboardStore?.setSessions) {
-        window.dashboardStore.setSessions(rows);
-      }
-      downloadCSV(csvText);
+      // Sense token no podem escriure al repositori: descarreguem el document
+      // canònic complet perquè l’usuari el pugui substituir manualment.
+      window.dashboardStore?.setData?.({
+        ...window.dashboardStore.getState(),
+        sessions: window.DashboardDataService.normalizeSessionsJSON(updatedDocument),
+        sessionsDocument: updatedDocument,
+      });
+      downloadSessionsJSON(updatedDocument);
     }
 
     showNotice('✅ Comentari guardat.');
 
+    window.DashboardComponents?.showToast({ type: 'success', message: 'Comentari guardat correctament.' });
     closeSessionCommentEditor();
 
     if (token && typeof window.refreshDashboard === 'function') {
       await window.refreshDashboard();
+    } else {
+      window.refreshDashboardUI?.();
     }
   } catch (err) {
     console.error(err);
+    window.DashboardComponents?.showToast({ type: 'error', message: 'No s’ha pogut guardar el comentari. Revisa la connexió i torna-ho a provar.' });
     showNotice(`❌ Error guardant comentari: ${err.message}`, true);
     saveBtn.disabled = false;
   }

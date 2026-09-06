@@ -128,6 +128,7 @@ function activityLogExportJSON(sessions) {
   const exported = sessions.map(activityLogCanonical).filter(session => session && session.id).map(session => JSON.parse(JSON.stringify(session)));
   if (!exported.length) {
     window.showNotice?.('Cap activitat seleccionada per exportar.', true);
+    window.DashboardComponents?.showToast({ type: 'warning', message: 'No hi ha activitats seleccionades per exportar.' });
     return;
   }
   const documentData = { schema_version: 1, source: 'suunto', sessions: exported };
@@ -140,6 +141,7 @@ function activityLogExportJSON(sessions) {
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
+  window.DashboardComponents?.showToast({ type: 'success', message: `Exportació completada: ${exported.length} ${exported.length === 1 ? 'activitat' : 'activitats'}.` });
 }
 function activityLogCard(session) {
   const tone = activityLogTone(session), meta = ACTIVITY_LOG_TONES[tone], feeling = activityLogValue(session, 'feeling');

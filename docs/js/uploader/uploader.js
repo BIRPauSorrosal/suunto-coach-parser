@@ -146,7 +146,7 @@ async function handleFileSelection(files, onDone) {
  * @param {Function} onComplete — callback() quan acaba (per tancar modal, etc.)
  */
 async function confirmImport(comments, variants, onComplete) {
-  if (!_pendingRows.length) return;
+  if (!_pendingRows.length) return { ok: false, error: 'No hi ha activitats preparades per importar.' };
 
   // Injectem el comentari a cada row. Si no n'hi ha, queda string buit.
   const rowsWithComments = _pendingRows.map((row, i) => ({
@@ -159,7 +159,16 @@ async function confirmImport(comments, variants, onComplete) {
     },
   }));
 
-  await appendRowsToJSON(rowsWithComments);   // definit a csv-writer.js
+  const result = await appendRowsToJSON(rowsWithComments);   // definit a csv-writer.js
+  if (!result?.ok) {
+    window.DashboardComponents?.showToast({ type: 'error', message: 'No s’ha pogut completar la importació. Revisa el missatge i torna-ho a provar.' });
+    return result || { ok: false, error: 'La importació no s’ha pogut completar.' };
+  }
+  window.DashboardComponents?.showToast({
+    type: 'success',
+    message: `Importació completada: ${result.added || 0} activitats noves${result.duplicates ? ` · ${result.duplicates} ja existents` : ''}.`,
+  });
   _pendingRows = [];
-  onComplete();
+  onComplete?.(result);
+  return result;
 }

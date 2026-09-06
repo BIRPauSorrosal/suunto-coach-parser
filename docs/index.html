@@ -27,6 +27,7 @@
   <link rel="stylesheet" href="./css/planning-overview.css">
   <link rel="stylesheet" href="./css/activities.css">
   <link rel="stylesheet" href="./css/analytics.css">
+  <link rel="stylesheet" href="./css/feedback.css">
   <link rel="stylesheet" href="./css/load-scale.css">
   <link rel="stylesheet" href="./css/fc-config-modal.css">
   <link rel="stylesheet" href="./css/fc-scale.css">
@@ -59,23 +60,28 @@
       <div class="sidebar-spacer"></div>
 
       <!-- 4. Estat dades -->
-      <section class="sidebar-panel">
-        <h2>Estat dades</h2>
-        <ul class="status-list">
+      <section class="sidebar-panel sidebar-status-panel">
+        <h2>Estat</h2>
+        <ul class="status-list status-list--compact">
           <li><span class="dot dot-live"></span> <span id="status-sessions">sessions.json pendent</span></li>
           <li><span class="dot dot-live"></span> <span id="status-planning">planning.json pendent</span></li>
           <li id="sync-status-item" data-sync-state="idle" aria-live="polite">
             <span class="dot"></span> <span id="status-sync">Canvis sincronitzats</span>
           </li>
-          <li><span class="dot"></span> <span id="status-source">Origen no resolt</span></li>
-          <li><span class="dot"></span> <span id="status-last-update">Sense actualització</span></li>
         </ul>
+        <details class="status-details">
+          <summary>Veure detalls</summary>
+          <ul class="status-list status-list--details">
+            <li><span class="dot"></span> <span id="status-source">Origen no resolt</span></li>
+            <li><span class="dot"></span> <span id="status-last-update">Sense actualització</span></li>
+          </ul>
+        </details>
       </section>
 
       <!-- 5. Botons dades -->
       <div class="sidebar-actions">
         <button type="button" class="btn btn-ghost btn-sidebar" id="gh-token-btn"
-                onclick="openGitHubTokenModal()">&#x2699;&#xFE0F; Token GitHub</button>
+                onclick="openGitHubTokenModal()">Connecta GitHub</button>
         <button type="button" class="btn btn-ghost btn-sidebar" id="sync-now-btn">
           Sincronitzar canvis
         </button>
@@ -94,6 +100,17 @@
 
       <section class="notice-bar" id="notice-bar" role="status" aria-live="polite">
         <p id="notice-text">Llegint fitxers de dades...</p>
+      </section>
+
+      <section class="data-state-panel" id="data-state-panel" data-state="loading" role="status" aria-live="polite">
+        <div class="data-state-panel__content">
+          <span class="data-state-panel__icon" aria-hidden="true">◌</span>
+          <div class="data-state-panel__copy">
+            <strong id="data-state-title">Carregant dades...</strong>
+            <p id="data-state-message">Estem llegint les dades del dashboard.</p>
+          </div>
+          <button type="button" class="btn btn-primary data-state-panel__action" id="data-state-import" hidden>Importa activitats</button>
+        </div>
       </section>
 
       <!-- Vista: Overview -->
@@ -570,7 +587,7 @@
     <p class="bnav-drawer-title">Opcions</p>
     <div class="bnav-drawer-actions">
       <button type="button" class="btn btn-ghost" onclick="openGitHubTokenModal(); closeBnavDrawer()">
-        ⚙️ Token GitHub
+        Connecta GitHub
       </button>
       <p class="bnav-sync-status" id="mobile-sync-status" aria-live="polite">Canvis sincronitzats</p>
       <button type="button" class="btn btn-ghost" id="sync-now-btn-mobile">

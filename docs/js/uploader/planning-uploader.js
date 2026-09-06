@@ -331,6 +331,7 @@ async function confirmPlanningImport(onComplete) {
   if (merge.format === 'json') {
     const token = window.getGitHubToken ? window.getGitHubToken() : '';
     const jsonText = `${JSON.stringify(merge.document, null, 2)}\n`;
+    let success = false;
     try {
       if (token) {
         showNotice('Llegint planning.json actual...');
@@ -346,16 +347,22 @@ async function confirmPlanningImport(onComplete) {
       }
       window.dashboardStore?.setPlanningDocument?.(merge.document);
       if (token && typeof window.refreshDashboard === 'function') await window.refreshDashboard();
+      success = true;
     } catch (err) {
       console.error(err); showNotice(`❌ Error: ${err.message}`, true);
     } finally {
-      _pendingMerge = null;
-      onComplete();
+      if (success) {
+        _pendingMerge = null;
+        onComplete?.();
+      }
     }
-    return;
+    if (success) window.DashboardComponents?.showToast({ type: 'success', message: `Planning importat: ${merge.stats.added} noves, ${merge.stats.replaced} actualitzades.` });
+    else window.DashboardComponents?.showToast({ type: 'error', message: 'No s’ha pogut importar el planning. Revisa el format o la connexió.' });
+    return { ok: success, stats: merge.stats };
   }
   const csv   = serializePlanningCSV(merge.rows);
   const token = window.getGitHubToken ? window.getGitHubToken() : '';
+  let success = false;
 
   try {
     if (token) {
@@ -392,14 +399,20 @@ async function confirmPlanningImport(onComplete) {
     if (token && typeof window.refreshDashboard === 'function') {
       await window.refreshDashboard();
     }
+    success = true;
 
   } catch (err) {
     console.error(err);
     showNotice(`❌ Error: ${err.message}`, true);
   } finally {
-    _pendingMerge = null;
-    onComplete();
+    if (success) {
+      _pendingMerge = null;
+      onComplete?.();
+    }
   }
+  if (success) window.DashboardComponents?.showToast({ type: 'success', message: 'Planning importat correctament.' });
+  else window.DashboardComponents?.showToast({ type: 'error', message: 'No s’ha pogut importar el planning. Revisa el format o la connexió.' });
+  return { ok: success, stats: merge.stats };
 }
 
 
