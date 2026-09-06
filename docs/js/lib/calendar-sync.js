@@ -16,6 +16,7 @@
     planning_session_id: item.planning_session_id ?? (item.source === 'manual' ? null : item.id),
   });
   const toRemoteWeek = (week, value) => ({
+    version: value.version || 5,
     week_id: value.week_id || week.key,
     week_code: value.week_code || week.planning?.setmana || week.key,
     updated_at: value.updated_at || new Date().toISOString(),
