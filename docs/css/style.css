@@ -879,6 +879,42 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   height: 200px;
 }
 
+/* ── Planning / Calendar — Performance system ───────────────────────────── */
+.planning-week-shell { max-width: var(--layout-content-max-width); }
+.planning-week-header { margin-bottom: 20px; }
+.planning-week-header .page-header { margin-bottom: 0; }
+.flex-week-toolbar { background: var(--color-surface); border-color: var(--color-border); border-radius: var(--radius-md); padding: 18px 20px; box-shadow: none; }
+.flex-week-summary { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.flex-summary-card { background: var(--color-surface-subtle); border-color: var(--color-border); border-radius: var(--radius-sm); padding: 14px 16px; }
+.flex-summary-card span { color: var(--color-text-muted); font-size: 11px; letter-spacing: .06em; }
+.flex-summary-card strong { color: var(--color-text-primary); font-size: 20px; font-weight: 650; }
+.flex-calendar { gap: 10px; }
+.flex-day { min-height: 270px; background: var(--color-surface-subtle); border-color: var(--color-border); border-radius: var(--radius-md); }
+.flex-day--today { border-color: var(--color-accent); box-shadow: 0 0 0 1px rgba(85,214,190,.14); }
+.flex-day-header { min-height: 58px; padding: 12px; background: rgba(255,255,255,.02); border-color: var(--color-border); }
+.flex-day-name { color: var(--color-text-primary); font-size: 12px; }
+.flex-day-date { color: var(--color-text-muted); }
+.flex-day-dropzone { min-height: 210px; padding: 10px; }
+.flex-day-dropzone.is-over { background: rgba(85,214,190,.10); outline: 1px dashed var(--color-accent); outline-offset: -4px; }
+.flex-day-empty { padding: 42px 4px; color: var(--color-text-muted); }
+.flex-plan-card, .flex-actual-card { background: var(--color-surface); border-radius: var(--radius-sm); border-color: var(--color-border); }
+.flex-plan-card { box-shadow: none; transition: background .15s ease, border-color .15s ease, opacity .15s ease; }
+.flex-plan-card:hover { background: var(--color-surface-elevated); border-color: var(--color-border-strong); }
+.flex-plan-card.is-done { opacity: .68; }
+.flex-actual-card { background: rgba(255,255,255,.025); }
+.flex-linked-activity { background: rgba(85,214,190,.08); border-left-color: var(--color-accent); }
+.flex-unassigned, .flex-unmatched { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 18px 20px; }
+.flex-unassigned-dropzone.is-over { border-color: var(--color-accent); background: rgba(85,214,190,.08); }
+.flex-manual-dialog { background: var(--color-surface); border-color: var(--color-border-strong); border-radius: var(--radius-md); box-shadow: 0 12px 40px rgba(0,0,0,.28); }
+.flex-manual-form input:focus, .flex-manual-form select:focus, .flex-manual-form textarea:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(85,214,190,.10); }
+.plan-year-nav, .plan-month-nav, .plan-week-nav { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 10px 12px; }
+.plan-year-label, .plan-month-title, .plan-week-nav-label { color: var(--color-text-primary); }
+.plan-legend { padding: 14px 16px; background: var(--color-surface-subtle); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.pcy-month-card, .plan-week-card { background: var(--color-surface); border-color: var(--color-border); border-radius: var(--radius-md); box-shadow: none; }
+.pcy-month-card:not(.pcy-month-card--empty):hover, .plan-week-card:hover { background: var(--color-surface-elevated); border-color: var(--color-border-strong); box-shadow: none; transform: translateY(-1px); }
+.pcy-cell--active:not(.pcy-cell--empty) { outline-color: var(--color-accent) !important; }
+.pwc-phase-bar { border-radius: var(--radius-sm); }
+
 /*
   Pills de tendència (generades per JS sota cada gràfic).
   3 variants semàntiques: up (pujada) | neutral (en línia) | down (descàrrega / pèrdua forma).

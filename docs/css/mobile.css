@@ -172,6 +172,15 @@
   .today-training-grid > .panel { margin-bottom: 14px; }
   .today-load .chart-wrap--today-load { height: 180px; }
 
+  .flex-calendar { grid-template-columns: 1fr; overflow: visible; }
+  .flex-day { min-width: 0; min-height: 0; }
+  .flex-day-dropzone { min-height: 72px; }
+  .flex-day-empty { padding: 20px 4px; text-align: left; }
+  .flex-plan-card, .flex-actual-card { width: 100%; }
+  .flex-unassigned-dropzone > .flex-plan-card { display: block; width: 100%; margin: 8px 0 0; }
+  .flex-week-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .plan-year-nav, .plan-month-nav, .plan-week-nav { padding: 8px; }
+
   .chart-wrap         { height: 180px; }
   .chart-wrap--tall   { height: 220px; }
   .chart-wrap--trend  { height: 160px; }
