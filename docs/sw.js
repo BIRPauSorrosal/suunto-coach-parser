@@ -24,7 +24,7 @@ if (
 // • PATCH (v3.0.1, v3.0.2…) — fixes petits de CSS/JS, ajustos visuals
 // Qualsevol canvi al nom de CACHE_NAME invalida la cache anterior i força la
 // descàrrega de tots els assets nous al pròxim activate del SW.
-const CACHE_NAME = 'suunto-coach-v4.2.6';
+const CACHE_NAME = 'suunto-coach-v4.3.0';
 
 // Assets estàtics que es precachegen en instal·lar el SW
 const PRECACHE_URLS = [
@@ -36,6 +36,7 @@ const PRECACHE_URLS = [
   './icons/apple-touch-icon.png',
   './css/style.css',
   './css/mobile.css',
+  './css/analytics.css',
   './css/load-scale.css',
   './css/fc-config-modal.css',
   './css/fc-scale.css',

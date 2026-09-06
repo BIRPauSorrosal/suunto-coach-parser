@@ -11,7 +11,7 @@
 
 let _sessSessions = [];
 let _sessType     = 'all';
-let _sessPeriod   = 180;
+let _sessPeriod   = 90;
 let _sessChart    = null;
 let _pmcChart     = null;
 let _pmcDataCache = [];
@@ -45,10 +45,9 @@ const DAY_VIEW_THRESHOLD = 30;
 
 // ── Punt d'entrada ──────────────────────────────────────────────────────────────
 function renderSessionsView(sessions) {
-  _sessSessions = sessions;
+  _sessSessions = Array.isArray(sessions) ? sessions : [];
   initSessFilters();
   renderSessPanel();
-  renderPMC(_sessSessions);
 }
 
 // ── Inicialitza listeners ──────────────────────────────────────────────────────
@@ -77,10 +76,15 @@ function initSessFilters() {
 // ── Render principal ──────────────────────────────────────────────────────────
 function renderSessPanel() {
   const filtered = applyFilters(_sessSessions);
-  renderSessKPIs(filtered);
+  const pmcData = getSelectedPMCData();
+  renderSessKPIs(filtered, pmcData);
   renderSessTrendChart(filtered);
-  renderSessTable(filtered);
-  renderSessCards(filtered);  // ← mòbil
+  renderPMC();
+  renderAnalyticsPerformance(filtered);
+  renderAnalyticsPerformanceCharts(filtered);
+  renderAnalyticsZones(filtered);
+  renderAnalyticsMix(filtered);
+  renderAnalyticsFeeling(filtered);
 }
 
 // ── Filtratge ──────────────────────────────────────────────────────────────────
@@ -109,7 +113,7 @@ function applyFilters(sessions) {
 }
 
 // ── KPIs ───────────────────────────────────────────────────────────────────────
-function renderSessKPIs(sessions) {
+function renderSessKPIs(sessions, pmcData) {
   const totalKm   = sessions.reduce((a,s) => a + (s.distancia||0), 0);
   const totalMin  = sessions.reduce((a,s) => a + (s.durada||0), 0);
   const totalLoad = sessions.reduce((a,s) => a + (s.carrega||0), 0);
@@ -120,8 +124,39 @@ function renderSessKPIs(sessions) {
   const timeTxt = totalMin>0 ? (h>0?`${h}h ${min}min`:`${min} min`) : '--';
   setSessText('kpi-km',   totalKm>0  ? `${fmtNum(totalKm)} km`    : '--');
   setSessText('kpi-time', timeTxt);
-  setSessText('kpi-load', totalLoad>0 ? `${fmtNum(totalLoad)} TSS` : '--');
+  setSessText('kpi-load', totalLoad>0 ? fmtNum(totalLoad) : '--');
   setSessText('kpi-epoc', totalEpoc>0 ? fmtNum(totalEpoc)          : '--');
+
+  const latest = pmcData.length ? pmcData[pmcData.length - 1] : null;
+  setSessText('analytics-ctl-value', latest ? fmtAnalyticsNumber(latest.ctl) : '—');
+  setSessText('analytics-atl-value', latest ? fmtAnalyticsNumber(latest.atl) : '—');
+  setSessText('analytics-tsb-value', latest ? formatSignedNumber(latest.tsb) : '—');
+  setSessText('analytics-tsb-status', latest ? analyticsFormAssessment(latest.tsb) : 'Sense dades de forma');
+}
+
+function fmtAnalyticsNumber(value) {
+  return typeof value === 'number' && isFinite(value) ? fmtNum(Math.round(value * 10) / 10) : '—';
+}
+
+function formatSignedNumber(value) {
+  if (typeof value !== 'number' || !isFinite(value)) return '—';
+  const rounded = Math.round(value * 10) / 10;
+  return `${rounded > 0 ? '+' : ''}${fmtNum(rounded)}`;
+}
+
+// Mateixa interpretació de TSB que Today, llegint els llindars centralitzats.
+function analyticsFormAssessment(tsb) {
+  const t = PMC_CONFIG.TSB_THRESHOLDS;
+  if (tsb > t.fresc) return 'Fresc';
+  if (tsb >= t.optim_min) return 'Forma òptima';
+  if (tsb >= t.productiu_min) return 'Productiu';
+  if (tsb >= t.fatigat_min) return 'Fatigat';
+  return 'Sobrecarregat';
+}
+
+function getSelectedPMCData() {
+  const full = buildPMCData(_sessSessions);
+  return _sessPeriod > 0 ? full.slice(-_sessPeriod) : full;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -156,20 +191,23 @@ const PMC_GRADIENT_PLUGIN = {
   }
 };
 
-function renderPMC(sessions) {
+function renderPMC() {
   const canvas = document.getElementById('chart-pmc');
   if (!canvas) return;
   window.DashboardComponents.destroyChart('sessions-pmc');
   _pmcChart = null;
-  if (!sessions.length) return;
-
-  _pmcDataCache = buildPMCData(sessions);
-  if (!_pmcDataCache.length) return;
+  const empty = document.getElementById('analytics-pmc-empty');
+  const fullData = buildPMCData(_sessSessions);
+  _pmcDataCache = _sessPeriod > 0 ? fullData.slice(-_sessPeriod) : fullData;
+  const hasData = _pmcDataCache.length > 0;
+  canvas.hidden = !hasData;
+  if (empty) empty.hidden = hasData;
 
   const btn90 = document.getElementById('pmc-export-90');
   const btn7  = document.getElementById('pmc-export-7');
-  if (btn90) btn90.disabled = false;
-  if (btn7)  btn7.disabled  = false;
+  if (btn90) btn90.disabled = !hasData;
+  if (btn7)  btn7.disabled  = !hasData;
+  if (!hasData) return;
 
   const C      = CHART_COLORS;
   const labels = _pmcDataCache.map(d => d.label);
@@ -225,7 +263,7 @@ function renderPMC(sessions) {
 function exportPMCcsv(days) {
   if (!_pmcDataCache.length) return;
   const rows   = days>0 ? _pmcDataCache.slice(-days) : _pmcDataCache;
-  const header = 'Data,TSS,CTL,ATL,TSB,Estat';
+  const header = 'Data,Càrrega,CTL,ATL,TSB,Estat';
   const lines  = rows.map(d => [
     d.date, Math.round(d.tss),
     (Math.round(d.ctl*10)/10).toFixed(1),
@@ -235,29 +273,6 @@ function exportPMCcsv(days) {
   ].join(','));
   triggerCsvDownload([header,...lines].join('\n'),
     `pmc_${days>0?days+'d':'complet'}_${new Date().toISOString().slice(0,10)}.csv`);
-}
-
-// ── Exportació Sessions CSV ───────────────────────────────────────────────────
-function exportSessionsCSV(days) {
-  let rows = _sessSessions;
-  if (days > 0) {
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - days);
-    cutoff.setHours(0,0,0,0);
-    rows = rows.filter(s => s.date >= cutoff);
-  }
-  rows = [...rows].sort((a,b) => a.date - b.date);
-  if (!rows.length) return;
-  const headers = Object.keys(rows[0].raw);
-  const escCsv = v => {
-    const s = String(v ?? '');
-    return (s.includes(',') || s.includes('"') || s.includes('\n'))
-      ? `"${s.replaceAll('"', '""')}"`
-      : s;
-  };
-  const lines = rows.map(s => headers.map(h => escCsv(s.raw[h] ?? '')).join(','));
-  triggerCsvDownload([headers.map(escCsv).join(','), ...lines].join('\n'),
-    `sessions_${days>0?days+'d':'complet'}_${new Date().toISOString().slice(0,10)}.csv`);
 }
 
 function triggerCsvDownload(csvContent, filename) {
@@ -273,13 +288,136 @@ function triggerCsvDownload(csvContent, filename) {
 // Gràfic de tendència
 // ══════════════════════════════════════════════════════════════════════════════
 
+function analyticsActivity(s) {
+  return s?.raw?.__activity || {};
+}
+
+function analyticsDateLabel(s) {
+  return s.displayDate || (s.date instanceof Date ? s.date.toLocaleDateString('ca-ES') : String(s.date || ''));
+}
+
+function setAnalyticsChartState(canvasId, emptyId, hasData) {
+  const canvas = document.getElementById(canvasId);
+  const empty = document.getElementById(emptyId);
+  if (canvas) canvas.hidden = !hasData;
+  if (empty) empty.hidden = hasData;
+}
+
+function analyticsChartOptions(extra = {}) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'nearest', intersect: false },
+    plugins: { legend: { display: false }, tooltip: { padding: 10, displayColors: false } },
+    scales: {
+      x: { grid: { color: CHART_COLORS.gridLine }, ticks: { color: CHART_COLORS.text, maxRotation: 0, maxTicksLimit: 8 } },
+      y: { grid: { color: CHART_COLORS.gridLine }, ticks: { color: CHART_COLORS.text } },
+    },
+    ...extra,
+  };
+}
+
+function renderAnalyticsPerformance(sessions) {
+  const vo2 = sessions.filter(s => typeof s.vo2max === 'number' && isFinite(s.vo2max) && s.vo2max > 0).sort((a, b) => a.date - b.date);
+  const summary = document.getElementById('analytics-vo2-summary');
+  if (summary) summary.textContent = vo2.length
+    ? `${fmtNum(vo2[vo2.length - 1].vo2max)} ml/kg/min · ${vo2.length} ${vo2.length === 1 ? 'registre' : 'registres'}`
+    : 'Sense registres';
+}
+
+function renderAnalyticsPerformanceCharts(sessions) {
+  window.DashboardComponents.destroyChart('analytics-vo2');
+  window.DashboardComponents.destroyChart('analytics-pace');
+  const vo2 = sessions.filter(s => typeof s.vo2max === 'number' && isFinite(s.vo2max) && s.vo2max > 0).sort((a, b) => a.date - b.date);
+  const pace = sessions.filter(s => analyticsActivity(s).sport === 'running' && typeof s.ritme === 'number' && isFinite(s.ritme) && s.ritme > 0).sort((a, b) => a.date - b.date);
+  setAnalyticsChartState('chart-analytics-vo2', 'analytics-vo2-empty', vo2.length >= 2);
+  setAnalyticsChartState('chart-analytics-pace', 'analytics-pace-empty', pace.length >= 2);
+
+  if (vo2.length >= 2) {
+    window.DashboardComponents.createChart('analytics-vo2', document.getElementById('chart-analytics-vo2'), {
+      type: 'line',
+      data: { labels: vo2.map(analyticsDateLabel), datasets: [{ label: 'VO₂max', data: vo2.map(s => s.vo2max), borderColor: CHART_COLORS.blue, backgroundColor: 'rgba(56,189,248,.12)', fill: true, tension: .25, pointRadius: 4, pointHoverRadius: 6 }] },
+      options: analyticsChartOptions({ plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` VO₂max: ${fmtNum(c.parsed.y)} ml/kg/min` } } }, scales: { y: { grid: { color: CHART_COLORS.gridLine }, ticks: { color: CHART_COLORS.text }, beginAtZero: false } } }),
+    });
+  }
+  if (pace.length >= 2) {
+    window.DashboardComponents.createChart('analytics-pace', document.getElementById('chart-analytics-pace'), {
+      type: 'line',
+      data: { labels: pace.map(analyticsDateLabel), datasets: [{ label: 'Ritme', data: pace.map(s => s.ritme), borderColor: CHART_COLORS.green, backgroundColor: 'rgba(34,197,94,.12)', fill: true, tension: .25, pointRadius: 4, pointHoverRadius: 6 }] },
+      options: analyticsChartOptions({ plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` Ritme: ${formatPace(c.parsed.y, '')} min/km` } } }, scales: { y: { reverse: true, grid: { color: CHART_COLORS.gridLine }, ticks: { color: CHART_COLORS.text, callback: v => formatPace(v, '') } } } }),
+    });
+  }
+}
+
+function renderAnalyticsFeeling(sessions) {
+  window.DashboardComponents.destroyChart('analytics-feeling');
+  const points = sessions.filter(s => Number.isInteger(s.feeling) && s.feeling >= 1 && s.feeling <= 5).sort((a, b) => a.date - b.date);
+  const summary = document.getElementById('analytics-feeling-summary');
+  if (summary) {
+    if (!points.length) summary.textContent = 'Sense registres';
+    else {
+      const avg = points.reduce((sum, s) => sum + s.feeling, 0) / points.length;
+      summary.textContent = `${fmtNum(avg)}/5 de mitjana · ${points.length} ${points.length === 1 ? 'registre' : 'registres'}`;
+    }
+  }
+  setAnalyticsChartState('chart-analytics-feeling', 'analytics-feeling-empty', points.length >= 2);
+  if (points.length < 2) return;
+  const labels = ['Molt baixa', 'Baixa', 'Neutra', 'Bona', 'Molt bona'];
+  window.DashboardComponents.createChart('analytics-feeling', document.getElementById('chart-analytics-feeling'), {
+    type: 'line',
+    data: { labels: points.map(analyticsDateLabel), datasets: [{ label: 'Feeling', data: points.map(s => s.feeling), borderColor: '#55D6BE', backgroundColor: 'rgba(85,214,190,.12)', fill: true, tension: 0, showLine: false, pointRadius: 5, pointHoverRadius: 7 }] },
+    options: analyticsChartOptions({ plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` Feeling: ${c.parsed.y}/5 · ${labels[c.parsed.y - 1] || 'Sense etiqueta'}` } } }, scales: { y: { min: 1, max: 5, ticks: { stepSize: 1, color: CHART_COLORS.text, callback: v => labels[v - 1] || v }, grid: { color: CHART_COLORS.gridLine } } } }),
+  });
+}
+
+function renderAnalyticsZones(sessions) {
+  window.DashboardComponents.destroyChart('analytics-zones');
+  const totals = [1, 2, 3, 4, 5].map(zone => sessions.reduce((sum, s) => {
+    const activity = analyticsActivity(s);
+    const value = Number(activity.zones?.[`z${zone}_min`] ?? s.raw?.[`Z${zone}(min)`]);
+    return sum + (isFinite(value) && value > 0 ? value : 0);
+  }, 0));
+  const total = totals.reduce((a, b) => a + b, 0);
+  setAnalyticsChartState('chart-analytics-zones', 'analytics-zones-empty', total > 0);
+  if (total <= 0) return;
+  window.DashboardComponents.createChart('analytics-zones', document.getElementById('chart-analytics-zones'), {
+    type: 'bar', data: { labels: ['Z1', 'Z2', 'Z3', 'Z4', 'Z5'], datasets: [{ label: 'Temps', data: totals, backgroundColor: CHART_COLORS.zones, borderRadius: 5 }] },
+    options: analyticsChartOptions({ indexAxis: 'y', plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${fmtNum(c.parsed.x)} min · ${fmtNum(c.parsed.x / total * 100)}%` } } }, scales: { x: { beginAtZero: true, grid: { color: CHART_COLORS.gridLine }, ticks: { color: CHART_COLORS.text, callback: v => `${v} min` } }, y: { grid: { display: false }, ticks: { color: CHART_COLORS.text } } } }),
+  });
+}
+
+function renderAnalyticsMix(sessions) {
+  window.DashboardComponents.destroyChart('analytics-mix');
+  const order = ['running', 'cycling', 'strength', 'swimming', 'padel', 'hiking', 'other'];
+  const labels = { running: 'Cursa', cycling: 'Ciclisme', strength: 'Força', swimming: 'Natació', padel: 'Pàdel', hiking: 'Senderisme', other: 'Altres' };
+  const colors = { running: '#55D6BE', cycling: '#39C6E6', strength: '#B58CFF', swimming: '#38bdf8', padel: '#F5B942', hiking: '#FF7A59', other: '#94A3B8' };
+  const sportKey = s => {
+    const sport = String(analyticsActivity(s).sport || '').toLowerCase();
+    return order.includes(sport) ? sport : 'other';
+  };
+  const entries = order
+    .map(key => ({ key, count: sessions.filter(s => sportKey(s) === key).length }))
+    .filter(entry => entry.count > 0);
+  const total = entries.reduce((sum, entry) => sum + entry.count, 0);
+  setAnalyticsChartState('chart-analytics-mix', 'analytics-mix-empty', total > 0);
+  if (!total) return;
+  window.DashboardComponents.createChart('analytics-mix', document.getElementById('chart-analytics-mix'), {
+    type: 'doughnut', data: { labels: entries.map(entry => labels[entry.key]), datasets: [{ data: entries.map(entry => entry.count), backgroundColor: entries.map(entry => colors[entry.key]), borderColor: '#121820', borderWidth: 3 }] },
+    options: analyticsChartOptions({ cutout: '62%', plugins: { legend: { display: true, position: 'bottom', labels: { color: CHART_COLORS.text, boxWidth: 11, padding: 12 } }, tooltip: { callbacks: { label: c => ` ${c.label}: ${c.parsed} activitats · ${fmtNum(c.parsed / total * 100)}%` } } } }),
+  });
+}
+
 function renderSessTrendChart(sessions) {
   const ctx = document.getElementById('chart-sess-trend');
   if (!ctx) return;
   window.DashboardComponents.destroyChart('sessions-trend');
   _sessChart = null;
-  if (sessions.length < 1) { ctx.style.display='none'; return; }
-  ctx.style.display = '';
+  const badge = document.getElementById('sess-chart-badge');
+  if (badge) badge.textContent = _sessType === 'testrace'
+    ? 'Per activitat'
+    : (_sessPeriod > 0 && _sessPeriod <= DAY_VIEW_THRESHOLD ? 'Per dies' : 'Per setmanes');
+  setAnalyticsChartState('chart-sess-trend', 'analytics-trend-empty', sessions.length > 0);
+  if (sessions.length < 1) return;
 
   let byWeek;
   if (_sessType === 'testrace') {
@@ -352,7 +490,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
     if (lbl.includes('FC'))                return `  FC: ${v} ppm`;
     if (lbl.includes('Cad'))               return `  Cadència: ${v} spm`;
     if (lbl.includes('EPOC'))              return `  EPOC: ${v}`;
-    if (lbl === 'TSS')                     return `  TSS: ${v}`;
+    if (lbl === 'Càrrega')                return `  Càrrega: ${v}`;
     if (lbl.includes('Desnivell'))         return `  Desnivell: ${v} m`;
     if (lbl.includes('Km'))               return `  Km: ${v} km`;
     if (lbl.includes('Temps sèries'))      return `  Temps sèries: ${v} min`;
@@ -372,7 +510,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
           backgroundColor:COL.km.bar, borderColor:COL.km.line,
           borderWidth:1, borderRadius:4, yAxisID:'y' },
       ];
-      if (hasLoad) datasets.push({ type:'line', label:'TSS',
+      if (hasLoad) datasets.push({ type:'line', label:'Càrrega',
         data:byWeek.map(w=>w.load), borderColor:COL.load.line, backgroundColor:'transparent',
         borderWidth:2, pointRadius:3, tension:0.3, yAxisID:'y2', spanGaps:true });
       if (hasEpoc) datasets.push({ type:'line', label:'EPOC',
@@ -383,7 +521,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
         scales:{ x:baseOpts.scales.x, y:scaleKm('km'),
           y2:{ ...yBase, position:'right', grid:{drawOnChartArea:false},
                ticks:{...yBase.ticks,callback:v=>`${v}`},
-               title:{display:true,text:'TSS / EPOC',color:C.text,font:{size:10}} } }
+               title:{display:true,text:'Càrrega / EPOC',color:C.text,font:{size:10}} } }
       }};
     }
 
@@ -532,7 +670,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
 
     case 'strength':
       return { type:'bar', data:{labels, datasets:[
-        { label:'TSS', data:byWeek.map(w=>w.load),
+        { label:'Càrrega', data:byWeek.map(w=>w.load),
           backgroundColor:COL.load.bar, borderColor:COL.load.line, borderWidth:1, borderRadius:4 },
         { label:'EPOC', data:byWeek.map(w=>w.epoc),
           backgroundColor:COL.epoc.bar, borderColor:COL.epoc.line, borderWidth:1, borderRadius:4 },
@@ -557,7 +695,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
       if (hasFC) datasets.push({ type:'line', label:'FC mitja (ppm)',
         data:byWeek.map(w=>w.avgFC), borderColor:COL.fc.line, backgroundColor:'transparent',
         borderWidth:2, pointRadius:4, tension:0.3, yAxisID:'y2', spanGaps:true });
-      if (hasLoad) datasets.push({ type:'line', label:'TSS',
+      if (hasLoad) datasets.push({ type:'line', label:'Càrrega',
         data:byWeek.map(w=>w.load > 0 ? w.load : null), borderColor:COL.load.line,
         backgroundColor:'transparent', borderWidth:2, pointRadius:3,
         tension:0.3, yAxisID:'y2', spanGaps:true });
@@ -570,7 +708,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
                 ...yBase, position:'right', beginAtZero:false,
                 grid:{ drawOnChartArea:false },
                 ticks:{ ...yBase.ticks, callback: v => `${v}` },
-                title:{ display:true, text:'FC / TSS', color:C.text, font:{size:10} }
+                title:{ display:true, text:'FC / càrrega', color:C.text, font:{size:10} }
               } : { display:false },
         }
       }};
@@ -578,7 +716,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
 
     case 'other':
       return { type:'bar', data:{labels, datasets:[
-        { label:'TSS', data:byWeek.map(w=>w.load),
+        { label:'Càrrega', data:byWeek.map(w=>w.load),
           backgroundColor:COL.load.bar, borderColor:COL.load.line, borderWidth:1, borderRadius:4 },
         { label:'EPOC', data:byWeek.map(w=>w.epoc),
           backgroundColor:COL.epoc.bar, borderColor:COL.epoc.line, borderWidth:1, borderRadius:4 },
@@ -728,7 +866,7 @@ function getSessCardMetrics(s) {
   const dur   = s.durada    > 0 ? `${fmtNum(s.durada)} min`  : '—';
   const ritme = formatPace(s.ritme);
   const fc    = (typeof s.fcMitja === 'number' && s.fcMitja > 0) ? `${Math.round(s.fcMitja)} ppm` : '—';
-  const tss   = (typeof s.carrega === 'number' && s.carrega > 0) ? `${fmtNum(s.carrega)} TSS`     : '—';
+  const tss   = (typeof s.carrega === 'number' && s.carrega > 0) ? `${fmtNum(s.carrega)}`     : '—';
   const epocRaw = toNumber(s.raw['EPOC']);
   const epoc  = (typeof epocRaw === 'number' && epocRaw > 0)     ? fmtNum(epocRaw) : '—';
   const cadRaw = toNumber(s.raw['Cadencia(spm)']);

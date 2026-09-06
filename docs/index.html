@@ -26,6 +26,7 @@
   <link rel="stylesheet" href="./css/session-detail-drawer.css">
   <link rel="stylesheet" href="./css/planning-overview.css">
   <link rel="stylesheet" href="./css/activities.css">
+  <link rel="stylesheet" href="./css/analytics.css">
   <link rel="stylesheet" href="./css/load-scale.css">
   <link rel="stylesheet" href="./css/fc-config-modal.css">
   <link rel="stylesheet" href="./css/fc-scale.css">
@@ -51,7 +52,7 @@
         <a href="#" class="nav-link" data-target="overview"><span class="nav-icon">◉</span> Overview</a>
         <a href="#" class="nav-link" data-target="planning"><span class="nav-icon">◫</span> Planning</a>
         <a href="#" class="nav-link" data-target="activities"><span class="nav-icon">▣</span> Activitats</a>
-        <a href="#" class="nav-link" data-target="sessions"><span class="nav-icon">◇</span> Sessions</a>
+        <a href="#" class="nav-link" data-target="sessions"><span class="nav-icon">◇</span> Analytics</a>
       </nav>
 
       <!-- 3. Espai central buit — empeny tot el que ve després cap avall -->
@@ -472,9 +473,9 @@
       <!-- Vista: Sessions -->
       <section class="view" data-view="sessions">
         <header class="page-header">
-          <div><p class="eyebrow">Anàlisi</p><h2>Sessions</h2><p class="page-subtitle">Evolució per tipus i càrrega</p></div>
+          <div><p class="eyebrow">Anàlisi</p><h2>Analytics</h2><p class="page-subtitle">Evolució, càrrega i rendiment</p></div>
         </header>
-        <div class="sess-filters">
+        <div class="sess-filters analytics-period-filters">
           <div class="sess-filter-group">
             <label class="sess-filter-label" for="sess-type-select">Tipus</label>
             <select id="sess-type-select" class="sess-select">
@@ -492,31 +493,37 @@
           <div class="sess-filter-group">
             <span class="sess-filter-label">Període</span>
             <div class="sess-period-btns">
-              <button class="btn btn-ghost btn-sm" data-period="-1">Setmana</button>
               <button class="btn btn-ghost btn-sm" data-period="7">7d</button>
               <button class="btn btn-ghost btn-sm" data-period="30">30d</button>
-              <button class="btn btn-ghost btn-sm active" data-period="180">6m</button>
-              <button class="btn btn-ghost btn-sm" data-period="365">1a</button>
+              <button class="btn btn-ghost btn-sm active" data-period="90">90d</button>
               <button class="btn btn-ghost btn-sm" data-period="0">Sempre</button>
             </div>
           </div>
         </div>
+        <section class="analytics-performance-summary" aria-labelledby="analytics-performance-title">
+          <div class="analytics-section-heading"><p class="eyebrow">Resum de rendiment</p><h3 id="analytics-performance-title">Forma física · Fatiga · Forma</h3></div>
+          <div class="analytics-performance-grid">
+            <article class="analytics-metric-card analytics-metric-card--fitness"><span>Forma física</span><strong id="analytics-ctl-value">—</strong><small>CTL · càrrega crònica</small></article>
+            <article class="analytics-metric-card analytics-metric-card--fatigue"><span>Fatiga</span><strong id="analytics-atl-value">—</strong><small>ATL · càrrega aguda</small></article>
+            <article class="analytics-metric-card analytics-metric-card--form"><span>Forma</span><strong id="analytics-tsb-value">—</strong><small id="analytics-tsb-status">Sense dades de forma</small></article>
+          </div>
+        </section>
         <div class="sess-kpis" id="sess-kpis">
-          <div class="sess-kpi"><span class="sess-kpi-label">Km totals</span><strong class="sess-kpi-value" id="kpi-km">--</strong></div>
-          <div class="sess-kpi"><span class="sess-kpi-label">Temps total</span><strong class="sess-kpi-value" id="kpi-time">--</strong></div>
-          <div class="sess-kpi"><span class="sess-kpi-label">Càrrega total</span><strong class="sess-kpi-value" id="kpi-load">--</strong></div>
-          <div class="sess-kpi"><span class="sess-kpi-label">EPOC total</span><strong class="sess-kpi-value" id="kpi-epoc">--</strong></div>
+          <div class="sess-kpi"><span class="sess-kpi-label">Distància total</span><strong class="sess-kpi-value" id="kpi-km">—</strong></div>
+          <div class="sess-kpi"><span class="sess-kpi-label">Temps total</span><strong class="sess-kpi-value" id="kpi-time">—</strong></div>
+          <div class="sess-kpi"><span class="sess-kpi-label">Càrrega total</span><strong class="sess-kpi-value" id="kpi-load">—</strong></div>
+          <div class="sess-kpi"><span class="sess-kpi-label">EPOC total</span><strong class="sess-kpi-value" id="kpi-epoc">—</strong></div>
         </div>
         <article class="panel sess-trend-panel">
           <div class="panel-header">
-            <div><p class="eyebrow">Tendència</p><h3 id="sess-chart-title">Volum setmanal</h3></div>
+            <div><p class="eyebrow">Càrrega d’entrenament</p><h3 id="sess-chart-title">Volum i càrrega</h3></div>
             <span class="badge badge-muted" id="sess-chart-badge">Per setmanes</span>
           </div>
-          <div class="chart-wrap chart-wrap--tall"><canvas id="chart-sess-trend"></canvas></div>
+          <div class="chart-wrap chart-wrap--tall"><canvas id="chart-sess-trend"></canvas><p id="analytics-trend-empty" class="analytics-empty" hidden>No hi ha activitats en aquest període o amb aquest filtre.</p></div>
         </article>
         <article class="panel">
           <div class="panel-header">
-            <div><p class="eyebrow">Forma · Fatiga · Frescor</p><h3>Performance Management Chart</h3></div>
+            <div><p class="eyebrow">Forma · Fatiga · Frescor</p><h3>Gràfic de gestió del rendiment</h3></div>
             <div class="pmc-export-btns">
               <button id="pmc-export-7" class="btn btn-ghost btn-sm" disabled onclick="exportPMCcsv(7)" title="Exporta els darrers 7 dies com a CSV per enviar a la IA">↓ CSV 7 dies</button>
               <button id="pmc-export-90" class="btn btn-ghost btn-sm" disabled onclick="exportPMCcsv(90)" title="Exporta els darrers 90 dies com a CSV per enviar a la IA">↓ CSV 90 dies</button>
@@ -529,30 +536,29 @@
             <span class="pmc-leg-sep">&middot;</span>
             <span class="pmc-leg-hint">TSB &gt; +5 fresc &nbsp;|&nbsp; TSB &lt; −10 fatigat</span>
           </div>
-          <div class="chart-wrap pmc-chart-wrap"><canvas id="chart-pmc"></canvas></div>
+          <div class="chart-wrap pmc-chart-wrap"><canvas id="chart-pmc"></canvas><p id="analytics-pmc-empty" class="analytics-empty" hidden>No hi ha dades suficients per mostrar la forma.</p></div>
         </article>
-        <article class="panel">
-          <div class="panel-header">
-            <div><p class="eyebrow">Llistat</p><h3 id="sess-table-title">Totes les sessions</h3></div>
-            <div class="pmc-export-btns">
-              <span class="badge badge-muted" id="sess-count-badge">--</span>
-              <button id="sess-export-7" class="btn btn-ghost btn-sm" disabled onclick="exportSessionsCSV(7)" title="Exporta els darrers 7 dies de sessions com a CSV per enviar a la IA">↓ CSV 7 dies</button>
-              <button id="sess-export-90" class="btn btn-ghost btn-sm" disabled onclick="exportSessionsCSV(90)" title="Exporta els darrers 90 dies de sessions com a CSV per enviar a la IA">↓ CSV 90 dies</button>
-            </div>
-          </div>
-
-          <!-- Taula: visible en desktop -->
-          <div class="table-shell sess-table-wrap">
-            <table id="sess-table">
-              <thead id="sess-thead"></thead>
-              <tbody id="sess-tbody"></tbody>
-            </table>
-          </div>
-
-          <!-- Cards: visible en mòbil (≤767px) -->
-          <div id="sess-cards" class="sess-cards"></div>
-
-        </article>
+        <section class="analytics-grid analytics-grid--two" aria-label="Rendiment i sensacions">
+          <article class="panel analytics-chart-panel">
+            <div class="panel-header"><div><p class="eyebrow">Rendiment</p><h3>VO₂max i ritme</h3></div></div>
+            <div class="analytics-subchart"><div class="analytics-subchart-heading"><strong>VO₂max</strong><span id="analytics-vo2-summary">—</span></div><div class="analytics-chart-wrap"><canvas id="chart-analytics-vo2"></canvas><p id="analytics-vo2-empty" class="analytics-empty" hidden>No hi ha dades suficients per mostrar aquesta evolució.</p></div></div>
+            <div class="analytics-subchart"><div class="analytics-subchart-heading"><strong>Ritme de cursa</strong><span>min/km</span></div><div class="analytics-chart-wrap"><canvas id="chart-analytics-pace"></canvas><p id="analytics-pace-empty" class="analytics-empty" hidden>No hi ha dades suficients per mostrar aquesta evolució.</p></div></div>
+          </article>
+          <article class="panel analytics-chart-panel">
+            <div class="panel-header"><div><p class="eyebrow">Subjectiu</p><h3>Feeling</h3></div><span id="analytics-feeling-summary" class="badge badge-muted">Sense registres</span></div>
+            <div class="analytics-chart-wrap analytics-chart-wrap--feeling"><canvas id="chart-analytics-feeling"></canvas><p id="analytics-feeling-empty" class="analytics-empty">No hi ha dades suficients per mostrar aquesta evolució.</p></div>
+          </article>
+        </section>
+        <section class="analytics-grid analytics-grid--two" aria-label="Distribució de l’entrenament">
+          <article class="panel analytics-chart-panel">
+            <div class="panel-header"><div><p class="eyebrow">Distribució de l’entrenament</p><h3>Zones de freqüència cardíaca</h3></div></div>
+            <div class="analytics-chart-wrap"><canvas id="chart-analytics-zones"></canvas><p id="analytics-zones-empty" class="analytics-empty">No hi ha dades suficients per mostrar aquesta distribució.</p></div>
+          </article>
+          <article class="panel analytics-chart-panel">
+            <div class="panel-header"><div><p class="eyebrow">Distribució</p><h3>Esport</h3></div></div>
+            <div class="analytics-chart-wrap"><canvas id="chart-analytics-mix"></canvas><p id="analytics-mix-empty" class="analytics-empty">No hi ha dades suficients per mostrar aquesta distribució.</p></div>
+          </article>
+        </section>
       </section>
     </main>
   </div>
@@ -599,7 +605,7 @@
     </a>
     <a href="#" class="bnav-item" data-target="sessions">
       <span class="bnav-icon">◇</span>
-      <span class="bnav-label">Sessions</span>
+      <span class="bnav-label">Analytics</span>
     </a>
     <button class="bnav-item bnav-more" id="bnav-more-btn" aria-label="Més opcions">
       <span class="bnav-icon">⋯</span>

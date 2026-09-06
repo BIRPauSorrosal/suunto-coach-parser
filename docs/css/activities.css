@@ -7,7 +7,7 @@
 .activity-log-search { min-width: 0; }
 .activity-log-clear { height: 34px; white-space: nowrap; }
 .activity-log-filter-state { align-self: center; color: var(--color-text-muted); font-size: 10px; font-weight: 650; white-space: nowrap; }
-.activity-log-clear:disabled { cursor: default; opacity: .55; }
+.activity-log-clear:disabled, .activity-log-export:disabled { cursor: default; opacity: .55; }
 .activity-log-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 20px; }
 .activity-log-summary > div { padding: 13px 15px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
 .activity-log-summary span { display: block; color: var(--color-text-muted); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
@@ -33,7 +33,10 @@
 .activity-log-metrics { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; padding-top: 11px; border-top: 1px solid var(--color-border); }
 .activity-log-metrics span { display: block; color: var(--color-text-muted); font-size: 9px; text-transform: uppercase; }
 .activity-log-metrics strong { display: block; margin-top: 4px; overflow: hidden; color: var(--color-text-primary); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
-.activity-log-open { display: block; margin-top: 12px; color: var(--color-text-muted); font-size: 10px; }
+.activity-log-card__footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; }
+.activity-log-open { color: var(--color-text-muted); font-size: 10px; }
+.activity-log-comment { padding: 3px 0; background: transparent; border: 0; color: var(--color-text-muted); font: inherit; font-size: 10px; cursor: pointer; }
+.activity-log-comment:hover, .activity-log-comment:focus-visible { color: var(--color-accent); text-decoration: underline; }
 .activity-log-empty { padding: 42px 24px; background: var(--color-surface); border: 1px dashed var(--color-border-strong); border-radius: var(--radius-md); text-align: center; }
 .activity-log-empty h3 { margin: 0; color: var(--color-text-primary); font-size: 16px; }
 .activity-log-empty p { margin: 7px 0 0; color: var(--color-text-muted); font-size: 12px; }
