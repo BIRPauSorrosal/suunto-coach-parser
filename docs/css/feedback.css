@@ -80,7 +80,7 @@
 .ui-confirm-dialog__footer { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 22px 18px; border-top: 1px solid var(--border); }
 .btn-danger { color: #fff !important; background: var(--red) !important; border-color: var(--red) !important; }
 @media (max-width: 767px) {
-  .app-toast-container { right: 16px; bottom: 76px; width: calc(100vw - 32px); }
+  .app-toast-container { right: 16px; bottom: calc(76px + env(safe-area-inset-bottom)); width: calc(100vw - 32px); }
   .data-state-panel { padding: 16px; }
   .data-state-panel__content { align-items: flex-start; flex-wrap: wrap; }
   .data-state-panel__action { width: 100%; margin-left: 30px; }

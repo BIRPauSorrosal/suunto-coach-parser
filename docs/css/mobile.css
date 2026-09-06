@@ -8,11 +8,15 @@
 
 @media (max-width: 767px) {
 
+  /* ── Base responsive i safe area ───────────────────────────── */
+  html, body { max-width: 100%; overflow-x: hidden; }
+  .main-content { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+
   /* ── Ocultar sidebar ──────────────────────────────────────── */
   .view.view--active[data-view="avui"] { display: flex; flex-direction: column; }
-  .view.view--active[data-view="avui"] .today-training-grid { order: 1; }
-  .view.view--active[data-view="avui"] .today-performance { order: 2; }
-  .view.view--active[data-view="avui"] .today-load { order: 3; }
+  .view.view--active[data-view="avui"] .today-performance { order: 1; }
+  .view.view--active[data-view="avui"] .today-load { order: 2; }
+  .view.view--active[data-view="avui"] .today-training-grid { order: 3; }
   .view.view--active[data-view="avui"] .today-week { order: 4; }
   .view.view--active[data-view="avui"] .today-upcoming { order: 5; }
 
@@ -164,13 +168,15 @@
   .sess-kpi-value { font-size: 1.2rem; }
   .panel-header  { margin-bottom: 14px; }
 
+  .today-training-grid { display: flex; flex-direction: column; gap: 0; }
+  .today-training-grid .today-feeling { order: 1; }
+  .today-training-grid .today-hero { order: 2; }
   .today-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .today-kpi { padding: 12px; }
   .today-kpi-value { font-size: 24px; }
   .today-kpi--performance { grid-column: 1 / -1; }
-  .today-training-grid { grid-template-columns: 1fr; gap: 0; }
   .today-training-grid > .panel { margin-bottom: 14px; }
-  .today-load .chart-wrap--today-load { height: 180px; }
+  .today-load .chart-wrap--today-load { height: 210px; }
 
   .flex-calendar { grid-template-columns: 1fr; overflow: visible; }
   .flex-day { min-width: 0; min-height: 0; }
@@ -268,11 +274,44 @@
   .pwv-km-total   { text-align: left; margin-top: 8px; }
   .progress-panel { padding: 14px; }
 
+  /* ── Planning mensual/anual: scroll només on és intencionat ─── */
+  .pa-calendar-panel { overflow-x: auto; }
+  .pa-calendar-weekdays, .pa-calendar-grid { min-width: 420px; }
+  .py-heat-panel { overflow-x: auto; }
+  .py-heat-months, .py-heatmap { min-width: 620px; }
+
+  /* ── Activitats: controls plegables i targets còmodes ───────── */
+  .activity-log-toolbar input,
+  .activity-log-toolbar select { min-height: 44px; height: 44px; }
+  .activity-log-comment { min-height: 44px; padding: 8px 0; }
+
+  /* ── Modals i bottom sheets ─────────────────────────────────── */
+  .session-detail-drawer { width: 100%; height: min(94dvh, 860px); max-height: 94dvh; border-radius: 18px 18px 0 0; }
+  .session-detail-close { width: 44px; height: 44px; }
+  .session-comment-dialog { top: auto; right: 0; bottom: 0; left: 0; width: 100%; max-height: 94dvh; margin: 0; }
+  .session-comment-modal { max-height: 94dvh; overflow-y: auto; border-radius: 18px 18px 0 0; }
+  .session-comment-modal__close,
+  .uploader-close,
+  .fc-modal-close { width: 44px; height: 44px; }
+  .fc-modal-overlay { align-items: flex-end; padding: 0; }
+  .fc-modal { max-height: 94dvh; overflow-y: auto; border-radius: 18px 18px 0 0; }
+  .flex-manual-modal { align-items: flex-end; padding: 0; }
+  .flex-manual-dialog { max-height: 94dvh; border-radius: 18px 18px 0 0; }
+
 }
 
 /* En desktop, les cards sempre ocultes */
 @media (min-width: 768px) {
   .sess-cards { display: none; }
+}
+
+/* ── Tablet: conserva la navegació lateral, però allibera amplada ── */
+@media (min-width: 768px) and (max-width: 1023px) {
+  :root { --sidebar-w: 196px; }
+  .sidebar { padding: 22px 12px; gap: 18px; }
+  .main-content { padding: 24px 22px; }
+  .today-kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .activity-log-toolbar { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
 /* ============================================================
@@ -326,7 +365,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 64px;
+    height: calc(64px + env(safe-area-inset-bottom));
     background: var(--surface);
     border-top: 1px solid var(--border);
     z-index: 1000;
@@ -376,7 +415,7 @@
   .bnav-drawer {
     display: block;
     position: fixed;
-    bottom: 64px;
+    bottom: calc(64px + env(safe-area-inset-bottom));
     left: 0;
     right: 0;
     background: var(--surface);
