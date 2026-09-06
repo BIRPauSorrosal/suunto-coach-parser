@@ -23,6 +23,11 @@
     items: (value.items || []).map(normalizeItem),
     removed_planning_session_ids: value.removedPlanning || value.removed_planning_session_ids || [],
   });
+  const preferLocal = (local, remote) => {
+    if (!local) return remote;
+    if (!remote) return local;
+    return local.sync_status === 'pending' || (local.updated_at && local.updated_at > remote.updated_at) ? local : remote;
+  };
 
   async function readRemote() {
     const config = global.DashboardConfig, token = global.getGitHubToken?.();
@@ -58,5 +63,5 @@
     }
   }
 
-  global.CalendarSync = Object.freeze({ saveWeek });
+  global.CalendarSync = Object.freeze({ saveWeek, preferLocal });
 })(window);

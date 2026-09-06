@@ -182,7 +182,9 @@ async function loadDashboardData() {
     const loaded = await window.DashboardDataService.refreshRemoteData();
     if (requestId !== loadRequestId) return;
     window.dashboardStore.setData(loaded);
-    if (loaded.settings?.settings?.heart_rate) applyFCConfig(loaded.settings.settings.heart_rate);
+    const remoteHeartRate = loaded.settings?.settings?.heart_rate;
+    const preferredHeartRate = window.SettingsSync?.preferredHeartRate(remoteHeartRate) || remoteHeartRate;
+    if (preferredHeartRate) applyFCConfig(preferredHeartRate);
     window.SessionsSync?.queueLocalLinks(loaded.sessions);
 
     renderDashboard();

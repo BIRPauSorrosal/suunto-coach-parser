@@ -156,9 +156,7 @@
     // així un moviment manual no es perd fins que es sincronitza al repositori.
     const local = all[key];
     const remote = calendarDocument?.weeks?.[key];
-    const hasPendingLocalChanges = local?.sync_status === 'pending';
-    const localIsNewer = local?.updated_at && (!remote?.updated_at || local.updated_at > remote.updated_at);
-    const source = hasPendingLocalChanges || localIsNewer ? local : (remote || local || old);
+    const source = window.CalendarSync?.preferLocal(local, remote) || old;
     const result = reconcileCalendar(week, source, sessions);
     all[key] = result;
     if (old && old !== source) delete all[planOf(week).setmana];
@@ -191,11 +189,12 @@
   }
 
   function activityLinks(real) {
-    if (real.raw?.__activity?.planning_links?.length) return real.raw.__activity.planning_links;
     try {
       const saved = JSON.parse(localStorage.getItem('suunto-coach-session-links-v1') || '{}');
-      return saved[real.raw?.__activity?.id] || [];
+      const id = real.raw?.__activity?.id;
+      if (Object.prototype.hasOwnProperty.call(saved, id)) return Array.isArray(saved[id]) ? saved[id] : [];
     } catch (_) { return []; }
+    return real.raw?.__activity?.planning_links || [];
   }
 
   function reconciliationCandidates(realWeek, week) {

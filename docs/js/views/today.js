@@ -12,16 +12,18 @@
   }
 
   function linksFor(session) {
-    if (session.raw?.__activity?.planning_links?.length) return session.raw.__activity.planning_links;
     try {
       const links = JSON.parse(localStorage.getItem('suunto-coach-session-links-v1') || '{}');
-      return links[session.raw?.__activity?.id] || [];
+      const id = session.raw?.__activity?.id;
+      if (Object.prototype.hasOwnProperty.call(links, id)) return Array.isArray(links[id]) ? links[id] : [];
     } catch (_) { return []; }
+    return session.raw?.__activity?.planning_links || [];
   }
 
   function plannedItems(week, calendarDocument) {
     const local = readLocalCalendar()[week.key];
-    const source = local || calendarDocument?.weeks?.[week.key];
+    const remote = calendarDocument?.weeks?.[week.key];
+    const source = window.CalendarSync?.preferLocal(local, remote) || remote;
     if (source && Array.isArray(source.items)) return source.items.filter(item => item.day !== null && item.day !== undefined);
     const sessions = week.planning?.sessions || [];
     return sessions.map((session, index) => ({
