@@ -288,6 +288,23 @@ function renderYearlyView(container, planning, sessions) {
 }
 
 // ── Vista MENSUAL ───────────────────────────────────────────────────────────────
+function planningSessionTypeLabel(session) {
+  const labels = { quality: 'Qualitat', z2: 'Z2', 'long-run': 'Tirada llarga', long: 'Tirada llarga', strength: 'Força', padel: 'Pàdel', bici: 'Bici', cycling: 'Ciclisme', running: 'Cursa' };
+  return session.session_type || session.label || labels[session.type] || labels[session.sport] || 'Sessió';
+}
+
+function confirmedActivityForPlanning(planningId, sessions) {
+  return (sessions || []).find(activity => {
+    let links = activity.raw?.__activity?.planning_links || activity.planning_links || [];
+    try {
+      const saved = JSON.parse(localStorage.getItem('suunto-coach-session-links-v1') || '{}');
+      const activityId = activity.raw?.__activity?.id || activity.id;
+      if (Object.prototype.hasOwnProperty.call(saved, activityId)) links = saved[activityId];
+    } catch (_) {}
+    return links.some(link => link.confidence === 'confirmed' && link.planning_session_id === planningId);
+  }) || null;
+}
+
 function renderMonthlyView(container, planning, sessions) {
   const monthNames = ['Gener','Febrer','Març','Abril','Maig','Juny',
                       'Juliol','Agost','Setembre','Octubre','Novembre','Desembre'];
@@ -309,6 +326,14 @@ function renderMonthlyView(container, planning, sessions) {
       const idx    = planning.indexOf(w);
       const stats  = getWeekStats(w, sessions);
       const donePct = Math.min(stats.pctTotal, 100);
+      const plannedSessions = Array.isArray(w.sessions) ? w.sessions : [];
+      const sessionButtons = plannedSessions.length
+        ? '<div class="pwc-sessions" aria-label="Sessions planificades">' + plannedSessions.map(session => {
+            const linked = confirmedActivityForPlanning(session.id, sessions);
+            const summary = [session.distance_km ? fmtNumP(session.distance_km) + ' km' : '', session.duration_min ? fmtMinutes(session.duration_min) : ''].filter(Boolean).join(' · ');
+            return '<button type="button" class="pwc-session" data-planning-session-id="' + escapePlanningText(session.id) + '" aria-label="Obrir el detall de ' + escapePlanningText(planningSessionTypeLabel(session)) + '">' + escapePlanningText(planningSessionTypeLabel(session)) + (summary ? ' · ' + escapePlanningText(summary) : '') + (linked ? ' · feta' : '') + '</button>';
+          }).join('') + '</div>'
+        : '';
 
       const badgeHTML = stats.status === 'future'
         ? '<span class="pwc-badge pwc-badge--future">⏳ Pendent</span>'
@@ -346,6 +371,7 @@ function renderMonthlyView(container, planning, sessions) {
         + '<div class="pwc-phase-bar" style="background:' + ph + '">'
         +   '<span>' + escapePlanningText(w.fase) + '</span>'
         + '</div>'
+        + sessionButtons
         + '</article>';
     });
   } else {
@@ -375,6 +401,14 @@ function renderMonthlyView(container, planning, sessions) {
       planningWeekIndex = parseInt(el.dataset.week, 10);
       planningViewLevel = 'weekly';
       renderPlanningLevel(planning, sessions, window.dashboardStore?.getState?.().calendar);
+    });
+  });
+  container.querySelectorAll('.pwc-session[data-planning-session-id]').forEach(button => {
+    button.addEventListener('click', event => {
+      event.stopPropagation();
+      const week = planning[Number(button.closest('[data-week]')?.dataset.week)];
+      const planned = week?.sessions?.find(session => session.id === button.dataset.planningSessionId);
+      if (planned) window.openPlannedSessionDetail?.(planned, confirmedActivityForPlanning(planned.id, sessions), { rangeLabel: week?.setmana || '' });
     });
   });
 }
