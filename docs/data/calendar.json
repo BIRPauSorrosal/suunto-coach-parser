@@ -69,7 +69,7 @@
       "version": 5,
       "week_id": "2026-08-31",
       "week_code": "2026-S36",
-      "updated_at": "2026-09-06T10:13:39.111Z",
+      "updated_at": "2026-09-06T09:30:10.299Z",
       "items": [
         {
           "id": "2026-S36-z2-01",
@@ -106,7 +106,7 @@
         },
         {
           "id": "2026-S36-strength-01",
-          "day": 2,
+          "day": 1,
           "type": "strength",
           "title": "Força",
           "detail": "Força",
