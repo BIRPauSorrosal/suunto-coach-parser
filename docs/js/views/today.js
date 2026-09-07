@@ -1,6 +1,7 @@
 // Pantalla inicial contextual. Resumeix el dia i manté el calendari setmanal com a lloc d'edició.
 (function () {
   let bound = false;
+  let detailBound = false;
   const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
   const fmt = value => Number.isFinite(Number(value)) ? new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 }).format(Number(value)) : '--';
   const dateKey = value => { const date = new Date(value); return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`; };
@@ -41,6 +42,10 @@
   function linkedActivity(item, sessions) {
     const planningId = item.planning_session_id || item.id;
     return sessions.find(session => linksFor(session).some(link => link.confidence === 'confirmed' && link.planning_session_id === planningId)) || null;
+  }
+
+  function plannedSessionForItem(item, week) {
+    return (week.planning?.sessions || []).find(session => session.id === (item.planning_session_id || item.id)) || null;
   }
 
   function actualDetails(session) {
@@ -118,6 +123,18 @@
     return `<article class="today-session-card today-session-card--unplanned"><div><span class="today-session-status">Activitat no planificada</span><h4>${esc(session.tipus || 'Activitat')}</h4><p>${esc(actualDetails(session))}</p></div></article>`;
   }
 
+  const basePlannedCard = plannedCard;
+  plannedCard = function (item, real) {
+    const html = basePlannedCard(item, real);
+    return html.replace('<article ', `<article data-today-planning-session-id="${esc(item.planning_session_id || item.id)}" role="button" tabindex="0" aria-label="Obrir el detall de la sessió del dia" `);
+  };
+  const baseUnplannedCard = unplannedCard;
+  unplannedCard = function (session) {
+    const html = baseUnplannedCard(session);
+    const id = session.raw?.__activity?.id || session.id || '';
+    return html.replace('<article ', `<article data-today-activity-id="${esc(id)}" role="button" tabindex="0" aria-label="Obrir el detall de l’activitat" `);
+  };
+
   function renderTodayView(sessions, planning) {
     renderPerformance(sessions);
     const weeks = window.WeekManager.timeline(planning, sessions), index = window.WeekManager.findCurrent(weeks), week = weeks[index];
@@ -126,7 +143,7 @@
     const today = new Date(), todayKey = dateKey(today), actual = sessions.filter(session => dateKey(session.date) === todayKey);
     const day = Math.max(0, Math.min(6, Math.round((new Date(todayKey+'T12:00:00') - new Date(dateKey(week.startDate)+'T12:00:00')) / 86400000)));
     const planned = plannedItems(week, calendar).filter(item => item.day === day);
-    const plannedWithReal = planned.map(item => ({ item, real: linkedActivity(item, sessions) }));
+    const plannedWithReal = planned.map(item => ({ item, plannedSession: plannedSessionForItem(item, week), real: linkedActivity(item, sessions) }));
     const linkedIds = new Set(plannedWithReal.filter(row => row.real).map(row => row.real.raw?.__activity?.id));
     const unplanned = actual.filter(session => !linkedIds.has(session.raw?.__activity?.id));
     const dateEl = document.getElementById('today-date-label'); if (dateEl) dateEl.textContent = dateText(today);
@@ -146,6 +163,26 @@
       const future = allPlanned.filter(item => item.day > day).sort((a, b) => a.day - b.day).slice(0, 3);
       upcoming.innerHTML = `<div class="panel-header"><div><p class="eyebrow">A continuació</p><h3>Properes sessions</h3></div></div>${future.length ? `<div class="today-upcoming-list">${future.map(item => { const real = linkedActivity(item, sessions); return `<div class="today-upcoming-item"><div><span>${['Dilluns','Dimarts','Dimecres','Dijous','Divendres','Dissabte','Diumenge'][item.day] || 'Properament'}</span><strong>${esc(item.title || typeLabels[item.type] || 'Sessió')}</strong><small>${esc(item.detail || '')}</small></div><b class="${real || item.status === 'done' ? 'is-complete' : ''}">${real || item.status === 'done' ? 'Completada' : 'Pendent'}</b></div>`; }).join('')}</div>` : '<p class="today-empty-upcoming">No hi ha més sessions assignades aquesta setmana.</p>'}`;
       upcoming.innerHTML = `<div class="panel-header"><div><p class="eyebrow">A continuació</p><h3>Properes sessions</h3></div></div>${future.length ? `<div class="today-upcoming-list">${future.map(item => { const real = linkedActivity(item, realWeek); return `<div class="today-upcoming-item"><div><span>${['Dilluns','Dimarts','Dimecres','Dijous','Divendres','Dissabte','Diumenge'][item.day] || 'Properament'}</span><strong>${esc(item.title || typeLabels[item.type] || 'Sessió')}</strong><small>${esc(item.detail || '')}</small></div><b class="${real || item.status === 'done' ? 'is-complete' : ''}">${real || item.status === 'done' ? 'Completada' : 'Pendent'}</b></div>`; }).join('')}</div>` : '<p class="today-empty-upcoming">No hi ha més sessions assignades aquesta setmana.</p>'}`;
+    }
+    if (!detailBound) {
+      document.getElementById('today-hero')?.addEventListener('click', event => {
+        const planningCard = event.target.closest('[data-today-planning-session-id]');
+        if (planningCard) {
+          const row = plannedWithReal.find(candidate => (candidate.item.planning_session_id || candidate.item.id) === planningCard.dataset.todayPlanningSessionId);
+          const plannedSession = row?.plannedSession || row?.item;
+          if (plannedSession) window.openPlannedSessionDetail?.(plannedSession, row?.real || null, { dateLabel: dateText(today), rangeLabel: week.planning?.setmana || '' });
+          return;
+        }
+        const activityCard = event.target.closest('[data-today-activity-id]');
+        if (activityCard) {
+          const activity = unplanned.find(session => (session.raw?.__activity?.id || session.id || '') === activityCard.dataset.todayActivityId);
+          if (activity) window.openSessionDetailDrawer?.(activity, { dateLabel: dateText(today) });
+        }
+      });
+      document.getElementById('today-hero')?.addEventListener('keydown', event => {
+        if ((event.key === 'Enter' || event.key === ' ') && event.target.closest('[data-today-planning-session-id],[data-today-activity-id]')) { event.preventDefault(); event.target.click(); }
+      });
+      detailBound = true;
     }
     if (!bound) { document.getElementById('today-open-week')?.addEventListener('click', () => window.navigateTo && window.navigateTo('planning')); bound = true; }
   }

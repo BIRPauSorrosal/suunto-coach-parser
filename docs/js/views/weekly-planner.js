@@ -10,6 +10,7 @@
   const UNASSIGNED_FROM = '2026-09-07'; // 2026-S37
   let weekIndex = null;
   let currentTimeline = [];
+  let activePlan = null;
 
   const esc = v => String(v ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
   const fmt = v => Number.isFinite(Number(v)) ? new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 }).format(Number(v)) : '--';
@@ -272,6 +273,7 @@
     currentTimeline = weeks;
     if (weekIndex === null || weekIndex >= weeks.length) weekIndex = window.WeekManager.findCurrent(weeks);
     const week = weeks[weekIndex], plan = planOf(week), calendar = getCalendar(week, calendarDocument, sessions), canEdit = editable(week);
+    activePlan = plan;
     const today = iso(new Date()), days = Array.from({length:7}, (_, i) => { const d = new Date(week.startDate); d.setDate(d.getDate()+i); return d; });
     const text = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
     text('flex-week-label', plan.setmana ? `${plan.setmana} · ${plan.cicle}` : `Setmana ${week.key}`);
@@ -289,10 +291,25 @@
     if (realWeek.length) { const reconciliationHtml = renderReconciliationPanel(realWeek, week); unmatched.hidden = !reconciliationHtml; unmatched.innerHTML = reconciliationHtml; }
     bind(sessions, planning, week, calendar, canEdit, calendarDocument);
   }
-  function card(item, canEdit, sessions=[]) { const meta=TYPES[item.type]||TYPES.other; const real=linkedActivity(item,sessions); const completed=item.status==='done'||!!real; const activityId=real?.raw?.__activity?.id || real?.raw?.id || ''; return `<div class="flex-plan-card${completed?' is-done':''}${real?' has-linked-activity':''}" draggable="${canEdit}" data-plan-id="${esc(item.id)}" style="--card-color:${meta[1]}"><div class="flex-card-top"><span class="flex-card-type">${esc(item.title||meta[0])}</span><span class="flex-card-source">${item.source==='manual'?'Afegida':'Pla'}</span></div><strong>${esc(item.detail||meta[0])}</strong>${real?`<div class="flex-linked-activity session-detail-trigger" data-activity-id="${esc(activityId)}" role="button" tabindex="0" aria-label="Obrir el detall de l’activitat"><span>✓ Realitzada</span><strong>${esc(real.tipus||'Activitat')} · ${real.distancia?fmt(real.distancia)+' km':''}${real.durada?' · '+fmt(real.durada)+' min':''}</strong><small>${esc(real.displayDate||'')}</small></div>`:''}<div class="flex-card-actions">${canEdit?`${real?'<span class="flex-card-confirmed">✓ Realitzada</span>':`<button type="button" data-action="toggle" data-id="${esc(item.id)}">${item.status==='done'?'↩ Pendent':'Marcar feta'}</button>`}<button type="button" data-action="delete" data-id="${esc(item.id)}" aria-label="Eliminar activitat" title="Eliminar activitat">×</button>`:`<span>${completed?'✓ Realitzada':'Històric'}</span>`}</div></div>`; }
-  function actualCard(s) { const activityId=s.raw?.__activity?.id || s.raw?.id || ''; return `<div class="flex-actual-card session-detail-trigger" data-activity-id="${esc(activityId)}" role="button" tabindex="0" aria-label="Obrir el detall de l’activitat"><span>Registrada</span><strong>${esc(s.tipus||'Activitat')}</strong><small>${s.durada?fmt(s.durada)+' min':''}${s.distancia?' · '+fmt(s.distancia)+' km':''}</small></div>`; }
+  function card(item, canEdit, sessions=[]) { const meta=TYPES[item.type]||TYPES.other; const real=linkedActivity(item,sessions); const completed=item.status==='done'||!!real; return `<div class="flex-plan-card${completed?' is-done':''}${real?' has-linked-activity':''}" draggable="${canEdit}" data-plan-id="${esc(item.id)}" style="--card-color:${meta[1]}"><div class="flex-card-top"><span class="flex-card-type">${esc(item.title||meta[0])}</span><span class="flex-card-source">${item.source==='manual'?'Afegida':'Pla'}</span></div><strong>${esc(item.detail||meta[0])}</strong>${real?`<div class="flex-linked-activity"><span>✓ Realitzada</span><strong>${esc(real.tipus||'Activitat')} · ${real.distancia?fmt(real.distancia)+' km':''}${real.durada?' · '+fmt(real.durada)+' min':''}</strong><small>${esc(real.displayDate||'')}</small></div>`:''}<div class="flex-card-actions">${canEdit?`${real?'<span class="flex-card-confirmed">✓ Realitzada</span>':`<button type="button" data-action="toggle" data-id="${esc(item.id)}">${item.status==='done'?'↩ Pendent':'Marcar feta'}</button>`}<button type="button" data-action="delete" data-id="${esc(item.id)}" aria-label="Eliminar activitat" title="Eliminar activitat">×</button>`:`<span>${completed?'✓ Realitzada':'Històric'}</span>`}</div></div>`; }
+  function actualCard(s) { return `<div class="flex-actual-card"><span>Registrada</span><strong>${esc(s.tipus||'Activitat')}</strong><small>${s.durada?fmt(s.durada)+' min':''}${s.distancia?' · '+fmt(s.distancia)+' km':''}</small></div>`; }
+  const baseCard = card;
+  card = function (item, canEdit, sessions=[]) {
+    const planned = (activePlan?.sessions || []).find(session => session.id === (item.planning_session_id || item.id));
+    const html = baseCard(item, canEdit, sessions);
+    return planned ? html.replace('class="flex-plan-card', `class="flex-plan-card session-detail-trigger" data-plan-session-id="${esc(planned.id)}" role="button" tabindex="0" aria-label="Obrir el detall de la sessió planificada"`) : html;
+  };
+  const baseActualCard = actualCard;
+  actualCard = function (session) {
+    const html = baseActualCard(session);
+    const id = session.raw?.__activity?.id || session.id || '';
+    return html.replace('class="flex-actual-card"', `class="flex-actual-card session-detail-trigger" data-activity-id="${esc(id)}" role="button" tabindex="0" aria-label="Obrir el detall de l’activitat"`);
+  };
+
   function bind(sessions, planning, week, calendar, canEdit, calendarDocument) {
     ['flex-week-prev','flex-week-next','flex-week-current','flex-add-session'].forEach(id => { const el=document.getElementById(id); if(el) el.replaceWith(el.cloneNode(true)); });
+    document.getElementById('flex-calendar')?.addEventListener('click',e=>{if(e.target.closest('[data-action]'))return;const plannedTrigger=e.target.closest('[data-plan-session-id]');if(plannedTrigger){const planned=(activePlan?.sessions||[]).find(session=>session.id===plannedTrigger.dataset.planSessionId);if(planned)window.openPlannedSessionDetail?.(planned,linkedActivity({planning_session_id:planned.id},sessions),{dateLabel:plannedTrigger.closest('[data-day]')?.querySelector('.flex-day-date')?.textContent||'',rangeLabel:document.getElementById('flex-week-label')?.textContent||''});return;}const actualTrigger=e.target.closest('[data-activity-id]');if(actualTrigger){const actual=sessions.find(session=>(session.raw?.__activity?.id||session.id)===actualTrigger.dataset.activityId);if(actual)window.openSessionDetailDrawer?.(actual,{dateLabel:actual.displayDate||''});}});
+    document.getElementById('flex-calendar')?.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;const trigger=e.target.closest('[data-plan-session-id],[data-activity-id]');if(!trigger)return;e.preventDefault();trigger.click();});
     document.getElementById('flex-week-prev')?.addEventListener('click',()=>{weekIndex--;renderFlexibleWeekView(sessions,planning,calendarDocument);});
     document.getElementById('flex-week-next')?.addEventListener('click',()=>{weekIndex++;renderFlexibleWeekView(sessions,planning,calendarDocument);});
     document.getElementById('flex-week-current')?.addEventListener('click',()=>{weekIndex=window.WeekManager.findCurrent(window.WeekManager.timeline(planning,sessions));renderFlexibleWeekView(sessions,planning,calendarDocument);});
