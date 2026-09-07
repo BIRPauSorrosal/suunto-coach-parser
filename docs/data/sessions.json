@@ -5723,6 +5723,47 @@
           "confidence": "confirmed"
         }
       ]
+    },
+    {
+      "id": "260907_running_z2",
+      "source_file": "260907_running_z2.json",
+      "date": "2026-09-07",
+      "type": "z2",
+      "sport": "running",
+      "variant": "road",
+      "subtype": null,
+      "feeling": 4,
+      "vo2max": 43.2,
+      "duration_min": 43.3,
+      "distance_km": 6.19,
+      "elevation_m": 33,
+      "pace_min_km": 7.01,
+      "cadence_spm": 155,
+      "heart_rate": {
+        "average": 139,
+        "max": 149
+      },
+      "zones": {
+        "z1_min": 26.2,
+        "z2_min": 17.1,
+        "z3_min": 0,
+        "z4_min": 0,
+        "z5_min": 0
+      },
+      "training_effect": {
+        "pte": 3.1,
+        "epoc": 45.3,
+        "load": 80.3
+      },
+      "recovery": {
+        "hours": 12.4
+      },
+      "calories": 504,
+      "intervals": [],
+      "notes": {
+        "comment": null
+      },
+      "planning_links": []
     }
   ]
 }
