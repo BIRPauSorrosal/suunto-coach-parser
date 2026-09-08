@@ -3,13 +3,14 @@
   "planning_source": "planning.json",
   "weeks": {
     "2026-09-07": {
+      "version": 5,
       "week_id": "2026-09-07",
       "week_code": "2026-S37",
-      "updated_at": "2026-09-06T08:49:46.703Z",
+      "updated_at": "2026-09-07T16:50:11.908Z",
       "items": [
         {
           "id": "2026-S37-quality-01",
-          "day": 1,
+          "day": 2,
           "type": "quality",
           "title": "Qualitat",
           "detail": "6 km · 2 sèries",
