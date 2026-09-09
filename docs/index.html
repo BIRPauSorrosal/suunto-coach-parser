@@ -93,8 +93,6 @@
         <button type="button" class="btn btn-ghost btn-sidebar" id="supabase-auth-btn">
           Inicia sessió Supabase
         </button>
-        <button type="button" class="btn btn-ghost btn-sidebar" id="gh-token-btn"
-                onclick="openGitHubTokenModal()">Connecta GitHub</button>
         <button type="button" class="btn btn-ghost btn-sidebar" id="sync-now-btn">
           Sincronitzar canvis
         </button>
@@ -602,9 +600,6 @@
       <button type="button" class="btn btn-ghost" id="supabase-auth-btn-mobile">
         Inicia sessió Supabase
       </button>
-      <button type="button" class="btn btn-ghost" onclick="openGitHubTokenModal(); closeBnavDrawer()">
-        Connecta GitHub
-      </button>
       <p class="bnav-sync-status" id="mobile-sync-status" aria-live="polite">Canvis sincronitzats</p>
       <button type="button" class="btn btn-ghost" id="sync-now-btn-mobile">
         Sincronitzar canvis
@@ -681,7 +676,6 @@
   <script src="./js/views/sessions.js"></script>
   <script src="./js/views/activities.js"></script>
   <script src="./js/charts.js"></script>
-  <script src="./js/lib/github-token-modal.js"></script>
   <script src="./js/uploader/parser.js"></script>
   <script src="./js/uploader/csv-writer.js"></script>
   <script src="./js/uploader/uploader.js"></script>

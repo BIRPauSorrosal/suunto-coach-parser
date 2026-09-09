@@ -136,7 +136,7 @@ async function runSyncFromButton(button) {
     });
   } catch (error) {
     console.error('[sync]', error);
-    window.DashboardComponents?.showToast({ type: 'error', message: 'No s’ha pogut sincronitzar. Revisa la connexió i el token de GitHub.' });
+    window.DashboardComponents?.showToast({ type: 'error', message: 'No s’ha pogut sincronitzar. Revisa la connexió i la sessió de Supabase.' });
   }
   finally {
     button.classList.remove('is-syncing');
@@ -154,7 +154,7 @@ function updateSyncStatus(detail = {}) {
   if (!status) return;
   const pending = detail.pending ?? window.SyncQueue?.pending?.() ?? 0;
   const conflict = detail.status === 'conflict' || (window.SyncQueue?.list?.() || []).some(item => item.conflict);
-  const connected = Boolean(window.getGitHubToken?.());
+  const connected = Boolean(window.SupabaseAuth?.getUser?.());
   const state = conflict ? 'conflict' : detail.status === 'error' ? 'error' : detail.status === 'syncing' ? 'syncing' : pending ? 'pending' : detail.status === 'synced' ? 'synced' : connected ? 'connected' : 'disconnected';
   statusItem?.setAttribute('data-sync-state', state);
   status.textContent = conflict
@@ -165,8 +165,8 @@ function updateSyncStatus(detail = {}) {
       ? `${pending} canvi${pending === 1 ? '' : 's'} pendent${pending === 1 ? '' : 's'}`
       : state === 'error' ? 'Error de sincronització'
       : state === 'synced' ? 'Canvis sincronitzats' : 'Sense canvis pendents';
-  if (state === 'connected') status.textContent = 'GitHub connectat';
-  if (state === 'disconnected') status.textContent = 'GitHub no connectat';
+  if (state === 'connected') status.textContent = 'Supabase connectat';
+  if (state === 'disconnected') status.textContent = 'Supabase no connectat';
   if (state === 'synced') status.textContent = 'Sincronització completada';
   if (state === 'error') status.textContent = 'No s’ha pogut sincronitzar';
   resolveButton?.toggleAttribute('hidden', !conflict);
@@ -198,14 +198,6 @@ async function resolveSyncConflicts() {
 
 ['sync-queue-status', 'calendar-sync-status', 'sessions-sync-status', 'settings-sync-status']
   .forEach(eventName => window.addEventListener(eventName, event => updateSyncStatus(event.detail)));
-window.addEventListener('gh-token-changed', () => {
-  updateSyncStatus();
-  window.DashboardComponents?.showToast({
-    type: window.getGitHubToken?.() ? 'success' : 'info',
-    message: window.getGitHubToken?.() ? 'GitHub connectat.' : 'GitHub desconnectat.',
-  });
-});
-
 window.addEventListener('supabase-auth-changed', async event => {
   try {
     const result = event.detail?.user
@@ -415,108 +407,6 @@ window.dashboardStore.subscribe((_, reason) => {
   setBadge('Dades carregades');
 });
 
-// ── 🔧 FIX UTF-8: decodifica Base64 de l'API GitHub respectant UTF-8 ──────────────────────
-// atob() retorna Latin-1 i trenca accents (à, è, ç, etc.).
-// Aquesta funció converteix correctament Base64 → UTF-8.
-// ── Fetch ──────────────────────────────────────────────────────────────────────
-function base64ToUtf8(base64) {
-  return window.DashboardDataService.base64ToUtf8(base64);
-}
-
-/* Obsolete implementation kept disabled for one release; DashboardDataService is the single loader. */
-/*
-async function removedFetchFirstAvailable(paths) {
-  const token = window.getGitHubToken ? window.getGitHubToken() : '';
-
-  if (token) {
-    for (const path of paths) {
-      try {
-        const repoPath = path.replace(/^\.\//,  'docs/');
-        const { owner, repo, branch } = window.DashboardConfig.github;
-        const apiUrl   = `https://api.github.com/repos/${owner}/${repo}/contents/${repoPath}?ref=${branch}`;
-
-        const res = await fetch(apiUrl, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept':        'application/vnd.github+json',
-          }
-        });
-        if (!res.ok) throw new Error(`API GitHub: ${res.status}`);
-
-        const json = await res.json();
-        const text = base64ToUtf8(json.content);
-        if (!text.trim()) throw new Error(`Fitxer buit: ${repoPath}`);
-        return { path, text };
-      } catch (error) {
-        console.warn('[fetchFirstAvailable] API fallback a Pages:', error.message);
-      }
-    }
-  }
-
-  let lastError = null;
-  for (const path of paths) {
-    try {
-      const response = await fetch(`${path}?t=${Date.now()}`, { cache: 'no-store' });
-      if (!response.ok) throw new Error(`HTTP ${response.status} a ${path}`);
-      const buffer = await response.arrayBuffer();
-      const text = new TextDecoder('utf-8').decode(buffer);
-      if (!text.trim()) throw new Error(`Fitxer buit a ${path}`);
-      return { path, text };
-    } catch (error) {
-      lastError = error;
-    }
-  }
-  throw lastError || new Error('Cap ruta vàlida per al CSV');
-}
-
-// ── Parser CSV ───────────────────────────────────────────────────────────────────────────
-function removedParseCSV(text) {
-  const rows = [];
-  let row = [], value = '', insideQuotes = false;
-
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    const next = text[i + 1];
-
-    if (char === '"') {
-      if (insideQuotes && next === '"') { value += '"'; i++; }
-      else insideQuotes = !insideQuotes;
-      continue;
-    }
-    if (char === ',' && !insideQuotes) { row.push(value); value = ''; continue; }
-    if ((char === '\n' || char === '\r') && !insideQuotes) {
-      if (char === '\r' && next === '\n') i++;
-      row.push(value); rows.push(row);
-      row = []; value = '';
-      continue;
-    }
-    value += char;
-  }
-  if (value.length > 0 || row.length > 0) { row.push(value); rows.push(row); }
-
-  const cleanRows = rows.filter(cols => cols.some(cell => String(cell).trim() !== ''));
-  if (!cleanRows.length) return [];
-
-  const headers = cleanRows[0].map(h => String(h || '').replace(/^\uFEFF/, '').trim());
-  return cleanRows.slice(1).map(cols => {
-    const entry = {};
-    headers.forEach((h, i) => { entry[h] = (cols[i] || '').trim(); });
-    return entry;
-  });
-}
-*/
-
-// ── Orquestració del render ─────────────────────────────────────────────────────────────────
-// Compatibilitat amb codi extern: les implementacions reals viuen a
-// DashboardDataService.
-async function fetchFirstAvailable(paths) {
-  return window.DashboardDataService.fetchFirstAvailable(paths);
-}
-
-function parseCSV(text) {
-  return window.DashboardDataService.parseCSV(text);
-}
-
 function renderDashboard() {
   const planning = state.planning
     .map(enrichPlanningRow)
@@ -705,13 +595,7 @@ function detectActiveWeek(planning, sessions) {
 function updateStatus(errorMessage = null) {
   const sessionsStatus = document.getElementById('status-sessions');
   const planningStatus = document.getElementById('status-planning');
-  const sourceLabel = source => source === 'supabase'
-    ? 'Supabase'
-    : source === 'github-api'
-      ? 'GitHub Contents API'
-      : source === 'pages'
-        ? 'JSON local / Pages'
-        : source || '--';
+  const sourceLabel = source => source === 'supabase' ? 'Supabase' : source || '--';
   const sources = state.sources || {};
   setText('status-sessions', state.sessions.length ? `${state.sessions.length} activitats` : 'Sessions no disponibles');
   setText('status-planning', state.planning.length ? `${state.planning.length} setmanes` : 'Planning no disponible');

@@ -96,14 +96,11 @@ const PRECACHE_URLS = [
   './js/uploader/uploader-ui.js',
   './js/uploader/planning-uploader.js',
   './js/uploader/planning-uploader-ui.js',
-  './js/lib/github-token-modal.js',
 ];
 
-// Patrons de URLs que sempre van a xarxa (dades CSV i API GitHub)
+// Patrons de URLs legacy que sempre van a xarxa (dades CSV)
 const NETWORK_FIRST_PATTERNS = [
   /\.csv$/i,
-  /api\.github\.com/,
-  /raw\.githubusercontent\.com/,
 ];
 
 // ── Install: precáché dels assets estàtics ───────────────────────────────
