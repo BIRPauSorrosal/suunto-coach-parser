@@ -160,11 +160,11 @@
       "version": 5,
       "week_id": "2026-09-14",
       "week_code": "2026-S38",
-      "updated_at": "2026-09-07T08:01:43.776Z",
+      "updated_at": "2026-09-09T06:43:10.671Z",
       "items": [
         {
           "id": "2026-S38-quality-01",
-          "day": null,
+          "day": 1,
           "type": "quality",
           "title": "Qualitat",
           "detail": "6,5 km · 3 sèries",
