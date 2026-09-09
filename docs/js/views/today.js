@@ -2,6 +2,7 @@
 (function () {
   let bound = false;
   let detailBound = false;
+  let detailContext = null;
   const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
   const fmt = value => Number.isFinite(Number(value)) ? new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 }).format(Number(value)) : '--';
   const dateKey = value => { const date = new Date(value); return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`; };
@@ -124,9 +125,9 @@
   }
 
   const basePlannedCard = plannedCard;
-  plannedCard = function (item, real) {
+  plannedCard = function (item, real, plannedSession = null) {
     const html = basePlannedCard(item, real);
-    return html.replace('<article ', `<article data-today-planning-session-id="${esc(item.planning_session_id || item.id)}" role="button" tabindex="0" aria-label="Obrir el detall de la sessió del dia" `);
+    return html.replace('<article ', `<article data-today-planning-session-id="${esc(plannedSession?.id || item.planning_session_id || item.id)}" role="button" tabindex="0" aria-label="Obrir el detall de la sessió del dia" `);
   };
   const baseUnplannedCard = unplannedCard;
   unplannedCard = function (session) {
@@ -151,9 +152,10 @@
     if (badge) badge.textContent = planned.length && plannedWithReal.every(row => row.real || row.item.status === 'done') ? 'Dia completat' : actual.length ? 'Activitat registrada' : planned.length ? 'Sessió pendent' : 'Descans';
     const hero = document.getElementById('today-hero');
     if (hero) {
-      const content = [...plannedWithReal.map(row => plannedCard(row.item, row.real)), ...unplanned.map(unplannedCard)];
+      const content = [...plannedWithReal.map(row => plannedCard(row.item, row.real, row.plannedSession)), ...unplanned.map(unplannedCard)];
       hero.innerHTML = `<p class="eyebrow">Què toca avui?</p><h3>${planned.length ? (planned.length === 1 ? 'Sessió del dia' : `${planned.length} sessions del dia`) : (unplanned.length ? 'Activitat registrada' : 'Dia de descans')}</h3>${content.length ? `<div class="today-session-list">${content.join('')}</div>` : `<p class="today-hero-detail">No hi ha cap activitat planificada ni registrada.</p>`}<p class="today-hero-note">${unplanned.length ? 'Aquesta activitat no estava planificada, però queda registrada en la seva data.' : planned.length ? 'Les associacions amb activitats reals es gestionen des del calendari setmanal.' : 'Consulta el calendari si vols afegir o reorganitzar una activitat.'}</p>`;
     }
+    detailContext = { plannedWithReal, unplanned, today, week };
     const realWeek = sessions.filter(session => session.date >= week.startDate && session.date <= week.endDate), summary = document.getElementById('today-week-summary');
     const allPlanned = plannedItems(week, calendar), completed = allPlanned.filter(item => item.status === 'done' || linkedActivity(item, realWeek)).length;
     const unplannedWeek = realWeek.filter(session => !linksFor(session).some(link => link.confidence === 'confirmed')).length;
@@ -166,17 +168,18 @@
     }
     if (!detailBound) {
       document.getElementById('today-hero')?.addEventListener('click', event => {
+        const context = detailContext;
         const planningCard = event.target.closest('[data-today-planning-session-id]');
-        if (planningCard) {
-          const row = plannedWithReal.find(candidate => (candidate.item.planning_session_id || candidate.item.id) === planningCard.dataset.todayPlanningSessionId);
+        if (planningCard && context) {
+          const row = context.plannedWithReal.find(candidate => (candidate.item.planning_session_id || candidate.item.id) === planningCard.dataset.todayPlanningSessionId);
           const plannedSession = row?.plannedSession || row?.item;
-          if (plannedSession) window.openPlannedSessionDetail?.(plannedSession, row?.real || null, { dateLabel: dateText(today), rangeLabel: week.planning?.setmana || '' });
+          if (plannedSession) window.openPlannedSessionDetail?.(plannedSession, row?.real || null, { dateLabel: dateText(context.today), rangeLabel: context.week.planning?.setmana || '' });
           return;
         }
         const activityCard = event.target.closest('[data-today-activity-id]');
-        if (activityCard) {
-          const activity = unplanned.find(session => (session.raw?.__activity?.id || session.id || '') === activityCard.dataset.todayActivityId);
-          if (activity) window.openSessionDetailDrawer?.(activity, { dateLabel: dateText(today) });
+        if (activityCard && context) {
+          const activity = context.unplanned.find(session => (session.raw?.__activity?.id || session.id || '') === activityCard.dataset.todayActivityId);
+          if (activity) window.openSessionDetailDrawer?.(activity, { dateLabel: dateText(context.today) });
         }
       });
       document.getElementById('today-hero')?.addEventListener('keydown', event => {

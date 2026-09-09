@@ -17,11 +17,12 @@ function buildModal() {
   const dialog = document.createElement("dialog");
   dialog.id        = "uploader-dialog";
   dialog.className = "uploader-dialog";
+  dialog.setAttribute("aria-labelledby", "uploader-dialog-title");
   dialog.innerHTML = `
     <div class="uploader-inner">
 
       <header class="uploader-header">
-        <h3>Importar activitats</h3>
+        <h3 id="uploader-dialog-title">Importar activitats</h3>
         <button class="uploader-close" id="uploader-close-btn" aria-label="Tancar">✕</button>
       </header>
 

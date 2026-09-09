@@ -285,8 +285,8 @@
     if (prev) prev.disabled=weekIndex===0; if (next) next.disabled=weekIndex===weeks.length-1; if (current) current.disabled=weekIndex===currentIndex; if (add) add.disabled=!canEdit;
     const realWeek=sessions.filter(s => s.date>=week.startDate && s.date<=week.endDate), done=calendar.items.filter(i=>i.status==='done'||linkedActivity(i,sessions)).length;
     document.getElementById('flex-week-summary').innerHTML=`<div class="flex-summary-card"><span>Sessions previstes</span><strong>${calendar.items.length}</strong></div><div class="flex-summary-card"><span>Completades</span><strong>${done}</strong></div><div class="flex-summary-card"><span>Activitats registrades</span><strong>${realWeek.length}</strong></div><div class="flex-summary-card"><span>Km reals</span><strong>${fmt(realWeek.reduce((n,s)=>n+(s.distancia||0),0))} km</strong></div>`;
-    document.getElementById('flex-calendar').innerHTML=days.map((date, day)=>`<article class="flex-day${iso(date)===today?' flex-day--today':''}" data-day="${day}"><header class="flex-day-header"><div><span class="flex-day-name">${DAYS[day]}</span><span class="flex-day-date">${dateText(date)}</span></div>${iso(date)===today?'<span class="badge">Avui</span>':''}</header><div class="flex-day-dropzone" data-drop-day="${day}">${calendar.items.filter(i=>i.day===day).map(i=>card(i,canEdit,sessions)).join('')}${actualOn(sessions,date).map(actualCard).join('')}${!calendar.items.some(i=>i.day===day)&&!actualOn(sessions,date).length?'<p class="flex-day-empty">Descans / sense activitat</p>':''}</div></article>`).join('');
-    const unassigned=calendar.items.filter(i=>i.day===null||i.day===undefined), box=document.getElementById('flex-unassigned'); box.hidden=!unassigned.length&&!canEdit; box.innerHTML=`<p class="eyebrow">Per assignar</p><div class="flex-unassigned-dropzone" data-drop-unassigned="true">${unassigned.length?unassigned.map(i=>card(i,canEdit,sessions)).join(''):'Arrossega aquí les sessions que encara no vulguis assignar'}</div>`;
+    document.getElementById('flex-calendar').innerHTML=days.map((date, day)=>`<article class="flex-day${iso(date)===today?' flex-day--today':''}" data-day="${day}"><header class="flex-day-header"><div><span class="flex-day-name">${DAYS[day]}</span><span class="flex-day-date">${dateText(date)}</span></div>${iso(date)===today?'<span class="badge">Avui</span>':''}</header><div class="flex-day-dropzone" data-drop-day="${day}">${calendar.items.filter(i=>i.day===day).map(i=>card(i,canEdit,sessions,planning,week)).join('')}${actualOn(sessions,date).map(actualCard).join('')}${!calendar.items.some(i=>i.day===day)&&!actualOn(sessions,date).length?'<p class="flex-day-empty">Descans / sense activitat</p>':''}</div></article>`).join('');
+    const unassigned=calendar.items.filter(i=>i.day===null||i.day===undefined), box=document.getElementById('flex-unassigned'); box.hidden=!unassigned.length&&!canEdit; box.innerHTML=`<p class="eyebrow">Per assignar</p><div class="flex-unassigned-dropzone" data-drop-unassigned="true">${unassigned.length?unassigned.map(i=>card(i,canEdit,sessions,planning,week)).join(''):'Arrossega aquí les sessions que encara no vulguis assignar'}</div>`;
     const unmatched=document.getElementById('flex-unmatched'); unmatched.hidden=!realWeek.length; if(realWeek.length) unmatched.innerHTML=`<p class="eyebrow">Activitats registrades</p><p>${realWeek.length} activitat${realWeek.length===1?'':'s'} trobada${realWeek.length===1?'':'es'} aquesta setmana. La seva associació amb el planning es podrà confirmar en la propera etapa.</p>`;
     if (realWeek.length) { const reconciliationHtml = renderReconciliationPanel(realWeek, week); unmatched.hidden = !reconciliationHtml; unmatched.innerHTML = reconciliationHtml; }
     bind(sessions, planning, week, calendar, canEdit, calendarDocument);
@@ -321,11 +321,22 @@
       const planItem = trigger.closest('[data-plan-id]') ? calendar.items.find(item => item.id === trigger.closest('[data-plan-id]').dataset.planId) : null;
       window.openSessionDetailDrawer(activity, plannedSessionFor(planItem, planning, week) || planItem, { planningItem: planItem });
     };
+    const openPlanned = trigger => {
+      const planItem = trigger.closest('[data-plan-id]') ? calendar.items.find(item => item.id === trigger.closest('[data-plan-id]').dataset.planId) : null;
+      const planned = plannedSessionFor(planItem, planning, week);
+      if (!planned || typeof window.openPlannedSessionDetail !== 'function') return;
+      const real = planItem ? linkedActivity(planItem, sessions) : null;
+      window.openPlannedSessionDetail(planned, real || null, { planningItem: planItem, dateLabel: planItem?.day == null ? null : dateText(new Date(new Date(week.startDate).setDate(new Date(week.startDate).getDate() + planItem.day))) });
+    };
     document.getElementById('flex-calendar')?.addEventListener('click', event => {
+      const plannedTrigger = event.target.closest('.flex-plan-detail-trigger[data-plan-session-id]');
+      if (plannedTrigger) { openPlanned(plannedTrigger); return; }
       const trigger = event.target.closest('.session-detail-trigger[data-activity-id]');
       if (trigger && !event.target.closest('[data-action]')) openActivity(trigger);
     });
     document.getElementById('flex-calendar')?.addEventListener('keydown', event => {
+      const plannedTrigger = event.target.closest('.flex-plan-detail-trigger[data-plan-session-id]');
+      if (plannedTrigger && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openPlanned(plannedTrigger); return; }
       const trigger = event.target.closest('.session-detail-trigger[data-activity-id]');
       if (!trigger || (event.key !== 'Enter' && event.key !== ' ')) return;
       event.preventDefault(); openActivity(trigger);
