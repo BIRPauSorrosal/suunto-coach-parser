@@ -36,7 +36,7 @@ function buildPlanningModal() {
         <input
           type="file"
           id="planning-uploader-file-input"
-          accept=".json,.csv"
+          accept=".json"
           style="display:none"
         />
       </div>
@@ -227,7 +227,7 @@ function _bindPlanningEvents(dialog) {
     e.preventDefault();
     dropzone.classList.remove("uploader-dropzone--over");
     const file = Array.from(e.dataTransfer.files)
-      .find(f => /\.(json|csv)$/i.test(f.name));
+      .find(f => /\.json$/i.test(f.name));
     if (!file) return;
     setPlanningConfirmState("validating");
     await handlePlanningFileSelection(file, renderPlanningResults);
