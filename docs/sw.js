@@ -57,6 +57,7 @@ const PRECACHE_URLS = [
   './js/lib/supabase-config.js',
   './js/lib/supabase-client.js',
   './js/lib/supabase-auth.js',
+  './js/lib/supabase-data-provider.js',
   './js/lib/dashboard-store.js',
   './js/lib/week-manager.js',
   './js/lib/sync-queue.js',

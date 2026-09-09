@@ -14,6 +14,26 @@
   async function saveHeartRate(config, fromQueue = false) {
     const token = global.getGitHubToken?.(), cfg = global.DashboardConfig;
     if (!fromQueue) writeLocalState(config, 'pending');
+
+    // Les dades personals van primer a Supabase quan hi ha una sessió activa.
+    // Si no hi ha sessió o Supabase encara no està disponible, es manté el
+    // fallback existent a GitHub i a la cua offline.
+    try {
+      const supabaseResult = await global.SupabaseDataProvider?.saveHeartRate(config);
+      if (supabaseResult?.status === 'synced') {
+        writeLocalState(config, 'synced');
+        global.dispatchEvent(new CustomEvent('settings-sync-status', { detail: { status: 'synced', provider: 'supabase' } }));
+        return { status: 'synced', provider: 'supabase' };
+      }
+      if (supabaseResult?.status === 'conflict') {
+        if (!fromQueue) global.SyncQueue?.enqueue({ kind: 'settings', key: 'heart_rate', config: cloneConfig(config), conflict: true });
+        global.dispatchEvent(new CustomEvent('settings-sync-status', { detail: { status: 'conflict', provider: 'supabase' } }));
+        return { status: 'error', error: 'Conflicte de revisió a Supabase' };
+      }
+    } catch (error) {
+      console.warn('[settings-sync] Supabase no disponible; es prova el fallback GitHub:', error.message);
+    }
+
     if (!token) { if (!fromQueue) global.SyncQueue?.enqueue({ kind: 'settings', key: 'heart_rate', config: cloneConfig(config) }); return { status: 'pending' }; }
     try {
       const path = cfg.paths.settings.repository, { owner, repo, branch } = cfg.github;

@@ -206,6 +206,18 @@ window.addEventListener('gh-token-changed', () => {
   });
 });
 
+window.addEventListener('supabase-auth-changed', async event => {
+  if (!event.detail?.user) return;
+  try {
+    const result = await window.SupabaseDataProvider?.getHeartRate();
+    if (result?.status !== 'loaded') return;
+    if (typeof applyFCConfig === 'function') applyFCConfig(result.config);
+    window.refreshDashboardUI?.();
+  } catch (error) {
+    console.warn('[supabase-settings] No s’han pogut carregar les preferències:', error.message);
+  }
+});
+
 // ── Càrrega de dades ──────────────────────────────────────────────────────────────────
 async function loadDashboardData({ silent = false, force = false } = {}) {
   const requestId = ++loadRequestId;
