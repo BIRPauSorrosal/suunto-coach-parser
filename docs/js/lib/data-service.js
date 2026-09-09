@@ -313,10 +313,10 @@
         settings: parseSettingsJSON(settingsResult.text),
         loaded_at: new Date().toISOString(),
         sources: {
-          sessions: sessionsResult.path,
-          planning: planningResult.path,
-          calendar: calendarResult.path,
-          settings: settingsResult.path,
+          sessions: sessionsResult.source || sessionsResult.path,
+          planning: planningResult.source || planningResult.path,
+          calendar: calendarResult.source || calendarResult.path,
+          settings: settingsResult.source || settingsResult.path,
         },
         revisions: {
           sessions: sessionsResult.revision,

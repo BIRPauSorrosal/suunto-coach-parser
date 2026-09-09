@@ -249,21 +249,52 @@ async function loadDashboardData({ silent = false, force = false } = {}) {
   try {
     const loaded = await window.DashboardDataService.refreshRemoteData();
     if (requestId !== loadRequestId) return;
-    const supabaseCalendar = await window.CalendarSync?.readSupabase?.();
-    if (supabaseCalendar?.status === 'loaded') {
+    let supabaseCalendar = { status: 'unavailable' };
+    let supabaseActivities = { status: 'unavailable' };
+    let supabaseSettings = { status: 'unavailable' };
+    try {
+      supabaseCalendar = await window.CalendarSync?.readSupabase?.() || supabaseCalendar;
+    } catch (error) {
+      console.warn('[supabase-calendar] No s’han pogut llegir les setmanes; es manté el fallback JSON:', error.message);
+    }
+    try {
+      supabaseActivities = await window.SupabaseDataProvider?.getActivities?.() || supabaseActivities;
+    } catch (error) {
+      console.warn('[supabase-activities] No s’han pogut llegir les activitats; es manté el fallback JSON:', error.message);
+    }
+    try {
+      supabaseSettings = await window.SupabaseDataProvider?.getHeartRate?.() || supabaseSettings;
+    } catch (error) {
+      console.warn('[supabase-settings] No s’han pogut llegir les preferències; es manté el fallback JSON:', error.message);
+    }
+
+    const supabaseCalendarPrimary = ['loaded', 'empty'].includes(supabaseCalendar.status);
+    if (supabaseCalendarPrimary) {
       loaded.calendar = {
         ...loaded.calendar,
-        weeks: { ...(loaded.calendar?.weeks || {}), ...supabaseCalendar.weeks },
+        weeks: supabaseCalendar.weeks || {},
       };
+      loaded.sources = { ...loaded.sources, calendar: 'supabase' };
     }
-    const supabaseActivities = await window.SupabaseDataProvider?.getActivities?.();
-    if (supabaseActivities?.status === 'loaded') {
-      const byId = new Map((loaded.sessionsDocument?.sessions || []).map(item => [String(item.id), item]));
-      supabaseActivities.activities.forEach(item => byId.set(String(item.id), item));
-      loaded.sessionsDocument = { ...loaded.sessionsDocument, sessions: [...byId.values()] };
+    const supabaseActivitiesPrimary = ['loaded', 'empty'].includes(supabaseActivities.status);
+    if (supabaseActivitiesPrimary) {
+      loaded.sessionsDocument = { ...loaded.sessionsDocument, sessions: supabaseActivities.activities || [] };
       loaded.sessions = window.DashboardDataService.normalizeSessionsJSON(loaded.sessionsDocument);
+      loaded.sources = { ...loaded.sources, sessions: 'supabase' };
     }
-    if (!force && silent && hasSameRemoteRevisions(loaded.revisions, lastRemoteRevisions)) {
+    const supabaseSettingsPrimary = ['loaded', 'empty'].includes(supabaseSettings.status);
+    if (supabaseSettingsPrimary) {
+      loaded.settings = {
+        ...loaded.settings,
+        settings: {
+          ...(loaded.settings?.settings || {}),
+          heart_rate: supabaseSettings.status === 'loaded' ? supabaseSettings.config : null,
+        },
+      };
+      loaded.sources = { ...loaded.sources, settings: 'supabase' };
+    }
+    const supabasePrimary = supabaseCalendarPrimary || supabaseActivitiesPrimary || supabaseSettingsPrimary;
+    if (!force && silent && !supabasePrimary && hasSameRemoteRevisions(loaded.revisions, lastRemoteRevisions)) {
       window.SessionsSync?.queueLocalLinks(loaded.sessions);
       return;
     }
@@ -650,10 +681,22 @@ function detectActiveWeek(planning, sessions) {
 function updateStatus(errorMessage = null) {
   const sessionsStatus = document.getElementById('status-sessions');
   const planningStatus = document.getElementById('status-planning');
+  const sourceLabel = source => source === 'supabase'
+    ? 'Supabase'
+    : source === 'github-api'
+      ? 'GitHub Contents API'
+      : source === 'pages'
+        ? 'JSON local / Pages'
+        : source || '--';
+  const sources = state.sources || {};
   setText('status-sessions', state.sessions.length ? `${state.sessions.length} activitats` : 'Sessions no disponibles');
   setText('status-planning', state.planning.length ? `${state.planning.length} setmanes` : 'Planning no disponible');
-  if (sessionsStatus) sessionsStatus.title = state.sources.sessions || 'sessions.json';
-  if (planningStatus) planningStatus.title = state.sources.planning || 'planning.json';
+  if (sessionsStatus) sessionsStatus.title = sourceLabel(sources.sessions);
+  if (planningStatus) planningStatus.title = sourceLabel(sources.planning);
+  setText('status-source-sessions', `Activitats: ${sourceLabel(sources.sessions)}`);
+  setText('status-source-calendar', `Calendari: ${sourceLabel(sources.calendar)}`);
+  setText('status-source-settings', `Configuracio: ${sourceLabel(sources.settings)}`);
+  setText('status-source-planning', `Planning: ${sourceLabel(sources.planning)}`);
   setText('status-source', errorMessage
     ? `Error: ${errorMessage}`
     : `sessions: ${state.sources.sessions || '--'} · planning: ${state.sources.planning || '--'}`);
