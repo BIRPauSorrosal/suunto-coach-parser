@@ -26,7 +26,8 @@
         return { status: 'synced', provider: 'supabase' };
       }
       if (supabaseResult?.status === 'conflict') {
-        if (!fromQueue) global.SyncQueue?.enqueue({ kind: 'settings', key: 'heart_rate', config: cloneConfig(config), conflict: true });
+        if (fromQueue) global.SyncQueue?.markConflict({ kind: 'settings', key: 'heart_rate' });
+        else global.SyncQueue?.enqueue({ kind: 'settings', key: 'heart_rate', config: cloneConfig(config), conflict: true });
         global.dispatchEvent(new CustomEvent('settings-sync-status', { detail: { status: 'conflict', provider: 'supabase' } }));
         return { status: 'error', error: 'Conflicte de revisió a Supabase' };
       }

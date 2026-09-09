@@ -58,7 +58,8 @@
         return { status: 'synced', provider: 'supabase' };
       }
       if (supabaseResult?.status === 'conflict') {
-        if (!fromQueue) global.SyncQueue?.enqueue({ kind: 'calendar', key: week.key, week, value, conflict: true });
+        if (fromQueue) global.SyncQueue?.markConflict({ kind: 'calendar', key: week.key });
+        else global.SyncQueue?.enqueue({ kind: 'calendar', key: week.key, week, value, conflict: true });
         global.dispatchEvent(new CustomEvent('calendar-sync-status', { detail: { status: 'conflict', week: week.key, provider: 'supabase' } }));
         return { status: 'error', error: 'Conflicte de revisió a Supabase' };
       }
