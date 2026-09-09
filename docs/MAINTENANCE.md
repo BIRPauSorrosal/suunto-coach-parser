@@ -55,10 +55,3 @@ També cal validar la sintaxi dels fitxers JavaScript modificats amb `node
 `supabase-planning.sql` documenta la creació de les taules personals de
 planning, els índexs, els grants, RLS, triggers i Realtime. S’executa al SQL
 Editor de Supabase; no és codi de runtime del navegador.
-
-## Compatibilitat CSV
-
-Els fluxos CSV de `planning-uploader.js` i `csv-writer.js` són legacy. No s’han
-de considerar acabats fins que la seva importació també passi per Supabase o
-quedi substituïda per la importació JSON. Aquesta és la següent línia de
-neteja prevista.

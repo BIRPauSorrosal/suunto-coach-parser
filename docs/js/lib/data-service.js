@@ -138,27 +138,6 @@
     return document;
   }
 
-  function parseCalendarJSON(text) {
-    let document;
-    try { document = JSON.parse(text); }
-    catch (_) { throw new Error('calendar.json no conté JSON vàlid'); }
-    if (!document || document.schema_version !== 1 || document.planning_source !== 'planning.json' || !document.weeks || typeof document.weeks !== 'object' || Array.isArray(document.weeks)) {
-      throw new Error('calendar.json no té un esquema vàlid');
-    }
-    return document;
-  }
-
-  function parseSettingsJSON(text) {
-    let document;
-    try { document = JSON.parse(text); }
-    catch (_) { throw new Error('settings.json no conté JSON vàlid'); }
-    const heartRate = document?.settings?.heart_rate;
-    if (document?.schema_version !== 1 || !heartRate || !Number.isInteger(heartRate.fcMax) || !Array.isArray(heartRate.zones) || heartRate.zones.length !== 5 || heartRate.zones.some(value => !Number.isInteger(value) || value <= 0)) {
-      throw new Error('settings.json no té un esquema vàlid');
-    }
-    return document;
-  }
-
   function sum(values) {
     const numbers = values.filter(value => typeof value === 'number' && Number.isFinite(value));
     return numbers.length ? numbers.reduce((total, value) => total + value, 0) : null;
@@ -212,8 +191,6 @@
   global.DashboardDataService = Object.freeze({
     parseSessionsJSON,
     parsePlanningJSON,
-    parseCalendarJSON,
-    parseSettingsJSON,
     normalizePlanningJSON,
     normalizeSessionsJSON,
   });

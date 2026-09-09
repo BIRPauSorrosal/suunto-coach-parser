@@ -34,12 +34,12 @@ En importar-lo, el planning personal es desa a:
 El planning es llegeix d’aquestes taules. Moure una targeta del calendari no
 modifica el planning; modifica el calendari de l’usuari.
 
-## `calendar.json` i `calendar_weeks`
+## Calendari i `calendar_weeks`
 
-`calendar.json` és un format d’intercanvi/migració. El calendari operatiu viu a
-`calendar_weeks`, amb les setmanes i els seus `items[]`. Cada entrada conserva
-el dia assignat, l’estat i el tipus (`planned` o `manual`). Les activitats
-manuals no modifiquen el planning ni l’històric d’activitats.
+El calendari operatiu viu exclusivament a `calendar_weeks`, amb les setmanes i
+els seus `items[]`. Cada entrada conserva el dia assignat, l’estat i el tipus
+(`planned` o `manual`). Les activitats manuals no modifiquen el planning ni
+l’històric d’activitats.
 
 Moure, reassignar o eliminar una targeta actualitza `calendar_weeks`. La cua
 local només serveix per reintentar una operació pendent.
@@ -49,18 +49,6 @@ local només serveix per reintentar una operació pendent.
 Les associacions entre una activitat real i una sessió planificada viuen a
 `activity_links`. La relació es desa explícitament amb els identificadors
 corresponents i no es dedueix només pel nom o el tipus de sessió.
-
-## Configuració
-
-La configuració cardíaca s’intercanvia amb el format `settings.json`, però la
-font operativa és `user_settings`. El cache local només conserva temporalment
-un canvi pendent mentre es resol la connectivitat.
-
-## CSV legacy
-
-`sessions.csv` i `planning.csv` es conserven per compatibilitat o migració. No
-són formats de persistència operativa. El flux CSV encara existent s’ha de
-revisar abans de considerar completament retirada aquesta compatibilitat.
 
 Quan s’afegeixi un camp nou:
 

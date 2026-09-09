@@ -84,9 +84,6 @@ JSON exportats són còpies intercanviables i no substitueixen les dades de
 Supabase. La importació de `planning.json` i d’activitats escriu a Supabase;
 no fa push automàtic a GitHub ni descarrega un fitxer de fallback.
 
-Els fluxos CSV existents són legacy/compatibilitat i es tractaran en una fase
-posterior. No s’han de considerar font operativa.
-
 ## Identificadors i concurrència
 
 Els identificadors externs de les activitats, setmanes i sessions permeten fer

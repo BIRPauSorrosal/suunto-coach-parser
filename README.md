@@ -43,9 +43,6 @@ L’importador valida els JSON d’activitats i planning, els fusiona amb les da
 de l’usuari i desa el resultat a Supabase. Les activitats es poden exportar en
 format `sessions.json` per intercanviar-les o conservar una còpia.
 
-Els fitxers CSV del repositori són legacy o de migració. No són la font
-operativa; la seva retirada o adaptació a Supabase queda pendent.
-
 ## Validació
 
 Executa abans de fer push:

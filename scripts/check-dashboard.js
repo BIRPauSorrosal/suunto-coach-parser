@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-// Smoke checks sense dependències externes: fitxers, scripts, CSV i precache.
+// Smoke checks sense dependències externes: fitxers, scripts i precache.
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
@@ -26,12 +26,8 @@ const required = [
   'docs/sw.js',
   'docs/data/planning.json',
   'docs/data/planning.schema.json',
-  'docs/data/calendar.json',
-  'docs/data/calendar.schema.json',
   'docs/data/sessions.schema.json',
   'docs/data/sessions.json',
-  'docs/data/settings.json',
-  'docs/data/settings.schema.json',
   'docs/js/lib/dashboard-store.js',
   'docs/js/lib/data-service.js',
   'docs/js/lib/view-utils.js',
@@ -65,15 +61,6 @@ try {
 }
 
 try {
-  const calendarJson = JSON.parse(fs.readFileSync(path.join(docs, 'data/calendar.json'), 'utf8'));
-  if (calendarJson.schema_version !== 1 || calendarJson.planning_source !== 'planning.json' || !calendarJson.weeks || typeof calendarJson.weeks !== 'object') {
-    failures.push('calendar.json no té schema_version 1, planning_source o weeks vàlids');
-  }
-} catch (error) {
-  failures.push(`calendar.json no és vàlid: ${error.message}`);
-}
-
-try {
 const sessionsJson = JSON.parse(fs.readFileSync(path.join(docs, 'data/sessions.json'), 'utf8'));
   const sessions = sessionsJson.sessions || [];
   const ids = sessions.map(session => session.id);
@@ -88,16 +75,6 @@ const sessionsJson = JSON.parse(fs.readFileSync(path.join(docs, 'data/sessions.j
   });
 } catch (error) {
   failures.push(`sessions.json no és vàlid: ${error.message}`);
-}
-
-try {
-  const settingsJson = JSON.parse(fs.readFileSync(path.join(docs, 'data/settings.json'), 'utf8'));
-  const heartRate = settingsJson.settings?.heart_rate;
-  if (settingsJson.schema_version !== 1 || !heartRate || !Number.isInteger(heartRate.fcMax) || !Array.isArray(heartRate.zones) || heartRate.zones.length !== 5) {
-    failures.push('settings.json no té una configuració de zones cardíaques vàlida');
-  }
-} catch (error) {
-  failures.push(`settings.json no és vàlid: ${error.message}`);
 }
 
 const html = fs.readFileSync(path.join(docs, 'index.html'), 'utf8');
