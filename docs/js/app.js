@@ -220,6 +220,22 @@ window.addEventListener('supabase-auth-changed', async event => {
   }
 });
 
+let realtimeRefreshTimer = null;
+window.addEventListener('supabase-realtime-changed', () => {
+  if (realtimeRefreshTimer) window.clearTimeout(realtimeRefreshTimer);
+  realtimeRefreshTimer = window.setTimeout(async () => {
+    realtimeRefreshTimer = null;
+    try {
+      const settings = await window.SupabaseDataProvider?.getHeartRate();
+      if (settings?.status === 'loaded' && typeof applyFCConfig === 'function') applyFCConfig(settings.config);
+      await window.refreshDashboard?.({ silent: true, force: true });
+      window.refreshDashboardUI?.();
+    } catch (error) {
+      console.warn('[supabase-realtime] No s’han pogut actualitzar les dades:', error.message);
+    }
+  }, 150);
+});
+
 // ── Càrrega de dades ──────────────────────────────────────────────────────────────────
 async function loadDashboardData({ silent = false, force = false } = {}) {
   const requestId = ++loadRequestId;

@@ -109,9 +109,11 @@
     if (!supabase) return;
     const { data } = await supabase.auth.getSession();
     currentUser = data.session?.user || null;
+    global.SupabaseRealtime?.start(currentUser);
     setButtonState();
     supabase.auth.onAuthStateChange((_event, session) => {
       currentUser = session?.user || null;
+      global.SupabaseRealtime?.start(currentUser);
       setButtonState();
       global.dispatchEvent(new CustomEvent('supabase-auth-changed', { detail: { user: currentUser } }));
     });
