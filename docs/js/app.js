@@ -119,9 +119,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function runSyncFromButton(button) {
   if (!button) return;
-  if (!window.getGitHubToken?.()) {
-    window.DashboardComponents?.showToast({ type: 'warning', message: 'Connecta GitHub abans de sincronitzar.' });
-    window.openGitHubTokenModal?.();
+  if (!window.SupabaseAuth?.getUser?.()) {
+    window.DashboardComponents?.showToast({ type: 'warning', message: 'Inicia sessio a Supabase abans de sincronitzar.' });
+    window.SupabaseAuth?.openModal?.();
     return;
   }
   button.classList.add('is-syncing');
@@ -216,6 +216,7 @@ window.addEventListener('supabase-auth-changed', async event => {
     }
     await window.refreshDashboard?.({ silent: true, force: true });
     window.refreshDashboardUI?.();
+    await window.SyncQueue?.retry?.();
   } catch (error) {
     console.warn('[supabase-settings] No s’han pogut carregar les preferències:', error.message);
   }

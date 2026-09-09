@@ -77,5 +77,6 @@
   });
   global.addEventListener('online', retry);
   global.addEventListener('gh-token-changed', retry);
+  global.addEventListener('supabase-auth-changed', retry);
   global.addEventListener('load', () => { if (read().length) retry(); });
 })(window);
