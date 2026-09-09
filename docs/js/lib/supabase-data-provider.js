@@ -199,6 +199,54 @@
     return { status: 'synced', count: rows.length };
   }
 
+  async function migrateSessions(document) {
+    const client = global.SupabaseClient?.getClient?.();
+    if (!client) return { status: 'unavailable' };
+    const currentUser = await user();
+    if (!currentUser) return { status: 'unavailable' };
+    const sessions = Array.isArray(document?.sessions) ? document.sessions.filter(item => item?.id) : [];
+    if (!sessions.length) return { status: 'empty', activities: 0, links: 0 };
+
+    const activityRows = sessions.map(item => ({
+      user_id: currentUser.id,
+      source: 'suunto',
+      external_id: String(item.id),
+      activity_date: item.date,
+      activity_type: item.type,
+      sport: item.sport,
+      payload: item,
+    }));
+    const { error: activitiesError } = await client
+      .from('activities')
+      .upsert(activityRows, { onConflict: 'user_id,source,external_id' });
+    if (activitiesError) throw activitiesError;
+
+    const ids = activityRows.map(row => row.external_id);
+    const { data: savedActivities, error: lookupError } = await client
+      .from('activities')
+      .select('id, external_id')
+      .eq('user_id', currentUser.id)
+      .eq('source', 'suunto')
+      .in('external_id', ids);
+    if (lookupError) throw lookupError;
+    const activityIds = new Map((savedActivities || []).map(row => [String(row.external_id), row.id]));
+    const linkRows = sessions.flatMap(session => (Array.isArray(session.planning_links) ? session.planning_links : [])
+      .filter(link => link?.planning_session_id && activityIds.has(String(session.id)))
+      .map(link => ({
+        user_id: currentUser.id,
+        activity_id: activityIds.get(String(session.id)),
+        planning_session_id: String(link.planning_session_id),
+        confidence: link.confidence === 'suggested' ? 'suggested' : 'confirmed',
+      })));
+    if (linkRows.length) {
+      const { error: linksError } = await client
+        .from('activity_links')
+        .upsert(linkRows, { onConflict: 'user_id,activity_id,planning_session_id' });
+      if (linksError) throw linksError;
+    }
+    return { status: 'synced', activities: activityRows.length, links: linkRows.length };
+  }
+
   global.SupabaseDataProvider = Object.freeze({
     getHeartRate,
     saveHeartRate,
@@ -207,5 +255,6 @@
     getActivities,
     upsertActivities,
     saveActivityLinks,
+    migrateSessions,
   });
 })(window);
