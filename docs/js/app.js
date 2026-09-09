@@ -249,7 +249,17 @@ async function loadDashboardData({ silent = false, force = false } = {}) {
   }
 
   try {
-    const loaded = await window.DashboardDataService.refreshRemoteData();
+    const loaded = {
+      sessions: [],
+      sessionsDocument: { schema_version: 1, source: 'suunto', sessions: [] },
+      planning: [],
+      planningDocument: { schema_version: 1, source: 'supabase', cycles: [] },
+      calendar: { schema_version: 1, weeks: {} },
+      settings: { schema_version: 1, settings: {} },
+      loaded_at: new Date().toISOString(),
+      sources: { sessions: 'supabase', planning: 'supabase', calendar: 'supabase', settings: 'supabase' },
+      revisions: {},
+    };
     if (requestId !== loadRequestId) return;
     let supabaseCalendar = { status: 'unavailable' };
     let supabaseActivities = { status: 'unavailable' };

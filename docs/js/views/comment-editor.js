@@ -97,6 +97,8 @@ async function openSessionCommentEditor({ arxiu, data, tipus }) {
       saveBtn.onclick = async () => { await saveSessionComment(); };
       return;
     }
+    showNotice('No s’ha trobat l’activitat a Supabase o no hi ha sessió iniciada.', true);
+    return;
     const { document: sessionsDocument } = await readCurrentSessionsJSON();
     const session = sessionsDocument.sessions.find(item => String(item.source_file || item.id) === String(arxiu));
 

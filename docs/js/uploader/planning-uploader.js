@@ -343,13 +343,17 @@ async function confirmPlanningImport(onComplete) {
         showNotice(`✅ Planning importat a Supabase: ${merge.stats.added} noves, ${merge.stats.replaced} actualitzades.`);
         window.dashboardStore?.setPlanningDocument?.(merge.document);
         if (typeof window.refreshDashboard === 'function') await window.refreshDashboard({ silent: true, force: true });
-      } else if (token) {
+      } else {
+        throw new Error('No s’ha pogut importar el planning a Supabase. Inicia sessió i torna-ho a provar.');
+      }
+      /* Legacy GitHub/JSON export path retained below for a later cleanup. */
+      if (false && token) {
         showNotice('Llegint planning.json actual...');
         const { sha } = await readPlanningJSONFromGitHub();
         showNotice('Pujant planning.json al repositori...');
         await pushPlanningJSONToGitHub(merge.document, sha, merge.stats);
         showNotice(`✅ Planning importat: ${merge.stats.added} noves, ${merge.stats.replaced} actualitzades.`);
-      } else {
+      } else if (false) {
         const blob = new Blob([jsonText], { type: 'application/json;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); a.href = url; a.download = 'planning.json'; a.click(); URL.revokeObjectURL(url);
