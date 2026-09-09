@@ -159,7 +159,7 @@ async function confirmImport(comments, variants, onComplete) {
     },
   }));
 
-  const result = await appendRowsToJSON(rowsWithComments);   // definit a csv-writer.js
+  const result = await appendRowsToSupabase(rowsWithComments);   // definit a csv-writer.js
   if (!result?.ok) {
     window.DashboardComponents?.showToast({ type: 'error', message: 'No s’ha pogut completar la importació. Revisa el missatge i torna-ho a provar.' });
     return result || { ok: false, error: 'La importació no s’ha pogut completar.' };
