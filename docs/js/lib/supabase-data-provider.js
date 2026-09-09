@@ -133,6 +133,37 @@
     return { status: 'synced', revision: data.revision, updated_at: data.updated_at };
   }
 
+  async function migrateCalendar(document) {
+    const client = global.SupabaseClient?.getClient?.();
+    if (!client) return { status: 'unavailable' };
+    const currentUser = await user();
+    if (!currentUser) return { status: 'unavailable' };
+    const entries = Object.entries(document?.weeks || {}).filter(([weekId, value]) => weekId && value);
+    if (!entries.length) return { status: 'empty', inserted: 0, skipped: 0 };
+
+    const weekIds = entries.map(([weekId]) => weekId);
+    const { data: existing, error: existingError } = await client
+      .from('calendar_weeks')
+      .select('week_id')
+      .eq('user_id', currentUser.id)
+      .in('week_id', weekIds);
+    if (existingError) throw existingError;
+    const existingIds = new Set((existing || []).map(row => row.week_id));
+    const rows = entries.filter(([weekId]) => !existingIds.has(weekId)).map(([weekId, value]) => ({
+      user_id: currentUser.id,
+      week_id: weekId,
+      week_code: value.week_code || weekId,
+      items: Array.isArray(value.items) ? value.items : [],
+      removed_planning_session_ids: value.removedPlanning || value.removed_planning_session_ids || [],
+      revision: 1,
+    }));
+    if (rows.length) {
+      const { error } = await client.from('calendar_weeks').insert(rows);
+      if (error) throw error;
+    }
+    return { status: 'synced', inserted: rows.length, skipped: entries.length - rows.length };
+  }
+
   async function getActivities() {
     const client = global.SupabaseClient?.getClient?.();
     if (!client) return { status: 'unavailable' };
@@ -272,6 +303,7 @@
     saveHeartRate,
     getCalendarWeeks,
     saveCalendarWeek,
+    migrateCalendar,
     getActivities,
     upsertActivities,
     saveActivityLinks,
