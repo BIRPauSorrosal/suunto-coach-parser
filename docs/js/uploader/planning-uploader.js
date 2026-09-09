@@ -243,23 +243,6 @@ function mergePlanningDocuments(existing, incoming) {
   return { document, stats, incoming: annotated };
 }
 
-async function readPlanningJSONFromGitHub() {
-  const { owner, repo, branch, path, token } = PLANNING_GITHUB_CONFIG;
-  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } });
-  if (res.status === 404) return { document: { schema_version: 1, season: new Date().getFullYear(), cycles: [] }, sha: null };
-  if (!res.ok) throw new Error(`Error llegint planning.json: ${res.status} ${res.statusText}`);
-  const json = await res.json();
-  return { document: window.DashboardDataService.parsePlanningJSON(_base64ToUtf8(json.content)), sha: json.sha };
-}
-
-function pushPlanningJSONToGitHub(document, sha, stats) {
-  const { owner, repo, branch, path, token } = PLANNING_GITHUB_CONFIG;
-  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
-  const changes = (stats.added || 0) + (stats.replaced || 0);
-  return fetch(url, { method: 'PUT', headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify({ message: `[planning] Import JSON ${new Date().toLocaleDateString('ca-ES')} — ${changes} setmanes modificades`, content: _utf8ToBase64(`${JSON.stringify(document, null, 2)}\n`), branch, ...(sha ? { sha } : {}) }) }).then(async res => { if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(`Error pujant planning.json: ${res.status} — ${err.message ?? res.statusText}`); } });
-}
-
 async function handlePlanningFileSelection(file, onDone) {
   if (!file) return;
 
@@ -329,15 +312,13 @@ async function confirmPlanningImport(onComplete) {
 
   const merge = _pendingMerge;
   if (merge.format === 'json') {
-    const token = window.getGitHubToken ? window.getGitHubToken() : '';
-    const jsonText = `${JSON.stringify(merge.document, null, 2)}\n`;
     let success = false;
     try {
       let supabaseResult = null;
       try {
         supabaseResult = await window.SupabaseDataProvider?.upsertPlanning?.(merge.document);
       } catch (error) {
-        console.warn('[planning-uploader] Supabase no disponible; es prova el fallback existent:', error.message);
+        console.warn('[planning-uploader] Supabase no disponible:', error.message);
       }
       if (supabaseResult?.status === 'synced') {
         showNotice(`✅ Planning importat a Supabase: ${merge.stats.added} noves, ${merge.stats.replaced} actualitzades.`);
@@ -345,23 +326,6 @@ async function confirmPlanningImport(onComplete) {
         if (typeof window.refreshDashboard === 'function') await window.refreshDashboard({ silent: true, force: true });
       } else {
         throw new Error('No s’ha pogut importar el planning a Supabase. Inicia sessió i torna-ho a provar.');
-      }
-      /* Legacy GitHub/JSON export path retained below for a later cleanup. */
-      if (false && token) {
-        showNotice('Llegint planning.json actual...');
-        const { sha } = await readPlanningJSONFromGitHub();
-        showNotice('Pujant planning.json al repositori...');
-        await pushPlanningJSONToGitHub(merge.document, sha, merge.stats);
-        showNotice(`✅ Planning importat: ${merge.stats.added} noves, ${merge.stats.replaced} actualitzades.`);
-      } else if (false) {
-        const blob = new Blob([jsonText], { type: 'application/json;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = 'planning.json'; a.click(); URL.revokeObjectURL(url);
-        showNotice('✅ planning.json descarregat (configura el token per pujar directament).');
-      }
-      if (supabaseResult?.status !== 'synced') {
-        window.dashboardStore?.setPlanningDocument?.(merge.document);
-        if (token && typeof window.refreshDashboard === 'function') await window.refreshDashboard();
       }
       success = true;
     } catch (err) {
