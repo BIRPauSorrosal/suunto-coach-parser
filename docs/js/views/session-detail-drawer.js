@@ -197,6 +197,10 @@
     const confirmed = Array.isArray(data.planning_links) && data.planning_links.some(link => link.confidence === 'confirmed');
     const meta = [date, confirmed ? 'Associació confirmada' : 'Activitat registrada', data.id ? `ID ${data.id}` : null].filter(Boolean).map(esc).join(' · ');
     const comment = String(data.notes?.comment || row.Comentari || '').trim();
+    const activityIdentifier = data.source_file || data.id || row.Arxiu || row.arxiu || '';
+    const commentAction = activityIdentifier
+      ? `<div class="session-detail-comment-actions"><button type="button" class="btn btn-ghost btn-sm" data-session-detail-edit-comment>${comment ? 'Edita el comentari' : 'Afegeix comentari'}</button></div>`
+      : '';
     const vo2 = number(data.vo2max, row.vo2max);
     return `<div class="session-detail-header"><div><p class="eyebrow">${esc(type)}</p><h2 id="session-detail-title">${esc(identity || type)}</h2><p class="session-detail-meta">${meta}</p></div><button type="button" class="session-detail-close" data-session-detail-close aria-label="Tancar el detall">×</button></div>
       <div class="session-detail-body">
@@ -206,7 +210,7 @@
         ${plannedOnly ? '' : renderIntervals(data)}
         ${plannedOnly ? '' : renderFeeling(data, row)}
         ${vo2 === null ? '' : section('Rendiment', `<div class="session-detail-metric-grid">${metric('VO₂max', `${fmt(vo2, 1)} ml/kg/min`)}</div>`)}
-        ${plannedOnly ? '' : (comment ? section('Notes', `<p class="session-detail-note">${esc(comment)}</p>`) : '')}
+        ${plannedOnly ? '' : section('Notes', `${comment ? `<p class="session-detail-note">${esc(comment)}</p>` : '<p class="session-detail-muted">Sense comentari.</p>'}${commentAction}`)}
         ${plannedOnly ? '' : renderPlan(data, row, planned, options.planningItem)}
       </div>`;
   }
@@ -258,6 +262,17 @@
       const meta = current.querySelector('.session-detail-meta');
       if (meta) meta.textContent = [options.dateLabel, 'Sessió planificada'].filter(Boolean).join(' · ');
     }
+    const activity = actualData(session);
+    const activityIdentifier = activity.source_file || activity.id || session?.Arxiu || session?.arxiu;
+    current.querySelector('[data-session-detail-edit-comment]')?.addEventListener('click', () => {
+      if (!activityIdentifier || typeof global.openSessionCommentEditor !== 'function') return;
+      close();
+      global.openSessionCommentEditor({
+        arxiu: activityIdentifier,
+        data: options.dateLabel || dateText(activity.date || session?.date) || '',
+        tipus: label(activity.type, TYPE_LABELS) || label(session?.tipus, TYPE_LABELS) || 'Activitat'
+      });
+    });
     current.hidden = false;
     current.classList.add('is-open');
     current.setAttribute('aria-hidden', 'false');

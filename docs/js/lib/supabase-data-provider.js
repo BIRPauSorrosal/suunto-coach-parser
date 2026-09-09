@@ -298,6 +298,36 @@
     return { status: 'synced', activities: activityRows.length, links: linkRows.length };
   }
 
+  async function saveActivityComment(identifier, comment) {
+    const client = global.SupabaseClient?.getClient?.();
+    if (!client) return { status: 'unavailable' };
+    const currentUser = await user();
+    if (!currentUser) return { status: 'unavailable' };
+    const { data: rows, error: readError } = await client
+      .from('activities')
+      .select('id, payload, revision')
+      .eq('user_id', currentUser.id)
+      .eq('source', 'suunto');
+    if (readError) throw readError;
+    const row = (rows || []).find(item => String(item.payload?.source_file || item.payload?.id) === String(identifier));
+    if (!row) return { status: 'unavailable' };
+    const payload = {
+      ...row.payload,
+      notes: { ...(row.payload.notes || {}), comment: comment || null },
+    };
+    const { data, error } = await client
+      .from('activities')
+      .update({ payload, revision: row.revision + 1 })
+      .eq('user_id', currentUser.id)
+      .eq('id', row.id)
+      .eq('revision', row.revision)
+      .select('revision, updated_at')
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return { status: 'conflict' };
+    return { status: 'synced', revision: data.revision, updated_at: data.updated_at };
+  }
+
   global.SupabaseDataProvider = Object.freeze({
     getHeartRate,
     saveHeartRate,
@@ -308,5 +338,6 @@
     upsertActivities,
     saveActivityLinks,
     migrateSessions,
+    saveActivityComment,
   });
 })(window);

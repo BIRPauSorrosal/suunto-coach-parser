@@ -86,6 +86,17 @@ async function openSessionCommentEditor({ arxiu, data, tipus }) {
 
   try {
     showNotice('Llegint comentari actual...');
+    const supabaseActivities = await window.SupabaseDataProvider?.getActivities?.();
+    const supabaseSession = supabaseActivities?.activities?.find(item => String(item.source_file || item.id) === String(arxiu));
+    if (supabaseSession) {
+      ta.value = supabaseSession.notes?.comment ?? '';
+      dialog.showModal();
+      ta.focus();
+      ta.setSelectionRange(ta.value.length, ta.value.length);
+      saveBtn.disabled = false;
+      saveBtn.onclick = async () => { await saveSessionComment(); };
+      return;
+    }
     const { document: sessionsDocument } = await readCurrentSessionsJSON();
     const session = sessionsDocument.sessions.find(item => String(item.source_file || item.id) === String(arxiu));
 
@@ -127,6 +138,23 @@ async function saveSessionComment() {
 
   try {
     showNotice('Guardant comentari...');
+
+    const supabaseResult = await window.SupabaseDataProvider?.saveActivityComment(_sessionCommentContext.arxiu, text);
+    if (supabaseResult?.status === 'synced') {
+      showNotice('âœ… Comentari guardat a Supabase.');
+      window.dashboardStore?.setData?.({
+        ...window.dashboardStore.getState(),
+        sessions: window.dashboardStore.getState().sessions,
+      });
+      window.DashboardComponents?.showToast?.({ type: 'success', message: 'Comentari guardat correctament.' });
+      closeSessionCommentEditor();
+      await window.refreshDashboard?.({ silent: true, force: true });
+      window.refreshDashboardUI?.();
+      return;
+    }
+    if (supabaseResult?.status === 'conflict') {
+      throw new Error('El comentari ha canviat en un altre dispositiu. Torna a obrir l’editor.');
+    }
 
     const { document: sessionsDocument, sha } = await readCurrentSessionsJSON();
     const idx = sessionsDocument.sessions.findIndex(item => String(item.source_file || item.id) === String(_sessionCommentContext.arxiu));
