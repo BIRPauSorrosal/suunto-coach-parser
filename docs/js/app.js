@@ -236,7 +236,7 @@ async function loadDashboardData({ silent = false, force = false } = {}) {
   if (!silent) {
     lastAutoRefreshAt = Date.now();
     setDataState('loading');
-    setNotice('Llegint fitxers de dades...', 'info');
+    setNotice('Llegint dades des de Supabase...', 'info');
     setBadge('Carregant dades...');
   }
 
@@ -249,7 +249,7 @@ async function loadDashboardData({ silent = false, force = false } = {}) {
       calendar: { schema_version: 1, weeks: {} },
       settings: { schema_version: 1, settings: {} },
       loaded_at: new Date().toISOString(),
-      sources: { sessions: 'supabase', planning: 'supabase', calendar: 'supabase', settings: 'supabase' },
+      sources: { sessions: 'unavailable', planning: 'unavailable', calendar: 'unavailable', settings: 'unavailable' },
       revisions: {},
     };
     if (requestId !== loadRequestId) return;
@@ -260,22 +260,22 @@ async function loadDashboardData({ silent = false, force = false } = {}) {
     try {
       supabaseCalendar = await window.CalendarSync?.readSupabase?.() || supabaseCalendar;
     } catch (error) {
-      console.warn('[supabase-calendar] No s’han pogut llegir les setmanes; es manté el fallback JSON:', error.message);
+      console.warn('[supabase-calendar] No s’han pogut llegir les setmanes des de Supabase:', error.message);
     }
     try {
       supabaseActivities = await window.SupabaseDataProvider?.getActivities?.() || supabaseActivities;
     } catch (error) {
-      console.warn('[supabase-activities] No s’han pogut llegir les activitats; es manté el fallback JSON:', error.message);
+      console.warn('[supabase-activities] No s’han pogut llegir les activitats des de Supabase:', error.message);
     }
     try {
       supabaseSettings = await window.SupabaseDataProvider?.getHeartRate?.() || supabaseSettings;
     } catch (error) {
-      console.warn('[supabase-settings] No s’han pogut llegir les preferències; es manté el fallback JSON:', error.message);
+      console.warn('[supabase-settings] No s’han pogut llegir les preferències des de Supabase:', error.message);
     }
     try {
       supabasePlanning = await window.SupabaseDataProvider?.getPlanning?.() || supabasePlanning;
     } catch (error) {
-      console.warn('[supabase-planning] No s’han pogut llegir les dades; es manté el fallback JSON:', error.message);
+      console.warn('[supabase-planning] No s’han pogut llegir les dades des de Supabase:', error.message);
     }
 
     const supabaseCalendarPrimary = ['loaded', 'empty'].includes(supabaseCalendar.status);
@@ -335,7 +335,7 @@ async function loadDashboardData({ silent = false, force = false } = {}) {
     if (!chartData) setDataState('error');
     if (!silent) setBadge('Error de càrrega');
     if (!silent) setNotice(
-      "No s'han pogut llegir les dades. Comprova planning.json i sessions.json.",
+      "No s'han pogut llegir les dades. Comprova la sessió i les taules de Supabase.",
       'error'
     );
     updateStatus(error.message);
