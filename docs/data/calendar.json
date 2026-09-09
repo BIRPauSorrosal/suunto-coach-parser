@@ -6,7 +6,7 @@
       "version": 5,
       "week_id": "2026-09-07",
       "week_code": "2026-S37",
-      "updated_at": "2026-09-07T16:50:11.908Z",
+      "updated_at": "2026-09-09T06:41:33.048Z",
       "items": [
         {
           "id": "2026-S37-quality-01",
@@ -25,7 +25,7 @@
           "type": "z2",
           "title": "Z2",
           "detail": "6,5 km · 45 min",
-          "status": "pending",
+          "status": "done",
           "source": "planning",
           "kind": "planned",
           "planning_session_id": "2026-S37-z2-01"
