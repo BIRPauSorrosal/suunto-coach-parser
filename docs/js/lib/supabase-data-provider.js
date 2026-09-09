@@ -140,12 +140,32 @@
     if (!currentUser) return { status: 'unavailable' };
     const { data, error } = await client
       .from('activities')
-      .select('payload')
+      .select('id, payload')
       .eq('user_id', currentUser.id)
       .eq('source', 'suunto')
       .order('activity_date', { ascending: false });
     if (error) throw error;
-    const activities = (data || []).map(row => row.payload).filter(item => item && item.id);
+    const activityRows = (data || []).filter(row => row.payload?.id);
+    const activityIds = activityRows.map(row => row.id);
+    let linkRows = [];
+    if (activityIds.length) {
+      const links = await client
+        .from('activity_links')
+        .select('activity_id, planning_session_id, confidence')
+        .eq('user_id', currentUser.id)
+        .in('activity_id', activityIds);
+      if (links.error) throw links.error;
+      linkRows = links.data || [];
+    }
+    const linksByActivity = new Map(activityIds.map(id => [id, []]));
+    linkRows.forEach(link => linksByActivity.get(link.activity_id)?.push({
+      planning_session_id: link.planning_session_id,
+      confidence: link.confidence,
+    }));
+    const activities = activityRows.map(row => ({
+      ...row.payload,
+      planning_links: linksByActivity.get(row.id) || [],
+    }));
     return { status: activities.length ? 'loaded' : 'empty', activities };
   }
 
