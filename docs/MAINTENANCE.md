@@ -1,58 +1,64 @@
 # Manteniment i proves
 
-## Com afegir una vista
+## Regles de persistència
 
-1. Crea `docs/js/views/<nom>.js`.
-2. Mantén la vista centrada en render i interaccions; posa la lectura de dades a `DashboardDataService`.
-3. Reutilitza `DashboardViewUtils` i `DashboardComponents` abans de crear HTML duplicat.
-4. Afegeix el script a `index.html` i a `sw.js`, respectant l’ordre de dependències.
-5. Connecta la navegació a `app.js` i prova l’estat buit.
+- Supabase és la font operativa única.
+- Cal tenir una sessió Supabase per llegir i modificar dades personals.
+- No s’han d’afegir fallbacks de lectura o escriptura a GitHub/JSON.
+- El `localStorage` només es pot utilitzar com a cache, cua offline o estat de
+  la interfície; mai com a font de veritat.
+- Les exportacions JSON són explícites i no actualitzen automàticament GitHub.
 
-## Com afegir un component
-
-Els components han de ser petits, independents de la vista i previsibles:
-
-- reben dades com a arguments;
-- no llegeixen el store directament;
-- escapen text d’usuari abans d’injectar-lo com HTML;
-- retornen HTML o una instància amb un cicle de vida clar.
-
-## Gràfics
-
-Registra els gràfics amb `DashboardComponents.createChart(key, canvas, config)` i destrueix-los amb `destroyChart(key)` o `destroyAllCharts()`. Això evita gràfics duplicats quan es canvia de vista o es recarreguen dades.
-
-## Comprovacions abans de fer push
+## Comprovacions abans de fer commit
 
 ```bash
 node scripts/check-dashboard.js
+node scripts/test-dashboard.js
+git diff --check
 ```
 
-Després, comprova manualment:
+També cal validar la sintaxi dels fitxers JavaScript modificats amb `node
+--check <fitxer>`.
 
-- càrrega inicial i botó de recàrrega;
-- les quatre vistes i navegació mòbil;
-- estat sense dades;
-- importació Suunto i merge acumulatiu a `sessions.json`;
-- importació i merge de planning a `planning.json`;
-- calendari setmanal: arrossegar, retornar a «Per assignar» i afegir/eliminar activitats manuals;
-- reconciliació: dues sessions del mateix tipus, confirmació i canvi de dia;
-- pestanya «Avui»: descans, sessió pendent, completada i activitat no planificada;
-- editor de comentaris amb i sense token;
-- gràfics després de recarregar dades;
-- consola del navegador sense errors.
+## Validació manual
 
-El workflow `.github/workflows/dashboard-checks.yml` executa automàticament el mateix smoke check a GitHub Actions. Si falla, revisa primer els fitxers o les referències indicades al log abans de fer merge.
+- iniciar i tancar sessió Supabase sense recarregar la pàgina;
+- carregar un dashboard amb dades i amb taules buides;
+- importar activitats i verificar les files a `activities`;
+- importar `planning.json` i verificar `planning_weeks` i
+  `planning_sessions`;
+- moure una targeta i verificar `calendar_weeks`;
+- associar una activitat i verificar `activity_links`;
+- editar un comentari i verificar `activities`;
+- actualitzar la configuració cardíaca i verificar `user_settings`;
+- obrir dues pestanyes i comprovar el refresc Realtime;
+- provocar una pèrdua temporal de connexió i comprovar la cua i el reintent;
+- exportar activitats a JSON i confirmar que és una operació explícita;
+- comprovar que la consola no mostra errors ni intents d’escriptura a GitHub.
 
 ## Diagnosi ràpida
 
-- Si la càrrega falla, comprova que l’aplicació s’estigui servint per HTTP i que `DashboardConfig` apunti a les rutes correctes.
-- Si Pages mostra una versió anterior, revisa l’estat del deploy i incrementa `CACHE_NAME` quan correspongui.
-- Si una activitat no es classifica, revisa `ACTIVITY_*_TYPES`, `PARSER_REGISTRY` i el nom del fitxer JSON.
-- Si una importació elimina l’històric, atura l’operació: el merge ha de partir de `sessions.json` complet i afegir-hi les noves sessions.
-- Si una activitat no queda associada, revisa `planning_links`, el `planning_session_id` i que cada sessió planificada tingui un ID únic.
-- Si un moviment del calendari desapareix, revisa l’estat local del navegador i no només `planning.json`.
-- Si una pujada GitHub falla, elimina i torna a configurar el token i comprova la branca i el repositori.
+- **No hi ha dades:** comprova la sessió Supabase, les taules i les polítiques
+  RLS; no revisis primer els JSON del repositori.
+- **403 o `permission denied`:** comprova els `GRANT` a `authenticated`, les
+  polítiques RLS i que la sessió correspon a l’usuari esperat.
+- **Canvi pendent:** revisa `sync-queue` i torna a provar amb la sessió activa.
+- **Conflicte:** no forcis una sobreescriptura; torna a carregar les dades i
+  repeteix l’edició sobre la revisió actual.
+- **Planning absent:** comprova `planning_weeks` i `planning_sessions` i que
+  el `user_id` sigui el de la sessió actual.
+- **Versió antiga a Pages:** espera el deploy i invalida la cache/service
+  worker si s’ha modificat un asset precachejat.
 
-## Service worker
+## SQL de Supabase
 
-Quan s’afegeix o modifica un asset precachejat, incrementa `CACHE_NAME` a `docs/sw.js`. En desenvolupament local el service worker està bypassat; a GitHub Pages pot caldre una recàrrega forçada o netejar les dades del lloc.
+`supabase-planning.sql` documenta la creació de les taules personals de
+planning, els índexs, els grants, RLS, triggers i Realtime. S’executa al SQL
+Editor de Supabase; no és codi de runtime del navegador.
+
+## Compatibilitat CSV
+
+Els fluxos CSV de `planning-uploader.js` i `csv-writer.js` són legacy. No s’han
+de considerar acabats fins que la seva importació també passi per Supabase o
+quedi substituïda per la importació JSON. Aquesta és la següent línia de
+neteja prevista.

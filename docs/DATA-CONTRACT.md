@@ -1,82 +1,70 @@
 # Contracte de dades
 
-## `sessions.json`
+## Font operativa
 
-És la font principal d’activitats realitzades. Utilitza el contracte definit a
-[`data/sessions.schema.json`](data/sessions.schema.json), amb una activitat per
-objecte dins de `sessions`. Cada activitat té un `id` estable, una data ISO,
-`type`, `sport` i `variant`, i pot incloure mètriques, zones, intervals,
-comentaris i enllaços amb el planning.
+La font operativa de totes les dades personals és Supabase. Els documents JSON
+descrits en aquest fitxer defineixen formats d’intercanvi i d’importació, però
+no són la font principal del dashboard.
 
-L’aplicació carrega aquest fitxer i el normalitza temporalment al model pla que
-encara utilitzen algunes vistes. Cada importació es fusiona amb el document
-existent; mai no ha de substituir l’històric complet. Els camps `feeling` i
-`vo2max` són opcionals i `planning_links` conserva les associacions confirmades.
+## Activitats i `sessions.json`
 
-## `sessions.csv`
+`sessions.json` és el format d’exportació/importació d’activitats. El document
+utilitza `schema_version`, `source: "suunto"` i una llista `sessions`. Cada
+activitat té un `id` estable, una data ISO, `type`, `sport` i `variant`, i pot
+incloure mètriques, zones, comentaris i enllaços.
 
-Format legacy de compatibilitat. No és la font principal del dashboard ni el
-format de persistència de les noves importacions.
-
-És una còpia legacy de les activitats realitzades. La primera fila defineix els noms de columna. Els camps poden contenir comes, cometes escapades (`""`) i salts de línia si estan entre cometes.
-
-Columnes utilitzades habitualment:
-
-- Identificació: `Data`, `Arxiu`, `Tipus`.
-- Volum: `Dist(km)`, `Durada(min)`.
-- Intensitat: `Ritme(min/km)`, `FCMitja`, `FCMax`.
-- Càrrega: `Carrega`, `EPOC`, `Desnivell(m)`.
-- Zones: `Z1(min)` fins a `Z5(min)`.
-- Text lliure: `Comentari`.
-
-Els valors numèrics accepten punt o coma decimal segons el parser corresponent. Les dates es normalitzen abans de calcular setmanes i períodes.
+En importar-lo, l’aplicació el valida, el fusiona per identificador i desa el
+resultat a `activities` per a l’usuari autenticat. En carregar el dashboard,
+les activitats es llegeixen de `activities`, no de `docs/data/sessions.json`.
 
 ## `planning.json`
 
-És la font principal del planning. Utilitza el contracte definit a
-[`data/planning.schema.json`](data/planning.schema.json) i agrupa les dades com
-`cycles[] → weeks[] → sessions[]`.
-
-Cada setmana té un codi ISO com `2026-S37` i cada sessió té un ID únic, per
-exemple `2026-S37-z2-01` i `2026-S37-z2-02`. Les sessions inclouen `type`,
-`sport`, `variant`, `day` i els objectius disponibles. `day` pot ser `null`
-quan la sessió encara està pendent d’assignar.
-
-## `calendar.json`
-
-És la font del calendari editable i utilitza el contracte definit a
-[`data/calendar.schema.json`](data/calendar.schema.json). Per cada setmana
-conserva `items[]`, el `day` assignat (0 dilluns … 6 diumenge), `status`
-(`pending` o `done`) i `kind` (`planned` o `manual`). Les entrades manuals tenen
-`planning_session_id: null` i no modifiquen `planning.json` ni `sessions.json`.
-
-Les associacions entre una activitat real i una sessió planificada es guarden a
-`sessions.json` mitjançant `planning_links[].planning_session_id`. La
-confirmació és explícita i no es dedueix només pel nom de l’activitat.
-
-## `planning.csv` (legacy)
-
-Defineix una fila per setmana planificada. Les columnes obligatòries de l’importador són:
+És el format d’importació/exportació del planning i manté l’estructura:
 
 ```text
-Setmana, Data_Inici, Data_Fi, Cicle, Fase,
-Q_Series, Q_Durada_Serie_min, Q_Ritme_min_km, Q_Rec_min,
-Q_FC_min, Q_FC_max, Q_Km_Plan,
-Z2_Durada_min, Z2_Ritme_min_km_min, Z2_Ritme_min_km_max,
-Z2_FC_min, Z2_FC_max, Z2_Km_Plan,
-LL_Tipus, LL_Durada_min, LL_Km_Plan,
-Forca_Plan, Padel_Plan, Km_Total_Plan
+cycles[] → weeks[] → sessions[]
 ```
 
-Es conserva com a origen històric i com a suport de migració. El format actiu de
-l’aplicació és `planning.json`; els canvis nous s’han de fer sobre el JSON o
-mitjançant el seu importador.
+Cada setmana té un identificador/codi i cada sessió planificada té un ID únic.
+En importar-lo, el planning personal es desa a:
 
-## Compatibilitat
+- `planning_weeks`: setmana, dates, fase, resum i payload original;
+- `planning_sessions`: sessions de la setmana, ordre, esport, tipus i payload.
 
-Quan s’afegeixi una columna nova:
+El planning es llegeix d’aquestes taules. Moure una targeta del calendari no
+modifica el planning; modifica el calendari de l’usuari.
 
-1. mantén el nom estable al CSV;
-2. actualitza el parser o l’enriquiment si té semàntica numèrica;
-3. afegeix-la a la vista només després de validar files buides i valors no numèrics;
-4. comprova el merge local i el de GitHub.
+## `calendar.json` i `calendar_weeks`
+
+`calendar.json` és un format d’intercanvi/migració. El calendari operatiu viu a
+`calendar_weeks`, amb les setmanes i els seus `items[]`. Cada entrada conserva
+el dia assignat, l’estat i el tipus (`planned` o `manual`). Les activitats
+manuals no modifiquen el planning ni l’històric d’activitats.
+
+Moure, reassignar o eliminar una targeta actualitza `calendar_weeks`. La cua
+local només serveix per reintentar una operació pendent.
+
+## Enllaços d’activitats
+
+Les associacions entre una activitat real i una sessió planificada viuen a
+`activity_links`. La relació es desa explícitament amb els identificadors
+corresponents i no es dedueix només pel nom o el tipus de sessió.
+
+## Configuració
+
+La configuració cardíaca s’intercanvia amb el format `settings.json`, però la
+font operativa és `user_settings`. El cache local només conserva temporalment
+un canvi pendent mentre es resol la connectivitat.
+
+## CSV legacy
+
+`sessions.csv` i `planning.csv` es conserven per compatibilitat o migració. No
+són formats de persistència operativa. El flux CSV encara existent s’ha de
+revisar abans de considerar completament retirada aquesta compatibilitat.
+
+Quan s’afegeixi un camp nou:
+
+1. actualitza el parser i el normalitzador del JSON corresponent;
+2. actualitza el mapping del proveïdor Supabase i la migració SQL si cal;
+3. conserva el camp original a `payload` quan sigui necessari;
+4. actualitza els esquemes JSON i prova importació, lectura i exportació.

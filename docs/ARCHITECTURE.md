@@ -1,18 +1,22 @@
 # Arquitectura
 
-## Flux principal
+## Principi de dades
+
+Supabase és la font operativa única de l’aplicació. Els fitxers JSON del
+repositori són dades inicials, formats d’importació/exportació o material de
+migració; no són un fallback automàtic de lectura ni d’escriptura.
 
 ```text
-JSON local o GitHub
-        ↓
-DashboardDataService
-        ↓
+Supabase Auth
+     ↓
+SupabaseDataProvider / CalendarSync / SessionsSync / SettingsSync
+     ↓
 DashboardStore
-        ↓
-app.js (router i orquestració)
-        ↓
+     ↓
+app.js (càrrega, refresc i router)
+     ↓
 Vistes + DashboardComponents
-        ↓
+     ↓
 DOM i gràfics Chart.js
 ```
 
@@ -20,47 +24,72 @@ DOM i gràfics Chart.js
 
 ### Configuració i dades
 
-- `js/lib/dashboard-config.js`: propietari, repositori, branca i rutes dels fitxers de dades.
-- `js/lib/data-service.js`: càrrega local/GitHub, fallback de xarxa, descodificació UTF-8 i validació dels JSON.
-- `js/lib/dashboard-store.js`: estat únic de sessions, planning, calendari i fonts carregades.
+- `js/lib/supabase-client.js`: client Supabase amb la URL i la publishable key.
+- `js/lib/supabase-auth.js`: inici i tancament de sessió.
+- `js/lib/supabase-data-provider.js`: lectures i escriptures de dades personals.
+- `js/lib/calendar-sync.js`: persistència de `calendar_weeks` i cua offline.
+- `js/lib/sessions-sync.js`: persistència d’enllaços a `activity_links`.
+- `js/lib/settings-sync.js`: persistència de la configuració personal.
+- `js/lib/sync-queue.js`: reintents locals quan Supabase no està disponible.
+- `js/lib/supabase-realtime.js`: refresc després de canvis Realtime.
+- `js/lib/data-service.js`: validació i normalització dels documents JSON
+  d’importació/exportació; no és el proveïdor principal de dades.
 
-### Presentació
+### Persistència Supabase
 
-- `js/lib/formatters.js`: format de números, dates, ritmes i escapament HTML.
-- `js/lib/view-utils.js`: operacions DOM bàsiques.
-- `js/lib/ui-components.js`: badges, taules, estats, modals i cicle de vida dels gràfics.
-- `js/views/*.js`: render de cada vista i interaccions pròpies.
+| Dada | Taula | Abast |
+|---|---|---|
+| Perfil | `profiles` | Usuari autenticat |
+| Configuració | `user_settings` | Usuari autenticat |
+| Activitats | `activities` | Usuari autenticat |
+| Enllaços activitat-planning | `activity_links` | Usuari autenticat |
+| Calendari editable | `calendar_weeks` | Usuari autenticat |
+| Setmanes de planning | `planning_weeks` | Usuari autenticat |
+| Sessions de planning | `planning_sessions` | Usuari autenticat |
 
-### Orquestració
+Les polítiques RLS restringeixen les files a `auth.uid()`. Les taules
+operatives estan preparades per a Supabase Realtime.
 
-- `js/app.js`: inicialització, router, càrrega i render global.
-- `js/charts.js`: gràfics compartits del dashboard.
-- `js/uploader/*.js`: importació i persistència de sessions i planificació.
-- `js/views/weekly-planner.js`: calendari setmanal editable, sessions pendents d’assignar, activitats manuals i reconciliació.
-- `js/views/today.js`: resum contextual del dia i de la setmana actual.
+## Fluxos
 
-Els scripts es carreguen com a scripts clàssics. L’ordre definit a `index.html` és part del contracte: les llibreries comunes han d’aparèixer abans de les vistes que les utilitzen.
+### Càrrega i refresc
 
-## Estat i refresc
+`refreshDashboard()` consulta Supabase per a calendari, activitats,
+configuració i planning. Amb estat `loaded` o `empty`, Supabase té prioritat i
+no es carreguen els JSON del repositori. Si no hi ha sessió o la connexió no
+està disponible, la interfície mostra l’estat corresponent i no inventa dades
+remotes a partir dels fitxers legacy.
 
-- `refreshDashboard()`: torna a llegir els JSON i actualitza el store.
-- `refreshDashboardUI()`: torna a renderitzar l’estat ja carregat, útil després d’un canvi local.
-- `dashboardStore.setSessions()` i `setPlanning()`: actualitzen dades i notifiquen futures vistes reactives.
+`refreshDashboardUI()` només torna a renderitzar l’estat actual del store.
 
-## Fonts i responsabilitats
+### Importacions i edicions
 
-```text
-planning.json  ──> sessions previstes i cicles
-sessions.json  ──> activitats reals i històric immutable
-calendar.json  ──> dies assignats, estat i sessions manuals
-                         │
-                         └── associacions confirmades per planning_session_id
-```
+- Un JSON d’activitats es valida, es fusiona amb les dades rebudes i s’insereix
+  a `activities`.
+- Un `planning.json` es valida, es fusiona amb el planning actual de l’usuari
+  i s’insereix a `planning_weeks` i `planning_sessions`.
+- Moure una activitat o una sessió del calendari actualitza `calendar_weeks`.
+- Associar una activitat a una sessió planificada actualitza `activity_links`.
+- Editar un comentari actualitza `activities`.
+- La configuració cardíaca actualitza `user_settings`.
 
-El planning no es modifica quan l’usuari mou una targeta. Els moviments, les sessions manuals i els estats del calendari es desen localment al navegador i poden exportar-se o sincronitzar-se en una etapa posterior. Les activitats reals importades continuen sent la font de l’històric.
+Els canvis que no es poden enviar es mantenen temporalment a la cua/local
+cache i es reintenten quan torna la sessió o la connexió. Aquest cache no és la
+font de veritat.
 
-Les sessions planificades tenen un ID únic dins de `planning.json`. Aquest ID és imprescindible per associar correctament activitats quan hi ha dues sessions del mateix tipus durant una setmana.
+### Exportacions
 
-Els fitxers CSV que encara hi ha al repositori són material legacy o de migració.
-No s’han d’utilitzar com a font principal ni s’han de substituir automàticament
-quan es desa una importació nova.
+Les exportacions explícites d’activitats poden generar `sessions.json`. Els
+JSON exportats són còpies intercanviables i no substitueixen les dades de
+Supabase. La importació de `planning.json` i d’activitats escriu a Supabase;
+no fa push automàtic a GitHub ni descarrega un fitxer de fallback.
+
+Els fluxos CSV existents són legacy/compatibilitat i es tractaran en una fase
+posterior. No s’han de considerar font operativa.
+
+## Identificadors i concurrència
+
+Els identificadors externs de les activitats, setmanes i sessions permeten fer
+upsert idempotent. Les files operatives conserven `revision`, `updated_at` i
+validacions RLS. Els conflictes de revisió es comuniquen a l’usuari i no es
+sobreescriuen silenciosament.
