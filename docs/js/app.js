@@ -1,6 +1,6 @@
 // docs/js/app.js
 // Orquestrador: càrrega de dades, estat global, router, helpers compartits.
-// Dep: lib/dashboard-config.js, lib/dashboard-store.js, lib/data-service.js,
+// Dep: lib/dashboard-store.js, lib/data-service.js,
 //      lib/view-utils.js,
 //      lib/ui-components.js,
 //      lib/formatters.js i lib/metrics.js (carregats abans via index.html)
@@ -119,9 +119,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function runSyncFromButton(button) {
   if (!button) return;
-  if (!window.getGitHubToken?.()) {
-    window.DashboardComponents?.showToast({ type: 'warning', message: 'Connecta GitHub abans de sincronitzar.' });
-    window.openGitHubTokenModal?.();
+  if (!window.SupabaseAuth?.getUser?.()) {
+    window.DashboardComponents?.showToast({ type: 'warning', message: 'Inicia sessio a Supabase abans de sincronitzar.' });
+    window.SupabaseAuth?.openModal?.();
     return;
   }
   button.classList.add('is-syncing');
@@ -136,7 +136,7 @@ async function runSyncFromButton(button) {
     });
   } catch (error) {
     console.error('[sync]', error);
-    window.DashboardComponents?.showToast({ type: 'error', message: 'No s’ha pogut sincronitzar. Revisa la connexió i el token de GitHub.' });
+    window.DashboardComponents?.showToast({ type: 'error', message: 'No s’ha pogut sincronitzar. Revisa la connexió i la sessió de Supabase.' });
   }
   finally {
     button.classList.remove('is-syncing');
@@ -154,7 +154,7 @@ function updateSyncStatus(detail = {}) {
   if (!status) return;
   const pending = detail.pending ?? window.SyncQueue?.pending?.() ?? 0;
   const conflict = detail.status === 'conflict' || (window.SyncQueue?.list?.() || []).some(item => item.conflict);
-  const connected = Boolean(window.getGitHubToken?.());
+  const connected = Boolean(window.SupabaseAuth?.getUser?.());
   const state = conflict ? 'conflict' : detail.status === 'error' ? 'error' : detail.status === 'syncing' ? 'syncing' : pending ? 'pending' : detail.status === 'synced' ? 'synced' : connected ? 'connected' : 'disconnected';
   statusItem?.setAttribute('data-sync-state', state);
   status.textContent = conflict
@@ -165,8 +165,8 @@ function updateSyncStatus(detail = {}) {
       ? `${pending} canvi${pending === 1 ? '' : 's'} pendent${pending === 1 ? '' : 's'}`
       : state === 'error' ? 'Error de sincronització'
       : state === 'synced' ? 'Canvis sincronitzats' : 'Sense canvis pendents';
-  if (state === 'connected') status.textContent = 'GitHub connectat';
-  if (state === 'disconnected') status.textContent = 'GitHub no connectat';
+  if (state === 'connected') status.textContent = 'Supabase connectat';
+  if (state === 'disconnected') status.textContent = 'Supabase no connectat';
   if (state === 'synced') status.textContent = 'Sincronització completada';
   if (state === 'error') status.textContent = 'No s’ha pogut sincronitzar';
   resolveButton?.toggleAttribute('hidden', !conflict);
@@ -198,12 +198,36 @@ async function resolveSyncConflicts() {
 
 ['sync-queue-status', 'calendar-sync-status', 'sessions-sync-status', 'settings-sync-status']
   .forEach(eventName => window.addEventListener(eventName, event => updateSyncStatus(event.detail)));
-window.addEventListener('gh-token-changed', () => {
-  updateSyncStatus();
-  window.DashboardComponents?.showToast({
-    type: window.getGitHubToken?.() ? 'success' : 'info',
-    message: window.getGitHubToken?.() ? 'GitHub connectat.' : 'GitHub desconnectat.',
-  });
+window.addEventListener('supabase-auth-changed', async event => {
+  try {
+    const result = event.detail?.user
+      ? await window.SupabaseDataProvider?.getHeartRate()
+      : { status: 'unavailable' };
+    if (event.detail?.user && result?.status === 'loaded' && typeof applyFCConfig === 'function') {
+      applyFCConfig(result.config);
+    }
+    await window.refreshDashboard?.({ silent: true, force: true });
+    window.refreshDashboardUI?.();
+    await window.SyncQueue?.retry?.();
+  } catch (error) {
+    console.warn('[supabase-settings] No s’han pogut carregar les preferències:', error.message);
+  }
+});
+
+let realtimeRefreshTimer = null;
+window.addEventListener('supabase-realtime-changed', () => {
+  if (realtimeRefreshTimer) window.clearTimeout(realtimeRefreshTimer);
+  realtimeRefreshTimer = window.setTimeout(async () => {
+    realtimeRefreshTimer = null;
+    try {
+      const settings = await window.SupabaseDataProvider?.getHeartRate();
+      if (settings?.status === 'loaded' && typeof applyFCConfig === 'function') applyFCConfig(settings.config);
+      await window.refreshDashboard?.({ silent: true, force: true });
+      window.refreshDashboardUI?.();
+    } catch (error) {
+      console.warn('[supabase-realtime] No s’han pogut actualitzar les dades:', error.message);
+    }
+  }, 150);
 });
 
 // ── Càrrega de dades ──────────────────────────────────────────────────────────────────
@@ -212,14 +236,81 @@ async function loadDashboardData({ silent = false, force = false } = {}) {
   if (!silent) {
     lastAutoRefreshAt = Date.now();
     setDataState('loading');
-    setNotice('Llegint fitxers de dades...', 'info');
+    setNotice('Llegint dades des de Supabase...', 'info');
     setBadge('Carregant dades...');
   }
 
   try {
-    const loaded = await window.DashboardDataService.refreshRemoteData();
+    const loaded = {
+      sessions: [],
+      sessionsDocument: { schema_version: 1, source: 'suunto', sessions: [] },
+      planning: [],
+      planningDocument: { schema_version: 1, source: 'supabase', cycles: [] },
+      calendar: { schema_version: 1, weeks: {} },
+      settings: { schema_version: 1, settings: {} },
+      loaded_at: new Date().toISOString(),
+      sources: { sessions: 'unavailable', planning: 'unavailable', calendar: 'unavailable', settings: 'unavailable' },
+      revisions: {},
+    };
     if (requestId !== loadRequestId) return;
-    if (!force && silent && hasSameRemoteRevisions(loaded.revisions, lastRemoteRevisions)) {
+    let supabaseCalendar = { status: 'unavailable' };
+    let supabaseActivities = { status: 'unavailable' };
+    let supabaseSettings = { status: 'unavailable' };
+    let supabasePlanning = { status: 'unavailable' };
+    try {
+      supabaseCalendar = await window.CalendarSync?.readSupabase?.() || supabaseCalendar;
+    } catch (error) {
+      console.warn('[supabase-calendar] No s’han pogut llegir les setmanes des de Supabase:', error.message);
+    }
+    try {
+      supabaseActivities = await window.SupabaseDataProvider?.getActivities?.() || supabaseActivities;
+    } catch (error) {
+      console.warn('[supabase-activities] No s’han pogut llegir les activitats des de Supabase:', error.message);
+    }
+    try {
+      supabaseSettings = await window.SupabaseDataProvider?.getHeartRate?.() || supabaseSettings;
+    } catch (error) {
+      console.warn('[supabase-settings] No s’han pogut llegir les preferències des de Supabase:', error.message);
+    }
+    try {
+      supabasePlanning = await window.SupabaseDataProvider?.getPlanning?.() || supabasePlanning;
+    } catch (error) {
+      console.warn('[supabase-planning] No s’han pogut llegir les dades des de Supabase:', error.message);
+    }
+
+    const supabaseCalendarPrimary = ['loaded', 'empty'].includes(supabaseCalendar.status);
+    if (supabaseCalendarPrimary) {
+      loaded.calendar = {
+        ...loaded.calendar,
+        weeks: supabaseCalendar.weeks || {},
+      };
+      loaded.sources = { ...loaded.sources, calendar: 'supabase' };
+    }
+    const supabaseActivitiesPrimary = ['loaded', 'empty'].includes(supabaseActivities.status);
+    if (supabaseActivitiesPrimary) {
+      loaded.sessionsDocument = { ...loaded.sessionsDocument, sessions: supabaseActivities.activities || [] };
+      loaded.sessions = window.DashboardDataService.normalizeSessionsJSON(loaded.sessionsDocument);
+      loaded.sources = { ...loaded.sources, sessions: 'supabase' };
+    }
+    const supabaseSettingsPrimary = ['loaded', 'empty'].includes(supabaseSettings.status);
+    if (supabaseSettingsPrimary) {
+      loaded.settings = {
+        ...loaded.settings,
+        settings: {
+          ...(loaded.settings?.settings || {}),
+          heart_rate: supabaseSettings.status === 'loaded' ? supabaseSettings.config : null,
+        },
+      };
+      loaded.sources = { ...loaded.sources, settings: 'supabase' };
+    }
+    const supabasePlanningPrimary = ['loaded', 'empty'].includes(supabasePlanning.status);
+    if (supabasePlanningPrimary) {
+      loaded.planningDocument = supabasePlanning.document || { schema_version: 1, source: 'supabase', cycles: [] };
+      loaded.planning = window.DashboardDataService.normalizePlanningJSON(loaded.planningDocument);
+      loaded.sources = { ...loaded.sources, planning: 'supabase' };
+    }
+    const supabasePrimary = supabaseCalendarPrimary || supabaseActivitiesPrimary || supabaseSettingsPrimary || supabasePlanningPrimary;
+    if (!force && silent && !supabasePrimary && hasSameRemoteRevisions(loaded.revisions, lastRemoteRevisions)) {
       window.SessionsSync?.queueLocalLinks(loaded.sessions);
       return;
     }
@@ -244,7 +335,7 @@ async function loadDashboardData({ silent = false, force = false } = {}) {
     if (!chartData) setDataState('error');
     if (!silent) setBadge('Error de càrrega');
     if (!silent) setNotice(
-      "No s'han pogut llegir les dades. Comprova planning.json i sessions.json.",
+      "No s'han pogut llegir les dades. Comprova la sessió i les taules de Supabase.",
       'error'
     );
     updateStatus(error.message);
@@ -315,108 +406,6 @@ window.dashboardStore.subscribe((_, reason) => {
   updateStatus();
   setBadge('Dades carregades');
 });
-
-// ── 🔧 FIX UTF-8: decodifica Base64 de l'API GitHub respectant UTF-8 ──────────────────────
-// atob() retorna Latin-1 i trenca accents (à, è, ç, etc.).
-// Aquesta funció converteix correctament Base64 → UTF-8.
-// ── Fetch ──────────────────────────────────────────────────────────────────────
-function base64ToUtf8(base64) {
-  return window.DashboardDataService.base64ToUtf8(base64);
-}
-
-/* Obsolete implementation kept disabled for one release; DashboardDataService is the single loader. */
-/*
-async function removedFetchFirstAvailable(paths) {
-  const token = window.getGitHubToken ? window.getGitHubToken() : '';
-
-  if (token) {
-    for (const path of paths) {
-      try {
-        const repoPath = path.replace(/^\.\//,  'docs/');
-        const { owner, repo, branch } = window.DashboardConfig.github;
-        const apiUrl   = `https://api.github.com/repos/${owner}/${repo}/contents/${repoPath}?ref=${branch}`;
-
-        const res = await fetch(apiUrl, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept':        'application/vnd.github+json',
-          }
-        });
-        if (!res.ok) throw new Error(`API GitHub: ${res.status}`);
-
-        const json = await res.json();
-        const text = base64ToUtf8(json.content);
-        if (!text.trim()) throw new Error(`Fitxer buit: ${repoPath}`);
-        return { path, text };
-      } catch (error) {
-        console.warn('[fetchFirstAvailable] API fallback a Pages:', error.message);
-      }
-    }
-  }
-
-  let lastError = null;
-  for (const path of paths) {
-    try {
-      const response = await fetch(`${path}?t=${Date.now()}`, { cache: 'no-store' });
-      if (!response.ok) throw new Error(`HTTP ${response.status} a ${path}`);
-      const buffer = await response.arrayBuffer();
-      const text = new TextDecoder('utf-8').decode(buffer);
-      if (!text.trim()) throw new Error(`Fitxer buit a ${path}`);
-      return { path, text };
-    } catch (error) {
-      lastError = error;
-    }
-  }
-  throw lastError || new Error('Cap ruta vàlida per al CSV');
-}
-
-// ── Parser CSV ───────────────────────────────────────────────────────────────────────────
-function removedParseCSV(text) {
-  const rows = [];
-  let row = [], value = '', insideQuotes = false;
-
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    const next = text[i + 1];
-
-    if (char === '"') {
-      if (insideQuotes && next === '"') { value += '"'; i++; }
-      else insideQuotes = !insideQuotes;
-      continue;
-    }
-    if (char === ',' && !insideQuotes) { row.push(value); value = ''; continue; }
-    if ((char === '\n' || char === '\r') && !insideQuotes) {
-      if (char === '\r' && next === '\n') i++;
-      row.push(value); rows.push(row);
-      row = []; value = '';
-      continue;
-    }
-    value += char;
-  }
-  if (value.length > 0 || row.length > 0) { row.push(value); rows.push(row); }
-
-  const cleanRows = rows.filter(cols => cols.some(cell => String(cell).trim() !== ''));
-  if (!cleanRows.length) return [];
-
-  const headers = cleanRows[0].map(h => String(h || '').replace(/^\uFEFF/, '').trim());
-  return cleanRows.slice(1).map(cols => {
-    const entry = {};
-    headers.forEach((h, i) => { entry[h] = (cols[i] || '').trim(); });
-    return entry;
-  });
-}
-*/
-
-// ── Orquestració del render ─────────────────────────────────────────────────────────────────
-// Compatibilitat amb codi extern: les implementacions reals viuen a
-// DashboardDataService.
-async function fetchFirstAvailable(paths) {
-  return window.DashboardDataService.fetchFirstAvailable(paths);
-}
-
-function parseCSV(text) {
-  return window.DashboardDataService.parseCSV(text);
-}
 
 function renderDashboard() {
   const planning = state.planning
@@ -606,10 +595,16 @@ function detectActiveWeek(planning, sessions) {
 function updateStatus(errorMessage = null) {
   const sessionsStatus = document.getElementById('status-sessions');
   const planningStatus = document.getElementById('status-planning');
+  const sourceLabel = source => source === 'supabase' ? 'Supabase' : source || '--';
+  const sources = state.sources || {};
   setText('status-sessions', state.sessions.length ? `${state.sessions.length} activitats` : 'Sessions no disponibles');
   setText('status-planning', state.planning.length ? `${state.planning.length} setmanes` : 'Planning no disponible');
-  if (sessionsStatus) sessionsStatus.title = state.sources.sessions || 'sessions.json';
-  if (planningStatus) planningStatus.title = state.sources.planning || 'planning.json';
+  if (sessionsStatus) sessionsStatus.title = sourceLabel(sources.sessions);
+  if (planningStatus) planningStatus.title = sourceLabel(sources.planning);
+  setText('status-source-sessions', `Activitats: ${sourceLabel(sources.sessions)}`);
+  setText('status-source-calendar', `Calendari: ${sourceLabel(sources.calendar)}`);
+  setText('status-source-settings', `Configuracio: ${sourceLabel(sources.settings)}`);
+  setText('status-source-planning', `Planning: ${sourceLabel(sources.planning)}`);
   setText('status-source', errorMessage
     ? `Error: ${errorMessage}`
     : `sessions: ${state.sources.sessions || '--'} · planning: ${state.sources.planning || '--'}`);

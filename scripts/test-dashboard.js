@@ -9,10 +9,6 @@ const vm = require('node:vm');
 const root = path.resolve(__dirname, '..');
 const context = { console, window: {}, TextDecoder, TextEncoder, addEventListener() {} };
 context.window = context;
-context.DashboardConfig = context.window.DashboardConfig = {
-  github: { owner: 'test', repo: 'test', branch: 'main' },
-  paths: { planning: { repository: 'docs/data/planning.csv' } },
-};
 vm.createContext(context);
 
 function load(relativePath) {
@@ -36,16 +32,32 @@ assert.equal(JSON.stringify(parsed), JSON.stringify([
 const semicolon = csv.parse('Setmana;Fase\n1;Base\n', { separator: 'auto' });
 assert.equal(JSON.stringify(semicolon), JSON.stringify([{ Setmana: '1', Fase: 'Base' }]));
 
-const merged = context.mergePlanning(
-  [{ Setmana: '1', Data_Inici: '2026-01-01', Fase: 'Base' }],
-  [
-    { Setmana: '1', Data_Inici: '2026-01-01', Fase: 'Qualitat' },
-    { Setmana: '2', Data_Inici: '2026-01-08', Fase: 'Base' },
-  ]
+const merged = context.mergePlanningDocuments(
+  {
+    schema_version: 1,
+    season: 2026,
+    cycles: [{
+      id: 'base',
+      name: 'Base',
+      weeks: [{ id: 'week-1', code: '2026-S01', start: '2026-01-01', end: '2026-01-07', sessions: [] }],
+    }],
+  },
+  {
+    schema_version: 1,
+    season: 2026,
+    cycles: [{
+      id: 'base',
+      name: 'Base',
+      weeks: [
+        { id: 'week-1', code: '2026-S01', start: '2026-01-01', end: '2026-01-07', sessions: [{ id: 'session-1', type: 'quality' }] },
+        { id: 'week-2', code: '2026-S02', start: '2026-01-08', end: '2026-01-14', sessions: [] },
+      ],
+    }],
+  }
 );
 assert.equal(JSON.stringify(merged.stats), JSON.stringify({ added: 1, replaced: 1, unchanged: 0 }));
-assert.equal(merged.rows[0].Fase, 'Qualitat');
-assert.equal(merged.rows[1].Setmana, '2');
+assert.equal(merged.document.cycles[0].weeks[0].sessions[0].type, 'quality');
+assert.equal(merged.document.cycles[0].weeks[1].code, '2026-S02');
 
 const today = new Date();
 today.setHours(12, 0, 0, 0);

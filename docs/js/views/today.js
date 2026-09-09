@@ -117,7 +117,7 @@
   function plannedCard(item, real) {
     const title = item.title || typeLabels[item.type] || 'Sessió planificada';
     const detail = [item.detail && item.detail !== title ? item.detail : '', item.variant || '', item.distance_km ? `${fmt(item.distance_km)} km` : '', item.duration_min ? `${fmt(item.duration_min)} min` : ''].filter(Boolean).join(' · ') || title;
-    return `<article class="today-session-card${real || item.status === 'done' ? ' is-complete' : ''}"><div><span class="today-session-status">${real || item.status === 'done' ? '✓ Completada' : 'Pendent'}</span><h4>${esc(title)}</h4><p>${esc(detail)}</p></div>${real ? `<div class="today-real-detail"><span>Activitat real</span><strong>${esc(real.tipus || 'Activitat')} · ${esc(actualDetails(real))}</strong></div>` : ''}</article>`;
+    return `<article class="today-session-card${real ? ' is-complete' : ''}"><div><span class="today-session-status">${real ? '✓ Completada' : 'Pendent'}</span><h4>${esc(title)}</h4><p>${esc(detail)}</p></div>${real ? `<div class="today-real-detail"><span>Activitat real</span><strong>${esc(real.tipus || 'Activitat')} · ${esc(actualDetails(real))}</strong></div>` : ''}</article>`;
   }
 
   function unplannedCard(session) {
@@ -143,13 +143,18 @@
     const calendar = window.dashboardStore?.getState?.().calendar;
     const today = new Date(), todayKey = dateKey(today), actual = sessions.filter(session => dateKey(session.date) === todayKey);
     const day = Math.max(0, Math.min(6, Math.round((new Date(todayKey+'T12:00:00') - new Date(dateKey(week.startDate)+'T12:00:00')) / 86400000)));
-    const planned = plannedItems(week, calendar).filter(item => item.day === day);
-    const plannedWithReal = planned.map(item => ({ item, plannedSession: plannedSessionForItem(item, week), real: linkedActivity(item, sessions) }));
+    const planned = plannedItems(week, calendar)
+      .filter(item => item.day === day)
+      .filter(item => {
+        const linked = linkedActivity(item, sessions);
+        return !linked || dateKey(linked.date) === todayKey;
+      });
+    const plannedWithReal = planned.map(item => ({ item, plannedSession: plannedSessionForItem(item, week), real: linkedActivity(item, actual) }));
     const linkedIds = new Set(plannedWithReal.filter(row => row.real).map(row => row.real.raw?.__activity?.id));
     const unplanned = actual.filter(session => !linkedIds.has(session.raw?.__activity?.id));
     const dateEl = document.getElementById('today-date-label'); if (dateEl) dateEl.textContent = dateText(today);
     const badge = document.getElementById('today-status-badge');
-    if (badge) badge.textContent = planned.length && plannedWithReal.every(row => row.real || row.item.status === 'done') ? 'Dia completat' : actual.length ? 'Activitat registrada' : planned.length ? 'Sessió pendent' : 'Descans';
+    if (badge) badge.textContent = planned.length && plannedWithReal.every(row => row.real) ? 'Dia completat' : actual.length ? 'Activitat registrada' : planned.length ? 'Sessió pendent' : 'Descans';
     const hero = document.getElementById('today-hero');
     if (hero) {
       const content = [...plannedWithReal.map(row => plannedCard(row.item, row.real, row.plannedSession)), ...unplanned.map(unplannedCard)];

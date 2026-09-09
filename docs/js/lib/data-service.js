@@ -3,41 +3,6 @@
 // No conté cap manipulació de DOM.
 
 (function (global) {
-  const config = global.DashboardConfig;
-  const DATA_SOURCES = Object.freeze({
-    sessions: [config.paths.sessions.local],
-    planning: [config.paths.planning.local],
-    calendar: [config.paths.calendar.local],
-    settings: [config.paths.settings.local],
-  });
-  const GITHUB_CONFIG = config.github;
-  const REQUEST_TIMEOUT_MS = 10000;
-
-  async function request(url, options = {}) {
-    const Controller = global.AbortController;
-    const controller = typeof Controller === 'function' ? new Controller() : null;
-    const timeoutId = controller ? global.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS) : null;
-    try {
-      return await global.fetch(url, controller
-        ? { ...options, signal: controller.signal }
-        : options);
-    } finally {
-      if (timeoutId) global.clearTimeout(timeoutId);
-    }
-  }
-
-  function base64ToUtf8(base64) {
-    const binary = global.atob(base64.replace(/\n/g, ''));
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-    return new TextDecoder('utf-8').decode(bytes);
-  }
-
-  function parseCSV(text) {
-    return global.DashboardCsv.parse(text, { separator: ',' });
-  }
 
   function assertSessionsDocument(document) {
     if (!document || document.schema_version !== 1 || document.source !== 'suunto' || !Array.isArray(document.sessions)) {
@@ -173,27 +138,6 @@
     return document;
   }
 
-  function parseCalendarJSON(text) {
-    let document;
-    try { document = JSON.parse(text); }
-    catch (_) { throw new Error('calendar.json no conté JSON vàlid'); }
-    if (!document || document.schema_version !== 1 || document.planning_source !== 'planning.json' || !document.weeks || typeof document.weeks !== 'object' || Array.isArray(document.weeks)) {
-      throw new Error('calendar.json no té un esquema vàlid');
-    }
-    return document;
-  }
-
-  function parseSettingsJSON(text) {
-    let document;
-    try { document = JSON.parse(text); }
-    catch (_) { throw new Error('settings.json no conté JSON vàlid'); }
-    const heartRate = document?.settings?.heart_rate;
-    if (document?.schema_version !== 1 || !heartRate || !Number.isInteger(heartRate.fcMax) || !Array.isArray(heartRate.zones) || heartRate.zones.length !== 5 || heartRate.zones.some(value => !Number.isInteger(value) || value <= 0)) {
-      throw new Error('settings.json no té un esquema vàlid');
-    }
-    return document;
-  }
-
   function sum(values) {
     const numbers = values.filter(value => typeof value === 'number' && Number.isFinite(value));
     return numbers.length ? numbers.reduce((total, value) => total + value, 0) : null;
@@ -244,104 +188,10 @@
     }));
   }
 
-  async function fetchFirstAvailable(paths) {
-    const token = global.getGitHubToken ? global.getGitHubToken() : '';
-
-    if (token) {
-      for (const path of paths) {
-        try {
-          const repoPath = path.replace(/^\.\//, 'docs/');
-          const apiUrl =
-            `https://api.github.com/repos/${GITHUB_CONFIG.owner}/` +
-            `${GITHUB_CONFIG.repo}/contents/${repoPath}?ref=${GITHUB_CONFIG.branch}`;
-          const response = await request(apiUrl, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: 'application/vnd.github+json',
-            },
-          });
-          if (!response.ok) throw new Error(`API GitHub: ${response.status}`);
-
-          const json = await response.json();
-          const text = base64ToUtf8(json.content);
-          if (!text.trim()) throw new Error(`Fitxer buit: ${repoPath}`);
-          return { path, text, revision: json.sha || response.headers.get('ETag') || null, source: 'github-api' };
-        } catch (error) {
-          console.warn('[data-service] Fallback a Pages:', error.message);
-        }
-      }
-    }
-
-    let lastError = null;
-    for (const path of paths) {
-      try {
-        const response = await request(`${path}?t=${Date.now()}`, {
-          cache: 'no-store',
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status} a ${path}`);
-        const buffer = await response.arrayBuffer();
-        const text = new TextDecoder('utf-8').decode(buffer);
-        if (!text.trim()) throw new Error(`Fitxer buit a ${path}`);
-        return { path, text, revision: response.headers.get('ETag') || null, source: 'pages' };
-      } catch (error) {
-        lastError = error;
-      }
-    }
-
-    throw lastError || new Error('Cap ruta vàlida per al fitxer de dades');
-  }
-
-  let loadPromise = null;
-  async function load() {
-    if (loadPromise) return loadPromise;
-    loadPromise = (async () => {
-      const [sessionsResult, planningResult, calendarResult, settingsResult] = await Promise.all([
-        fetchFirstAvailable(DATA_SOURCES.sessions),
-        fetchFirstAvailable(DATA_SOURCES.planning),
-        fetchFirstAvailable(DATA_SOURCES.calendar),
-        fetchFirstAvailable(DATA_SOURCES.settings),
-      ]);
-
-      const sessionsDocument = parseSessionsJSON(sessionsResult.text);
-      const planningDocument = parsePlanningJSON(planningResult.text);
-      return {
-        sessions: normalizeSessionsJSON(sessionsDocument),
-        sessionsDocument,
-        planning: normalizePlanningJSON(planningDocument),
-        planningDocument,
-        calendar: parseCalendarJSON(calendarResult.text),
-        settings: parseSettingsJSON(settingsResult.text),
-        loaded_at: new Date().toISOString(),
-        sources: {
-          sessions: sessionsResult.path,
-          planning: planningResult.path,
-          calendar: calendarResult.path,
-          settings: settingsResult.path,
-        },
-        revisions: {
-          sessions: sessionsResult.revision,
-          planning: planningResult.revision,
-          calendar: calendarResult.revision,
-          settings: settingsResult.revision,
-        },
-      };
-    })();
-    try { return await loadPromise; }
-    finally { loadPromise = null; }
-  }
-
   global.DashboardDataService = Object.freeze({
-    DATA_SOURCES,
-    base64ToUtf8,
-    parseCSV,
     parseSessionsJSON,
     parsePlanningJSON,
-    parseCalendarJSON,
-    parseSettingsJSON,
     normalizePlanningJSON,
     normalizeSessionsJSON,
-    fetchFirstAvailable,
-    load,
-    refreshRemoteData: load,
   });
 })(window);

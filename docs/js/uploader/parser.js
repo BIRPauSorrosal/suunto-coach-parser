@@ -350,11 +350,11 @@ function parseGeneric(filename, data) {
 
 /**
  * Parseja un fitxer JSON de Suunto i retorna un objecte amb
- * totes les columnes del sessions.csv.
+ * totes les dades necessàries per al document canònic d’activitats.
  *
  * @param {string} filename  - Nom del fitxer (ex: "260323_running_z2.json")
  * @param {object} jsonData  - Contingut JSON ja parsejat (JSON.parse)
- * @returns {object|null}    - Fila CSV o null si el parser no és detectat
+ * @returns {object|null}    - Resultat del parser o null si no és detectat
  */
 function parseSuuntoFile(filename, jsonData) {
   const parserFn = detectParser(filename);

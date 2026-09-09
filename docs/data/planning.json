@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "season": 2026,
-  "source": "planning.csv",
+  "source": "planning.json",
   "cycles": [
     {
       "id": "2026-construccio-01",

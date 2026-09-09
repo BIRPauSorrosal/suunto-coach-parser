@@ -50,7 +50,7 @@
       <!-- 1. Header -->
       <div class="brand-block">
         <p class="eyebrow">Personal Coach</p>
-        <h1>Performance / Dark Analytics</h1>
+        <h1>Performance Analytics</h1>
       </div>
 
       <!-- 2. Pestanyes -->
@@ -79,6 +79,10 @@
           <summary>Veure detalls</summary>
           <ul class="status-list status-list--details">
             <li><span class="dot"></span> <span id="status-source">Origen no resolt</span></li>
+            <li><span class="dot"></span> <span id="status-source-sessions">Activitats: --</span></li>
+            <li><span class="dot"></span> <span id="status-source-calendar">Calendari: --</span></li>
+            <li><span class="dot"></span> <span id="status-source-settings">Configuracio: --</span></li>
+            <li><span class="dot"></span> <span id="status-source-planning">Planning: --</span></li>
             <li><span class="dot"></span> <span id="status-last-update">Sense actualització</span></li>
           </ul>
         </details>
@@ -86,8 +90,9 @@
 
       <!-- 5. Botons dades -->
       <div class="sidebar-actions">
-        <button type="button" class="btn btn-ghost btn-sidebar" id="gh-token-btn"
-                onclick="openGitHubTokenModal()">Connecta GitHub</button>
+        <button type="button" class="btn btn-ghost btn-sidebar" id="supabase-auth-btn">
+          Usuari
+        </button>
         <button type="button" class="btn btn-ghost btn-sidebar" id="sync-now-btn">
           Sincronitzar canvis
         </button>
@@ -105,7 +110,7 @@
     <main class="main-content">
 
       <section class="notice-bar" id="notice-bar" role="status" aria-live="polite">
-        <p id="notice-text">Llegint fitxers de dades...</p>
+        <p id="notice-text">Llegint dades des de Supabase...</p>
       </section>
 
       <section class="data-state-panel" id="data-state-panel" data-state="loading" role="status" aria-live="polite">
@@ -592,8 +597,8 @@
   <div class="bnav-drawer" id="bnav-drawer">
     <p class="bnav-drawer-title">Opcions</p>
     <div class="bnav-drawer-actions">
-      <button type="button" class="btn btn-ghost" onclick="openGitHubTokenModal(); closeBnavDrawer()">
-        Connecta GitHub
+      <button type="button" class="btn btn-ghost" id="supabase-auth-btn-mobile">
+        Usuari
       </button>
       <p class="bnav-sync-status" id="mobile-sync-status" aria-live="polite">Canvis sincronitzats</p>
       <button type="button" class="btn btn-ghost" id="sync-now-btn-mobile">
@@ -638,7 +643,12 @@
 
   <script src="./js/vendor/chart.umd.min.js"></script>
   <script src="./js/lib/formatters.js"></script>
-  <script src="./js/lib/dashboard-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./js/lib/supabase-config.js"></script>
+  <script src="./js/lib/supabase-client.js"></script>
+  <script src="./js/lib/supabase-realtime.js"></script>
+  <script src="./js/lib/supabase-auth.js"></script>
+  <script src="./js/lib/supabase-data-provider.js"></script>
   <script src="./js/lib/dashboard-store.js"></script>
   <script src="./js/lib/week-manager.js"></script>
   <script src="./js/lib/sync-queue.js"></script>
@@ -665,7 +675,6 @@
   <script src="./js/views/sessions.js"></script>
   <script src="./js/views/activities.js"></script>
   <script src="./js/charts.js"></script>
-  <script src="./js/lib/github-token-modal.js"></script>
   <script src="./js/uploader/parser.js"></script>
   <script src="./js/uploader/csv-writer.js"></script>
   <script src="./js/uploader/uploader.js"></script>
