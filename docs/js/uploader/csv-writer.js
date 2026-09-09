@@ -387,6 +387,17 @@ async function appendRowsToJSON(newRows) {
       else { additions.push(session); existingIds.add(session.id); }
     });
     const document = { ...current.document, schema_version: 1, source: 'suunto', sessions: [...existing, ...additions] };
+    let supabaseResult = null;
+    try {
+      supabaseResult = await window.SupabaseDataProvider?.upsertActivities(additions);
+    } catch (error) {
+      console.warn('[uploader] Supabase no disponible; es prova el fallback existent:', error.message);
+    }
+    if (supabaseResult?.status === 'synced') {
+      window.dashboardStore?.setData?.({ ...window.dashboardStore.getState(), sessions: window.DashboardDataService.normalizeSessionsJSON(document), sessionsDocument: document });
+      showNotice(`âœ… ${additions.length} sessions sincronitzades a Supabase${duplicates.length ? ` (${duplicates.length} duplicats ignorats)` : ''}.`);
+      return { ok: true, added: additions.length, duplicates: duplicates.length, provider: 'supabase' };
+    }
     const token = window.getGitHubToken ? window.getGitHubToken() : '';
     if (token) {
       showNotice('Pujant sessions.json al repositori...');

@@ -52,6 +52,16 @@
 
   async function savePlanningLinks(sessionId, planningLinks, fromQueue = false) {
     const config = global.DashboardConfig, token = global.getGitHubToken?.();
+    try {
+      const supabaseResult = await global.SupabaseDataProvider?.saveActivityLinks(sessionId, planningLinks);
+      if (supabaseResult?.status === 'synced') {
+        global.dispatchEvent(new CustomEvent('sessions-sync-status', { detail: { status: 'synced', sessionId, provider: 'supabase' } }));
+        if (!fromQueue) global.SyncQueue?.complete({ kind: 'sessions', key: sessionId });
+        return { status: 'synced', provider: 'supabase' };
+      }
+    } catch (error) {
+      console.warn('[sessions-sync] Supabase no disponible; es prova el fallback GitHub:', error.message);
+    }
     if (!token) { if (!fromQueue) global.SyncQueue?.enqueue({ kind: 'sessions', key: sessionId, links: planningLinks }); global.dispatchEvent(new CustomEvent('sessions-sync-status', { detail: { status: 'pending', sessionId } })); return { status: 'pending' }; }
     try {
       const path = config.paths.sessions.repository, { owner, repo, branch } = config.github;

@@ -240,6 +240,13 @@ async function loadDashboardData({ silent = false, force = false } = {}) {
         weeks: { ...(loaded.calendar?.weeks || {}), ...supabaseCalendar.weeks },
       };
     }
+    const supabaseActivities = await window.SupabaseDataProvider?.getActivities?.();
+    if (supabaseActivities?.status === 'loaded') {
+      const byId = new Map((loaded.sessionsDocument?.sessions || []).map(item => [String(item.id), item]));
+      supabaseActivities.activities.forEach(item => byId.set(String(item.id), item));
+      loaded.sessionsDocument = { ...loaded.sessionsDocument, sessions: [...byId.values()] };
+      loaded.sessions = window.DashboardDataService.normalizeSessionsJSON(loaded.sessionsDocument);
+    }
     if (!force && silent && hasSameRemoteRevisions(loaded.revisions, lastRemoteRevisions)) {
       window.SessionsSync?.queueLocalLinks(loaded.sessions);
       return;

@@ -133,10 +133,79 @@
     return { status: 'synced', revision: data.revision, updated_at: data.updated_at };
   }
 
+  async function getActivities() {
+    const client = global.SupabaseClient?.getClient?.();
+    if (!client) return { status: 'unavailable' };
+    const currentUser = await user();
+    if (!currentUser) return { status: 'unavailable' };
+    const { data, error } = await client
+      .from('activities')
+      .select('payload')
+      .eq('user_id', currentUser.id)
+      .eq('source', 'suunto')
+      .order('activity_date', { ascending: false });
+    if (error) throw error;
+    const activities = (data || []).map(row => row.payload).filter(item => item && item.id);
+    return { status: activities.length ? 'loaded' : 'empty', activities };
+  }
+
+  async function upsertActivities(activities) {
+    const client = global.SupabaseClient?.getClient?.();
+    if (!client) return { status: 'unavailable' };
+    const currentUser = await user();
+    if (!currentUser) return { status: 'unavailable' };
+    const rows = (activities || []).filter(item => item?.id).map(item => ({
+      user_id: currentUser.id,
+      source: 'suunto',
+      external_id: String(item.id),
+      activity_date: item.date,
+      activity_type: item.type,
+      sport: item.sport,
+      payload: item,
+    }));
+    if (!rows.length) return { status: 'empty', count: 0 };
+    const { error } = await client.from('activities').upsert(rows, { onConflict: 'user_id,source,external_id' });
+    if (error) throw error;
+    return { status: 'synced', count: rows.length };
+  }
+
+  async function saveActivityLinks(externalId, links) {
+    const client = global.SupabaseClient?.getClient?.();
+    if (!client) return { status: 'unavailable' };
+    const currentUser = await user();
+    if (!currentUser) return { status: 'unavailable' };
+    const { data: activity, error: activityError } = await client
+      .from('activities')
+      .select('id')
+      .eq('user_id', currentUser.id)
+      .eq('source', 'suunto')
+      .eq('external_id', String(externalId))
+      .maybeSingle();
+    if (activityError) throw activityError;
+    if (!activity) return { status: 'unavailable' };
+    const { error: deleteError } = await client.from('activity_links').delete()
+      .eq('user_id', currentUser.id).eq('activity_id', activity.id);
+    if (deleteError) throw deleteError;
+    const rows = (Array.isArray(links) ? links : []).filter(link => link?.planning_session_id).map(link => ({
+      user_id: currentUser.id,
+      activity_id: activity.id,
+      planning_session_id: String(link.planning_session_id),
+      confidence: link.confidence === 'suggested' ? 'suggested' : 'confirmed',
+    }));
+    if (rows.length) {
+      const { error: insertError } = await client.from('activity_links').insert(rows);
+      if (insertError) throw insertError;
+    }
+    return { status: 'synced', count: rows.length };
+  }
+
   global.SupabaseDataProvider = Object.freeze({
     getHeartRate,
     saveHeartRate,
     getCalendarWeeks,
     saveCalendarWeek,
+    getActivities,
+    upsertActivities,
+    saveActivityLinks,
   });
 })(window);
