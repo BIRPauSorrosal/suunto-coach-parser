@@ -253,6 +253,7 @@ async function loadDashboardData({ silent = false, force = false } = {}) {
     let supabaseCalendar = { status: 'unavailable' };
     let supabaseActivities = { status: 'unavailable' };
     let supabaseSettings = { status: 'unavailable' };
+    let supabasePlanning = { status: 'unavailable' };
     try {
       supabaseCalendar = await window.CalendarSync?.readSupabase?.() || supabaseCalendar;
     } catch (error) {
@@ -267,6 +268,11 @@ async function loadDashboardData({ silent = false, force = false } = {}) {
       supabaseSettings = await window.SupabaseDataProvider?.getHeartRate?.() || supabaseSettings;
     } catch (error) {
       console.warn('[supabase-settings] No s’han pogut llegir les preferències; es manté el fallback JSON:', error.message);
+    }
+    try {
+      supabasePlanning = await window.SupabaseDataProvider?.getPlanning?.() || supabasePlanning;
+    } catch (error) {
+      console.warn('[supabase-planning] No s’han pogut llegir les dades; es manté el fallback JSON:', error.message);
     }
 
     const supabaseCalendarPrimary = ['loaded', 'empty'].includes(supabaseCalendar.status);
@@ -294,7 +300,13 @@ async function loadDashboardData({ silent = false, force = false } = {}) {
       };
       loaded.sources = { ...loaded.sources, settings: 'supabase' };
     }
-    const supabasePrimary = supabaseCalendarPrimary || supabaseActivitiesPrimary || supabaseSettingsPrimary;
+    const supabasePlanningPrimary = ['loaded', 'empty'].includes(supabasePlanning.status);
+    if (supabasePlanningPrimary) {
+      loaded.planningDocument = supabasePlanning.document || { schema_version: 1, source: 'supabase', cycles: [] };
+      loaded.planning = window.DashboardDataService.normalizePlanningJSON(loaded.planningDocument);
+      loaded.sources = { ...loaded.sources, planning: 'supabase' };
+    }
+    const supabasePrimary = supabaseCalendarPrimary || supabaseActivitiesPrimary || supabaseSettingsPrimary || supabasePlanningPrimary;
     if (!force && silent && !supabasePrimary && hasSameRemoteRevisions(loaded.revisions, lastRemoteRevisions)) {
       window.SessionsSync?.queueLocalLinks(loaded.sessions);
       return;

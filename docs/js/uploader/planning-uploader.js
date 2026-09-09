@@ -333,7 +333,17 @@ async function confirmPlanningImport(onComplete) {
     const jsonText = `${JSON.stringify(merge.document, null, 2)}\n`;
     let success = false;
     try {
-      if (token) {
+      let supabaseResult = null;
+      try {
+        supabaseResult = await window.SupabaseDataProvider?.upsertPlanning?.(merge.document);
+      } catch (error) {
+        console.warn('[planning-uploader] Supabase no disponible; es prova el fallback existent:', error.message);
+      }
+      if (supabaseResult?.status === 'synced') {
+        showNotice(`✅ Planning importat a Supabase: ${merge.stats.added} noves, ${merge.stats.replaced} actualitzades.`);
+        window.dashboardStore?.setPlanningDocument?.(merge.document);
+        if (typeof window.refreshDashboard === 'function') await window.refreshDashboard({ silent: true, force: true });
+      } else if (token) {
         showNotice('Llegint planning.json actual...');
         const { sha } = await readPlanningJSONFromGitHub();
         showNotice('Pujant planning.json al repositori...');
@@ -345,8 +355,10 @@ async function confirmPlanningImport(onComplete) {
         const a = document.createElement('a'); a.href = url; a.download = 'planning.json'; a.click(); URL.revokeObjectURL(url);
         showNotice('✅ planning.json descarregat (configura el token per pujar directament).');
       }
-      window.dashboardStore?.setPlanningDocument?.(merge.document);
-      if (token && typeof window.refreshDashboard === 'function') await window.refreshDashboard();
+      if (supabaseResult?.status !== 'synced') {
+        window.dashboardStore?.setPlanningDocument?.(merge.document);
+        if (token && typeof window.refreshDashboard === 'function') await window.refreshDashboard();
+      }
       success = true;
     } catch (err) {
       console.error(err); showNotice(`❌ Error: ${err.message}`, true);
