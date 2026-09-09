@@ -1,5 +1,5 @@
 /* ============================================================
-   sw.js — Suunto Coach Dashboard · Service Worker
+   sw.js — Personal Coach · Service Worker
    Estratègia:
      - Cache First  → assets estàtics (JS, CSS, fonts, icones)
      - Network First → dades CSV (canvien sovint)
@@ -24,17 +24,26 @@ if (
 // • PATCH (v3.0.1, v3.0.2…) — fixes petits de CSS/JS, ajustos visuals
 // Qualsevol canvi al nom de CACHE_NAME invalida la cache anterior i força la
 // descàrrega de tots els assets nous al pròxim activate del SW.
-const CACHE_NAME = 'suunto-coach-v4.5.0';
+const CACHE_NAME = 'personal-coach-v1.0.0';
 
 // Assets estàtics que es precachegen en instal·lar el SW
 const PRECACHE_URLS = [
   './',
   './index.html',
   './manifest.json',
+  './icons/favicon-16.png',
+  './icons/favicon-32.png',
+  './icons/favicon-48.png',
   './icons/icon-192.png',
   './icons/icon-512.png',
+  './icons/icon-512-maskable.png',
   './icons/apple-touch-icon.png',
+  './css/tokens.css',
+  './css/base.css',
   './css/style.css',
+  './css/session-detail-drawer.css',
+  './css/planning-overview.css',
+  './css/activities.css',
   './css/mobile.css',
   './css/analytics.css',
   './css/feedback.css',
@@ -69,10 +78,12 @@ const PRECACHE_URLS = [
   './data/sessions.json',
   './data/settings.json',
   './js/views/overview.js',
+  './js/views/session-detail-drawer.js',
   './js/views/weekly-planner.js',
   './js/views/today.js',
   './js/views/planning.js',
   './js/views/sessions.js',
+  './js/views/activities.js',
   './js/views/comment-editor.js',
   './js/uploader/parser.js',
   './js/uploader/csv-writer.js',

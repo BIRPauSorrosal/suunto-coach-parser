@@ -132,6 +132,8 @@
 .today-session-card { display:flex; justify-content:space-between; gap:18px; align-items:flex-start; padding:14px 16px; background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:9px; }
 .today-session-card.is-complete { border-left-color:var(--accent); background:rgba(34,197,94,.08); }
 .today-session-card--unplanned { border-left-color:var(--yellow); background:rgba(234,179,8,.06); }
+.today-session-card[data-today-planning-session-id], .today-session-card[data-today-activity-id] { cursor:pointer; }
+.today-session-card[data-today-planning-session-id]:focus-visible, .today-session-card[data-today-activity-id]:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 .today-session-status, .today-real-detail span { display:block; color:var(--accent); font-size:.68rem; text-transform:uppercase; letter-spacing:.04em; }
 .today-session-card--unplanned .today-session-status { color:var(--yellow); }
 .today-session-card h4 { margin:4px 0 3px; font-size:1rem; }

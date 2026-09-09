@@ -41,6 +41,18 @@
     if (seconds >= 60) { whole += 1; seconds = 0; }
     return `${whole}:${String(seconds).padStart(2, '0')} min/km`;
   };
+  const paceRange = value => {
+    if (!value || typeof value !== 'object') return pace(value);
+    const min = pace(value.min), max = pace(value.max);
+    return min && max ? `${min.replace(' min/km', '')}–${max}` : min || max;
+  };
+  const range = (value, suffix = '') => {
+    if (!value || typeof value !== 'object') return null;
+    const min = number(value.min), max = number(value.max);
+    if (min === null && max === null) return null;
+    if (min !== null && max !== null) return `${fmt(min)}–${fmt(max)}${suffix}`;
+    return `${fmt(min ?? max)}${suffix}`;
+  };
   const label = (value, labels) => labels[value] || (value ? String(value) : null);
   const actualData = session => session?.raw?.__activity || session?.__activity || session || {};
   const metric = (title, value, modifier = '') => value === null || value === undefined || value === '' ? '' : `<div class="session-detail-metric ${modifier}"><span>${esc(title)}</span><strong>${esc(value)}</strong></div>`;
@@ -130,14 +142,57 @@
     return section('Planificat vs real', `<div class="session-detail-plan-summary">${planInfo}</div>${comparisons ? `<div class="session-detail-comparison"><p>Comparació de camps disponibles</p>${comparisons}</div>` : '<p class="session-detail-muted">No hi ha camps comparables suficients.</p>'}`);
   }
 
+  function renderPlannedStructure(plan) {
+    if (Array.isArray(plan.intervals) && plan.intervals.length) {
+      const rows = plan.intervals.map((item, index) => {
+        const title = item.name || item.label || `Bloc ${index + 1}`;
+        const values = [
+          metric('Durada', duration(item.duration_min)),
+          metric('Distància', number(item.distance_km, item.distance_m) === null ? null : `${fmt(number(item.distance_km, item.distance_m))}${item.distance_m ? ' m' : ' km'}`),
+          metric('Ritme', paceRange(item.pace_min_km)),
+          metric('Velocitat', number(item.speed_kmh, item.speed) === null ? null : `${fmt(number(item.speed_kmh, item.speed))} km/h`),
+          metric('FC objectiu', range(item.heart_rate, ' bpm')),
+          metric('Zona', item.zone || item.heart_rate_zone || null),
+          metric('Recuperació', item.recovery_min === undefined ? null : duration(item.recovery_min))
+        ].join('');
+        return `<div class="session-detail-plan-title"><span>${esc(title)}</span>${values ? `<div class="session-detail-metric-grid">${values}</div>` : ''}</div>`;
+      }).join('');
+      return section('Estructura', `<div class="session-detail-zones">${rows}</div>`);
+    }
+    const values = [
+      metric('Sèries', number(plan.series) === null ? null : fmt(plan.series, 0)),
+      metric('Durada de cada sèrie', duration(plan.series_duration_min)),
+      metric('Recuperació', duration(plan.recovery_min))
+    ].join('');
+    return values ? section('Estructura', `<div class="session-detail-metric-grid">${values}</div>`) : '';
+  }
+
+  function renderPlannedOnly(plan) {
+    const objective = plan.objective || plan.goal || plan.focus || plan.session_type || plan.description || plan.label || null;
+    const values = [
+      metric('Objectiu', objective),
+      metric('Distància prevista', number(plan.distance_km) === null ? null : `${fmt(plan.distance_km)} km`),
+      metric('Durada prevista', duration(plan.duration_min)),
+      metric('Ritme objectiu', paceRange(plan.pace_min_km)),
+      metric('Velocitat objectiu', number(plan.speed_kmh, plan.speed) === null ? null : `${fmt(number(plan.speed_kmh, plan.speed))} km/h`),
+      metric('FC objectiu', range(plan.heart_rate, ' bpm')),
+      metric('Zona objectiu', plan.zone || plan.heart_rate_zone || plan.hr_zone || null),
+      metric('Variant', label(plan.variant, VARIANT_LABELS))
+    ].join('');
+    const noteValues = [plan.notes?.comment, plan.notes, plan.description].filter(value => typeof value === 'string' && value.trim());
+    return section('Objectiu planificat', `<div class="session-detail-metric-grid">${values}</div>`) + renderPlannedStructure(plan) + (noteValues.length ? section('Notes', `<p class="session-detail-note">${esc([...new Set(noteValues)].join('\n\n'))}</p>`) : '');
+  }
+
   function renderContent(session, planned, options = {}) {
-    const row = session || {};
-    const data = actualData(session);
-    const type = label(data.type, TYPE_LABELS) || label(row.tipus, TYPE_LABELS) || 'Activitat';
-    const sport = label(data.sport, SPORT_LABELS);
-    const variant = label(data.variant, VARIANT_LABELS);
-    const subtype = label(data.subtype, VARIANT_LABELS);
-    const date = dateText(data.date || row.date);
+    const plannedOnly = Boolean(options.plannedOnly && planned);
+    const row = plannedOnly ? {} : (session || {});
+    const data = plannedOnly ? {} : actualData(session);
+    const plan = planned || {};
+    const type = plannedOnly ? (label(plan.type, TYPE_LABELS) || label(plan.sport, SPORT_LABELS) || 'Sessió planificada') : (label(data.type, TYPE_LABELS) || label(row.tipus, TYPE_LABELS) || 'Activitat');
+    const sport = plannedOnly ? label(plan.sport, SPORT_LABELS) : label(data.sport, SPORT_LABELS);
+    const variant = plannedOnly ? label(plan.variant, VARIANT_LABELS) : label(data.variant, VARIANT_LABELS);
+    const subtype = plannedOnly ? null : label(data.subtype, VARIANT_LABELS);
+    const date = options.dateLabel || dateText(data.date || row.date);
     const identity = [sport, variant, subtype].filter(Boolean).join(' · ');
     const confirmed = Array.isArray(data.planning_links) && data.planning_links.some(link => link.confidence === 'confirmed');
     const meta = [date, confirmed ? 'Associació confirmada' : 'Activitat registrada', data.id ? `ID ${data.id}` : null].filter(Boolean).map(esc).join(' · ');
@@ -145,14 +200,14 @@
     const vo2 = number(data.vo2max, row.vo2max);
     return `<div class="session-detail-header"><div><p class="eyebrow">${esc(type)}</p><h2 id="session-detail-title">${esc(identity || type)}</h2><p class="session-detail-meta">${meta}</p></div><button type="button" class="session-detail-close" data-session-detail-close aria-label="Tancar el detall">×</button></div>
       <div class="session-detail-body">
-        ${renderHero(data, row)}
-        ${renderImpact(data, row)}
-        ${renderZones(data, row)}
-        ${renderIntervals(data)}
-        ${renderFeeling(data, row)}
+        ${plannedOnly ? renderPlannedOnly(plan) : renderHero(data, row)}
+        ${plannedOnly ? '' : renderImpact(data, row)}
+        ${plannedOnly ? '' : renderZones(data, row)}
+        ${plannedOnly ? '' : renderIntervals(data)}
+        ${plannedOnly ? '' : renderFeeling(data, row)}
         ${vo2 === null ? '' : section('Rendiment', `<div class="session-detail-metric-grid">${metric('VO₂max', `${fmt(vo2, 1)} ml/kg/min`)}</div>`)}
-        ${comment ? section('Notes', `<p class="session-detail-note">${esc(comment)}</p>`) : ''}
-        ${renderPlan(data, row, planned, options.planningItem)}
+        ${plannedOnly ? '' : (comment ? section('Notes', `<p class="session-detail-note">${esc(comment)}</p>`) : '')}
+        ${plannedOnly ? '' : renderPlan(data, row, planned, options.planningItem)}
       </div>`;
   }
 
@@ -199,6 +254,10 @@
     const current = ensureLayer();
     lastFocused = document.activeElement;
     current.querySelector('.session-detail-drawer').innerHTML = renderContent(session, planned, options);
+    if (options.plannedOnly) {
+      const meta = current.querySelector('.session-detail-meta');
+      if (meta) meta.textContent = [options.dateLabel, 'Sessió planificada'].filter(Boolean).join(' · ');
+    }
     current.hidden = false;
     current.classList.add('is-open');
     current.setAttribute('aria-hidden', 'false');
@@ -209,5 +268,10 @@
   }
 
   global.openSessionDetailDrawer = open;
+  global.openPlannedSessionDetail = (planned, actual = null, options = {}) => open(actual || planned, planned, {
+    ...options,
+    planningItem: options.planningItem || planned,
+    plannedOnly: !actual
+  });
   global.closeSessionDetailDrawer = close;
 })(window);

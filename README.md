@@ -1,4 +1,6 @@
-# Suunto Coach Parser
+# Personal Coach
+
+Personal Coach és una aplicació personal de planificació, seguiment i anàlisi de l’entrenament. Utilitza dades de Suunto com a font d’activitats.
 
 Dashboard estàtic per consultar activitats esportives, planificació d’entrenament i calendari flexible a partir de fitxers JSON.
 
