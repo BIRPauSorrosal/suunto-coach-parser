@@ -50,6 +50,22 @@
   }
 
   async function saveWeek(week, value, fromQueue = false) {
+    try {
+      const supabaseResult = await global.SupabaseDataProvider?.saveCalendarWeek(week, value);
+      if (supabaseResult?.status === 'synced') {
+        global.dispatchEvent(new CustomEvent('calendar-sync-status', { detail: { status: 'synced', week: week.key, provider: 'supabase' } }));
+        if (!fromQueue) global.SyncQueue?.complete({ kind: 'calendar', key: week.key });
+        return { status: 'synced', provider: 'supabase' };
+      }
+      if (supabaseResult?.status === 'conflict') {
+        if (!fromQueue) global.SyncQueue?.enqueue({ kind: 'calendar', key: week.key, week, value, conflict: true });
+        global.dispatchEvent(new CustomEvent('calendar-sync-status', { detail: { status: 'conflict', week: week.key, provider: 'supabase' } }));
+        return { status: 'error', error: 'Conflicte de revisió a Supabase' };
+      }
+    } catch (error) {
+      console.warn('[calendar-sync] Supabase no disponible; es prova el fallback GitHub:', error.message);
+    }
+
     const token = global.getGitHubToken?.();
     if (!token) { if (!fromQueue) global.SyncQueue?.enqueue({ kind: 'calendar', key: week.key, week, value }); global.dispatchEvent(new CustomEvent('calendar-sync-status', { detail: { status: 'pending', week: week.key } })); return { status: 'pending' }; }
     try {
@@ -72,5 +88,9 @@
     }
   }
 
-  global.CalendarSync = Object.freeze({ saveWeek, preferLocal, discardLocalWeek });
+  async function readSupabase() {
+    return global.SupabaseDataProvider?.getCalendarWeeks?.() || { status: 'unavailable' };
+  }
+
+  global.CalendarSync = Object.freeze({ saveWeek, preferLocal, discardLocalWeek, readSupabase });
 })(window);

@@ -210,8 +210,10 @@ window.addEventListener('supabase-auth-changed', async event => {
   if (!event.detail?.user) return;
   try {
     const result = await window.SupabaseDataProvider?.getHeartRate();
-    if (result?.status !== 'loaded') return;
-    if (typeof applyFCConfig === 'function') applyFCConfig(result.config);
+    if (result?.status === 'loaded' && typeof applyFCConfig === 'function') {
+      applyFCConfig(result.config);
+    }
+    await window.refreshDashboard?.({ silent: true, force: true });
     window.refreshDashboardUI?.();
   } catch (error) {
     console.warn('[supabase-settings] No s’han pogut carregar les preferències:', error.message);
@@ -231,6 +233,13 @@ async function loadDashboardData({ silent = false, force = false } = {}) {
   try {
     const loaded = await window.DashboardDataService.refreshRemoteData();
     if (requestId !== loadRequestId) return;
+    const supabaseCalendar = await window.CalendarSync?.readSupabase?.();
+    if (supabaseCalendar?.status === 'loaded') {
+      loaded.calendar = {
+        ...loaded.calendar,
+        weeks: { ...(loaded.calendar?.weeks || {}), ...supabaseCalendar.weeks },
+      };
+    }
     if (!force && silent && hasSameRemoteRevisions(loaded.revisions, lastRemoteRevisions)) {
       window.SessionsSync?.queueLocalLinks(loaded.sessions);
       return;
