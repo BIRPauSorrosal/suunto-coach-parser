@@ -94,6 +94,9 @@
 .flex-reconciliation-match { flex:1; color:var(--accent); font-size:.82rem; }
 .flex-reconciliation-unmatched { flex:1; color:var(--text-muted); font-size:.82rem; }
 .flex-linked-activity { margin:8px 0; padding:6px 8px; border-left:2px solid var(--accent); background:rgba(34,197,94,.08); border-radius:5px; }
+.flex-plan-detail-trigger { border-radius:5px; cursor:pointer; }
+.flex-plan-detail-trigger:hover { color:var(--color-text-primary, #f2f5f7); }
+.flex-plan-detail-trigger:focus-visible { outline:2px solid var(--color-accent, #55d6be); outline-offset:3px; }
 .flex-linked-activity span { display:block; color:var(--accent); font-size:.62rem; text-transform:uppercase; }
 .flex-linked-activity strong { display:block; margin-top:2px; font-size:.72rem; }
 .flex-linked-activity small { color:var(--text-muted); }
