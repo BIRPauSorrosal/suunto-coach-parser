@@ -119,7 +119,9 @@ try {
 
 const html = fs.readFileSync(path.join(docs, 'index.html'), 'utf8');
 const scriptSources = [...html.matchAll(/<script[^>]+src=["']([^"']+)["']/g)].map(match => match[1]);
-scriptSources.forEach(source => exists(path.join('docs', source.replace(/^\.\//, ''))));
+scriptSources
+  .filter(source => !/^https?:\/\//i.test(source))
+  .forEach(source => exists(path.join('docs', source.replace(/^\.\//, ''))));
 
 // Guardes bàsiques contra regressions XSS en els punts que renderitzen dades
 // procedents de fitxers pujats o de CSV editables per l'usuari.

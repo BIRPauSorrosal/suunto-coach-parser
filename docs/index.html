@@ -86,6 +86,9 @@
 
       <!-- 5. Botons dades -->
       <div class="sidebar-actions">
+        <button type="button" class="btn btn-ghost btn-sidebar" id="supabase-auth-btn">
+          Inicia sessió Supabase
+        </button>
         <button type="button" class="btn btn-ghost btn-sidebar" id="gh-token-btn"
                 onclick="openGitHubTokenModal()">Connecta GitHub</button>
         <button type="button" class="btn btn-ghost btn-sidebar" id="sync-now-btn">
@@ -592,6 +595,9 @@
   <div class="bnav-drawer" id="bnav-drawer">
     <p class="bnav-drawer-title">Opcions</p>
     <div class="bnav-drawer-actions">
+      <button type="button" class="btn btn-ghost" id="supabase-auth-btn-mobile">
+        Inicia sessió Supabase
+      </button>
       <button type="button" class="btn btn-ghost" onclick="openGitHubTokenModal(); closeBnavDrawer()">
         Connecta GitHub
       </button>
@@ -639,6 +645,10 @@
   <script src="./js/vendor/chart.umd.min.js"></script>
   <script src="./js/lib/formatters.js"></script>
   <script src="./js/lib/dashboard-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./js/lib/supabase-config.js"></script>
+  <script src="./js/lib/supabase-client.js"></script>
+  <script src="./js/lib/supabase-auth.js"></script>
   <script src="./js/lib/dashboard-store.js"></script>
   <script src="./js/lib/week-manager.js"></script>
   <script src="./js/lib/sync-queue.js"></script>
