@@ -1,6 +1,6 @@
 // docs/js/app.js
 // Orquestrador: càrrega de dades, estat global, router, helpers compartits.
-// Dep: lib/dashboard-config.js, lib/dashboard-store.js, lib/data-service.js,
+// Dep: lib/dashboard-store.js, lib/data-service.js,
 //      lib/view-utils.js,
 //      lib/ui-components.js,
 //      lib/formatters.js i lib/metrics.js (carregats abans via index.html)

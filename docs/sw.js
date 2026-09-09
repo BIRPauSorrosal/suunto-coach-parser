@@ -24,7 +24,7 @@ if (
 // • PATCH (v3.0.1, v3.0.2…) — fixes petits de CSS/JS, ajustos visuals
 // Qualsevol canvi al nom de CACHE_NAME invalida la cache anterior i força la
 // descàrrega de tots els assets nous al pròxim activate del SW.
-const CACHE_NAME = 'personal-coach-v1.0.1';
+const CACHE_NAME = 'personal-coach-v1.0.2';
 
 // Assets estàtics que es precachegen en instal·lar el SW
 const PRECACHE_URLS = [
@@ -53,7 +53,6 @@ const PRECACHE_URLS = [
   './css/uploader.css',
   './css/comment-editor.css',
   './js/vendor/chart.umd.min.js',
-  './js/lib/dashboard-config.js',
   './js/lib/supabase-config.js',
   './js/lib/supabase-client.js',
   './js/lib/supabase-realtime.js',
@@ -78,10 +77,6 @@ const PRECACHE_URLS = [
   './js/lib/fc-scale.js',
   './js/lib/fc-config-modal.js',
   './js/lib/pmc-config.js',
-  './data/planning.json',
-  './data/calendar.json',
-  './data/sessions.json',
-  './data/settings.json',
   './js/views/overview.js',
   './js/views/session-detail-drawer.js',
   './js/views/weekly-planner.js',
@@ -98,10 +93,8 @@ const PRECACHE_URLS = [
   './js/uploader/planning-uploader-ui.js',
 ];
 
-// Patrons de URLs legacy que sempre van a xarxa (dades CSV)
-const NETWORK_FIRST_PATTERNS = [
-  /\.csv$/i,
-];
+// Les dades operatives viuen a Supabase i no es precachegen.
+const NETWORK_FIRST_PATTERNS = [];
 
 // ── Install: precáché dels assets estàtics ───────────────────────────────
 self.addEventListener('install', event => {

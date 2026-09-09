@@ -24,8 +24,6 @@ function walk(directory) {
 const required = [
   'docs/index.html',
   'docs/sw.js',
-  'docs/data/sessions.csv',
-  'docs/data/planning.csv',
   'docs/data/planning.json',
   'docs/data/planning.schema.json',
   'docs/data/calendar.json',
@@ -34,7 +32,6 @@ const required = [
   'docs/data/sessions.json',
   'docs/data/settings.json',
   'docs/data/settings.schema.json',
-  'docs/js/lib/dashboard-config.js',
   'docs/js/lib/dashboard-store.js',
   'docs/js/lib/data-service.js',
   'docs/js/lib/view-utils.js',
@@ -49,20 +46,6 @@ walk(path.join(docs, 'js')).filter(file => file.endsWith('.js')).forEach(file =>
   } catch (error) {
     failures.push(`Sintaxi incorrecta: ${path.relative(root, file)} (${error.message})`);
   }
-});
-
-function firstCsvLine(relativePath) {
-  return fs.readFileSync(path.join(root, relativePath), 'utf8').split(/\r?\n/, 1)[0];
-}
-
-const sessionsHeader = firstCsvLine('docs/data/sessions.csv');
-['Data', 'Tipus'].forEach(column => {
-  if (!sessionsHeader.includes(column)) failures.push(`sessions.csv no conté la columna ${column}`);
-});
-
-const planningHeader = firstCsvLine('docs/data/planning.csv');
-['Setmana', 'Data_Inici', 'Data_Fi'].forEach(column => {
-  if (!planningHeader.includes(column)) failures.push(`planning.csv no conté la columna ${column}`);
 });
 
 try {
