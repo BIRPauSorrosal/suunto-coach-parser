@@ -14,7 +14,7 @@
     const client = global.SupabaseClient?.getClient?.();
     if (!client) return;
     const filter = `user_id=eq.${user.id}`;
-    const tables = ['user_settings', 'calendar_weeks', 'activities', 'activity_links'];
+    const tables = ['user_settings', 'calendar_weeks', 'activities', 'activity_links', 'planning_weeks', 'planning_sessions'];
     channel = client.channel(`personal-coach:${user.id}`);
     tables.forEach(table => {
       channel = channel.on('postgres_changes', {

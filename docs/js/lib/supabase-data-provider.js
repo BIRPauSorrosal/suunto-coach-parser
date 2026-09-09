@@ -164,6 +164,131 @@
     return { status: 'synced', inserted: rows.length, skipped: entries.length - rows.length };
   }
 
+  function planningEntries(document) {
+    return (document?.cycles || []).flatMap(cycle => (cycle.weeks || []).map(week => ({
+      cycle,
+      week,
+      sessions: (week.sessions || []).map((session, index) => ({ session, index })),
+    })));
+  }
+
+  function planningDocumentFromRows(weekRows, sessionRows) {
+    const sessionsByWeek = new Map((weekRows || []).map(row => [row.id, []]));
+    (sessionRows || []).forEach(row => sessionsByWeek.get(row.week_id)?.push({
+      ...row.payload,
+      id: row.external_id,
+    }));
+    const cycles = [];
+    const cyclesById = new Map();
+    (weekRows || []).forEach(row => {
+      const cycleId = row.cycle_id || `cycle-${row.start_date}`;
+      let cycle = cyclesById.get(cycleId);
+      if (!cycle) {
+        cycle = {
+          id: cycleId,
+          name: row.cycle_name || cycleId,
+          start: row.cycle_start,
+          end: row.cycle_end,
+          weeks: [],
+        };
+        cyclesById.set(cycleId, cycle);
+        cycles.push(cycle);
+      }
+      cycle.weeks.push({
+        id: row.external_id,
+        code: row.week_code,
+        start: row.start_date,
+        end: row.end_date,
+        phase: row.phase,
+        summary: row.summary || {},
+        sessions: (sessionsByWeek.get(row.id) || []).sort((left, right) => Number(left.session_order || 0) - Number(right.session_order || 0)),
+      });
+    });
+    return {
+      schema_version: 1,
+      source: 'supabase',
+      season: Number(String(weekRows?.[0]?.start_date || '').slice(0, 4)) || null,
+      cycles,
+    };
+  }
+
+  async function getPlanning() {
+    const client = global.SupabaseClient?.getClient?.();
+    if (!client) return { status: 'unavailable' };
+    const currentUser = await user();
+    if (!currentUser) return { status: 'unavailable' };
+
+    const weeksResult = await client
+      .from('planning_weeks')
+      .select('id, external_id, cycle_id, cycle_name, cycle_start, cycle_end, week_code, start_date, end_date, phase, summary, payload, revision, updated_at')
+      .eq('user_id', currentUser.id)
+      .order('start_date');
+    if (weeksResult.error) throw weeksResult.error;
+    const weekRows = weeksResult.data || [];
+    if (!weekRows.length) return { status: 'empty', document: { schema_version: 1, source: 'supabase', cycles: [] } };
+
+    const sessionsResult = await client
+      .from('planning_sessions')
+      .select('week_id, external_id, session_order, payload')
+      .eq('user_id', currentUser.id)
+      .order('session_order');
+    if (sessionsResult.error) throw sessionsResult.error;
+    return {
+      status: 'loaded',
+      document: planningDocumentFromRows(weekRows, sessionsResult.data || []),
+      revision: Math.max(...weekRows.map(row => Number(row.revision) || 1)),
+      updated_at: weekRows.reduce((latest, row) => row.updated_at > latest ? row.updated_at : latest, ''),
+    };
+  }
+
+  async function upsertPlanning(document) {
+    const client = global.SupabaseClient?.getClient?.();
+    if (!client) return { status: 'unavailable' };
+    const currentUser = await user();
+    if (!currentUser) return { status: 'unavailable' };
+    const entries = planningEntries(document);
+    if (!entries.length) return { status: 'empty', weeks: 0, sessions: 0 };
+
+    const weekRows = entries.map(({ cycle, week }) => ({
+      user_id: currentUser.id,
+      external_id: String(week.id),
+      cycle_id: cycle.id,
+      cycle_name: cycle.name,
+      cycle_start: cycle.start || null,
+      cycle_end: cycle.end || null,
+      week_code: week.code,
+      start_date: week.start,
+      end_date: week.end,
+      phase: week.phase,
+      summary: week.summary || {},
+      payload: week,
+      revision: 1,
+    }));
+    const weeksResult = await client
+      .from('planning_weeks')
+      .upsert(weekRows, { onConflict: 'user_id,external_id' })
+      .select('id, external_id');
+    if (weeksResult.error) throw weeksResult.error;
+    const weekIds = new Map((weeksResult.data || []).map(row => [String(row.external_id), row.id]));
+    const sessionRows = entries.flatMap(({ week, sessions }) => sessions.map(({ session, index }) => ({
+      user_id: currentUser.id,
+      week_id: weekIds.get(String(week.id)),
+      external_id: String(session.id),
+      session_order: index,
+      day: session.day ?? null,
+      session_type: session.type,
+      sport: session.sport,
+      variant: session.variant ?? null,
+      payload: session,
+      revision: 1,
+    })));
+    const sessionResult = sessionRows.length
+      ? await client.from('planning_sessions').upsert(sessionRows, { onConflict: 'user_id,external_id' })
+      : { error: null };
+    if (sessionResult.error) throw sessionResult.error;
+    return { status: 'synced', weeks: weekRows.length, sessions: sessionRows.length };
+  }
+
   async function getActivities() {
     const client = global.SupabaseClient?.getClient?.();
     if (!client) return { status: 'unavailable' };
@@ -334,6 +459,8 @@
     getCalendarWeeks,
     saveCalendarWeek,
     migrateCalendar,
+    getPlanning,
+    upsertPlanning,
     getActivities,
     upsertActivities,
     saveActivityLinks,
