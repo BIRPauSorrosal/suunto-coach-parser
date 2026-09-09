@@ -8,7 +8,7 @@
   }
 
   function setButtonState() {
-    const label = currentUser ? `Supabase: ${currentUser.email || 'connectat'}` : 'Inicia sessió Supabase';
+    const label = currentUser ? `Usuari: ${currentUser.email || 'connectat'}` : 'Usuari';
     ['supabase-auth-btn', 'supabase-auth-btn-mobile'].forEach(id => {
       const button = document.getElementById(id);
       if (button) button.textContent = label;
