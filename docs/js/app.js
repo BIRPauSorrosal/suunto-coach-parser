@@ -207,10 +207,11 @@ window.addEventListener('gh-token-changed', () => {
 });
 
 window.addEventListener('supabase-auth-changed', async event => {
-  if (!event.detail?.user) return;
   try {
-    const result = await window.SupabaseDataProvider?.getHeartRate();
-    if (result?.status === 'loaded' && typeof applyFCConfig === 'function') {
+    const result = event.detail?.user
+      ? await window.SupabaseDataProvider?.getHeartRate()
+      : { status: 'unavailable' };
+    if (event.detail?.user && result?.status === 'loaded' && typeof applyFCConfig === 'function') {
       applyFCConfig(result.config);
     }
     await window.refreshDashboard?.({ silent: true, force: true });
