@@ -398,6 +398,7 @@ async function appendRowsToJSON(newRows) {
       showNotice(`âœ… ${additions.length} sessions sincronitzades a Supabase${duplicates.length ? ` (${duplicates.length} duplicats ignorats)` : ''}.`);
       return { ok: true, added: additions.length, duplicates: duplicates.length, provider: 'supabase' };
     }
+    throw new Error('No s’han pogut sincronitzar les activitats a Supabase. Inicia sessió i torna-ho a provar.');
     const token = window.getGitHubToken ? window.getGitHubToken() : '';
     if (token) {
       showNotice('Pujant sessions.json al repositori...');

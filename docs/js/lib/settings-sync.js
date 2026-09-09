@@ -35,7 +35,8 @@
       console.warn('[settings-sync] Supabase no disponible; es prova el fallback GitHub:', error.message);
     }
 
-    if (!token) { if (!fromQueue) global.SyncQueue?.enqueue({ kind: 'settings', key: 'heart_rate', config: cloneConfig(config) }); return { status: 'pending' }; }
+    if (!fromQueue) global.SyncQueue?.enqueue({ kind: 'settings', key: 'heart_rate', config: cloneConfig(config) });
+    return { status: 'pending', provider: 'supabase' };
     try {
       const path = cfg.paths.settings.repository, { owner, repo, branch } = cfg.github;
       const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${encodeURIComponent(branch)}`;

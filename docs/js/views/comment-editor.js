@@ -156,6 +156,7 @@ async function saveSessionComment() {
       throw new Error('El comentari ha canviat en un altre dispositiu. Torna a obrir l’editor.');
     }
 
+    throw new Error('No s’ha pogut desar el comentari a Supabase. Inicia sessió i torna-ho a provar.');
     const { document: sessionsDocument, sha } = await readCurrentSessionsJSON();
     const idx = sessionsDocument.sessions.findIndex(item => String(item.source_file || item.id) === String(_sessionCommentContext.arxiu));
     if (idx === -1) {
