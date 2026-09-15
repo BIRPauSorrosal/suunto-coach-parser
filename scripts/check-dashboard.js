@@ -136,8 +136,8 @@ const viewSources = walk(path.join(docs, 'js/views'))
 if (/new\s+Chart\s*\(/.test(viewSources)) {
   failures.push('Una vista crea gràfics directament en lloc d’usar DashboardComponents');
 }
-if (!fs.readFileSync(path.join(docs, 'sw.js'), 'utf8').includes('const pathname = new URL(url).pathname')) {
-  failures.push('El service worker no normalitza les URLs CSV amb query params');
+if (!fs.readFileSync(path.join(docs, 'sw.js'), 'utf8').includes('!STATIC_ASSET_URLS.has(request.url)')) {
+  failures.push('El service worker podria interceptar dades dinàmiques en lloc de limitar-se als assets estàtics');
 }
 const chartsSource = fs.readFileSync(path.join(docs, 'js/charts.js'), 'utf8');
 if (!/function initCharts[\s\S]*?destroyChart\(['"]zones['"]\)/.test(chartsSource)) {

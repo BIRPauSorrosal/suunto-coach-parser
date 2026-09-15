@@ -75,4 +75,80 @@ context.dashboardStore.setSessions([{ id: 1 }]);
 assert.equal(storeReason, 'sessions-updated');
 assert.equal(context.dashboardStore.getState().sessions.length, 1);
 
-console.log('Dashboard unit checks OK');
+// El Service Worker no pot interceptar dades de Supabase: una resposta GET
+// cachejada d'una setmana o de la seva revisió provocaria conflictes falsos.
+const swListeners = {};
+const swContext = {
+  URL,
+  Promise,
+  self: {
+    location: { hostname: 'coach.example' },
+    registration: { scope: 'https://coach.example/' },
+    addEventListener(name, listener) { swListeners[name] = listener; },
+  },
+  caches: {
+    match: async () => null,
+    open: async () => ({ addAll: async () => {}, put: async () => {} }),
+    keys: async () => [],
+    delete: async () => true,
+  },
+  fetch: async () => ({ status: 200, clone() { return this; } }),
+};
+vm.createContext(swContext);
+vm.runInContext(fs.readFileSync(path.join(root, 'docs/sw.js'), 'utf8'), swContext, { filename: 'docs/sw.js' });
+let handledDynamicRequest = false;
+swListeners.fetch({
+  request: { method: 'GET', url: 'https://project.supabase.co/rest/v1/calendar_weeks?select=*' },
+  respondWith() { handledDynamicRequest = true; },
+});
+assert.equal(handledDynamicRequest, false);
+let handledStaticRequest = false;
+swListeners.fetch({
+  request: { method: 'GET', url: 'https://coach.example/js/app.js' },
+  respondWith() { handledStaticRequest = true; },
+});
+assert.equal(handledStaticRequest, true);
+
+// Les escriptures consecutives de la mateixa setmana s'han de serialitzar i
+// la segona ha d'usar la revisió confirmada per la primera.
+(async () => {
+  const calendarStorage = new Map();
+  const calendarContext = {
+    console,
+    Map,
+    Promise,
+    Date,
+    CustomEvent: class CustomEvent { constructor(type, init = {}) { this.type = type; this.detail = init.detail; } },
+    localStorage: {
+      getItem(key) { return calendarStorage.get(key) || null; },
+      setItem(key, value) { calendarStorage.set(key, value); },
+    },
+    dispatchEvent() {},
+  };
+  calendarContext.window = calendarContext;
+  const revisions = [];
+  let activeWrites = 0, maximumActiveWrites = 0;
+  calendarContext.SupabaseDataProvider = {
+    async saveCalendarWeek(_week, value) {
+      revisions.push(value.revision);
+      activeWrites += 1;
+      maximumActiveWrites = Math.max(maximumActiveWrites, activeWrites);
+      await Promise.resolve();
+      activeWrites -= 1;
+      return { status: 'synced', revision: Number(value.revision) + 1, updated_at: new Date().toISOString() };
+    },
+  };
+  vm.createContext(calendarContext);
+  vm.runInContext(fs.readFileSync(path.join(root, 'docs/js/lib/calendar-sync.js'), 'utf8'), calendarContext, { filename: 'docs/js/lib/calendar-sync.js' });
+  const week = { key: '2026-09-14' };
+  await Promise.all([
+    calendarContext.CalendarSync.saveWeek(week, { revision: 4, updated_at: 'first', items: [] }),
+    calendarContext.CalendarSync.saveWeek(week, { revision: 4, updated_at: 'second', items: [] }),
+  ]);
+  assert.deepEqual(revisions, [4, 5]);
+  assert.equal(maximumActiveWrites, 1);
+  console.log('Dashboard unit checks OK');
+})().catch(error => {
+  console.error(error);
+  process.exitCode = 1;
+});

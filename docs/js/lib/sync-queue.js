@@ -7,9 +7,24 @@
   const notify = detail => global.dispatchEvent(new CustomEvent('sync-queue-status', { detail: { pending: read().length, ...detail } }));
   let retryPromise = null;
 
+  function mergeIntent(previous, next) {
+    const operations = [
+      ...(previous?.operations || []),
+      ...(next?.operations || []),
+    ];
+    return operations.length ? { operations } : null;
+  }
+
   function enqueue(operation) {
     const queue = read(), queueKey = keyOf(operation), index = queue.findIndex(item => (item.queue_key || keyOf(item)) === queueKey);
-    const item = { ...operation, queue_key: queueKey, queued_at: operation.queued_at || new Date().toISOString(), attempts: (queue[index]?.attempts || 0) + 1 };
+    const previous = index >= 0 ? queue[index] : null;
+    const item = {
+      ...operation,
+      intent: operation.kind === 'calendar' ? mergeIntent(previous?.intent, operation.intent) : operation.intent,
+      queue_key: queueKey,
+      queued_at: operation.queued_at || new Date().toISOString(),
+      attempts: (previous?.attempts || 0) + 1,
+    };
     if (index >= 0) queue[index] = item; else queue.push(item);
     write(queue); notify({ status: 'pending', key: queueKey });
   }
@@ -39,7 +54,7 @@
         if (operation.conflict) continue;
         try {
           let result;
-          if (operation.kind === 'calendar') result = await global.CalendarSync?.saveWeek(operation.week, operation.value, true);
+          if (operation.kind === 'calendar') result = await global.CalendarSync?.saveWeek(operation.week, operation.value, { fromQueue: true, intent: operation.intent });
           if (operation.kind === 'sessions') result = await global.SessionsSync?.savePlanningLinks(operation.key, operation.links, true);
           if (operation.kind === 'settings') result = await global.SettingsSync?.saveHeartRate(operation.config, true);
           if (result?.status === 'synced') complete(operation);
@@ -62,7 +77,21 @@
       return { status: 'discarded-local' };
     }
     if (choice === 'local') {
+      if (item.kind === 'calendar') {
+        let rebased;
+        try { rebased = await global.CalendarSync?.rebaseOperation?.(item); }
+        catch (_) { rebased = null; }
+        if (rebased?.status !== 'rebased') {
+          item.conflict = true;
+          item.last_error = 'rebase-failed';
+          write(queue);
+          notify({ status: 'conflict', key: queueKey });
+          return { status: 'unresolved' };
+        }
+        item.value = rebased.value;
+      }
       item.conflict = false;
+      delete item.last_error;
       write(queue);
       return retry();
     }

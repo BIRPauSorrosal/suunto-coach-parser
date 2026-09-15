@@ -102,6 +102,28 @@
       items: Array.isArray(value.items) ? value.items : [],
       removed_planning_session_ids: value.removedPlanning || value.removed_planning_session_ids || [],
     };
+
+    // Les vistes conserven la revisió rebuda de Supabase. Quan la tenim,
+    // fem directament un compare-and-swap sobre aquella revisió: no tornem a
+    // llegir una dada que podria ser antiga o que podria canviar entre la
+    // lectura i l'update.
+    const expectedRevision = Number(value.revision);
+    if (Number.isInteger(expectedRevision) && expectedRevision > 0) {
+      const { data, error } = await client
+        .from('calendar_weeks')
+        .update({ ...payload, revision: expectedRevision + 1 })
+        .eq('user_id', currentUser.id)
+        .eq('week_id', weekId)
+        .eq('revision', expectedRevision)
+        .select('revision, updated_at')
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) return { status: 'conflict' };
+      return { status: 'synced', revision: data.revision, updated_at: data.updated_at };
+    }
+
+    // Les setmanes antigues o creades offline poden no tenir revisió. Només
+    // en aquest cas cal descobrir si la fila existeix abans d'escriure-la.
     const { data: current, error: readError } = await client
       .from('calendar_weeks')
       .select('revision')

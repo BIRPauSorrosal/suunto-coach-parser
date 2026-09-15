@@ -687,8 +687,17 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
+        const reloadKey = 'personal-coach-sw-reloaded-v1.1.1';
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          // El nou worker ja controla la pestanya, però els scripts actuals
+          // poden ser de la cache anterior. Fem una sola recàrrega automàtica
+          // perquè no calgui esborrar dades del navegador manualment.
+          if (sessionStorage.getItem(reloadKey)) return;
+          sessionStorage.setItem(reloadKey, 'true');
+          window.location.reload();
+        });
         navigator.serviceWorker
-          .register('./sw.js')
+          .register('./sw.js', { updateViaCache: 'none' })
           .then(reg => console.log('[SW] Registrat:', reg.scope))
           .catch(err => console.warn('[SW] Error en el registre:', err));
       });

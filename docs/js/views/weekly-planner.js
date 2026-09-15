@@ -146,7 +146,13 @@
       week_id: week.key,
       week_code: planOf(week).setmana || weekCode(week.key),
       items: [...reconciled, ...saved.filter(isManual)],
-      removedPlanning: [...removed]
+      removedPlanning: [...removed],
+      // La revisió és necessària per fer l'update condicional posterior.
+      // Sense conservar-la, cada render del calendari convertia qualsevol
+      // escriptura en un read-before-write vulnerable a concurrència.
+      revision: current?.revision ?? null,
+      updated_at: current?.updated_at ?? null,
+      sync_status: current?.sync_status ?? null,
     };
   }
 
@@ -165,19 +171,38 @@
     write(all);
     return result;
   }
+
+  function calendarIntent(previous, next) {
+    const before = new Map((previous?.items || []).map(item => [item.id, item]));
+    const after = new Map((next.items || []).map(item => [item.id, item]));
+    const operations = [];
+    after.forEach((item, id) => {
+      const old = before.get(id);
+      if (!old) {
+        operations.push({ type: 'add', id, item: { ...item } });
+        return;
+      }
+      if (old.day !== item.day) operations.push({ type: 'move', id, day: item.day });
+      if (old.status !== item.status) operations.push({ type: 'status', id, status: item.status });
+    });
+    before.forEach((item, id) => {
+      if (after.has(id)) return;
+      operations.push({
+        type: 'remove',
+        id,
+        removedPlanningId: item.source === 'planning' ? id : null,
+      });
+    });
+    return { operations };
+  }
+
   function saveCalendar(week, calendar) {
     const saved = { ...calendar, version: 5, updated_at: new Date().toISOString(), sync_status: 'pending' };
-    const all = read(); all[week.key] = saved; write(all);
+    const all = read(), intent = calendarIntent(all[week.key], saved); all[week.key] = saved; write(all);
     window.dispatchEvent(new CustomEvent('dashboard-local-change', {
       detail: { kind: 'calendar', key: week.key }
     }));
-    const sync = window.CalendarSync?.saveWeek(week, saved);
-    if (sync?.then) sync.then(result => {
-      if (!result || result.status !== 'synced') return;
-      const latest = read()[week.key];
-      if (!latest || latest.updated_at !== saved.updated_at) return;
-      const current = read(); current[week.key] = { ...latest, sync_status: 'synced' }; write(current);
-    });
+    window.CalendarSync?.saveWeek(week, saved, { intent });
   }
   function editable(week) { return new Date() <= week.endDate; }
   function actualOn(sessions, date) { const key = iso(date); return sessions.filter(s => iso(s.date) === key && !activityLinks(s).some(link => link.confidence === 'confirmed')); }

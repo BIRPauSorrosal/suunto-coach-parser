@@ -31,7 +31,8 @@ També cal validar la sintaxi dels fitxers JavaScript modificats amb `node
 - associar una activitat i verificar `activity_links`;
 - editar un comentari i verificar `activities`;
 - actualitzar la configuració cardíaca i verificar `user_settings`;
-- obrir dues pestanyes i comprovar el refresc Realtime;
+- obrir dues pestanyes o dispositius, moure una targeta a cada un i comprovar
+  el refresc Realtime i la conservació dels dos moviments;
 - provocar una pèrdua temporal de connexió i comprovar la cua i el reintent;
 - exportar activitats a JSON i confirmar que és una operació explícita;
 - comprovar que la consola no mostra errors ni intents d’escriptura a GitHub.
@@ -47,8 +48,9 @@ També cal validar la sintaxi dels fitxers JavaScript modificats amb `node
   repeteix l’edició sobre la revisió actual.
 - **Planning absent:** comprova `planning_weeks` i `planning_sessions` i que
   el `user_id` sigui el de la sessió actual.
-- **Versió antiga a Pages:** espera el deploy i invalida la cache/service
-  worker si s’ha modificat un asset precachejat.
+- **Versió antiga a Pages:** torna a obrir la pàgina després del deploy. El
+  Service Worker actualitza els assets estàtics i fa una única recàrrega
+  automàtica; no cal esborrar la cache ni el `localStorage`.
 
 ## SQL de Supabase
 

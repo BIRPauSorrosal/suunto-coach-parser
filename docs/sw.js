@@ -24,7 +24,7 @@ if (
 // • PATCH (v3.0.1, v3.0.2…) — fixes petits de CSS/JS, ajustos visuals
 // Qualsevol canvi al nom de CACHE_NAME invalida la cache anterior i força la
 // descàrrega de tots els assets nous al pròxim activate del SW.
-const CACHE_NAME = 'personal-coach-v1.1.0';
+const CACHE_NAME = 'personal-coach-v1.1.1';
 
 // Assets estàtics que es precachegen en instal·lar el SW
 const PRECACHE_URLS = [
@@ -93,8 +93,13 @@ const PRECACHE_URLS = [
   './js/uploader/planning-uploader-ui.js',
 ];
 
-// Les dades operatives viuen a Supabase i no es precachegen.
-const NETWORK_FIRST_PATTERNS = [];
+// Les dades operatives viuen a Supabase i no es posen mai a la Cache API.
+// Important: el handler de `fetch` també rep les peticions cross-origin del
+// client. Per tant, no n'hi ha prou amb no fer-les precache: cal excloure-les
+// explícitament del cache de runtime.
+const STATIC_ASSET_URLS = new Set(
+  PRECACHE_URLS.map(path => new URL(path, self.registration.scope).href)
+);
 
 // ── Install: precáché dels assets estàtics ───────────────────────────────
 self.addEventListener('install', event => {
@@ -118,34 +123,10 @@ self.addEventListener('activate', event => {
   );
 });
 
-// ── Fetch: Cache First o Network First segons el recurs ───────────────
+// ── Fetch: Cache First només per als assets estàtics propis ───────────
 self.addEventListener('fetch', event => {
   const { request } = event;
-  const url = request.url;
-  const pathname = new URL(url).pathname;
-
-  if (request.method !== 'GET' || url.startsWith('chrome-extension')) return;
-
-  // Les dades poden portar query params de cache-busting; classifiquem per
-  // pathname perquè continuïn tenint estratègia Network First.
-  const isNetworkFirst = NETWORK_FIRST_PATTERNS.some(pattern =>
-    pattern.test(url) || pattern.test(pathname)
-  );
-
-  if (isNetworkFirst) {
-    event.respondWith(
-      fetch(request)
-        .then(response => {
-          if (response && response.status === 200) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
-          }
-          return response;
-        })
-        .catch(() => caches.match(request))
-    );
-    return;
-  }
+  if (request.method !== 'GET' || !STATIC_ASSET_URLS.has(request.url)) return;
 
   event.respondWith(
     caches.match(request)
