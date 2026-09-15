@@ -110,7 +110,20 @@ function renderResults(ok, errors) {
   if (ok.length) {
     document.getElementById("uploader-ok-count").textContent = ok.length;
     document.getElementById("uploader-ok-list").innerHTML = ok
-      .map((f, i) => `
+      .map((f, i) => {
+        const session = f.row.__session || {};
+        const classification = activityClassification(session);
+        const sportOptions = activitySportOptions()
+          .map(([value, label]) => `<option value="${escapeHtml(value)}"${value === classification.sport ? ' selected' : ''}>${escapeHtml(label)}</option>`)
+          .join('');
+        const typeOptions = activityTypeOptionsForSport(classification.sport)
+          .map(([value, label]) => `<option value="${escapeHtml(value)}"${value === classification.activityType ? ' selected' : ''}>${escapeHtml(label)}</option>`)
+          .join('');
+        const variantType = activityCanonicalTypeFor(classification.sport, classification.activityType, session.type);
+        const variantOptions = activityVariantOptions(variantType, session.variant)
+          .map(option => `<option value="${escapeHtml(option.value)}"${option.value === session.variant ? ' selected' : ''}>${escapeHtml(option.label)}</option>`)
+          .join('');
+        return `
         <li class="uploader-list-item uploader-list-item--with-comment">
           <div class="uploader-item-row">
             <span class="uploader-item-icon">📄</span>
@@ -127,21 +140,16 @@ function renderResults(ok, errors) {
             >✏️</button>
           </div>
           <div class="uploader-variant-row">
+            <label for="uploader-sport-${i}">Esport</label>
+            <select id="uploader-sport-${i}" class="uploader-sport-input">${sportOptions}</select>
+          </div>
+          <div class="uploader-variant-row">
+            <label for="uploader-type-${i}">Tipus</label>
+            <select id="uploader-type-${i}" class="uploader-type-input">${typeOptions}</select>
+          </div>
+          <div class="uploader-variant-row">
             <label for="uploader-variant-${i}">Variant</label>
-            <select id="uploader-variant-${i}" class="uploader-variant-input">
-              <option value="">Sense especificar</option>
-              <option value="road">Road</option>
-              <option value="trail">Trail</option>
-              <option value="indoor">Indoor / estàtica</option>
-              <option value="outdoor">Outdoor / carretera</option>
-              <option value="S1">S1</option>
-              <option value="S2">S2</option>
-              <option value="S3">S3</option>
-              <option value="S4">S4</option>
-              <option value="S5">S5</option>
-              <option value="Pliometria">Pliometria</option>
-              <option value="Complementari">Complementari</option>
-            </select>
+            <select id="uploader-variant-${i}" class="uploader-variant-input">${variantOptions}</select>
           </div>
           <div class="uploader-comment-area" id="uploader-comment-area-${i}" style="display:none">
             <textarea
@@ -151,12 +159,15 @@ function renderResults(ok, errors) {
               rows="2"
             ></textarea>
           </div>
-        </li>`)
+        </li>`;
+      })
       .join("");
 
     // Binding dels botons toggle (delegació d'events sobre la llista)
     document.getElementById("uploader-ok-list")
       .addEventListener("click", _handleCommentToggle);
+    document.getElementById("uploader-ok-list")
+      .addEventListener("change", _handleTypeChange);
 
     okSection.style.display  = "block";
     confirmBtn.disabled      = false;
@@ -222,6 +233,47 @@ function collectComments() {
 function collectVariants() {
   return Array.from(document.querySelectorAll('#uploader-ok-list .uploader-variant-input'))
     .map(select => select.value || null);
+}
+
+function collectActivitySports() {
+  return Array.from(document.querySelectorAll('#uploader-ok-list .uploader-sport-input'))
+    .map(select => select.value || 'other');
+}
+
+function collectActivityTypes() {
+  return Array.from(document.querySelectorAll('#uploader-ok-list .uploader-type-input'))
+    .map(select => select.value || 'other');
+}
+
+function _renderImportTypeOptions(row, selectedType) {
+  const sportSelect = row.querySelector('.uploader-sport-input');
+  const typeSelect = row.querySelector('.uploader-type-input');
+  if (!sportSelect || !typeSelect) return;
+  const options = activityTypeOptionsForSport(sportSelect.value);
+  const selected = options.some(([value]) => value === selectedType) ? selectedType : options[0]?.[0] || 'general';
+  typeSelect.innerHTML = options
+    .map(([value, label]) => `<option value="${value}"${value === selected ? ' selected' : ''}>${label}</option>`).join('');
+  _renderImportVariantOptions(row, selected);
+}
+
+function _renderImportVariantOptions(row, selectedType) {
+  const sportSelect = row.querySelector('.uploader-sport-input');
+  const variantSelect = row.querySelector('.uploader-variant-input');
+  if (!sportSelect || !variantSelect) return;
+  const canonicalType = activityCanonicalTypeFor(sportSelect.value, selectedType);
+  variantSelect.innerHTML = activityVariantOptions(canonicalType)
+    .map(option => `<option value="${option.value}">${option.label}</option>`).join('');
+}
+
+function _handleTypeChange(event) {
+  const row = event.target.closest('.uploader-list-item');
+  if (!row) return;
+  if (event.target.closest('.uploader-sport-input')) {
+    _renderImportTypeOptions(row, row.querySelector('.uploader-type-input')?.value);
+    return;
+  }
+  const typeSelect = event.target.closest('.uploader-type-input');
+  if (typeSelect) _renderImportVariantOptions(row, typeSelect.value);
 }
 
 
@@ -323,7 +375,7 @@ function _bindEvents(dialog) {
     .addEventListener("click", async () => {
       setConfirmState("processing");
       const comments = collectComments();
-      const result = await confirmImport(comments, collectVariants(), closeUploaderModal);  // uploader.js
+      const result = await confirmImport(comments, collectVariants(), collectActivityTypes(), collectActivitySports(), closeUploaderModal);  // uploader.js
       if (!result?.ok) setConfirmState("idle");
     });
 }

@@ -48,10 +48,12 @@
         : session.type === 'strength' ? `FORÇA${session.subtype ? ` ${session.subtype}` : ''}`
         : session.type === 'cycling' ? (session.variant === 'indoor' ? 'BICI ESTÀTICA' : 'BICI')
         : session.type === 'race' ? 'CURSA'
-        : session.type === 'test' ? 'TEST'
+        : session.type === 'test' ? (session.sport === 'cycling' ? 'TEST_BICI' : 'TEST')
         : session.type === 'padel' ? 'PADEL'
+        : session.type === 'tennis' ? 'TENNIS'
         : session.type === 'hiking' ? 'HIKING'
         : session.type === 'swimming' ? 'NATACIÓ'
+        : session.type === 'walking' ? 'WALKING'
         : qualityType || 'ALTRES';
       const heartRate = session.heart_rate || {};
       const zones = session.zones || {};
@@ -135,7 +137,24 @@
     try { document = JSON.parse(text); }
     catch (_) { throw new Error('planning.json no conté JSON vàlid'); }
     assertPlanningDocument(document);
-    return document;
+    return normalizePlanningDocument(document);
+  }
+
+  // Normalitza els camps de classificació sense eliminar cap dada original.
+  function normalizePlanningDocument(document) {
+    const copy = JSON.parse(JSON.stringify(document));
+    copy.cycles = (copy.cycles || []).map(cycle => ({
+      ...cycle,
+      weeks: (cycle.weeks || []).map(week => ({
+        ...week,
+        sessions: (week.sessions || []).map(session =>
+          typeof normalizeActivityPlanningSession === 'function'
+            ? normalizeActivityPlanningSession(session)
+            : session
+        ),
+      })),
+    }));
+    return copy;
   }
 
   function sum(values) {
@@ -146,7 +165,8 @@
   // Adapta el JSON jeràrquic al model pla que encara utilitzen Overview/Planning.
   // Les sessions estructurades es conserven a __sessions per a les vistes noves.
   function normalizePlanningJSON(document) {
-    return document.cycles.flatMap(cycle => cycle.weeks.map(week => {
+    const normalized = normalizePlanningDocument(document);
+    return normalized.cycles.flatMap(cycle => cycle.weeks.map(week => {
       const sessions = Array.isArray(week.sessions) ? week.sessions : [];
       const quality = sessions.filter(session => session.type === 'quality');
       const z2 = sessions.filter(session => session.type === 'z2');
@@ -191,6 +211,7 @@
   global.DashboardDataService = Object.freeze({
     parseSessionsJSON,
     parsePlanningJSON,
+    normalizePlanningDocument,
     normalizePlanningJSON,
     normalizeSessionsJSON,
   });

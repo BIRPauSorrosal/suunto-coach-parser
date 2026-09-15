@@ -20,6 +20,9 @@ load('docs/js/lib/csv.js');
 load('docs/js/lib/formatters.js');
 load('docs/js/lib/dashboard-store.js');
 load('docs/js/lib/metrics.js');
+load('docs/js/lib/activity-types.js');
+load('docs/js/lib/data-service.js');
+load('docs/js/uploader/parser.js');
 load('docs/js/uploader/planning-uploader.js');
 
 const csv = context.DashboardCsv;
@@ -59,6 +62,21 @@ assert.equal(JSON.stringify(merged.stats), JSON.stringify({ added: 1, replaced: 
 assert.equal(merged.document.cycles[0].weeks[0].sessions[0].type, 'quality');
 assert.equal(merged.document.cycles[0].weeks[1].code, '2026-S02');
 
+const normalizedPlanning = context.DashboardDataService.normalizePlanningDocument({
+  schema_version: 1,
+  cycles: [{
+    id: 'base', name: 'Base', weeks: [{
+      id: '2026-01-01', code: '2026-S01', start: '2026-01-01', end: '2026-01-07', phase: 'Base',
+      sessions: [{ id: '2026-S01-aerobic-01', type: 'aerobic', sport: 'run', variant: null }],
+    }],
+  }],
+});
+assert.deepEqual(
+  [normalizedPlanning.cycles[0].weeks[0].sessions[0].type, normalizedPlanning.cycles[0].weeks[0].sessions[0].sport],
+  ['z2', 'running'],
+);
+assert.equal(context.activityPlanningVariant({ type: 'strength', sport: 'strength', variant: null, session_type: 'S2' }), 'S2');
+
 const today = new Date();
 today.setHours(12, 0, 0, 0);
 const yesterday = new Date(today);
@@ -74,6 +92,52 @@ context.dashboardStore.subscribe((_, reason) => { storeReason = reason; });
 context.dashboardStore.setSessions([{ id: 1 }]);
 assert.equal(storeReason, 'sessions-updated');
 assert.equal(context.dashboardStore.getState().sessions.length, 1);
+
+// Taxonomia: conserva la compatibilitat amb les etiquetes legacy i no depèn
+// d'una resincronització de les activitats que ja són a Supabase.
+const classifications = JSON.parse(vm.runInContext(`JSON.stringify([
+  activityClassification({ tipusKey: 'MARATÓ' }),
+  activityClassification({ raw: { __activity: { type: 'cycling', sport: 'cycling' } }, tipusKey: 'BICI' }),
+  activityClassification({ tipusKey: 'TENNIS' })
+])`, context));
+assert.deepEqual(classifications.map(item => [item.type, item.sport, item.activityType, item.group]), [
+  ['long-run', 'running', 'long', 'long'],
+  ['cycling', 'cycling', 'general', 'bici'],
+  ['tennis', 'tennis', 'general', 'other'],
+]);
+const legacyZ2 = JSON.parse(vm.runInContext(`JSON.stringify(activityClassification({ tipusKey: 'Z2' }))`, context));
+assert.deepEqual([legacyZ2.sport, legacyZ2.activityType, legacyZ2.subtype], ['running', 'aerobic', 'z2']);
+const bikeTest = JSON.parse(vm.runInContext(`JSON.stringify(activityClassification({ tipusKey: 'TEST_BICI' }))`, context));
+assert.deepEqual([bikeTest.sport, bikeTest.activityType], ['cycling', 'test']);
+assert.equal(vm.runInContext(`activityCanonicalTypeFor('running', 'aerobic')`, context), 'z2');
+assert.equal(vm.runInContext(`activityCanonicalTypeFor('cycling', 'test')`, context), 'test');
+assert.equal(vm.runInContext(`activityPlanningLabel({ type: 'z2', sport: 'running' })`, context), 'Aeròbic');
+assert.equal(vm.runInContext(`activityPlanningLabel({ type: 'cycling', sport: 'cycling' })`, context), 'Cycling');
+assert.equal(vm.runInContext(`activityDisplayLabel({ type: 'strength', sport: 'strength', session_type: 'S3' }, true)`, context), 'Força · S3');
+assert.equal(vm.runInContext(`activityDisplayLabel({ type: 'cycling', sport: 'cycling', variant: 'indoor' }, true)`, context), 'Cycling · Interior / estàtica');
+assert.deepEqual(
+  JSON.parse(vm.runInContext(`JSON.stringify(activityTypeOptionsForSport('running').map(([value]) => value))`, context)),
+  ['aerobic', 'quality', 'long', 'race', 'test'],
+);
+
+const parsedVariants = JSON.parse(vm.runInContext(`JSON.stringify([
+  sessionFromParsedRow('20260915_marato-road.json', { Tipus: 'MARATÓ', Data: '15/09/2026' }),
+  sessionFromParsedRow('20260916_tennis.json', { Tipus: 'TENNIS', Data: '16/09/2026' }),
+  Boolean(detectParser('20260917_bici-estatica-indoor.json')),
+  Boolean(detectParser('20260918_half-marathon-trail.json'))
+])`, context));
+assert.deepEqual(parsedVariants[0].type, 'long-run');
+assert.deepEqual(parsedVariants[0].variant, 'road');
+assert.deepEqual([parsedVariants[1].type, parsedVariants[1].sport], ['tennis', 'tennis']);
+assert.equal(parsedVariants[2], true);
+assert.equal(parsedVariants[3], true);
+
+const parsedBici = JSON.parse(vm.runInContext(`JSON.stringify(
+  parseSuuntoFile('20260917_bici-estatica-indoor.json', {
+    DeviceLog: { Header: { DateTime: '2026-09-17T18:00:00+02:00', Duration: 1800 }, Samples: [] }
+  }).__session
+)`, context));
+assert.deepEqual([parsedBici.type, parsedBici.sport, parsedBici.variant], ['cycling', 'cycling', 'indoor']);
 
 // El Service Worker no pot interceptar dades de Supabase: una resposta GET
 // cachejada d'una setmana o de la seva revisió provocaria conflictes falsos.

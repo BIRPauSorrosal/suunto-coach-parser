@@ -1,10 +1,4 @@
 (function () {
-  const TYPE_LABELS = {
-    quality: 'Qualitat', z2: 'Z2', long: 'Tirada llarga', 'long-run': 'Tirada llarga',
-    strength: 'Força', padel: 'Pàdel', cycling: 'Ciclisme', bici: 'Bici',
-    running: 'Cursa', race: 'Cursa', hiking: 'Senderisme', swimming: 'Natació', other: 'Altres'
-  };
-  const SPORT_LABELS = { running: 'Cursa', cycling: 'Ciclisme', strength: 'Força', padel: 'Pàdel', hiking: 'Senderisme', swimming: 'Natació' };
   let lastFocus = null;
 
   const esc = value => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
@@ -14,8 +8,14 @@
     const total = Math.round(Number(value) * 60);
     return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
   };
-  const typeLabel = value => TYPE_LABELS[String(value || '').toLowerCase()] || String(value || 'Sessió');
-  const sportLabel = value => SPORT_LABELS[String(value || '').toLowerCase()] || typeLabel(value);
+  const typeLabel = value => activityPlanningLabel(typeof value === 'string' ? { type: value } : value) || String(value || 'Sessió');
+  const sportLabel = value => {
+    if (typeof value !== 'string') return activitySportLabel(value) || typeLabel(value);
+    const key = value.trim().toLowerCase();
+    return activitySportOptions().some(([sport]) => sport === key)
+      ? activitySportLabel({ sport: value })
+      : typeLabel(value);
+  };
   const present = value => value !== null && value !== undefined && value !== '';
   const textValue = value => typeof value === 'object' ? '' : String(value || '').trim();
 
@@ -52,7 +52,7 @@
       field('Velocitat objectiu', speed),
       field('Freqüència cardíaca objectiu', hr),
       field('Zona objectiu', zone),
-      field('Variant', session.variant),
+      field('Variant', activityPlanningVariant(session)),
     ].join('');
   }
 
@@ -130,7 +130,10 @@
     const layer = ensureLayer();
     lastFocus = document.activeElement;
     const panel = layer.querySelector('.session-detail-panel');
-    const title = planned ? (planned.label || planned.session_type || typeLabel(planned.type)) : (actual?.tipus || actual?.sport || actual?.type || 'Activitat');
+    const plannedLabel = planned ? activityDisplayLabel(planned, true) : null;
+    const title = planned
+      ? (planned.title || (planned.source === 'manual' ? planned.detail : null) || plannedLabel || planned.label || typeLabel(planned.type))
+      : (actual?.tipus || actual?.sport || actual?.type || 'Activitat');
     const sport = planned ? sportLabel(planned.sport || planned.type) : sportLabel(actual?.sport || actual?.type);
     layer.querySelector('#session-detail-kicker').textContent = planned ? (actual ? 'Planificada · realitzada' : 'Sessió planificada') : 'Activitat realitzada';
     layer.querySelector('#session-detail-title').textContent = title;

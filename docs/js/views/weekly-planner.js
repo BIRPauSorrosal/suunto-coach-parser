@@ -3,10 +3,7 @@
   const STORE_KEY = 'suunto-coach-calendar-local-v1';
   const LEGACY_STORE_KEY = 'suunto-coach-weekly-calendar-v2';
   const DAYS = ['Dilluns', 'Dimarts', 'Dimecres', 'Dijous', 'Divendres', 'Dissabte', 'Diumenge'];
-  const TYPES = {
-    quality: ['Qualitat', 'var(--orange)'], z2: ['Z2', 'var(--accent)'], long: ['Tirada llarga', 'var(--blue)'], 'long-run': ['Tirada llarga', 'var(--blue)'],
-    strength: ['Força', 'var(--purple)'], bici: ['Bici estàtica', 'var(--cyan)'], other: ['Altres', 'var(--yellow)']
-  };
+  const typeMeta = value => [activityPlanningLabel(value), activityToneColor(value)];
   const UNASSIGNED_FROM = '2026-09-07'; // 2026-S37
   let weekIndex = null;
   let currentTimeline = [];
@@ -63,8 +60,10 @@
   function planItems(week) {
     const p = planOf(week), items = [];
     if (Array.isArray(p.sessions)) return p.sessions.map(session => {
-      const meta = TYPES[session.type] || TYPES.other;
-      const title = session.session_type ? `${meta[0]} · ${session.session_type}` : meta[0];
+      const meta = typeMeta(session.type);
+      const title = session.session_type
+        ? `${activityPlanningLabel(session)} · ${session.session_type}`
+        : activityDisplayLabel(session, true);
       const details = [
         session.distance_km ? `${fmt(session.distance_km)} km` : '',
         session.duration_min ? `${fmt(session.duration_min)} min` : '',
@@ -73,16 +72,17 @@
       ].filter(Boolean);
       return [session.type, title, details.join(' · ') || title, dayIndex(session.day), session.id];
     });
-    if ((p.qKm || 0) > 0 || (p.qSeries || 0) > 0) items.push(['quality', 'Qualitat', `${p.qKm ? fmt(p.qKm)+' km · ' : ''}${p.qSeries || ''} ${p.qSeries ? 'sèries' : ''}`.trim()]);
-    if ((p.z2Km || 0) > 0 || (p.z2Durada || 0) > 0) items.push(['z2', 'Z2', `${p.z2Km ? fmt(p.z2Km)+' km · ' : ''}${p.z2Durada ? fmt(p.z2Durada)+' min' : 'Sessió aeròbica'}`]);
-    if ((p.llKm || 0) > 0 || (p.llDurada || 0) > 0) items.push(['long', 'Tirada llarga', `${p.llKm ? fmt(p.llKm)+' km' : ''}${p.llTipus ? ' · '+p.llTipus : ''}`.trim()]);
-    if (p.forcaPlan) items.push(['strength', 'Força', p.forcaPlan]);
-    if (p.padelPlan) items.push(['other', 'Altres', p.padelPlan]);
+    if ((p.qKm || 0) > 0 || (p.qSeries || 0) > 0) items.push(['quality', activityPlanningLabel({ type: 'quality' }), `${p.qKm ? fmt(p.qKm)+' km · ' : ''}${p.qSeries || ''} ${p.qSeries ? 'sèries' : ''}`.trim()]);
+    if ((p.z2Km || 0) > 0 || (p.z2Durada || 0) > 0) items.push(['z2', activityPlanningLabel({ type: 'z2' }), `${p.z2Km ? fmt(p.z2Km)+' km · ' : ''}${p.z2Durada ? fmt(p.z2Durada)+' min' : 'Sessió aeròbica'}`]);
+    if ((p.llKm || 0) > 0 || (p.llDurada || 0) > 0) items.push(['long-run', activityPlanningLabel({ type: 'long-run' }), `${p.llKm ? fmt(p.llKm)+' km' : ''}${p.llTipus ? ' · '+p.llTipus : ''}`.trim()]);
+    if (p.forcaPlan) items.push(['strength', activityPlanningLabel({ type: 'strength' }), p.forcaPlan]);
+    if (p.padelPlan) items.push(['padel', activityPlanningLabel({ type: 'padel' }), p.padelPlan]);
     return items;
   }
 
   function defaultDay(type) {
-    return { quality: 1, z2: 3, long: 5, 'long-run': 5, strength: 2, other: 5 }[type] ?? null;
+    const canonicalType = activityClassification({ type }).type;
+    return { quality: 1, z2: 3, 'long-run': 5, strength: 2, cycling: 5, padel: 5, tennis: 5, hiking: 5, swimming: 5, walking: 5, other: 5 }[canonicalType] ?? null;
   }
 
   function isManual(item) {
@@ -208,14 +208,11 @@
   function actualOn(sessions, date) { const key = iso(date); return sessions.filter(s => iso(s.date) === key && !activityLinks(s).some(link => link.confidence === 'confirmed')); }
 
   function activityType(session) {
-    const type = session.raw?.__activity?.type;
-    if (type === 'long-run') return 'long-run';
-    if (type === 'cycling') return 'bici';
-    return type || (session.tipusKey === 'Z2' ? 'z2' : session.tipusKey === 'INTERVALS' || session.tipusKey === 'TEMPO' ? 'quality' : session.tipusKey?.startsWith('FOR') ? 'strength' : 'other');
+    return activityClassification(session).type;
   }
 
   function planningType(session) {
-    return session.type === 'long' ? 'long-run' : session.type === 'cycling' ? 'bici' : session.type;
+    return activityClassification(session).type;
   }
 
   function activityLinks(real) {
@@ -236,8 +233,14 @@
       const links = activityLinks(real);
       const confirmed = links.find(link => link.confidence === 'confirmed');
       if (confirmed) return { real, confirmed, candidate: planned.find(p => p.id === confirmed.planning_session_id) || null };
+      const realClassification = activityClassification(real);
+      const realVariant = real.raw?.__activity?.variant || real.variant || null;
       const candidates = planned.filter(plan => !confirmedPlanIds.has(plan.id)).map(plan => {
-        let score = activityType(real) === plan.type ? 60 : 0;
+        const planClassification = activityClassification(plan);
+        let score = realClassification.type === planClassification.type ? 45 : 0;
+        if (realClassification.sport === planClassification.sport) score += 25;
+        if (realClassification.activityType === planClassification.activityType) score += 10;
+        if (realVariant && plan.variant && realVariant === plan.variant) score += 10;
         if (plan.distance_km && real.distancia) score += Math.max(0, 25 - Math.abs(plan.distance_km - real.distancia) * 5);
         if (plan.duration_min && real.durada) score += Math.max(0, 15 - Math.abs(plan.duration_min - real.durada) / 5);
         return { plan, score };
@@ -248,12 +251,12 @@
 
   function renderReconciliationPanel(realWeek, week) {
     const rows = reconciliationCandidates(realWeek, week).filter(row => !row.confirmed);
-    return `<p class="eyebrow">Activitats registrades</p><p>Associació amb el planning:</p><div class="flex-reconciliation-list">${rows.map(({ real, confirmed, candidate }) => `<div class="flex-reconciliation-item${confirmed ? ' is-confirmed' : ''}"><div><strong>${esc(real.tipus || 'Activitat')}</strong><small>${esc(real.displayDate || '')} · ${real.distancia ? fmt(real.distancia)+' km' : ''}${real.durada ? ' · '+fmt(real.durada)+' min' : ''}</small></div>${candidate ? `<span class="flex-reconciliation-match">→ ${esc(plannedLabel(candidate))}</span><button type="button" class="btn btn-ghost btn-sm" data-reconcile-session="${esc(real.raw?.__activity?.id || '')}" data-reconcile-plan="${esc(candidate.id)}" ${confirmed ? 'disabled' : ''}>${confirmed ? 'Confirmada' : 'Confirmar'}</button>` : '<span class="flex-reconciliation-unmatched">Sense coincidència · no planificada</span>'}</div>`).join('')}</div>`;
+    return `<p class="eyebrow">Activitats registrades</p><p>Associació amb el planning:</p><div class="flex-reconciliation-list">${rows.map(({ real, confirmed, candidate }) => `<div class="flex-reconciliation-item${confirmed ? ' is-confirmed' : ''}"><div><strong>${esc(activityDisplayLabel(real, true) || 'Activitat')}</strong><small>${esc(real.displayDate || '')} · ${real.distancia ? fmt(real.distancia)+' km' : ''}${real.durada ? ' · '+fmt(real.durada)+' min' : ''}</small></div>${candidate ? `<span class="flex-reconciliation-match">→ ${esc(plannedLabel(candidate))}</span><button type="button" class="btn btn-ghost btn-sm" data-reconcile-session="${esc(real.raw?.__activity?.id || '')}" data-reconcile-plan="${esc(candidate.id)}" ${confirmed ? 'disabled' : ''}>${confirmed ? 'Confirmada' : 'Confirmar'}</button>` : '<span class="flex-reconciliation-unmatched">Sense coincidència · no planificada</span>'}</div>`).join('')}</div>`;
   }
 
   function plannedLabel(plan) {
-    const labels = { quality: 'Qualitat', z2: 'Z2', 'long-run': 'Tirada llarga', long: 'Tirada llarga', strength: 'Força', bici: 'Bici estàtica', cycling: 'Bici', other: 'Altres' };
-    return plan.session_type || plan.title || labels[plan.type] || 'Sessió planificada';
+    if (plan?.source === 'manual') return plan.title || plan.detail || activityDisplayLabel(plan, true) || 'Sessió planificada';
+    return activityDisplayLabel(plan, true) || plan.title || plan.detail || 'Sessió planificada';
   }
 
   function linkedActivity(item, sessions) {
@@ -316,8 +319,8 @@
     if (realWeek.length) { const reconciliationHtml = renderReconciliationPanel(realWeek, week); unmatched.hidden = !reconciliationHtml; unmatched.innerHTML = reconciliationHtml; }
     bind(sessions, planning, week, calendar, canEdit, calendarDocument);
   }
-  function card(item, canEdit, sessions=[]) { const meta=TYPES[item.type]||TYPES.other; const real=linkedActivity(item,sessions); const completed=item.status==='done'||!!real; return `<div class="flex-plan-card${completed?' is-done':''}${real?' has-linked-activity':''}" draggable="${canEdit}" data-plan-id="${esc(item.id)}" style="--card-color:${meta[1]}"><div class="flex-card-top"><span class="flex-card-type">${esc(item.title||meta[0])}</span><span class="flex-card-source">${item.source==='manual'?'Afegida':'Pla'}</span></div><strong>${esc(item.detail||meta[0])}</strong>${real?`<div class="flex-linked-activity"><span>✓ Realitzada</span><strong>${esc(real.tipus||'Activitat')} · ${real.distancia?fmt(real.distancia)+' km':''}${real.durada?' · '+fmt(real.durada)+' min':''}</strong><small>${esc(real.displayDate||'')}</small></div>`:''}<div class="flex-card-actions">${canEdit?`${real?'<span class="flex-card-confirmed">✓ Realitzada</span>':`<button type="button" data-action="toggle" data-id="${esc(item.id)}">${item.status==='done'?'↩ Pendent':'Marcar feta'}</button>`}<button type="button" data-action="delete" data-id="${esc(item.id)}" aria-label="Eliminar activitat" title="Eliminar activitat">×</button>`:`<span>${completed?'✓ Realitzada':'Històric'}</span>`}</div></div>`; }
-  function actualCard(s) { return `<div class="flex-actual-card"><span>Registrada</span><strong>${esc(s.tipus||'Activitat')}</strong><small>${s.durada?fmt(s.durada)+' min':''}${s.distancia?' · '+fmt(s.distancia)+' km':''}</small></div>`; }
+  function card(item, canEdit, sessions=[]) { const meta=typeMeta(item.type); const real=linkedActivity(item,sessions); const completed=item.status==='done'||!!real; return `<div class="flex-plan-card${completed?' is-done':''}${real?' has-linked-activity':''}" draggable="${canEdit}" data-plan-id="${esc(item.id)}" style="--card-color:${meta[1]}"><div class="flex-card-top"><span class="flex-card-type">${esc(item.title||meta[0])}</span><span class="flex-card-source">${item.source==='manual'?'Afegida':'Pla'}</span></div><strong>${esc(item.detail||meta[0])}</strong>${real?`<div class="flex-linked-activity"><span>✓ Realitzada</span><strong>${esc(activityDisplayLabel(real, true) || 'Activitat')} · ${real.distancia?fmt(real.distancia)+' km':''}${real.durada?' · '+fmt(real.durada)+' min':''}</strong><small>${esc(real.displayDate||'')}</small></div>`:''}<div class="flex-card-actions">${canEdit?`${real?'<span class="flex-card-confirmed">✓ Realitzada</span>':`<button type="button" data-action="toggle" data-id="${esc(item.id)}">${item.status==='done'?'↩ Pendent':'Marcar feta'}</button>`}<button type="button" data-action="delete" data-id="${esc(item.id)}" aria-label="Eliminar activitat" title="Eliminar activitat">×</button>`:`<span>${completed?'✓ Realitzada':'Històric'}</span>`}</div></div>`; }
+  function actualCard(s) { return `<div class="flex-actual-card"><span>Registrada</span><strong>${esc(activityDisplayLabel(s, true) || 'Activitat')}</strong><small>${s.durada?fmt(s.durada)+' min':''}${s.distancia?' · '+fmt(s.distancia)+' km':''}</small></div>`; }
   const baseCard = card;
   card = function (item, canEdit, sessions=[]) {
     const planned = (activePlan?.sessions || []).find(session => session.id === (item.planning_session_id || item.id));
@@ -372,19 +375,17 @@
     [...document.querySelectorAll('[data-drop-day]'), document.querySelector('[data-drop-unassigned]')].filter(Boolean).forEach(z=>{z.addEventListener('dragover',e=>{if(canEdit){e.preventDefault();z.classList.add('is-over');}});z.addEventListener('dragleave',()=>z.classList.remove('is-over'));z.addEventListener('drop',e=>{e.preventDefault();z.classList.remove('is-over');if(!canEdit)return;const i=calendar.items.find(x=>x.id===e.dataTransfer.getData('text/plain'));if(i){i.day=z.dataset.dropUnassigned!==undefined?null:Number(z.dataset.dropDay);saveCalendar(week,calendar);renderFlexibleWeekView(sessions,planning,calendarDocument);}});});
   }
   function manualVariantOptions(type) {
-    const variants = {
-      quality: [['', 'Sense especificar']], z2: [['', 'Sense especificar']], long: [['road', 'Road'], ['trail', 'Trail']],
-      strength: [['', 'Sense especificar'], ['S1', 'S1'], ['S2', 'S2'], ['S3', 'S3'], ['S4', 'S4'], ['S5', 'S5'], ['Pilometria', 'Pilometria'], ['Complementari', 'Complementari']],
-      bici: [['', 'Sense especificar'], ['indoor', 'Indoor / estàtica'], ['outdoor', 'Outdoor / carretera']], other: [['', 'Sense especificar']]
-    };
-    return (variants[type] || variants.other).map(([value, label]) => `<option value="${esc(value)}">${esc(label)}</option>`).join('');
+    const classification = activityClassification({ type });
+    return activityVariantOptions(classification.type)
+      .map(option => `<option value="${esc(option.value)}">${esc(option.label)}</option>`)
+      .join('');
   }
 
   function addSession(sessions, planning, week, calendarDocument) {
     const modal = document.createElement('div'); modal.className = 'flex-manual-modal';
     modal.innerHTML = `<div class="flex-manual-dialog" role="dialog" aria-modal="true" aria-labelledby="flex-manual-title">
       <div class="flex-manual-header"><div><p class="eyebrow">Calendari manual</p><h3 id="flex-manual-title">Afegir activitat</h3></div><button type="button" class="btn btn-ghost btn-sm" data-manual-close aria-label="Tancar">×</button></div>
-      <form class="flex-manual-form"><label>Tipus<select name="type" required>${[['quality','Qualitat'],['z2','Z2'],['long','Tirada llarga'],['strength','Força'],['bici','Bici estàtica'],['other','Altres']].map(([v,l]) => `<option value="${v}">${l}</option>`).join('')}</select></label>
+      <form class="flex-manual-form"><label>Tipus<select name="type" required>${[['quality','Qualitat'],['z2','Aeròbic'],['long-run','Tirada llarga'],['strength','Força'],['cycling','Cycling'],['padel','Pàdel'],['tennis','Tennis'],['other','Altres']].map(([v,l]) => `<option value="${v}">${l}</option>`).join('')}</select></label>
         <label>Variant / subtipus<select name="variant">${manualVariantOptions('quality')}</select></label>
         <label>Dia<select name="day" required>${DAYS.map((day, index) => `<option value="${index}" ${index === (defaultDay('quality') ?? 0) ? 'selected' : ''}>${day}</option>`).join('')}</select></label>
         <label>Descripció<input name="detail" placeholder="Objectiu o descripció"></label>
@@ -399,7 +400,8 @@
     modal.addEventListener('click', event => { if (event.target === modal) modal.remove(); });
     form.addEventListener('submit', event => {
       event.preventDefault(); const data = new FormData(form), type = data.get('type'), detail = String(data.get('detail') || '').trim();
-      const item = { id: `${week.key}-manual-${Date.now()}`, day: Number(data.get('day')), type, title: TYPES[type][0], detail: detail || TYPES[type][0], status: 'pending', source: 'manual', variant: data.get('variant') || null, notes: String(data.get('notes') || '').trim() || null };
+      const title = activityPlanningLabel({ type });
+      const item = { id: `${week.key}-manual-${Date.now()}`, day: Number(data.get('day')), type, title, detail: detail || title, status: 'pending', source: 'manual', variant: data.get('variant') || null, notes: String(data.get('notes') || '').trim() || null };
       const distance = Number(data.get('distance')), duration = Number(data.get('duration'));
       if (Number.isFinite(distance) && distance > 0) item.distance_km = distance;
       if (Number.isFinite(duration) && duration > 0) item.duration_min = duration;

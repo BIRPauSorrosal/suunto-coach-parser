@@ -1,15 +1,5 @@
 // Drawer reutilitzable per consultar el detall d'una activitat registrada.
 (function (global) {
-  const TYPE_LABELS = {
-    quality: 'Qualitat', z2: 'Z2', long: 'Tirada llarga', 'long-run': 'Tirada llarga',
-    strength: 'Força', bici: 'Bici estàtica', cycling: 'Ciclisme', running: 'Cursa',
-    walking: 'Caminada', hiking: 'Senderisme', swimming: 'Natació', padel: 'Pàdel', other: 'Altres'
-  };
-  const SPORT_LABELS = {
-    running: 'Cursa', cycling: 'Ciclisme', bike: 'Ciclisme', strength: 'Força',
-    walking: 'Caminada', hiking: 'Senderisme', swimming: 'Natació', padel: 'Pàdel'
-  };
-  const VARIANT_LABELS = { road: 'Carretera', trail: 'Trail', indoor: 'Interior', outdoor: 'Exterior', treadmill: 'Cinta', intervals: 'Intervals', tempo: 'Tempo', pilometria: 'Pliometria' };
   const ZONE_LABELS = ['Z1', 'Z2', 'Z3', 'Z4', 'Z5'];
 
   const esc = value => String(value ?? '')
@@ -53,7 +43,9 @@
     if (min !== null && max !== null) return `${fmt(min)}–${fmt(max)}${suffix}`;
     return `${fmt(min ?? max)}${suffix}`;
   };
-  const label = (value, labels) => labels[value] || (value ? String(value) : null);
+  const typeLabel = value => activityDisplayLabel(value, true) || (value ? String(value) : null);
+  const sportLabel = value => activitySportLabel(value);
+  const variantLabel = value => activityVariantLabel(value);
   const actualData = session => session?.raw?.__activity || session?.__activity || session || {};
   const metric = (title, value, modifier = '') => value === null || value === undefined || value === '' ? '' : `<div class="session-detail-metric ${modifier}"><span>${esc(title)}</span><strong>${esc(value)}</strong></div>`;
   const section = (title, content, modifier = '') => content ? `<section class="session-detail-section ${modifier}"><h3>${esc(title)}</h3>${content}</section>` : '';
@@ -123,7 +115,9 @@
   function renderPlan(data, row, planned, planningItem) {
     if (!planned && !planningItem) return section('Planificació', '<p class="session-detail-muted">Activitat no planificada.</p>');
     const plan = { ...(planningItem || {}), ...(planned || {}) };
-    const planTitle = plan.title || plan.detail || plan.description || label(plan.type, TYPE_LABELS) || 'Sessió planificada';
+    const planTitle = plan.source === 'manual'
+      ? plan.title || plan.detail || typeLabel(plan)
+      : typeLabel(plan) || plan.title || plan.detail || plan.description;
     const planInfo = [
       `<div class="session-detail-plan-title"><span>Associació confirmada</span><strong>${esc(planTitle)}</strong></div>`,
       metric('Distància prevista', number(plan.distance_km) === null ? null : `${fmt(plan.distance_km)} km`),
@@ -177,7 +171,7 @@
       metric('Velocitat objectiu', number(plan.speed_kmh, plan.speed) === null ? null : `${fmt(number(plan.speed_kmh, plan.speed))} km/h`),
       metric('FC objectiu', range(plan.heart_rate, ' bpm')),
       metric('Zona objectiu', plan.zone || plan.heart_rate_zone || plan.hr_zone || null),
-      metric('Variant', label(plan.variant, VARIANT_LABELS))
+      metric('Variant', variantLabel(activityPlanningVariant(plan)))
     ].join('');
     const noteValues = [plan.notes?.comment, plan.notes, plan.description].filter(value => typeof value === 'string' && value.trim());
     return section('Objectiu planificat', `<div class="session-detail-metric-grid">${values}</div>`) + renderPlannedStructure(plan) + (noteValues.length ? section('Notes', `<p class="session-detail-note">${esc([...new Set(noteValues)].join('\n\n'))}</p>`) : '');
@@ -188,10 +182,11 @@
     const row = plannedOnly ? {} : (session || {});
     const data = plannedOnly ? {} : actualData(session);
     const plan = planned || {};
-    const type = plannedOnly ? (label(plan.type, TYPE_LABELS) || label(plan.sport, SPORT_LABELS) || 'Sessió planificada') : (label(data.type, TYPE_LABELS) || label(row.tipus, TYPE_LABELS) || 'Activitat');
-    const sport = plannedOnly ? label(plan.sport, SPORT_LABELS) : label(data.sport, SPORT_LABELS);
-    const variant = plannedOnly ? label(plan.variant, VARIANT_LABELS) : label(data.variant, VARIANT_LABELS);
-    const subtype = plannedOnly ? null : label(data.subtype, VARIANT_LABELS);
+    const type = plannedOnly ? typeLabel(plan) || 'Sessió planificada' : typeLabel(data) || typeLabel(row) || 'Activitat';
+    const sport = plannedOnly ? sportLabel(plan) : sportLabel(data);
+    const variant = plannedOnly ? variantLabel(activityPlanningVariant(plan)) : variantLabel(activityPlanningVariant(data));
+    const subtypeValue = plannedOnly ? '' : activitySubtypeLabel(data);
+    const subtype = subtypeValue === 'z2' ? null : subtypeValue;
     const date = options.dateLabel || dateText(data.date || row.date);
     const identity = [sport, variant, subtype].filter(Boolean).join(' · ');
     const confirmed = Array.isArray(data.planning_links) && data.planning_links.some(link => link.confidence === 'confirmed');
@@ -270,7 +265,7 @@
       global.openSessionCommentEditor({
         arxiu: activityIdentifier,
         data: options.dateLabel || dateText(activity.date || session?.date) || '',
-        tipus: label(activity.type, TYPE_LABELS) || label(session?.tipus, TYPE_LABELS) || 'Activitat'
+        tipus: typeLabel(activity) || typeLabel(session) || 'Activitat'
       });
     });
     current.hidden = false;

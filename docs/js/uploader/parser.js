@@ -25,20 +25,41 @@ const PARSER_REGISTRY = {
   "tempo":         parseQuality,
   "test":          parseQuality,
   "intervals":     parseQuality,
+  "interval":      parseQuality,
+  "series":        parseQuality,
+  "fartlek":       parseQuality,
   "llarga":        parseLongRun,
   "longrun":       parseLongRun,
+  "long-run":      parseLongRun,
   "marat":         parseLongRun,
+  "marato":        parseLongRun,
+  "marathon":      parseLongRun,
   "trail":         parseLongRun,
   "mitja":         parseLongRun,
+  "halfmarathon":  parseLongRun,
+  "half-marathon": parseLongRun,
   "cursa":         parseLongRun,
+  "race":          parseLongRun,
   "força":         parseStrength,
   "forca":         parseStrength,
   "bici_estatica": parseGeneric,
+  "bici-estatica": parseGeneric,
+  "biciestatica":  parseGeneric,
+  "test_bici":     parseGeneric,
+  "test-bici":     parseGeneric,
+  "cycling":       parseGeneric,
+  "ciclisme":      parseGeneric,
+  "bike":          parseGeneric,
   "padel":         parseGeneric,
   "tennis":        parseGeneric,
+  "tenis":         parseGeneric,
   "hiking":        parseGeneric,
+  "senderisme":    parseGeneric,
   "natacio":       parseGeneric,
   "swim":          parseGeneric,
+  "swimming":      parseGeneric,
+  "caminada":      parseGeneric,
+  "walking":       parseGeneric,
 };
 
 function detectParser(filename) {
@@ -374,7 +395,7 @@ function sessionFromParsedRow(filename, row) {
   let subtype = null;
 
   if (upper === 'Z2') { type = 'z2'; sport = 'running'; }
-  else if (upper === 'LLARGA' || upper === 'TRAIL') { type = 'long-run'; sport = 'running'; }
+  else if (['LLARGA', 'TRAIL', 'MARATÓ', 'MARATO', 'MITJA'].includes(upper)) { type = 'long-run'; sport = 'running'; }
   else if (upper === 'INTERVALS' || upper === 'TEMPO' || upper === 'QUALITAT') {
     type = 'quality'; sport = 'running'; subtype = upper.toLowerCase();
   } else if (upper.startsWith('FORÇA') || upper.startsWith('FORCA')) {
@@ -384,8 +405,10 @@ function sessionFromParsedRow(filename, row) {
   else if (upper === 'TEST_BICI') { type = 'test'; sport = 'cycling'; }
   else if (upper === 'CURSA') { type = 'race'; sport = 'running'; }
   else if (upper === 'PADEL') { type = 'padel'; sport = 'padel'; }
+  else if (upper === 'TENNIS' || upper === 'TENIS') { type = 'tennis'; sport = 'tennis'; }
   else if (upper === 'HIKING') { type = 'hiking'; sport = 'hiking'; }
   else if (upper === 'NATACIÓ' || upper === 'NATACIO') { type = 'swimming'; sport = 'swimming'; }
+  else if (upper === 'WALKING') { type = 'walking'; sport = 'walking'; }
 
   const numberOrNull = value => Number.isFinite(Number(value)) ? Number(value) : null;
   const intervalRows = (() => {
@@ -410,7 +433,7 @@ function sessionFromParsedRow(filename, row) {
     date: row.Data ? row.Data.split('/').reverse().join('-') : null,
     type,
     sport,
-    variant: null,
+    variant: activityVariantFromFilename(filename, { type, sport }),
     subtype,
     feeling: numberOrNull(row.Feeling),
     vo2max: numberOrNull(row.VO2max),

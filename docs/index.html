@@ -178,11 +178,10 @@
           </div>
           <div class="metrics-grid">
             <div class="metric-box"><span>Qualitat</span><strong id="quality-summary">--</strong><small id="quality-detail">Tempo i intervals</small><small id="quality-real" class="metric-real"></small></div>
-            <div class="metric-box"><span>Z1+Z2 running</span><strong id="z2-summary">--</strong><small id="z2-detail">Minuts en zona aeròbica</small></div>
+            <div class="metric-box"><span>Aeròbic</span><strong id="z2-summary">--</strong><small id="z2-detail">Minuts en zona aeròbica (Z1 + Z2)</small></div>
             <div class="metric-box"><span>Tirada llarga</span><strong id="long-summary">--</strong><small id="long-detail">Tipus i volum setmanal</small><small id="long-real" class="metric-real"></small></div>
             <div class="metric-box"><span>Força</span><strong id="strength-summary">--</strong><small id="strength-detail">Sessions de gimnàs</small></div>
-            <!-- NOU: Bici Estàtica -->
-            <div class="metric-box"><span>Bici estàtica</span><strong id="bici-summary">--</strong><small id="bici-detail">Sessions setmanals</small></div>
+            <div class="metric-box"><span>Cycling</span><strong id="bici-summary">--</strong><small id="bici-detail">Sessions setmanals</small></div>
           </div>
         </article>
 
@@ -257,10 +256,10 @@
           <div class="sw-mini-table-wrap" id="test-race-container"><p class="plan-no-data">Carregant...</p></div>
         </article>
 
-        <!-- NOU: Bici Estàtica — últims 30 dies -->
+        <!-- Cycling — últims 30 dies -->
         <article class="panel">
           <div class="panel-header">
-            <div><p class="eyebrow">Cardio complementari</p><h3>Bici estàtica</h3></div>
+            <div><p class="eyebrow">Cardio complementari</p><h3>Cycling</h3></div>
             <span class="badge badge-muted" id="bici-count">—</span>
           </div>
           <div class="sw-mini-table-wrap" id="bici-container"><p class="plan-no-data">Carregant...</p></div>
@@ -328,9 +327,9 @@
             </div>
           </article>
 
-          <!-- ── Bloc Z2 ─────────────────────────────────────────────────── -->
+          <!-- ── Bloc Aeròbic ─────────────────────────────────────────────── -->
           <article class="panel sw-block" id="sw-z2-block">
-            <div class="sw-block-header"><h3>🫀 Z2</h3><span class="sw-status-dot"></span></div>
+            <div class="sw-block-header"><h3>🫀 Aeròbic</h3><span class="sw-status-dot"></span></div>
             <div class="sw-htable-wrap">
               <table class="sw-htable">
                 <thead><tr><th></th><th>Durada</th><th>Ritme</th><th>FC</th><th>Km</th></tr></thead>
@@ -371,7 +370,7 @@
             </div>
             <div class="sw-mini-table-wrap">
               <table class="sw-mini-table">
-                <thead><tr><th>Data</th><th>Durada</th><th>Ritme</th><th>Min Z2</th><th>Desnivell</th><th>FC</th><th>TSS</th><th>Km</th></tr></thead>
+                <thead><tr><th>Data</th><th>Durada</th><th>Ritme</th><th>Min aeròbic</th><th>Desnivell</th><th>FC</th><th>TSS</th><th>Km</th></tr></thead>
                 <tbody id="sw-ll-sessions-list"></tbody>
               </table>
             </div>
@@ -399,9 +398,9 @@
             </div>
           </article>
 
-          <!-- ── Bloc Bici Estàtica ─────────────────────────────────────────── -->
+          <!-- ── Bloc Cycling ──────────────────────────────────────────────── -->
           <article class="panel sw-block" id="sw-bici-block">
-            <div class="sw-block-header"><h3>🚴 Bici estàtica</h3><span class="sw-status-dot"></span></div>
+            <div class="sw-block-header"><h3>🚴 Cycling</h3><span class="sw-status-dot"></span></div>
             <div class="sw-htable-wrap">
               <table class="sw-htable">
                 <thead><tr><th></th><th>Sessions pla</th></tr></thead>
@@ -508,12 +507,12 @@
             <label class="sess-filter-label" for="sess-type-select">Tipus</label>
             <select id="sess-type-select" class="sess-select">
               <option value="all">Totes</option>
-              <option value="z2">Z2</option>
+              <option value="z2">Aeròbic</option>
               <option value="quality">Qualitat</option>
               <option value="long">Tirada llarga</option>
               <option value="testrace">Test / Cursa</option>
               <option value="strength">Força</option>
-              <option value="bici">Bici estàtica</option>
+              <option value="bici">Cycling</option>
               <option value="other">Altres</option>
             </select>
           </div>
@@ -687,7 +686,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        const reloadKey = 'personal-coach-sw-reloaded-v1.1.1';
+        const reloadKey = 'personal-coach-sw-reloaded-v1.3.1';
         navigator.serviceWorker.addEventListener('controllerchange', () => {
           // El nou worker ja controla la pestanya, però els scripts actuals
           // poden ser de la cache anterior. Fem una sola recàrrega automàtica

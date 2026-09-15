@@ -2,21 +2,16 @@
 // El detall complet continua centralitzat a session-detail-drawer.js.
 
 const ACTIVITY_LOG_TONES = {
-  test: { label: 'Cursa / test', color: 'var(--color-danger)' },
+  test: { label: 'Test / Cursa', color: 'var(--color-danger)' },
   quality: { label: 'Qualitat', color: 'var(--orange)' },
-  z2: { label: 'Z2', color: 'var(--accent)' },
+  z2: { label: 'Aeròbic', color: 'var(--accent)' },
   long: { label: 'Tirada llarga', color: 'var(--blue)' },
   strength: { label: 'Força', color: 'var(--purple)' },
-  bici: { label: 'Bici', color: 'var(--cyan)' },
-  other: { label: 'Altres', color: 'var(--yellow)' },
-};
-const ACTIVITY_LOG_SPORTS = {
-  running: 'Cursa', cycling: 'Ciclisme', bike: 'Ciclisme', strength: 'Força',
-  walking: 'Caminada', hiking: 'Senderisme', swimming: 'Natació', padel: 'Pàdel',
+  bici: { label: 'Cycling', color: 'var(--cyan)' },
+  other: { label: 'General', color: 'var(--yellow)' },
 };
 const ACTIVITY_LOG_TYPES = [
-  ['all', 'Tots els tipus'], ['z2', 'Z2'], ['quality', 'Qualitat'], ['long', 'Tirada llarga'],
-  ['testrace', 'Cursa / test'], ['strength', 'Força'], ['bici', 'Bici'], ['other', 'Altres'],
+  ['all', 'Tots els tipus'], ...activityTypeOptions(),
 ];
 let activityLogSessions = [];
 let activityLogPlanning = [];
@@ -29,12 +24,13 @@ function activityLogEscape(value) {
 }
 function activityLogCanonical(session) { return session?.raw?.__activity || session?.__activity || {}; }
 function activityLogTone(session) { return activityToneKey(session); }
-function activityLogIsRunning(session) { return RUNNING_TYPES.has(String(session?.tipusKey || '').toUpperCase()); }
+function activityLogIsRunning(session) { return activityIsRunning(session); }
+function activityLogSportKey(session) { return activityClassification(session).sport; }
 function activityLogSport(session) {
-  const canonical = activityLogCanonical(session);
-  const raw = String(canonical.sport || '').toLowerCase();
-  return ACTIVITY_LOG_SPORTS[raw] || (activityLogIsRunning(session) ? 'Cursa' : ACTIVITY_LOG_TONES[activityLogTone(session)].label);
+  return activitySportLabel(session);
 }
+function activityLogTypeKey(session) { return activityClassification(session).activityType; }
+function activityLogTypeLabel(session) { return activityPlanningLabel(session); }
 function activityLogPlan(session) {
   const canonical = activityLogCanonical(session);
   const links = Array.isArray(canonical.planning_links) ? canonical.planning_links : [];
@@ -81,7 +77,7 @@ function activityLogValue(session, field) {
 }
 function activityLogText(session) {
   const canonical = activityLogCanonical(session);
-  return [session.tipus, activityLogSport(session), canonical.variant, canonical.subtype, canonical.title, canonical.name].filter(Boolean).join(' ').toLowerCase();
+  return [session.tipus, activityLogSport(session), activityLogTypeLabel(session), activitySubtypeLabel(session), canonical.variant, canonical.title, canonical.name].filter(Boolean).join(' ').toLowerCase();
 }
 function activityLogFilter(sessions) {
   const today = new Date(); today.setHours(23, 59, 59, 999);
@@ -90,10 +86,10 @@ function activityLogFilter(sessions) {
       const cutoff = new Date(today); cutoff.setDate(cutoff.getDate() - activityLogState.range); cutoff.setHours(0, 0, 0, 0);
       if (session.date < cutoff || session.date > today) return false;
     }
-    if (activityLogState.sport !== 'all' && activityLogSport(session) !== activityLogState.sport) return false;
-    const tone = activityLogTone(session);
-    if (activityLogState.type === 'testrace' && tone !== 'test') return false;
-    if (activityLogState.type !== 'all' && activityLogState.type !== 'testrace' && tone !== activityLogState.type) return false;
+    if (activityLogState.sport !== 'all' && activityLogSportKey(session) !== activityLogState.sport) return false;
+    const type = activityLogTypeKey(session);
+    if (activityLogState.type === 'testrace' && !['race', 'test'].includes(type)) return false;
+    if (activityLogState.type !== 'all' && activityLogState.type !== 'testrace' && type !== activityLogState.type) return false;
     if (activityLogState.status !== 'all' && activityLogStatus(session) !== activityLogState.status) return false;
     const feeling = activityLogValue(session, 'feeling');
     if (activityLogState.feeling === 'recorded' && !(feeling >= 1 && feeling <= 5)) return false;
@@ -148,6 +144,7 @@ function activityLogCard(session) {
   const distance = activityLogValue(session, 'distance'), duration = activityLogValue(session, 'duration'), load = activityLogValue(session, 'load');
   const pace = activityLogValue(session, 'pace'), heartRate = activityLogValue(session, 'heartRate'), vo2 = activityLogValue(session, 'vo2');
   const canonical = activityLogCanonical(session);
+  const classification = activityClassification(session);
   const sourceFile = canonical.source_file || session.raw?.Arxiu || canonical.id || '';
   const comment = canonical.notes?.comment || session.raw?.Comentari || '';
   const id = activityLogCanonical(session).id || session.raw?.id || session.raw?.Arxiu || '';
@@ -160,8 +157,12 @@ function activityLogCard(session) {
     heartRate > 0 ? ['FC', `${Math.round(heartRate)} ppm`] : null,
     vo2 > 0 ? ['VO₂max', new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 }).format(vo2)] : null,
   ].filter(Boolean).slice(0, 5);
-  const commentAction = sourceFile ? `<button type="button" class="activity-log-comment" data-activity-comment="${activityLogEscape(sourceFile)}" data-comment-date="${activityLogEscape(activityLogFormatDate(session.date))}" data-comment-type="${activityLogEscape(session.tipus || 'Activitat')}" aria-label="${comment ? 'Editar comentari' : 'Afegir comentari'}">${comment ? 'Edita comentari' : 'Afegeix comentari'}</button>` : '';
-  return `<article class="activity-log-card${tone === 'test' ? ' activity-log-card--emphasis' : ''}" style="--activity-log-color:${meta.color}" data-activity-id="${activityLogEscape(id)}" role="button" tabindex="0" aria-label="Obrir ${activityLogEscape(session.tipus || 'activitat')}, ${activityLogEscape(activityLogFormatDate(session.date, true))}"><div class="activity-log-card__top"><time datetime="${activityLogDateKey(session.date)}">${activityLogEscape(activityLogFormatDate(session.date))}</time><span class="activity-log-status${activityLogPlan(session) ? ' is-planned' : ''}">${activityLogEscape(activityLogStatusLabel(session))}</span></div><div class="activity-log-card__title"><div><p class="activity-log-type">${activityLogEscape(session.tipus || meta.label)}</p><h3>${activityLogEscape(activityLogSport(session))}</h3></div><span class="activity-log-tone">${activityLogEscape(meta.label)}</span></div><p class="activity-log-subtitle">${activityLogEscape([distance > 0 ? `${new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 }).format(distance)} km` : '', duration > 0 ? activityLogFormatDuration(duration) : '', session.raw?.Variant || activityLogCanonical(session).variant || ''].filter(Boolean).join(' · '))}</p><div class="activity-log-metrics">${metrics.map(([label, value]) => activityLogMetric(label, value)).join('')}</div><div class="activity-log-card__footer"><span class="activity-log-open">Veure detall →</span>${commentAction}</div></article>`;
+  const displayLabel = activityDisplayLabel(session, true);
+  const toneLabel = classification.subtype && classification.subtype !== 'z2'
+    ? `${displayLabel} · ${activitySubtypeLabel(session)}`
+    : displayLabel;
+  const commentAction = sourceFile ? `<button type="button" class="activity-log-comment" data-activity-comment="${activityLogEscape(sourceFile)}" data-comment-date="${activityLogEscape(activityLogFormatDate(session.date))}" data-comment-type="${activityLogEscape(displayLabel || 'Activitat')}" aria-label="${comment ? 'Editar comentari' : 'Afegir comentari'}">${comment ? 'Edita comentari' : 'Afegeix comentari'}</button>` : '';
+  return `<article class="activity-log-card${tone === 'test' ? ' activity-log-card--emphasis' : ''}" style="--activity-log-color:${meta.color}" data-activity-id="${activityLogEscape(id)}" role="button" tabindex="0" aria-label="Obrir ${activityLogEscape(displayLabel || 'activitat')}, ${activityLogEscape(activityLogFormatDate(session.date, true))}"><div class="activity-log-card__top"><time datetime="${activityLogDateKey(session.date)}">${activityLogEscape(activityLogFormatDate(session.date))}</time><span class="activity-log-status${activityLogPlan(session) ? ' is-planned' : ''}">${activityLogEscape(activityLogStatusLabel(session))}</span></div><div class="activity-log-card__title"><div><p class="activity-log-type">${activityLogEscape(displayLabel)}</p><h3>${activityLogEscape(activityLogSport(session))}</h3></div><span class="activity-log-tone">${activityLogEscape(toneLabel)}</span></div><p class="activity-log-subtitle">${activityLogEscape([distance > 0 ? `${new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 }).format(distance)} km` : '', duration > 0 ? activityLogFormatDuration(duration) : '', session.raw?.Variant || activityLogCanonical(session).variant || ''].filter(Boolean).join(' · '))}</p><div class="activity-log-metrics">${metrics.map(([label, value]) => activityLogMetric(label, value)).join('')}</div><div class="activity-log-card__footer"><span class="activity-log-open">Veure detall →</span>${commentAction}</div></article>`;
 }
 function activityLogRenderEmpty(filtered, total) {
   return filtered || total ? `<div class="activity-log-empty"><h3>Cap activitat coincideix</h3><p>Prova de modificar els filtres.</p></div>` : `<div class="activity-log-empty"><h3>Encara no hi ha activitats</h3><p>No hi ha activitats disponibles per al període seleccionat.</p></div>`;
@@ -183,7 +184,7 @@ function renderActivitiesView(sessions, planning) {
   const activeFilterLabel = activeFilterCount ? `${activeFilterCount} ${activeFilterCount === 1 ? 'filtre actiu' : 'filtres actius'}` : 'Sense filtres';
   const exportLabel = `${filtered.length} ${filtered.length === 1 ? 'activitat' : 'activitats'}`;
   const options = (items, selected) => items.map(([value, label]) => `<option value="${activityLogEscape(value)}"${value === selected ? ' selected' : ''}>${activityLogEscape(label)}</option>`).join('');
-  const sportOptions = [['all', 'Tots els esports'], ...[...new Set(activityLogSessions.map(activityLogSport))].sort().map(value => [value, value])];
+  const sportOptions = [['all', 'Tots els esports'], ...activitySportOptions()];
   container.innerHTML = `<div class="activity-log-toolbar"><div class="activity-log-search"><label for="activity-log-search">Cerca</label><input id="activity-log-search" type="search" value="${activityLogEscape(activityLogState.query)}" placeholder="Cerca una activitat..." autocomplete="off"></div><label>Període<select data-activity-filter="range"><option value="0"${activityLogState.range === 0 ? ' selected' : ''}>Tot l’historial</option><option value="30"${activityLogState.range === 30 ? ' selected' : ''}>Darrers 30 dies</option><option value="90"${activityLogState.range === 90 ? ' selected' : ''}>Darrers 90 dies</option><option value="365"${activityLogState.range === 365 ? ' selected' : ''}>Darrer any</option></select></label><label>Esport<select data-activity-filter="sport">${options(sportOptions, activityLogState.sport)}</select></label><label>Tipus<select data-activity-filter="type">${options(ACTIVITY_LOG_TYPES, activityLogState.type)}</select></label><label>Estat<select data-activity-filter="status">${options([['all', 'Tots els estats'], ['planned', 'Planificada + realitzada'], ['unplanned', 'No planificada']], activityLogState.status)}</select></label><label>Feeling<select data-activity-filter="feeling">${options([['all', 'Qualsevol feeling'], ['recorded', 'Amb feeling registrat'], ['high', 'Feeling 4–5']], activityLogState.feeling)}</select></label><label>Càrrega<select data-activity-filter="load">${options([['all', 'Qualsevol càrrega'], ['with', 'Amb càrrega'], ['without', 'Sense càrrega']], activityLogState.load)}</select></label><label>Ordenar<select data-activity-filter="sort">${options([['recent', 'Més recents'], ['oldest', 'Més antigues'], ['load', 'Més càrrega'], ['duration', 'Més durada']], activityLogState.sort)}</select></label><span class="activity-log-filter-state" aria-live="polite">${activityLogEscape(activeFilterLabel)}</span><button type="button" class="btn btn-ghost btn-sm activity-log-clear" data-activity-clear${activeFilterCount ? '' : ' disabled'}>Neteja filtres</button><button type="button" class="btn btn-primary btn-sm activity-log-export" data-activity-export${filtered.length ? '' : ' disabled'}>Exporta ${activityLogEscape(exportLabel)}</button></div><div class="activity-log-summary"><div><span>Activitats</span><strong>${filtered.length}</strong></div><div><span>Temps</span><strong>${activityLogFormatDuration(totalDuration)}</strong></div><div><span>Distància</span><strong>${totalDistance > 0 ? `${new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 }).format(totalDistance)} km` : '—'}</strong></div><div><span>Càrrega</span><strong>${totalLoad > 0 ? new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 }).format(totalLoad) : '—'}</strong></div></div><div class="activity-log-results" aria-live="polite">${groupsHtml || activityLogRenderEmpty(filtered.length !== activityLogSessions.length, activityLogSessions.length)}</div>`;
   const toolbar = container.querySelector('.activity-log-toolbar');
   const filterLabels = Array.from(toolbar?.children || []).filter(child => child.tagName === 'LABEL');

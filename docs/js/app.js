@@ -6,10 +6,10 @@
 //      lib/formatters.js i lib/metrics.js (carregats abans via index.html)
 
 // ── Constants de classificació de sessions ────────────────────────────────────────────
-function isRunning(s)  { return RUNNING_TYPES.has(s.tipusKey); }
-function isStrength(s) { return STRENGTH_RE.test(s.tipusKey); }
-function isTestRace(s) { return TEST_RACE_TYPES.has(s.tipusKey); }
-function isBici(s)     { return BICI_TYPES.has(s.tipusKey); }
+function isRunning(s)  { return activityIsRunning(s); }
+function isStrength(s) { return activityIsStrength(s); }
+function isTestRace(s) { return activityToneKey(s) === 'test'; }
+function isBici(s)     { return activityIsBici(s); }
 function isOther(s)    { return !isRunning(s) && !isStrength(s) && !isTestRace(s) && !isBici(s); }
 
 // L'estat i la càrrega de dades viuen en mòduls independents.
@@ -538,11 +538,13 @@ function enrichSessionRow(row) {
   const date = parseDate(row['Data']);
   if (!date) return null;
   const tipus = String(row['Tipus'] || '').trim().toUpperCase();
+  const activity = row.__activity || { type: row['Tipus'], sport: row['Sport'], variant: row['Variant'] };
+  const displayType = activityDisplayLabel(activity, true) || row['Tipus'] || '--';
   return {
     raw:                 row,
     date,
     displayDate:         formatDate(date),
-    tipus:               row['Tipus'] || '--',
+    tipus:               displayType,
     tipusKey:            tipus,
     durada:              toNumber(row['Durada(min)']),
     distancia:           toNumber(row['Dist(km)']),

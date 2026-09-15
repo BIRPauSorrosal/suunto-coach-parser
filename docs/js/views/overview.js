@@ -92,8 +92,8 @@ function renderCycleProgress(activeWeek, planning) {
 
 // ── Metric-boxes (resum setmana activa) ────────────────────────────────────────────
 function renderSummary(activeWeek, weeklySessions) {
-  const quality  = weeklySessions.filter(s => QUALITY_TYPES.has(s.tipusKey));
-  const llong    = weeklySessions.filter(s => LONG_TYPES.has(s.tipusKey));
+  const quality  = weeklySessions.filter(s => activityToneKey(s) === 'quality');
+  const llong    = weeklySessions.filter(s => activityToneKey(s) === 'long');
   const strength = weeklySessions.filter(s => isStrength(s));
   const bici     = weeklySessions.filter(s => isBici(s));   // ← NOU
 
@@ -124,7 +124,7 @@ function renderSummary(activeWeek, weeklySessions) {
   // ─ Z1+Z2 ────────────────────────────────────────────────────────────────────────
   setText('z2-summary', z1z2Minutes ? `${formatNumber(z1z2Minutes)} min` : '\u2014');
   setText('z2-detail', activeWeek
-    ? `Ritme Z2: ${formatPace(activeWeek.z2RitmeMin, '')}\u2013${formatPace(activeWeek.z2RitmeMax)}`
+    ? `Ritme ${activityPlanningLabel({ type: 'z2' })}: ${formatPace(activeWeek.z2RitmeMin, '')}\u2013${formatPace(activeWeek.z2RitmeMax)}`
     : 'Sense rang de ritme planificat');
 
   // ─ Tirada llarga ──────────────────────────────────────────────────────────────────
@@ -219,7 +219,7 @@ function renderEpocPanel(sessions) {
     const pendent      = Math.max(0, s.recuperacio - horaPassades);
     if (pendent > maxPendent) {
       maxPendent  = pendent;
-      origenTipus = s.tipus;
+      origenTipus = activityDisplayLabel(s, true) || s.tipus;
       origenData  = s.displayDate;
     }
   });
@@ -667,7 +667,7 @@ function renderTestRacePanel(sessions) {
       </thead>
       <tbody>
         ${rowHTML('Test', lastRunningTest)}
-        ${rowHTML('Test bici', lastBikeTest)}
+        ${rowHTML(`Test · ${activitySportLabel('cycling')}`, lastBikeTest)}
         ${rowHTML('Cursa', lastCursa)}
       </tbody>
     </table>`;
@@ -682,9 +682,9 @@ function renderBiciPanel(sessions) {
   cutoff.setDate(cutoff.getDate() - 30);
   cutoff.setHours(0, 0, 0, 0);
 
-  // Inclou BICI ESTÀTICA però exclou TEST_BICI (ja apareix a Test & Cursa)
+  // Inclou qualsevol activitat de ciclisme, però exclou els tests.
   const biciSessions = sessions.filter(
-    s => s.tipusKey === 'BICI ESTÀTICA' && s.date >= cutoff
+    s => activityIsBici(s) && activityToneKey(s) !== 'test' && s.date >= cutoff
   );
 
   const totalMin  = sumNumbers(biciSessions.map(s => s.durada));
@@ -698,7 +698,7 @@ function renderBiciPanel(sessions) {
   }
 
   if (!biciSessions.length) {
-    container.innerHTML = '<p class="plan-no-data">Cap sessió de bici estàtica els últims 30 dies.</p>';
+    container.innerHTML = `<p class="plan-no-data">Cap sessió de ${activitySportLabel('cycling').toLowerCase()} els últims 30 dies.</p>`;
     return;
   }
 
@@ -759,7 +759,7 @@ function renderOthersPanel(sessions) {
           ${others.map(s => `
             <tr>
               <td>${esc(s.displayDate)}</td>
-              <td>${esc(s.tipus)}</td>
+              <td>${esc(activityDisplayLabel(s, true) || s.tipus)}</td>
               <td>${formatMetric(s.durada, 'min')}</td>
               <td>${fcBadgeHTML(s.fcMitja)}</td>
               <td>${tssDotHTML(s.carrega)}</td>

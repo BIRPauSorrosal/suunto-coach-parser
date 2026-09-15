@@ -254,6 +254,8 @@
   color: var(--text-muted);
   font-size: .8rem;
 }
+.uploader-sport-input,
+.uploader-type-input,
 .uploader-variant-input {
   min-width: 150px;
   color: var(--text);
@@ -261,6 +263,15 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 5px 8px;
+  font: inherit;
+  cursor: pointer;
+}
+.uploader-sport-input:focus,
+.uploader-type-input:focus,
+.uploader-variant-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.18);
 }
 
 .uploader-comment-area {
@@ -331,6 +342,77 @@
   color:      var(--text-muted);
   background: var(--surface-2);
   border:     1px solid var(--border);
+}
+
+.planning-upload-week {
+  grid-template-columns: 20px 1fr auto auto;
+  align-items: start;
+}
+.planning-session-list {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+.planning-session-row {
+  padding: 6px 0 2px;
+}
+.planning-session-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--text);
+  font-size: .78rem;
+}
+.planning-session-heading span {
+  color: var(--text-muted);
+  font-size: .68rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.planning-session-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 5px;
+}
+.planning-session-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  color: var(--text-muted);
+  font-size: .68rem;
+}
+.planning-session-fields select {
+  min-width: 0;
+  width: 100%;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 5px 6px;
+  font: inherit;
+  cursor: pointer;
+}
+.planning-session-fields select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.18);
+}
+.planning-session-fields select:disabled {
+  cursor: not-allowed;
+  opacity: .65;
+}
+.planning-session-empty {
+  margin: 0;
+  padding: 4px 0 6px;
+  color: var(--text-muted);
+  font-size: .75rem;
 }
 
 /* Missatge d'error de validació del planning */

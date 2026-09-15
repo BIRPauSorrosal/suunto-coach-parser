@@ -136,22 +136,108 @@ function renderPlanningResults(result) {
 
   document.getElementById("planning-uploader-ok-count").textContent = incoming.length;
   document.getElementById("planning-uploader-ok-list").innerHTML = incoming
-    .map(({ row, status }) => `
-      <li class="uploader-list-item">
+    .map(({ row, status, week }) => `
+      <li class="uploader-list-item planning-upload-week planning-upload-week--${status}" data-planning-status="${status}">
         <span class="uploader-item-icon">${ICONS[status]}</span>
         <span class="uploader-item-name">${escapeHtml(row.Setmana)}</span>
         <span class="uploader-item-date">${escapeHtml(row.Data_Inici)} → ${escapeHtml(row.Data_Fi)}</span>
         <span class="uploader-item-badge uploader-item-badge--${status}">${LABELS[status]}</span>
+        <div class="planning-session-list">${(week?.sessions || []).map(session => renderPlanningSessionRow(session, status, escapeHtml)).join('') || '<p class="planning-session-empty">No hi ha sessions detallades.</p>'}</div>
       </li>`)
     .join("");
 
   okSection.style.display = "block";
+
+  document.getElementById("planning-uploader-ok-list")
+    .addEventListener("change", _handlePlanningClassificationChange);
 
   // Habilitar el botó de confirmació només si hi ha canvis reals
   confirmBtn.disabled = (stats.added + stats.replaced) === 0;
   confirmBtn.title = confirmBtn.disabled
     ? "No hi ha canvis nous respecte al planning actual."
     : "";
+}
+
+function renderPlanningSessionRow(session, status, escapeHtml) {
+  const classification = activityClassification(session);
+  const sportOptions = activitySportOptions()
+    .map(([value, label]) => `<option value="${escapeHtml(value)}"${value === classification.sport ? ' selected' : ''}>${escapeHtml(label)}</option>`)
+    .join('');
+  const typeOptions = activityTypeOptionsForSport(classification.sport)
+    .map(([value, label]) => `<option value="${escapeHtml(value)}"${value === classification.activityType ? ' selected' : ''}>${escapeHtml(label)}</option>`)
+    .join('');
+  const selectedVariant = activityPlanningVariant(session);
+  const canonicalType = activityCanonicalTypeFor(classification.sport, classification.activityType, classification.type);
+  const variantOptions = activityVariantOptions(canonicalType)
+    .map(option => `<option value="${escapeHtml(option.value)}"${option.value === selectedVariant ? ' selected' : ''}>${escapeHtml(option.label)}</option>`)
+    .join('');
+  const disabled = status === 'unchanged' ? ' disabled' : '';
+  const title = session.session_type || session.label || activityPlanningLabel(session);
+  return `<div class="planning-session-row" data-planning-session-id="${escapeHtml(session.id)}">
+    <div class="planning-session-heading"><strong>${escapeHtml(title)}</strong><span>${escapeHtml(session.id || '')}</span></div>
+    <div class="planning-session-fields">
+      <label>Esport<select class="planning-sport-input"${disabled}>${sportOptions}</select></label>
+      <label>Tipus<select class="planning-type-input"${disabled}>${typeOptions}</select></label>
+      <label>Variant<select class="planning-variant-input"${disabled}>${variantOptions}</select></label>
+    </div>
+  </div>`;
+}
+
+function _renderPlanningTypeOptions(row, selectedType) {
+  const sportSelect = row.querySelector('.planning-sport-input');
+  const typeSelect = row.querySelector('.planning-type-input');
+  if (!sportSelect || !typeSelect) return;
+  const options = activityTypeOptionsForSport(sportSelect.value);
+  const selected = options.some(([value]) => value === selectedType) ? selectedType : options[0]?.[0] || 'general';
+  typeSelect.innerHTML = options
+    .map(([value, label]) => `<option value="${value}"${value === selected ? ' selected' : ''}>${label}</option>`)
+    .join('');
+  _renderPlanningVariantOptions(row, selected);
+}
+
+function _renderPlanningVariantOptions(row, selectedType) {
+  const sportSelect = row.querySelector('.planning-sport-input');
+  const typeSelect = row.querySelector('.planning-type-input');
+  const variantSelect = row.querySelector('.planning-variant-input');
+  if (!sportSelect || !typeSelect || !variantSelect) return;
+  const currentVariant = variantSelect.value;
+  const canonicalType = activityCanonicalTypeFor(sportSelect.value, selectedType || typeSelect.value);
+  const options = activityVariantOptions(canonicalType);
+  const selected = options.some(option => option.value === currentVariant) ? currentVariant : '';
+  variantSelect.innerHTML = options
+    .map(option => `<option value="${option.value}"${option.value === selected ? ' selected' : ''}>${option.label}</option>`)
+    .join('');
+}
+
+function _handlePlanningClassificationChange(event) {
+  const row = event.target.closest('.planning-session-row');
+  if (!row) return;
+  if (event.target.closest('.planning-sport-input')) {
+    _renderPlanningTypeOptions(row, row.querySelector('.planning-type-input')?.value);
+    return;
+  }
+  const typeSelect = event.target.closest('.planning-type-input');
+  if (typeSelect) _renderPlanningVariantOptions(row, typeSelect.value);
+}
+
+function applyPlanningClassificationSelections() {
+  const merge = getPendingMerge();
+  if (!merge?.document) return;
+  const values = new Map(Array.from(document.querySelectorAll('.planning-upload-week:not([data-planning-status="unchanged"]) .planning-session-row')).map(row => [
+    row.dataset.planningSessionId,
+    {
+      sport: row.querySelector('.planning-sport-input')?.value || 'other',
+      activityType: row.querySelector('.planning-type-input')?.value || 'general',
+      variant: row.querySelector('.planning-variant-input')?.value || null,
+    },
+  ]));
+  merge.document.cycles?.forEach(cycle => cycle.weeks?.forEach(week => week.sessions?.forEach(session => {
+    const selected = values.get(session.id);
+    if (!selected) return;
+    session.sport = selected.sport;
+    session.type = activityCanonicalTypeFor(selected.sport, selected.activityType, session.type);
+    session.variant = selected.variant;
+  })));
 }
 
 /**
@@ -238,6 +324,7 @@ function _bindPlanningEvents(dialog) {
   document.getElementById("planning-uploader-confirm-btn")
     .addEventListener("click", async () => {
       setPlanningConfirmState("processing");
+      applyPlanningClassificationSelections();
       const result = await confirmPlanningImport(closePlanningUploaderModal);
       if (!result?.ok) setPlanningConfirmState("idle");
     });

@@ -7,7 +7,7 @@
   const fmt = value => Number.isFinite(Number(value)) ? new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 }).format(Number(value)) : '--';
   const dateKey = value => { const date = new Date(value); return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`; };
   const dateText = date => new Intl.DateTimeFormat('ca-ES', { weekday:'long', day:'numeric', month:'long' }).format(date);
-  const typeLabels = { quality:'Qualitat', z2:'Z2', long:'Tirada llarga', 'long-run':'Tirada llarga', strength:'Força', bici:'Bici estàtica', cycling:'Bici', other:'Altres' };
+  const plannedLabel = value => activityPlanningLabel(value) || 'Sessió planificada';
 
   function readLocalCalendar() {
     try { return JSON.parse(localStorage.getItem('suunto-coach-calendar-local-v1') || '{}')?.weeks || {}; } catch (_) { return {}; }
@@ -33,8 +33,8 @@
       planning_session_id: session.id || null,
       day: Number.isInteger(session.day) ? session.day : null,
       type: session.type,
-      title: typeLabels[session.type] || 'Sessió',
-      detail: session.session_type || session.description || session.label || typeLabels[session.type] || 'Sessió planificada',
+      title: plannedLabel(session),
+      detail: session.session_type ? `${plannedLabel(session)} · ${session.session_type}` : session.description || session.label || plannedLabel(session),
       status: 'pending',
       source: 'planning'
     })).filter(item => item.day !== null);
@@ -115,8 +115,8 @@
   }
 
   function plannedCard(item, real) {
-    const title = item.title || typeLabels[item.type] || 'Sessió planificada';
-    const detail = [item.detail && item.detail !== title ? item.detail : '', item.variant || '', item.distance_km ? `${fmt(item.distance_km)} km` : '', item.duration_min ? `${fmt(item.duration_min)} min` : ''].filter(Boolean).join(' · ') || title;
+    const title = item.title || plannedLabel(item);
+    const detail = [item.detail && item.detail !== title ? item.detail : '', activityVariantLabel(item.variant), item.distance_km ? `${fmt(item.distance_km)} km` : '', item.duration_min ? `${fmt(item.duration_min)} min` : ''].filter(Boolean).join(' · ') || title;
     return `<article class="today-session-card${real ? ' is-complete' : ''}"><div><span class="today-session-status">${real ? '✓ Completada' : 'Pendent'}</span><h4>${esc(title)}</h4><p>${esc(detail)}</p></div>${real ? `<div class="today-real-detail"><span>Activitat real</span><strong>${esc(real.tipus || 'Activitat')} · ${esc(actualDetails(real))}</strong></div>` : ''}</article>`;
   }
 
@@ -168,8 +168,8 @@
     const upcoming = document.getElementById('today-upcoming');
     if (upcoming) {
       const future = allPlanned.filter(item => item.day > day).sort((a, b) => a.day - b.day).slice(0, 3);
-      upcoming.innerHTML = `<div class="panel-header"><div><p class="eyebrow">A continuació</p><h3>Properes sessions</h3></div></div>${future.length ? `<div class="today-upcoming-list">${future.map(item => { const real = linkedActivity(item, sessions); return `<div class="today-upcoming-item"><div><span>${['Dilluns','Dimarts','Dimecres','Dijous','Divendres','Dissabte','Diumenge'][item.day] || 'Properament'}</span><strong>${esc(item.title || typeLabels[item.type] || 'Sessió')}</strong><small>${esc(item.detail || '')}</small></div><b class="${real || item.status === 'done' ? 'is-complete' : ''}">${real || item.status === 'done' ? 'Completada' : 'Pendent'}</b></div>`; }).join('')}</div>` : '<p class="today-empty-upcoming">No hi ha més sessions assignades aquesta setmana.</p>'}`;
-      upcoming.innerHTML = `<div class="panel-header"><div><p class="eyebrow">A continuació</p><h3>Properes sessions</h3></div></div>${future.length ? `<div class="today-upcoming-list">${future.map(item => { const real = linkedActivity(item, realWeek); return `<div class="today-upcoming-item"><div><span>${['Dilluns','Dimarts','Dimecres','Dijous','Divendres','Dissabte','Diumenge'][item.day] || 'Properament'}</span><strong>${esc(item.title || typeLabels[item.type] || 'Sessió')}</strong><small>${esc(item.detail || '')}</small></div><b class="${real || item.status === 'done' ? 'is-complete' : ''}">${real || item.status === 'done' ? 'Completada' : 'Pendent'}</b></div>`; }).join('')}</div>` : '<p class="today-empty-upcoming">No hi ha més sessions assignades aquesta setmana.</p>'}`;
+      upcoming.innerHTML = `<div class="panel-header"><div><p class="eyebrow">A continuació</p><h3>Properes sessions</h3></div></div>${future.length ? `<div class="today-upcoming-list">${future.map(item => { const real = linkedActivity(item, sessions); return `<div class="today-upcoming-item"><div><span>${['Dilluns','Dimarts','Dimecres','Dijous','Divendres','Dissabte','Diumenge'][item.day] || 'Properament'}</span><strong>${esc(item.title || plannedLabel(item) || 'Sessió')}</strong><small>${esc(item.detail || '')}</small></div><b class="${real || item.status === 'done' ? 'is-complete' : ''}">${real || item.status === 'done' ? 'Completada' : 'Pendent'}</b></div>`; }).join('')}</div>` : '<p class="today-empty-upcoming">No hi ha més sessions assignades aquesta setmana.</p>'}`;
+      upcoming.innerHTML = `<div class="panel-header"><div><p class="eyebrow">A continuació</p><h3>Properes sessions</h3></div></div>${future.length ? `<div class="today-upcoming-list">${future.map(item => { const real = linkedActivity(item, realWeek); return `<div class="today-upcoming-item"><div><span>${['Dilluns','Dimarts','Dimecres','Dijous','Divendres','Dissabte','Diumenge'][item.day] || 'Properament'}</span><strong>${esc(item.title || plannedLabel(item) || 'Sessió')}</strong><small>${esc(item.detail || '')}</small></div><b class="${real || item.status === 'done' ? 'is-complete' : ''}">${real || item.status === 'done' ? 'Completada' : 'Pendent'}</b></div>`; }).join('')}</div>` : '<p class="today-empty-upcoming">No hi ha més sessions assignades aquesta setmana.</p>'}`;
     }
     if (!detailBound) {
       document.getElementById('today-hero')?.addEventListener('click', event => {

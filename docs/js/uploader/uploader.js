@@ -145,19 +145,32 @@ async function handleFileSelection(files, onDone) {
  *                               proviùt per uploader-ui.js via collectComments()
  * @param {Function} onComplete — callback() quan acaba (per tancar modal, etc.)
  */
-async function confirmImport(comments, variants, onComplete) {
+async function confirmImport(comments, variants, types, sports, onComplete) {
+  // Compatibilitat amb possibles crides antigues de tres arguments.
+  if (typeof types === 'function') { onComplete = types; types = []; sports = []; }
+  if (typeof sports === 'function') { onComplete = sports; sports = []; }
   if (!_pendingRows.length) return { ok: false, error: 'No hi ha activitats preparades per importar.' };
 
   // Injectem el comentari a cada row. Si no n'hi ha, queda string buit.
-  const rowsWithComments = _pendingRows.map((row, i) => ({
-    ...row,
-    Comentari: (comments && comments[i]) ? comments[i] : "",
-    __session: {
-      ...row.__session,
-      variant: variants?.[i] || null,
-      notes: { ...row.__session?.notes, comment: comments?.[i] || null },
-    },
-  }));
+  const rowsWithComments = _pendingRows.map((row, i) => {
+    const previousClassification = activityClassification(row.__session || {});
+    const sport = sports?.[i] || row.__session?.sport || previousClassification.sport;
+    const activityType = types?.[i] || previousClassification.activityType;
+    const type = activityCanonicalTypeFor(sport, activityType, row.__session?.type);
+    const changedClassification = type !== row.__session?.type || sport !== previousClassification.sport;
+    return {
+      ...row,
+      Comentari: (comments && comments[i]) ? comments[i] : "",
+      __session: {
+        ...row.__session,
+        type,
+        sport,
+        subtype: changedClassification ? null : row.__session?.subtype,
+        variant: variants?.[i] || row.__session?.variant || null,
+        notes: { ...row.__session?.notes, comment: comments?.[i] || null },
+      },
+    };
+  });
 
   const result = await appendRowsToSupabase(rowsWithComments);   // definit a csv-writer.js
   if (!result?.ok) {

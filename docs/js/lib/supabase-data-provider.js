@@ -186,12 +186,17 @@
     return { status: 'synced', inserted: rows.length, skipped: entries.length - rows.length };
   }
 
-  function planningEntries(document) {
-    return (document?.cycles || []).flatMap(cycle => (cycle.weeks || []).map(week => ({
-      cycle,
-      week,
-      sessions: (week.sessions || []).map((session, index) => ({ session, index })),
-    })));
+  function planningEntries(document, weekIds = null) {
+    const allowedWeekIds = Array.isArray(weekIds)
+      ? new Set(weekIds.map(id => String(id)))
+      : null;
+    return (document?.cycles || []).flatMap(cycle => (cycle.weeks || [])
+      .filter(week => !allowedWeekIds || allowedWeekIds.has(String(week.id)))
+      .map(week => ({
+        cycle,
+        week,
+        sessions: (week.sessions || []).map((session, index) => ({ session, index })),
+      })));
   }
 
   function planningDocumentFromRows(weekRows, sessionRows) {
@@ -263,12 +268,12 @@
     };
   }
 
-  async function upsertPlanning(document) {
+  async function upsertPlanning(document, options = {}) {
     const client = global.SupabaseClient?.getClient?.();
     if (!client) return { status: 'unavailable' };
     const currentUser = await user();
     if (!currentUser) return { status: 'unavailable' };
-    const entries = planningEntries(document);
+    const entries = planningEntries(document, options.weekIds ?? null);
     if (!entries.length) return { status: 'empty', weeks: 0, sessions: 0 };
 
     const weekRows = entries.map(({ cycle, week }) => ({

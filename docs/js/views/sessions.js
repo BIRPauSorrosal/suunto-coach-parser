@@ -18,25 +18,23 @@ let _pmcDataCache = [];
 
 // SESS_GROUPS: usa les constants centralitzades de app.js
 const SESS_GROUPS = {
-  z2:        s => s.tipusKey === 'Z2',
-  quality:   s => QUALITY_TYPES.has(s.tipusKey),
-  long:      s => LONG_TYPES.has(s.tipusKey),
-  testrace:  s => TEST_RACE_TYPES.has(s.tipusKey),
-  strength:  s => STRENGTH_RE.test(s.tipusKey),
-  bici:      s => BICI_TYPES.has(s.tipusKey),
-  other:     s => !RUNNING_TYPES.has(s.tipusKey) && !STRENGTH_RE.test(s.tipusKey)
-               && !TEST_RACE_TYPES.has(s.tipusKey) && !PADEL_TYPES.has(s.tipusKey)
-               && !BICI_TYPES.has(s.tipusKey),
+  z2:        s => activityToneKey(s) === 'z2',
+  quality:   s => activityToneKey(s) === 'quality',
+  long:      s => activityToneKey(s) === 'long',
+  testrace:  s => activityToneKey(s) === 'test',
+  strength:  s => activityToneKey(s) === 'strength',
+  bici:      s => activityToneKey(s) === 'bici',
+  other:     s => activityToneKey(s) === 'other',
 };
 
 const SESS_TYPE_LABELS = {
   all:      'Totes les sessions',
-  z2:       'Sessions Z2',
+  z2:       'Sessions aeròbiques',
   quality:  'Sessions de qualitat',
-  long:     'Tirades llargues',
+  long:     'Sessions de tirada llarga',
   testrace: 'Test i curses',
   strength: 'Sessions de força',
-  bici:     'Bicicleta estàtica',
+  bici:     'Sessions de cycling',
   other:    'Altres activitats',
 };
 
@@ -388,11 +386,11 @@ function renderAnalyticsZones(sessions) {
 
 function renderAnalyticsMix(sessions) {
   window.DashboardComponents.destroyChart('analytics-mix');
-  const order = ['running', 'cycling', 'strength', 'swimming', 'padel', 'hiking', 'other'];
-  const labels = { running: 'Cursa', cycling: 'Ciclisme', strength: 'Força', swimming: 'Natació', padel: 'Pàdel', hiking: 'Senderisme', other: 'Altres' };
-  const colors = { running: '#55D6BE', cycling: '#39C6E6', strength: '#B58CFF', swimming: '#38bdf8', padel: '#F5B942', hiking: '#FF7A59', other: '#94A3B8' };
+  const order = ['running', 'cycling', 'strength', 'swimming', 'padel', 'tennis', 'hiking', 'walking', 'other'];
+  const labels = Object.fromEntries(activitySportOptions());
+  const colors = { running: '#55D6BE', cycling: '#39C6E6', strength: '#B58CFF', swimming: '#38bdf8', padel: '#F5B942', tennis: '#F5B942', hiking: '#FF7A59', walking: '#A3E635', other: '#94A3B8' };
   const sportKey = s => {
-    const sport = String(analyticsActivity(s).sport || '').toLowerCase();
+    const sport = activityClassification(s).sport;
     return order.includes(sport) ? sport : 'other';
   };
   const entries = order
@@ -790,7 +788,7 @@ function buildSessCard(s) {
     class="ced-btn${hasComment ? ' ced-btn--has-comment' : ''} sess-card-comment"
     data-comment-arxiu="${safeName}"
     data-comment-data="${esc(s.displayDate || '')}"
-    data-comment-tipus="${esc(s.tipus || '')}"
+    data-comment-tipus="${esc(activityDisplayLabel(s, true) || '')}"
     title="${titleAttr}"
     aria-label="${titleAttr}"
   >
@@ -811,10 +809,10 @@ function buildSessCard(s) {
 
   const activityId = s.raw?.__activity?.id || s.raw?.id || s.raw?.Arxiu || '';
   return `
-    <div class="sess-card session-detail-trigger" data-activity-id="${esc(activityId)}" role="button" tabindex="0" aria-label="Obrir el detall de ${esc(s.tipus || 'l’activitat')}">
+    <div class="sess-card session-detail-trigger" data-activity-id="${esc(activityId)}" role="button" tabindex="0" aria-label="Obrir el detall de ${esc(activityDisplayLabel(s, true) || 'l’activitat')}">
       <div class="sess-card-header">
         <span class="sess-card-date">${esc(s.displayDate)}</span>
-        <span class="sess-card-tipus">${esc(s.tipus)}</span>
+        <span class="sess-card-tipus">${esc(activityDisplayLabel(s, true))}</span>
         ${commentBtn}
       </div>
       <div class="sess-card-metrics">
@@ -845,7 +843,7 @@ function bindSessDetailTriggers(sessions) {
       row.dataset.detailBound = '1';
       row.classList.add('session-detail-trigger');
       row.tabIndex = 0;
-      row.setAttribute('aria-label', `Obrir el detall de ${session.tipus || 'l’activitat'}`);
+      row.setAttribute('aria-label', `Obrir el detall de ${activityDisplayLabel(session, true) || 'l’activitat'}`);
       row.addEventListener('click', event => { if (!event.target.closest('[data-comment-arxiu]')) openSessionDetailFromList(session); });
       row.addEventListener('keydown', event => { if ((event.key === 'Enter' || event.key === ' ') && !event.target.closest('[data-comment-arxiu]')) { event.preventDefault(); openSessionDetailFromList(session); } });
     });
@@ -890,7 +888,7 @@ function getSessCardMetrics(s) {
         { label: 'Durada',    value: dur },
         { label: 'Ritme',     value: ritme },
         { label: 'FC',        value: fc },
-        { label: 'Z2',        value: z2min },
+        { label: activityPlanningLabel({ type: 'z2' }), value: z2min },
         { label: 'TSS',       value: tss },
       ];
     case 'quality':
@@ -972,7 +970,7 @@ function makeColComentari() {
         class="ced-btn${hasComment ? ' ced-btn--has-comment' : ''}"
         data-comment-arxiu="${safeName}"
         data-comment-data="${esc(s.displayDate || '')}"
-        data-comment-tipus="${esc(s.tipus || '')}"
+        data-comment-tipus="${esc(activityDisplayLabel(s, true) || '')}"
         title="${titleAttr}"
         aria-label="${titleAttr}"
       >
@@ -989,7 +987,7 @@ function makeColComentari() {
 function getSessCols(type) {
   const colComentari  = makeColComentari();
   const colData       = {label:'Data',            render:s=>esc(s.displayDate)};
-  const colTipus      = {label:'Tipus',            render:s=>esc(s.tipus)};
+  const colTipus      = {label:'Tipus',            render:s=>esc(activityDisplayLabel(s, true))};
   const colKm         = {label:'Km',               render:s=>s.distancia>0?`${fmtNum(s.distancia)} km`:'—'};
   const colDurada     = {label:'Durada',           render:s=>s.durada>0?`${fmtNum(s.durada)} min`:'—'};
   const colRitme      = {label:'Ritme',            render:s=>formatPace(s.ritme)};
@@ -1003,7 +1001,7 @@ function getSessCols(type) {
     render: s => { const e = toNumber(s.raw['EPOC']); return (typeof e === 'number' && e > 0) ? loadBadgeHTML(e) : '—'; }
   };
   const colRecup      = {label:'Recup.',            render:s=>{const r=toNumber(s.raw['Recup(h)']);return typeof r==='number'&&r>0?`${fmtNum(r)} h`:'—';}};
-  const colZ2min      = {label:'Z2 (min)',          render:s=>s.z2min>0?`${fmtNum(s.z2min)} min`:'—'};
+  const colZ2min      = {label:`${activityPlanningLabel({ type: 'z2' })} (min)`, render:s=>s.z2min>0?`${fmtNum(s.z2min)} min`:'—'};
   const colCad        = {label:'Cadència',          render:s=>{const c=toNumber(s.raw['Cadencia(spm)']);return typeof c==='number'&&c>0?`${Math.round(c)} spm`:'—';}};
   const colDesnivell  = {label:'Desnivell',         render:s=>{const d=toNumber(s.raw['Desnivell(m)']);return typeof d==='number'&&d>0?`${Math.round(d)} m`:'—';}};
   const colRitmeSeries= {label:'Ritme sèries',      render:s=>formatPace(typeof s.ritmeMitjaSeries==='number'?s.ritmeMitjaSeries:null)};

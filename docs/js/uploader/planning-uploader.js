@@ -21,9 +21,12 @@ function readPlanningFileAsText(file) {
 }
 
 function mergePlanningDocuments(existing, incoming) {
-  const document = JSON.parse(JSON.stringify(existing || {
+  const normalize = value => window.DashboardDataService?.normalizePlanningDocument?.(value) || value;
+  const normalizedIncoming = normalize(incoming);
+  const normalizedExisting = existing ? normalize(existing) : null;
+  const document = JSON.parse(JSON.stringify(normalizedExisting || {
     schema_version: 1,
-    season: incoming.season,
+    season: normalizedIncoming.season,
     cycles: [],
   }));
   const weeksById = new Map(
@@ -32,7 +35,7 @@ function mergePlanningDocuments(existing, incoming) {
   const stats = { added: 0, replaced: 0, unchanged: 0 };
   const annotated = [];
 
-  (incoming.cycles || []).forEach(incomingCycle => {
+  (normalizedIncoming.cycles || []).forEach(incomingCycle => {
     let cycle = document.cycles.find(candidate => candidate.id === incomingCycle.id);
     if (!cycle) {
       cycle = { ...incomingCycle, weeks: [] };
@@ -64,6 +67,8 @@ function mergePlanningDocuments(existing, incoming) {
           Data_Fi: incomingWeek.end,
         },
         status,
+        cycle: incomingCycle,
+        week: incomingWeek,
       });
     });
   });
@@ -98,7 +103,14 @@ async function confirmPlanningImport(onComplete) {
   const merge = _pendingMerge;
   let success = false;
   try {
-    const result = await window.SupabaseDataProvider?.upsertPlanning?.(merge.document);
+    const changedWeekIds = (merge.incoming || [])
+      .filter(item => item.status !== 'unchanged')
+      .map(item => item.week?.id)
+      .filter(Boolean);
+    const result = await window.SupabaseDataProvider?.upsertPlanning?.(
+      merge.document,
+      { weekIds: changedWeekIds }
+    );
     if (result?.status !== 'synced') {
       throw new Error('No s’ha pogut importar el planning a Supabase. Inicia sessió i torna-ho a provar.');
     }
