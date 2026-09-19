@@ -116,6 +116,27 @@ assert.deepEqual(productionPhases, [
   'Recuperaci\u00f3',
 ].sort());
 
+const importedPlanning = context.DashboardDataService.parsePlanningJSON(JSON.stringify({
+  schema_version: 1,
+  cycles: [{
+    id: '2026-construccio-01',
+    name: 'CONSTRUCCIO',
+    weeks: [{ id: '2026-01-01', code: '2026-S01', start: '2026-01-01', end: '2026-01-07', phase: 'DESCARREGA', sessions: [] }],
+  }],
+}));
+assert.equal(importedPlanning.cycles[0].name, 'Construcci\u00f3');
+assert.equal(importedPlanning.cycles[0].weeks[0].phase, 'Desc\u00e0rrega');
+assert.throws(() => context.DashboardDataService.parsePlanningJSON(JSON.stringify({
+  schema_version: 1,
+  cycles: [{ id: '2026-unknown-01', name: 'Volum', weeks: [] }],
+})), /Cicle no reconegut/);
+assert.throws(() => context.DashboardDataService.parsePlanningJSON(JSON.stringify({
+  schema_version: 1,
+  cycles: [{
+    id: '2026-base-01', name: 'Base', weeks: [{ id: '2026-01-01', code: '2026-S01', start: '2026-01-01', end: '2026-01-07', phase: 'Volum', sessions: [] }],
+  }],
+})), /Fase no reconeguda/);
+
 assert.equal(context.activityPlanningVariant({ type: 'strength', sport: 'strength', variant: null, session_type: 'S2' }), null);
 assert.equal(context.activityPlanningSubtype({ type: 'strength', sport: 'strength', variant: null, session_type: 'S2' }), 'S2');
 

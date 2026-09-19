@@ -269,6 +269,7 @@
   }
 
   async function upsertPlanning(document, options = {}) {
+    global.DashboardDataService?.assertPlanningDocument?.(document);
     const client = global.SupabaseClient?.getClient?.();
     if (!client) return { status: 'unavailable' };
     const currentUser = await user();

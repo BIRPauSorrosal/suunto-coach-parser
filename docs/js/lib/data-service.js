@@ -58,6 +58,13 @@
     };
   }
 
+  function planningTaxonomy() {
+    return {
+      cycles: Object.entries(CYCLE_LABELS).map(([key, label]) => ({ key, label })),
+      phases: Object.entries(PHASE_LABELS).map(([key, label]) => ({ key, label })),
+    };
+  }
+
   function isPlainObject(value) {
     return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
   }
@@ -203,9 +210,17 @@
       if (!cycle || !cycle.id || !cycle.name || !Array.isArray(cycle.weeks)) {
         throw new Error('planning.json conté un cicle incomplet');
       }
+      const normalizedCycle = normalizeCycleName(cycle.name);
+      if (!normalizedCycle.known) {
+        throw new Error(`Cicle no reconegut a ${cycle.id}: ${cycle.name}. Opcions: ${Object.values(CYCLE_LABELS).join(', ')}`);
+      }
       cycle.weeks.forEach(week => {
         if (!week || !week.id || !week.code || !week.start || !week.end || !week.phase || !Array.isArray(week.sessions)) {
           throw new Error(`Setmana incompleta al planning.json: ${week?.id || 'desconeguda'}`);
+        }
+        const normalizedPhase = normalizePhaseName(week.phase);
+        if (!normalizedPhase.known) {
+          throw new Error(`Fase no reconeguda a ${week.id}: ${week.phase}. Opcions: ${Object.values(PHASE_LABELS).join(', ')}`);
         }
         if (seenWeeks.has(week.id)) throw new Error(`Setmana duplicada al planning.json: ${week.id}`);
         seenWeeks.add(week.id);
@@ -316,6 +331,8 @@
     normalizePlanningJSON,
     normalizeCycleName,
     normalizePhaseName,
+    planningTaxonomy,
+    assertPlanningDocument,
     normalizeSessionsJSON,
     validateCanonicalSession,
     assertSessionsDocument,
