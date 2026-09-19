@@ -316,6 +316,15 @@
     const unassigned=calendar.items.filter(i=>i.day===null||i.day===undefined), box=document.getElementById('flex-unassigned'); box.hidden=!unassigned.length&&!canEdit; box.innerHTML=`<p class="eyebrow">Per assignar</p><div class="flex-unassigned-dropzone" data-drop-unassigned="true">${unassigned.length?unassigned.map(i=>card(i,canEdit,sessions,planning,week)).join(''):'Arrossega aquí les sessions que encara no vulguis assignar'}</div>`;
     const unmatched=document.getElementById('flex-unmatched'); unmatched.hidden=!realWeek.length; if(realWeek.length) unmatched.innerHTML=`<p class="eyebrow">Activitats registrades</p><p>${realWeek.length} activitat${realWeek.length===1?'':'s'} trobada${realWeek.length===1?'':'es'} aquesta setmana. La seva associació amb el planning es podrà confirmar en la propera etapa.</p>`;
     if (realWeek.length) { const reconciliationHtml = renderReconciliationPanel(realWeek, week); unmatched.hidden = !reconciliationHtml; unmatched.innerHTML = reconciliationHtml; }
+    const flexCalendar = document.getElementById('flex-calendar');
+    const hasCycle = Boolean(plan.cicle);
+    flexCalendar?.classList.toggle('flex-calendar--planned', hasCycle);
+    if (hasCycle) {
+      const cycleColor = typeof getCycleStyle === 'function' ? getCycleStyle(plan.cicle).color : 'var(--color-border-strong)';
+      flexCalendar?.style.setProperty('--flex-cycle-color', cycleColor);
+    } else {
+      flexCalendar?.style.removeProperty('--flex-cycle-color');
+    }
     bind(sessions, planning, week, calendar, canEdit, calendarDocument);
   }
   function card(item, canEdit, sessions=[]) { const meta=typeMeta(item.type); const real=linkedActivity(item,sessions); const completed=item.status==='done'||!!real; return `<div class="flex-plan-card${completed?' is-done':''}${real?' has-linked-activity':''}" draggable="${canEdit}" data-plan-id="${esc(item.id)}" style="--card-color:${meta[1]}"><div class="flex-card-top"><span class="flex-card-type">${esc(item.title||meta[0])}</span><span class="flex-card-source">${item.source==='manual'?'Afegida':'Pla'}</span></div><strong>${esc(item.detail||meta[0])}</strong>${real?`<div class="flex-linked-activity"><span>✓ Realitzada</span><strong>${esc(activityDisplayLabel(real, true) || 'Activitat')} · ${real.distancia?fmt(real.distancia)+' km':''}${real.durada?' · '+fmt(real.durada)+' min':''}</strong><small>${esc(real.displayDate||'')}</small></div>`:''}<div class="flex-card-actions">${canEdit?`${real?'<span class="flex-card-confirmed">✓ Realitzada</span>':`<button type="button" data-action="toggle" data-id="${esc(item.id)}">${item.status==='done'?'↩ Pendent':'Marcar feta'}</button>`}<button type="button" data-action="delete" data-id="${esc(item.id)}" aria-label="Eliminar activitat" title="Eliminar activitat">×</button>`:`<span>${completed?'✓ Realitzada':'Històric'}</span>`}</div></div>`; }

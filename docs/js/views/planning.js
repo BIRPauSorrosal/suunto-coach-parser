@@ -259,11 +259,11 @@ function paPlanningDays(planning, calendar, month) {
       if (day === null) return;
       const date = new Date(week.startDate); date.setDate(date.getDate() + day);
       if (date < month.start || date > month.end) return;
-      result.push({ dateKey: paDateKey(date), plan, item, real: null });
+      result.push({ dateKey: paDateKey(date), plan, week, item, real: null });
     });
     storedItems.filter(item => item.source === 'manual' && Number.isInteger(item.day)).forEach(item => {
       const date = new Date(week.startDate); date.setDate(date.getDate() + item.day);
-      if (date >= month.start && date <= month.end) result.push({ dateKey: paDateKey(date), plan: null, item, real: null });
+      if (date >= month.start && date <= month.end) result.push({ dateKey: paDateKey(date), plan: null, week: null, item, real: null });
     });
   });
   return result;
@@ -288,11 +288,11 @@ function paDaySummary(dateKey, real, plans, planning) {
   const activityList = real.length
     ? real.map(session => { const activityType = paActivityType(session); return `<button type="button" class="pa-day-activity${activityType === 'test' ? ' pa-day-activity--emphasis' : ''}" style="--pa-activity-color:${paActivityColor(session)}" data-month-activity="${escapeAttr(session.raw?.__activity?.id || '')}" data-plan-id="${escapeAttr(paFindPlanForActivity(session, planning)?.id || '')}"><span>${escapePlanningText(activityDisplayLabel(session, true) || 'Activitat')}</span><small>${paValue(session, 'duration') === null ? '' : fmtMinutes(Math.round(paValue(session, 'duration')))}${paValue(session, 'distance') === null || paValue(session, 'distance') <= 0 ? '' : ` · ${fmtNumP(paValue(session, 'distance'))} km`}</small></button>`; }).join('')
     : '<p class="pa-muted">No hi ha activitats reals aquest dia.</p>';
-  const plansOnly = plans.filter(entry => !entry.real).map(entry => `<div class="pa-day-plan"><span>Prevista</span><strong>${escapePlanningText(paPlanLabel(entry.plan || entry.item))}</strong></div>`).join('');
+  const plansOnly = plans.filter(entry => !entry.real).map(entry => `<div class="pa-day-plan" style="--pa-plan-color:${activityToneColor(entry.plan || entry.item)}"><span>Prevista${entry.week?.cicle ? ` · ${escapePlanningText(entry.week.cicle)}` : ''}${entry.week?.fase ? ` · ${escapePlanningText(entry.week.fase)}` : ''}</span><strong>${escapePlanningText(paPlanLabel(entry.plan || entry.item))}</strong></div>`).join('');
   return `<div class="pa-day-detail-head"><div><p class="eyebrow">Detall del dia</p><h3>${escapePlanningText(title)}</h3></div><div class="pa-day-detail-kpis">${paMetric('Activitats', stats.activities)}${stats.duration > 0 ? paMetric('Temps', fmtMinutes(Math.round(stats.duration))) : ''}${stats.hasLoad ? paMetric('Càrrega', fmtNumP(stats.load)) : ''}</div></div><div class="pa-day-activity-list">${activityList}${plansOnly}</div>`;
 }
 
-function renderContextMonthView(container, planning, sessions, calendar) {
+function renderContextMonthViewLegacy(container, planning, sessions, calendar) {
   const monthSessions = paMonthSessions(sessions, planningYear, planningMonth);
   const previousMonth = planningMonth === 0 ? 11 : planningMonth - 1;
   const previousYear = planningMonth === 0 ? planningYear - 1 : planningYear;
@@ -347,25 +347,298 @@ function renderContextMonthView(container, planning, sessions, calendar) {
   container.querySelectorAll('[data-planning-week]').forEach(button => button.addEventListener('click', () => { const index = Number(button.dataset.planningWeek); if (!Number.isInteger(index)) return; planningWeekIndex = index; planningViewLevel = 'weekly'; renderPlanningLevel(planning, sessions, calendar); }));
 }
 
+function renderContextMonthView(container, planning, sessions, calendar) {
+  const monthSessions = paMonthSessions(sessions, planningYear, planningMonth);
+  const previousMonth = planningMonth === 0 ? 11 : planningMonth - 1;
+  const previousYear = planningMonth === 0 ? planningYear - 1 : planningYear;
+  const currentStats = paStats(monthSessions), previousStats = paStats(paMonthSessions(sessions, previousYear, previousMonth));
+  const range = paMonthRange(planningYear, planningMonth);
+  const model = buildPlanningVisualModel(planning, sessions);
+  const monthWeeks = model.cycles.flatMap(cycle => cycle.weeks
+    .filter(week => week.startDate <= range.end && week.endDate >= range.start)
+    .map(week => ({ week, cycle })));
+  const monthCycles = [...new Map(monthWeeks.map(item => [item.cycle.id, item.cycle])).values()];
+  const monthPhases = [...new Map(monthWeeks.map(item => [`${item.cycle.id}|${item.week.phase}`, item])).values()];
+  const plannedKm = monthWeeks.reduce((sum, item) => sum + item.week.plannedKm, 0);
+  const plannedSessions = monthWeeks.reduce((sum, item) => sum + (item.week.sessions || []).length, 0);
+
+  const plans = paPlanningDays(planning, calendar, range);
+  const byDay = new Map();
+  plans.forEach(entry => {
+    if (!byDay.has(entry.dateKey)) byDay.set(entry.dateKey, { plans: [], real: [] });
+    byDay.get(entry.dateKey).plans.push(entry);
+  });
+  monthSessions.forEach(session => {
+    const key = paDateKey(session.date);
+    if (!byDay.has(key)) byDay.set(key, { plans: [], real: [] });
+    byDay.get(key).real.push(session);
+  });
+  const dailyLoads = [...byDay.values()].map(day => day.real.reduce((sum, session) => sum + paLoad(session), 0));
+  const maxLoad = Math.max(...dailyLoads, 1);
+
+  const actualByWeek = new Map();
+  monthSessions.forEach(session => {
+    const key = window.WeekManager.key(session.date);
+    if (!actualByWeek.has(key)) actualByWeek.set(key, []);
+    actualByWeek.get(key).push(session);
+  });
+  const weekByKey = new Map(monthWeeks.map(item => [window.WeekManager.key(item.week.startDate), item]));
+  actualByWeek.forEach((_, key) => { if (!weekByKey.has(key)) weekByKey.set(key, null); });
+  const weekRows = [...weekByKey.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([key, item]) => {
+    const actual = actualByWeek.get(key) || [];
+    const stats = paStats(actual);
+    const week = item?.week;
+    const cycle = item?.cycle;
+    const flatIndex = week?.flatIndex ?? -1;
+    const title = week ? `${week.code} · ${cycle.name} · ${week.phase}` : `${key} · Sense setmana planificada`;
+    const rowClass = `pa-week-row pa-week-row--planning${week ? '' : ' pa-week-row--unplanned'}`;
+    const cycleColor = cycle ? getCycleStyle(cycle.name).color : 'var(--color-border-strong)';
+    const rowStart = flatIndex >= 0
+      ? `<button type="button" class="${rowClass}" style="--pa-cycle-color:${cycleColor}" data-planning-week="${flatIndex}" title="${escapeAttr(title)}">`
+      : `<div class="${rowClass}" style="--pa-cycle-color:${cycleColor}" title="${escapeAttr(title)}">`;
+    const rowEnd = flatIndex >= 0 ? '</button>' : '</div>';
+    return `${rowStart}<span class="pa-week-plan-label"><strong>${escapePlanningText(week?.code || key)}</strong><small>${escapePlanningText(week ? `${cycle.name} · ${week.phase}` : 'Sense planning')}</small></span><span>${week?.plannedKm ? `${fmtNumP(week.plannedKm)} km` : '—'}</span><span>${stats.hasDistance ? `${fmtNumP(stats.distance)} km` : '—'}</span><span>${stats.activities || '—'}</span>${rowEnd}`;
+  }).join('');
+
+  const cells = paDayCells(planningYear, planningMonth).map(cell => {
+    if (!cell.inMonth) return '<span class="pa-calendar-day pa-calendar-day--empty" aria-hidden="true"></span>';
+    const data = byDay.get(cell.key) || { plans: [], real: [] };
+    const cellDate = new Date(cell.date); cellDate.setHours(12, 0, 0, 0);
+    const weekPlanning = monthWeeks.find(item => item.week.startDate <= cellDate && item.week.endDate >= cellDate) || null;
+    const load = data.real.reduce((sum, session) => sum + paLoad(session), 0);
+    const intensity = load > 0 ? Math.max(.08, load / maxLoad) : 0;
+    const planText = data.plans.length ? `<span class="pa-day-plan-count">${data.plans.length} prev.</span>` : '';
+    const realText = data.real.length ? `<span class="pa-day-real-count">${data.real.length} real.</span>` : '';
+    const dayCycleColor = weekPlanning ? weekPlanning.cycle.color : 'var(--color-border-strong)';
+    const plannedChips = data.plans.slice(0, 3).map(entry => `<span class="pa-calendar-plan" style="--pa-plan-color:${activityToneColor(entry.plan || entry.item)}" title="${escapeAttr(`${paPlanLabel(entry.plan || entry.item)} · ${entry.week?.cicle || 'Sense cicle'} · ${entry.week?.fase || 'Sense fase'}`)}">${escapePlanningText(paPlanLabel(entry.plan || entry.item))}</span>`).join('');
+    const morePlans = data.plans.length > 3 ? `<span class="pa-calendar-plan-more">+${data.plans.length - 3}</span>` : '';
+    const loadOpacity = load ? (0.04 + intensity * 0.16).toFixed(3) : '0';
+    const realButtons = data.real.map(session => {
+      const activityType = paActivityType(session);
+      return `<button type="button" class="pa-calendar-activity${activityType === 'test' ? ' pa-calendar-activity--emphasis' : ''}" style="--pa-activity-color:${paActivityColor(session)}" data-month-activity="${escapeAttr(session.raw?.__activity?.id || '')}" aria-label="Obrir ${escapeAttr(activityDisplayLabel(session, true) || 'activitat')}">${escapePlanningText(activityDisplayLabel(session, true) || 'Activitat')}</button>`;
+    }).join('');
+    return `<article class="pa-calendar-day${weekPlanning ? ' has-plan' : ''}${data.real.length ? ' has-real' : ''}${load ? ' has-load' : ''}" style="--pa-cycle-color:${dayCycleColor};--pa-load:${intensity};--pa-load-opacity:${loadOpacity}"><button type="button" class="pa-calendar-day-select" data-month-day="${cell.key}" aria-label="${escapeAttr(`${cell.date.getDate()} de ${PA_MONTH_NAMES[planningMonth]}`)}"><span class="pa-day-number">${cell.date.getDate()}</span><span class="pa-day-indicators">${planText}${realText}</span></button>${plannedChips}${morePlans}${realButtons}</article>`;
+  }).join('');
+  const loadBars = paDayCells(planningYear, planningMonth).filter(cell => cell.inMonth).map(cell => {
+    const load = (byDay.get(cell.key)?.real || []).reduce((sum, session) => sum + paLoad(session), 0);
+    return `<span title="${escapeAttr(`${cell.date.getDate()} ${PA_MONTH_NAMES[planningMonth]} · ${fmtNumP(load)} càrrega`)}" style="height:${load ? Math.max(8, load / maxLoad * 100) : 2}%"></span>`;
+  }).join('');
+  const comparisonFields = [
+    ['Activitats', currentStats.activities, previousStats.activities],
+    ['Temps', currentStats.duration, previousStats.duration],
+    currentStats.hasDistance && previousStats.hasDistance ? ['Distància', currentStats.distance, previousStats.distance] : null,
+    currentStats.hasLoad && previousStats.hasLoad ? ['Càrrega', currentStats.load, previousStats.load] : null,
+  ].filter(Boolean).map(([name, current, previous]) => `<div><span>${name}</span><strong>${name === 'Temps' ? (current > 0 ? fmtMinutes(Math.round(current)) : '0 min') : name === 'Activitats' ? current : fmtNumP(current)}</strong><em>${paPercent(current, previous) || '—'}</em></div>`).join('');
+  const comparison = previousStats.activities && comparisonFields ? `<section class="pa-panel pa-comparison"><div class="pa-panel-heading"><div><p class="eyebrow">Evolució</p><h3>Vs ${PA_MONTH_NAMES[previousMonth]} ${previousYear}</h3></div></div><div class="pa-comparison-grid">${comparisonFields}</div></section>` : '';
+  const contextChips = monthCycles.map(cycle => `<span class="pc-month-context-chip" style="--pc-context-color:${cycle.color}"><i></i>${escapePlanningText(cycle.name)}</span>`).join('');
+  const phaseChips = monthPhases.map(item => `<span class="pc-month-context-chip pc-month-context-chip--phase" style="--pc-context-color:${getPhaseColor(item.week.phase)}"><i></i>${escapePlanningText(item.week.phase)}</span>`).join('');
+  container.innerHTML = `<div class="pa-view-header"><div><p class="eyebrow">Planificació mensual</p><h2>${PA_MONTH_NAMES[planningMonth]} ${planningYear}</h2><p class="page-subtitle">Cicles, fases, setmanes i activitat real</p></div><div class="pa-nav-actions"><button class="btn btn-ghost btn-sm" id="btn-month-prev" aria-label="Mes anterior">◄</button><button class="btn btn-ghost btn-sm" id="btn-month-today">Avui</button><button class="btn btn-ghost btn-sm" id="btn-month-next" aria-label="Mes següent">►</button></div></div><section class="pa-panel pc-month-context"><div class="pa-panel-heading"><div><p class="eyebrow">Context del mes</p><h3>Cicles i fases actius</h3></div><span class="pa-panel-note">${monthWeeks.length} setmanes del planning</span></div><div class="pc-month-context-list">${contextChips || '<span class="pa-muted">Sense cicles planificats aquest mes.</span>'}${phaseChips}</div></section><div class="pa-kpi-grid">${paMetric('Km planificats', plannedKm ? `${fmtNumP(plannedKm)} km` : '—')}${paMetric('Sessions previstes', plannedSessions || '—')}${paMetric('Activitats reals', currentStats.activities)}${currentStats.hasDistance ? paMetric('Km reals', `${fmtNumP(currentStats.distance)} km`) : ''}${currentStats.hasLoad ? paMetric('Càrrega real', fmtNumP(currentStats.load)) : ''}</div>${comparison}<div class="pa-month-layout"><section class="pa-panel pa-calendar-panel"><div class="pa-panel-heading"><div><p class="eyebrow">Calendari mensual</p><h3>Planificació i activitat real</h3></div><div class="pa-legend"><span><i class="pa-legend-dot pa-legend-dot--plan"></i> Prevista</span><span><i class="pa-legend-dot pa-legend-dot--real"></i> Real</span><span><i class="pa-legend-edge"></i> Cicle</span></div></div><div class="pa-calendar-weekdays">${PA_WEEK_NAMES.map(name => `<span>${name}</span>`).join('')}</div><div class="pa-calendar-grid">${cells}</div><div class="pa-day-detail" id="pa-day-detail"><p class="pa-muted">Selecciona un dia amb activitat per veure’n el resum.</p></div></section><aside class="pa-month-side"><section class="pa-panel pa-load-panel"><div class="pa-panel-heading"><div><p class="eyebrow">Càrrega real</p><h3>Per dia</h3></div><span class="pa-panel-note">training_effect.load</span></div><div class="pa-load-bars" aria-label="Càrrega real diària">${loadBars || '<p class="pa-muted">Sense dades de càrrega.</p>'}</div></section><section class="pa-panel pa-weeks-panel"><div class="pa-panel-heading"><div><p class="eyebrow">Planificació</p><h3>Per setmanes</h3></div></div><div class="pa-week-table-head pa-week-table-head--planning"><span>Setmana</span><span>Pla</span><span>Real</span><span>Act.</span></div><div class="pa-week-table">${weekRows || '<p class="pa-muted">No hi ha planning ni activitat aquest mes.</p>'}</div></section></aside></div>`;
+  container.querySelector('#btn-month-prev')?.addEventListener('click', () => { planningMonth--; if (planningMonth < 0) { planningMonth = 11; planningYear--; } renderPlanningLevel(planning, sessions, calendar); });
+  container.querySelector('#btn-month-next')?.addEventListener('click', () => { planningMonth++; if (planningMonth > 11) { planningMonth = 0; planningYear++; } renderPlanningLevel(planning, sessions, calendar); });
+  container.querySelector('#btn-month-today')?.addEventListener('click', () => { const now = new Date(); planningMonth = now.getMonth(); planningYear = now.getFullYear(); renderPlanningLevel(planning, sessions, calendar); });
+  const showDay = key => { const data = byDay.get(key) || { plans: [], real: [] }; container.querySelector('#pa-day-detail').innerHTML = paDaySummary(key, data.real, data.plans, planning); container.querySelectorAll('[data-month-day]').forEach(button => button.closest('.pa-calendar-day')?.classList.toggle('is-selected', button.dataset.monthDay === key)); };
+  container.querySelectorAll('[data-month-day]').forEach(button => button.addEventListener('click', () => showDay(button.dataset.monthDay)));
+  container.addEventListener('click', event => {
+    const button = event.target.closest('[data-month-activity]');
+    if (!button || !container.contains(button)) return;
+    event.stopPropagation();
+    const activity = sessions.find(session => (session.raw?.__activity?.id || '') === button.dataset.monthActivity);
+    if (!activity || typeof window.openSessionDetailDrawer !== 'function') return;
+    const plan = paFindPlanForActivity(activity, planning);
+    window.openSessionDetailDrawer(activity, plan, { planningItem: plans.find(entry => entry.plan?.id === plan?.id)?.item || null });
+  });
+  container.querySelectorAll('[data-planning-week]').forEach(button => button.addEventListener('click', () => { const index = Number(button.dataset.planningWeek); if (!Number.isInteger(index)) return; planningWeekIndex = index; planningViewLevel = 'weekly'; renderPlanningLevel(planning, sessions, calendar); }));
+}
+
 function paYearMonths(year, sessions) {
   return PA_MONTH_NAMES.map((name, month) => ({ name, month, sessions: paMonthSessions(sessions, year, month), stats: paStats(paMonthSessions(sessions, year, month)) }));
 }
+
+// Model visual derivat del document jeràrquic. El contracte del JSON no canvia:
+// les vistes poden consumir aquest model sense perdre la compatibilitat amb la
+// llista plana `planning`, que encara fan servir altres parts del dashboard.
+function planningVisualDate(value) {
+  const date = value instanceof Date
+    ? new Date(value)
+    : new Date(`${String(value || '').slice(0, 10)}T12:00:00`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function plannedWeekDistance(week, flatWeek) {
+  const explicit = Number(week?.summary?.weekly_km_target);
+  if (Number.isFinite(explicit)) return explicit;
+  if (Number.isFinite(Number(flatWeek?.kmTotal))) return Number(flatWeek.kmTotal);
+  return (week?.sessions || []).reduce((sum, session) => {
+    const value = Number(session?.distance_km);
+    return sum + (Number.isFinite(value) ? value : 0);
+  }, 0);
+}
+
+function buildPlanningVisualModel(planning, sessions) {
+  const document = window.dashboardStore?.getState?.().planningDocument;
+  const flatWeeks = Array.isArray(planning) ? planning : [];
+  const flatById = new Map();
+  flatWeeks.forEach((week, index) => {
+    [week.planningId, week.raw?.__weekId, week.code, week.setmana].filter(Boolean)
+      .forEach(key => flatById.set(String(key), { week, index }));
+  });
+
+  const sourceCycles = Array.isArray(document?.cycles) && document.cycles.length
+    ? document.cycles
+    : [{
+        id: 'legacy-planning',
+        name: 'Planning',
+        start: flatWeeks[0]?.startDate,
+        end: flatWeeks[flatWeeks.length - 1]?.endDate,
+        weeks: flatWeeks.map(week => ({
+          id: week.planningId || week.raw?.__weekId || week.code,
+          code: week.code || week.setmana,
+          start: week.startDate,
+          end: week.endDate,
+          phase: week.fase,
+          summary: { weekly_km_target: week.kmTotal },
+          sessions: week.sessions || [],
+        })),
+      }];
+
+  const cycles = sourceCycles.map((source, cycleIndex) => {
+    const weeks = (source.weeks || []).map(sourceWeek => {
+      const match = flatById.get(String(sourceWeek.id)) || flatById.get(String(sourceWeek.code));
+      const flatWeek = match?.week || null;
+      const startDate = planningVisualDate(sourceWeek.start || flatWeek?.startDate);
+      const endDate = planningVisualDate(sourceWeek.end || flatWeek?.endDate);
+      if (!startDate || !endDate) return null;
+      const actual = (sessions || []).filter(session => session.date >= startDate && session.date <= endDate);
+      return {
+        ...sourceWeek,
+        id: sourceWeek.id || `${source.id}-${sourceWeek.code}`,
+        code: sourceWeek.code || flatWeek?.code || flatWeek?.setmana || '--',
+        phase: sourceWeek.phase || flatWeek?.fase || 'Sense fase',
+        startDate,
+        endDate,
+        flatIndex: match?.index ?? -1,
+      flatWeek,
+      actual,
+      plannedKm: plannedWeekDistance(sourceWeek, flatWeek),
+      };
+    }).filter(Boolean).sort((a, b) => a.startDate - b.startDate);
+
+    const startDate = planningVisualDate(source.start) || weeks[0]?.startDate || null;
+    const endDate = planningVisualDate(source.end) || weeks[weeks.length - 1]?.endDate || null;
+    const plannedKm = weeks.reduce((sum, week) => sum + week.plannedKm, 0);
+    const actual = (sessions || []).filter(session => startDate && endDate && session.date >= startDate && session.date <= endDate);
+    return {
+      id: source.id || `cycle-${cycleIndex + 1}`,
+      name: source.name || 'Cicle sense nom',
+      startDate,
+      endDate,
+      weeks,
+      plannedKm,
+      actual,
+      color: getCycleStyle(source.name).color,
+    };
+  }).filter(cycle => cycle.weeks.length || (cycle.startDate && cycle.endDate));
+
+  return {
+    season: document?.season || null,
+    cycles: cycles.sort((a, b) => (a.startDate || 0) - (b.startDate || 0)),
+  };
+}
+
+function planningYearWeekAxis(year) {
+  const first = window.WeekManager.startOfWeek(new Date(year, 0, 1));
+  const last = window.WeekManager.startOfWeek(new Date(year, 11, 31));
+  const result = [];
+  for (const cursor = new Date(first); cursor <= last; cursor.setDate(cursor.getDate() + 7)) {
+    const startDate = new Date(cursor);
+    const endDate = new Date(cursor); endDate.setDate(endDate.getDate() + 6); endDate.setHours(23, 59, 59, 999);
+    result.push({ key: window.WeekManager.key(startDate), startDate, endDate });
+  }
+  return result;
+}
+
+function planningTimelineRuns(axis, plansByKey, valueFor) {
+  const runs = [];
+  axis.forEach((entry, index) => {
+    const plan = plansByKey.get(entry.key);
+    const value = plan ? valueFor(plan) : null;
+    const previous = runs[runs.length - 1];
+    if (value && previous && previous.value === value && previous.end === index - 1) previous.end = index;
+    else if (value) runs.push({ value, start: index, end: index, plan });
+  });
+  return runs;
+}
+
 function renderSeasonYearView(container, planning, sessions, calendar) {
-  const yearSessions = sessions.filter(session => session.date.getFullYear() === planningYear);
-  const stats = paStats(yearSessions), months = paYearMonths(planningYear, sessions);
-  const byDay = new Map(yearSessions.map(session => [paDateKey(session.date), []]));
+  const model = buildPlanningVisualModel(planning, sessions);
+  const yearStart = new Date(planningYear, 0, 1);
+  const yearEnd = new Date(planningYear, 11, 31, 23, 59, 59, 999);
+  const axis = planningYearWeekAxis(planningYear);
+  const yearSessions = sessions.filter(session => session.date >= yearStart && session.date <= yearEnd);
+  const realStats = paStats(yearSessions);
+  const plansByKey = new Map();
+  model.cycles.forEach(cycle => cycle.weeks.forEach(week => {
+    if (week.startDate <= yearEnd && week.endDate >= yearStart) plansByKey.set(window.WeekManager.key(week.startDate), { week, cycle });
+  }));
+  const visibleWeeks = [...plansByKey.values()];
+  const visibleCycles = [...new Set(visibleWeeks.map(item => item.cycle))];
+  const plannedKm = visibleWeeks.reduce((sum, item) => sum + item.week.plannedKm, 0);
+  const emptyWeeks = axis.filter(entry => !plansByKey.has(entry.key)).length;
+  const cycleRuns = planningTimelineRuns(axis, plansByKey, item => item.cycle.id);
+  const phaseRuns = planningTimelineRuns(axis, plansByKey, item => `${item.cycle.id}|${item.week.phase}`);
+  const cycleById = new Map(model.cycles.map(cycle => [cycle.id, cycle]));
+  const phaseById = new Map(visibleWeeks.map(item => [`${item.cycle.id}|${item.week.phase}`, item]));
+  const monthRuns = [];
+  axis.forEach((entry, index) => {
+    const month = entry.startDate.getMonth();
+    const previous = monthRuns[monthRuns.length - 1];
+    if (previous && previous.month === month && previous.end === index - 1) previous.end = index;
+    else monthRuns.push({ month, start: index, end: index });
+  });
+  const monthHeader = monthRuns.map(run => `<span style="grid-column:${run.start + 1} / span ${run.end - run.start + 1}">${PA_MONTH_NAMES[run.month]}</span>`).join('');
+  const cycleTrack = cycleRuns.map(run => {
+    const cycle = cycleById.get(run.value);
+    return `<span class="pc-timeline-run pc-timeline-run--cycle" style="grid-column:${run.start + 1} / span ${run.end - run.start + 1};--pc-run-color:${cycle?.color || CYCLE_DEFAULT.color}" title="${escapeAttr(`${cycle?.name || 'Cicle'} · ${fmtDateP(cycle?.startDate)} → ${fmtDateP(cycle?.endDate)}`)}">${escapePlanningText(cycle?.name || 'Cicle')}</span>`;
+  }).join('');
+  const phaseTrack = phaseRuns.map(run => {
+    const item = phaseById.get(run.value);
+    const phase = item?.week.phase || 'Sense fase';
+    return `<span class="pc-timeline-run pc-timeline-run--phase" style="grid-column:${run.start + 1} / span ${run.end - run.start + 1};--pc-run-color:${getPhaseColor(phase)}" title="${escapeAttr(phase)}">${escapePlanningText(phase)}</span>`;
+  }).join('');
+  const weekTrack = axis.map(entry => {
+    const item = plansByKey.get(entry.key);
+    if (!item) return `<span class="pc-timeline-week pc-timeline-week--empty" title="${escapeAttr(`${fmtDateShortP(entry.startDate)} → ${fmtDateShortP(entry.endDate)} · Sense setmana planificada`)}">·</span>`;
+    const week = item.week;
+    const actualKm = week.actual.reduce((sum, session) => sum + (paValue(session, 'distance') || 0), 0);
+    const progress = week.plannedKm > 0 ? Math.min(100, Math.round(actualKm / week.plannedKm * 100)) : 0;
+    const active = new Date() >= week.startDate && new Date() <= week.endDate ? ' pc-timeline-week--active' : '';
+    const title = `${week.code} · ${item.cycle.name} · ${week.phase} · ${fmtNumP(week.plannedKm)} km pla · ${fmtNumP(actualKm)} km real`;
+    const button = week.flatIndex >= 0
+      ? `<button type="button" class="pc-timeline-week${active}" data-season-week="${week.flatIndex}" title="${escapeAttr(title)}">`
+      : `<span class="pc-timeline-week${active}" title="${escapeAttr(title)}">`;
+    return `${button}<strong>${escapePlanningText(week.code.replace(/^\d{4}-/, ''))}</strong><i style="--pc-week-progress:${progress}%"></i>${week.flatIndex >= 0 ? '</button>' : '</span>'}`;
+  }).join('');
+
+  const months = paYearMonths(planningYear, sessions);
+  const planByMonth = months.map(item => {
+    const range = paMonthRange(planningYear, item.month);
+    const monthWeeks = visibleWeeks.filter(({ week }) => week.startDate <= range.end && week.endDate >= range.start);
+    return { ...item, plannedKm: monthWeeks.reduce((sum, entry) => sum + entry.week.plannedKm, 0), cycles: [...new Set(monthWeeks.map(entry => entry.cycle.name))] };
+  });
+  const monthlyLoad = months.map(item => item.stats.load), maxMonthlyLoad = Math.max(...monthlyLoad, 1);
+  const trend = months.map(item => `<button type="button" class="py-trend-bar${item.stats.activities ? ' has-data' : ''}" data-year-month="${item.month}" title="${escapeAttr(`${item.name}: ${fmtNumP(item.stats.load)} càrrega`)}"><span style="height:${item.stats.load ? Math.max(8, item.stats.load / maxMonthlyLoad * 100) : 2}%"></span><small>${item.name.slice(0, 3)}</small></button>`).join('');
+  const monthlyRows = planByMonth.map(item => `<button type="button" class="py-month-row${item.stats.activities || item.plannedKm ? '' : ' is-empty'}" data-year-month="${item.month}"><span>${item.name}</span><strong>${item.plannedKm ? `${fmtNumP(item.plannedKm)} km` : '—'}</strong><span>${item.stats.activities || '—'}</span><span>${escapePlanningText(item.cycles.join(', ') || '—')}</span><span>${item.stats.hasLoad ? fmtNumP(item.stats.load) : '—'}</span></button>`).join('');
+  const byDay = new Map();
   yearSessions.forEach(session => { const key = paDateKey(session.date); if (!byDay.has(key)) byDay.set(key, []); byDay.get(key).push(session); });
   const maxDailyLoad = Math.max(...[...byDay.values()].map(day => day.reduce((sum, session) => sum + paLoad(session), 0)), 1);
   const first = new Date(planningYear, 0, 1), offset = (first.getDay() + 6) % 7, daysInYear = (new Date(planningYear, 11, 31) - new Date(planningYear, 0, 1)) / 86400000 + 1;
   const heatmap = Array.from({ length: Math.ceil((offset + daysInYear) / 7) * 7 }, (_, index) => { const date = new Date(planningYear, 0, index - offset + 1), inYear = date.getFullYear() === planningYear; if (!inYear) return '<span class="py-heat-cell py-heat-cell--empty"></span>'; const day = byDay.get(paDateKey(date)) || [], load = day.reduce((sum, session) => sum + paLoad(session), 0), intensity = load ? Math.max(.1, load / maxDailyLoad) : 0; return `<span class="py-heat-cell${load ? ' has-load' : ''}" style="--py-load:${intensity}" title="${escapeAttr(`${date.getDate()} ${PA_MONTH_NAMES[date.getMonth()]} · ${fmtNumP(load)} càrrega`)}"></span>`; }).join('');
-  const monthlyLoad = months.map(item => item.stats.load), maxMonthlyLoad = Math.max(...monthlyLoad, 1);
-  const trend = months.map(item => `<button type="button" class="py-trend-bar${item.stats.activities ? ' has-data' : ''}" data-year-month="${item.month}" title="${escapeAttr(`${item.name}: ${fmtNumP(item.stats.load)} càrrega`)}"><span style="height:${item.stats.load ? Math.max(8, item.stats.load / maxMonthlyLoad * 100) : 2}%"></span><small>${item.name.slice(0, 3)}</small></button>`).join('');
-  const monthlyRows = months.map(item => `<button type="button" class="py-month-row${item.stats.activities ? '' : ' is-empty'}" data-year-month="${item.month}"><span>${item.name}</span><strong>${item.stats.activities || '—'}</strong><span>${item.stats.duration ? fmtMinutes(Math.round(item.stats.duration)) : '—'}</span><span>${item.stats.hasDistance ? `${fmtNumP(item.stats.distance)} km` : '—'}</span><span>${item.stats.hasLoad ? fmtNumP(item.stats.load) : '—'}</span></button>`).join('');
-  const planMonths = months.map(item => { const plan = planning.find(week => week.startDate.getMonth() === item.month && week.startDate.getFullYear() === planningYear) || planning.find(week => week.startDate <= new Date(planningYear, item.month, 15) && week.endDate >= new Date(planningYear, item.month, 15)); return plan ? `<span class="py-month-phase"><i style="background:${getCycleStyle(plan.cicle).color}"></i>${escapePlanningText(plan.cicle)} · ${escapePlanningText(plan.fase)}</span>` : ''; }).join('');
-  container.innerHTML = `<div class="pa-view-header"><div><p class="eyebrow">Visió de temporada</p><h2>${planningYear}</h2><p class="page-subtitle">Evolució real de la temporada</p></div><div class="pa-nav-actions"><button class="btn btn-ghost btn-sm" id="btn-year-prev" aria-label="Any anterior">◄</button><button class="btn btn-ghost btn-sm" id="btn-year-today">Avui</button><button class="btn btn-ghost btn-sm" id="btn-year-next" aria-label="Any següent">►</button></div></div><div class="pa-kpi-grid pa-year-kpis">${paMetric('Activitats', stats.activities)}${paMetric('Temps total', stats.duration ? fmtMinutes(Math.round(stats.duration)) : '—')}${stats.hasDistance ? paMetric('Distància', `${fmtNumP(stats.distance)} km`) : ''}${stats.hasLoad ? paMetric('Càrrega', fmtNumP(stats.load)) : ''}</div><div class="py-layout"><section class="pa-panel py-trend-panel"><div class="pa-panel-heading"><div><p class="eyebrow">Evolució de càrrega</p><h3>Càrrega real per mes</h3></div><span class="pa-panel-note">training_effect.load</span></div><div class="py-trend-chart">${trend}</div></section><section class="pa-panel py-heat-panel"><div class="pa-panel-heading"><div><p class="eyebrow">Mapa de càrrega</p><h3>Càrrega real per dia</h3></div></div><div class="py-heat-months">${PA_MONTH_NAMES.map(name => `<span>${name.slice(0, 3)}</span>`).join('')}</div><div class="py-heatmap" aria-label="Mapa anual de càrrega">${heatmap}</div><p class="pa-panel-note">La intensitat del color representa la càrrega real acumulada de cada dia.</p></section></div><section class="pa-panel py-months-panel"><div class="pa-panel-heading"><div><p class="eyebrow">Desglossament</p><h3>Resum per mesos</h3></div></div><div class="py-month-table-head"><span>Mes</span><span>Act.</span><span>Temps</span><span>Distància</span><span>Càrrega</span></div><div class="py-month-table">${monthlyRows}</div></section><div class="py-phase-strip">${planMonths}</div>`;
+  const empty = '<p class="pa-muted">No hi ha setmanes planificades aquest any.</p>';
+  container.innerHTML = `<div class="pa-view-header"><div><p class="eyebrow">Planificació anual</p><h2>${planningYear}</h2><p class="page-subtitle">Línia temporal de cicles, fases i setmanes</p></div><div class="pa-nav-actions"><button class="btn btn-ghost btn-sm" id="btn-year-prev" aria-label="Any anterior">◄</button><button class="btn btn-ghost btn-sm" id="btn-year-today">Avui</button><button class="btn btn-ghost btn-sm" id="btn-year-next" aria-label="Any següent">►</button></div></div><div class="pa-kpi-grid pa-year-kpis">${paMetric('Cicles', visibleCycles.length)}${paMetric('Setmanes planificades', visibleWeeks.length)}${paMetric('Sense planning', emptyWeeks)}${paMetric('Km planificats', plannedKm ? `${fmtNumP(plannedKm)} km` : '—')}${paMetric('Km reals', realStats.hasDistance ? `${fmtNumP(realStats.distance)} km` : '—')}</div><section class="pa-panel pc-season-panel"><div class="pa-panel-heading"><div><p class="eyebrow">Període anual</p><h3>${planningYear}</h3></div><span class="pa-panel-note">Els buits es mostren sense interpretar-ne el motiu</span></div><div class="pc-season-legend"><span><i class="pc-legend-dot pc-legend-dot--cycle"></i> Cicle</span><span><i class="pc-legend-dot pc-legend-dot--phase"></i> Fase</span><span><i class="pc-legend-dot pc-legend-dot--week"></i> Setmana planificada</span><span><i class="pc-legend-dot pc-legend-dot--empty"></i> Sense planning</span></div><div class="pc-timeline-scroll"><div class="pc-timeline-grid" style="--pc-week-count:${axis.length}"><span class="pc-timeline-label"></span><div class="pc-timeline-month-track">${monthHeader}</div><span class="pc-timeline-label">Cicles</span><div class="pc-timeline-track">${cycleTrack || empty}</div><span class="pc-timeline-label">Fases</span><div class="pc-timeline-track">${phaseTrack || empty}</div><span class="pc-timeline-label">Setmanes</span><div class="pc-timeline-week-track">${weekTrack}</div></div></div></section><div class="py-layout"><section class="pa-panel py-trend-panel"><div class="pa-panel-heading"><div><p class="eyebrow">Evolució mensual</p><h3>Càrrega real per mes</h3></div><span class="pa-panel-note">training_effect.load</span></div><div class="py-trend-chart">${trend}</div></section><section class="pa-panel py-heat-panel"><div class="pa-panel-heading"><div><p class="eyebrow">Mapa anual</p><h3>Càrrega real per dia</h3></div></div><div class="py-heat-months">${PA_MONTH_NAMES.map(name => `<span>${name.slice(0, 3)}</span>`).join('')}</div><div class="py-heatmap" aria-label="Mapa anual de càrrega">${heatmap}</div><p class="pa-panel-note">La intensitat del color representa la càrrega real acumulada de cada dia.</p></section></div><section class="pa-panel py-months-panel"><div class="pa-panel-heading"><div><p class="eyebrow">Resum mensual</p><h3>Planificació i activitat real</h3></div></div><div class="py-month-table-head"><span>Mes</span><span>Km pla</span><span>Act.</span><span>Cicles</span><span>Càrrega</span></div><div class="py-month-table">${monthlyRows || empty}</div></section>`;
   container.querySelector('#btn-year-prev')?.addEventListener('click', () => { planningYear--; renderPlanningLevel(planning, sessions, calendar); });
   container.querySelector('#btn-year-next')?.addEventListener('click', () => { planningYear++; renderPlanningLevel(planning, sessions, calendar); });
   container.querySelector('#btn-year-today')?.addEventListener('click', () => { planningYear = new Date().getFullYear(); renderPlanningLevel(planning, sessions, calendar); });
+  container.querySelectorAll('[data-season-week]').forEach(button => button.addEventListener('click', () => { planningWeekIndex = Number(button.dataset.seasonWeek); planningViewLevel = 'weekly'; renderPlanningLevel(planning, sessions, calendar); }));
   container.querySelectorAll('[data-year-month]').forEach(button => button.addEventListener('click', () => { planningMonth = Number(button.dataset.yearMonth); planningViewLevel = 'monthly'; renderPlanningLevel(planning, sessions, calendar); }));
 }
 

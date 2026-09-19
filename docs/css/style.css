@@ -995,3 +995,9 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
   margin-top: 6px;
   line-height: 1.4;
 }
+
+/* El cicle de la setmana s'estén a tots els dies, també sense sessions detallades. */
+.flex-calendar.flex-calendar--planned .flex-day,
+.flex-calendar.flex-calendar--planned .flex-day--today {
+  border-top: 3px solid var(--flex-cycle-color, var(--color-border-strong));
+}
