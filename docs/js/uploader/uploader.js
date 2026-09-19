@@ -8,15 +8,18 @@
 // ─── CONSTANTS DE VALIDACIÓ ──────────────────────────────────
 
 const SUUNTO_HEADER_KEYS = ["DateTime", "Duration"];
+const MAX_FILES_PER_IMPORT = 50;
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
 
 // ─── ESTAT INTERN ─────────────────────────────────────────────
 
 // Files parsejades pendents de confirmar per l'usuari
 let _pendingRows = [];
+let _selectionVersion = 0;
 
 function getPendingRows()   { return _pendingRows; }
-function clearPendingRows() { _pendingRows = []; }
+function clearPendingRows() { _pendingRows = []; _selectionVersion += 1; }
 
 
 // ─── VALIDACIÓ ──────────────────────────────────────────────────
@@ -26,24 +29,54 @@ function clearPendingRows() { _pendingRows = []; }
  * Retorna { valid: bool, error: string|null }
  */
 function validateSuuntoJson(data) {
-  if (!data || typeof data !== "object") {
+  const isPlainObject = value => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+  if (!isPlainObject(data)) {
     return { valid: false, error: "No és un objecte JSON vàlid." };
   }
-  if (!data.DeviceLog) {
+  if (!isPlainObject(data.DeviceLog)) {
     return { valid: false, error: "Falta la clau arrel 'DeviceLog'." };
   }
-  if (!data.DeviceLog.Header) {
+  if (!isPlainObject(data.DeviceLog.Header)) {
     return { valid: false, error: "Falta 'DeviceLog.Header'." };
   }
-  if (!data.DeviceLog.Samples) {
-    return { valid: false, error: "Falta 'DeviceLog.Samples'." };
+  if (!Array.isArray(data.DeviceLog.Samples)) {
+    return { valid: false, error: "'DeviceLog.Samples' ha de ser una llista." };
   }
   for (const key of SUUNTO_HEADER_KEYS) {
     if (!(key in data.DeviceLog.Header)) {
       return { valid: false, error: `Falta el camp '${key}' al Header.` };
     }
   }
+  const date = new Date(data.DeviceLog.Header.DateTime);
+  if (typeof data.DeviceLog.Header.DateTime !== 'string' || Number.isNaN(date.getTime())) {
+    return { valid: false, error: "La data 'Header.DateTime' no és vàlida." };
+  }
+  const duration = Number(data.DeviceLog.Header.Duration);
+  if (!Number.isFinite(duration) || duration <= 0) {
+    return { valid: false, error: "La durada 'Header.Duration' ha de ser un nombre positiu." };
+  }
   return { valid: true, error: null };
+}
+
+function fallbackFingerprint(text) {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return `fnv1a:${(hash >>> 0).toString(16).padStart(8, '0')}:${text.length}`;
+}
+
+async function sourceFingerprint(text) {
+  try {
+    if (globalThis.crypto?.subtle && typeof TextEncoder !== 'undefined') {
+      const digest = await globalThis.crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+      return `sha256:${Array.from(new Uint8Array(digest)).map(byte => byte.toString(16).padStart(2, '0')).join('')}`;
+    }
+  } catch (_) {
+    // En entorns antics mantenim una empremta de reserva per detectar repeticions.
+  }
+  return fallbackFingerprint(text);
 }
 
 
@@ -73,10 +106,20 @@ function readFileAsText(file) {
 async function processFiles(files) {
   const ok     = [];
   const errors = [];
+  const selectedFiles = Array.from(files || []);
+  const acceptedFiles = selectedFiles.slice(0, MAX_FILES_PER_IMPORT);
+  selectedFiles.slice(MAX_FILES_PER_IMPORT).forEach(file => {
+    errors.push({ name: file?.name || 'Fitxer desconegut', reason: `S'ha superat el límit de ${MAX_FILES_PER_IMPORT} fitxers per importació.` });
+  });
 
-  for (const file of files) {
-    if (!file.name.toLowerCase().endsWith(".json")) {
-      errors.push({ name: file.name, reason: "No és un fitxer .json." });
+  for (const file of acceptedFiles) {
+    const fileName = String(file?.name || 'Fitxer desconegut');
+    if (!fileName.toLowerCase().endsWith(".json")) {
+      errors.push({ name: fileName, reason: "No és un fitxer .json." });
+      continue;
+    }
+    if (Number.isFinite(file.size) && file.size > MAX_FILE_SIZE_BYTES) {
+      errors.push({ name: fileName, reason: `El fitxer supera el límit de ${MAX_FILE_SIZE_BYTES / (1024 * 1024)} MB.` });
       continue;
     }
 
@@ -84,7 +127,7 @@ async function processFiles(files) {
     try {
       raw = await readFileAsText(file);
     } catch (e) {
-      errors.push({ name: file.name, reason: e.message });
+      errors.push({ name: fileName, reason: e.message });
       continue;
     }
 
@@ -92,27 +135,40 @@ async function processFiles(files) {
     try {
       data = JSON.parse(raw);
     } catch {
-      errors.push({ name: file.name, reason: "JSON malformat, no es pot parsejar." });
+      errors.push({ name: fileName, reason: "JSON malformat, no es pot parsejar." });
       continue;
     }
 
     const validation = validateSuuntoJson(data);
     if (!validation.valid) {
-      errors.push({ name: file.name, reason: validation.error });
+      errors.push({ name: fileName, reason: validation.error });
       continue;
     }
 
     const parserFn = detectParser(file.name);   // definit a parser.js
     if (!parserFn) {
       errors.push({
-        name: file.name,
-        reason: "Tipus no reconegut. Paraules clau esperades: z2, tempo, intervals, llarga, trail, marat, força, padel...",
+        name: fileName,
+        reason: "No s'ha pogut seleccionar un parser per a aquest fitxer.",
       });
       continue;
     }
 
-    const row = parseSuuntoFile(file.name, data);  // definit a parser.js
-    ok.push({ name: file.name, row });
+    try {
+      const row = parseSuuntoFile(file.name, data);  // definit a parser.js
+      if (!row?.__session) throw new Error('El parser no ha generat una activitat vàlida.');
+      row.__session.source_fingerprint = await sourceFingerprint(raw);
+      const sessionValidation = window.DashboardDataService?.validateCanonicalSession?.(row.__session);
+      if (!sessionValidation?.valid) throw new Error(sessionValidation?.errors?.join(' ') || 'La sessió parsejada no compleix el contracte.');
+      const definition = activityFilenameDefinition(file.name);
+      ok.push({
+        name: file.name,
+        row,
+        warnings: definition?.inferred ? ['Classificació proposada a partir del nom; revisa esport i tipus abans d’importar.'] : [],
+      });
+    } catch (error) {
+      errors.push({ name: fileName, reason: error?.message || 'No s’ha pogut processar el fitxer.' });
+    }
   }
 
   return { ok, errors };
@@ -130,10 +186,17 @@ async function processFiles(files) {
  * @param {Function} onDone     — callback(ok, errors) per actualitzar la UI
  */
 async function handleFileSelection(files, onDone) {
-  if (!files.length) return;
+  const selectionVersion = ++_selectionVersion;
+  if (!files?.length) {
+    _pendingRows = [];
+    onDone?.([], []);
+    return { ok: [], errors: [] };
+  }
   const { ok, errors } = await processFiles(files);
+  if (selectionVersion !== _selectionVersion) return { ok: [], errors: [], cancelled: true };
   _pendingRows = ok.map(f => f.row);
-  onDone(ok, errors);
+  onDone?.(ok, errors);
+  return { ok, errors };
 }
 
 /**
@@ -172,6 +235,16 @@ async function confirmImport(comments, variants, types, sports, subtypes, onComp
       },
     };
   });
+
+  const invalidRows = rowsWithComments
+    .map((row, index) => ({ index, validation: window.DashboardDataService?.validateCanonicalSession?.(row.__session) }))
+    .filter(({ validation }) => !validation?.valid);
+  if (invalidRows.length) {
+    const first = invalidRows[0];
+    const error = `Revisa l’activitat ${first.index + 1}: ${first.validation?.errors?.join(' ') || 'classificació invàlida.'}`;
+    window.DashboardComponents?.showToast({ type: 'error', message: error });
+    return { ok: false, error };
+  }
 
   const result = await appendRowsToSupabase(rowsWithComments);   // definit a csv-writer.js
   if (!result?.ok) {

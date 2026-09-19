@@ -173,6 +173,37 @@ function activityTypeOptionsForSport(sport) {
     .map(definition => definition.category));
   return ACTIVITY_TYPE_OPTIONS.filter(([value]) => values.has(value)).map(item => [...item]);
 }
+
+// La classificació tolerant manté compatibilitat amb dades legacy. Aquest
+// validador és l'última barrera abans de persistir una activitat nova.
+function activityValidateClassification(value) {
+  const source = activityCanonical(value);
+  const rawSport = activitySlug(source.sport || '');
+  const rawType = activitySlug(source.type || '');
+  const sport = ACTIVITY_SPORT_ALIASES[rawSport];
+  const type = Object.prototype.hasOwnProperty.call(ACTIVITY_CATALOG.kinds, rawType) ? rawType : null;
+  const errors = [];
+
+  if (!sport) errors.push('Esport no reconegut.');
+  if (!type) errors.push('Tipus d’activitat no reconegut.');
+
+  const kind = type ? ACTIVITY_CATALOG.kinds[type] : null;
+  if (kind && sport && kind.sport !== sport && !kind.allowedSports?.includes(sport)) {
+    errors.push('El tipus seleccionat no és compatible amb l’esport.');
+  }
+
+  const subtype = source.subtype || null;
+  if (subtype && !kind?.subtypes?.includes(subtype)) {
+    errors.push('El subtipus seleccionat no és compatible amb el tipus.');
+  }
+
+  const variant = source.variant || null;
+  if (variant && !kind?.variants?.includes(variant)) {
+    errors.push('La variant seleccionada no és compatible amb el tipus.');
+  }
+
+  return Object.freeze({ valid: errors.length === 0, errors, sport, type, subtype, variant });
+}
 function activityPlanningVariant(value) {
   const source = activityCanonical(value);
   const classification = activityClassification(value);
@@ -287,10 +318,32 @@ function activityFilenameDefinition(filename) {
     })))
     .sort((a, b) => b.alias.length - a.alias.length);
   const match = matches.find(candidate => name.includes(candidate.alias));
-  if (!match) return null;
+  if (!match) {
+    // El nom només orienta la classificació. Un JSON Suunto correcte no s'ha
+    // de rebutjar perquè s'hagi exportat amb una convenció de nom diferent.
+    const sportMatch = Object.entries(ACTIVITY_CATALOG.sports)
+      .filter(([sport]) => sport !== 'other')
+      .flatMap(([sport, definition]) => [sport, ...(definition.aliases || [])]
+        .map(alias => ({ sport, alias: activitySlug(alias) })))
+      .sort((a, b) => b.alias.length - a.alias.length)
+      .find(candidate => candidate.alias && name.includes(candidate.alias));
+    const sport = sportMatch?.sport || 'other';
+    const defaultType = sport === 'running' ? 'aerobic'
+      : sport === 'strength' ? 'strength'
+        : ACTIVITY_TAXONOMY[sport] ? sport : 'other';
+    const kind = ACTIVITY_CATALOG.kinds[defaultType] || ACTIVITY_CATALOG.kinds.other;
+    return {
+      type: defaultType,
+      sport,
+      parser: kind.parser || 'generic',
+      alias: sportMatch?.alias || null,
+      subtype: null,
+      inferred: true,
+    };
+  }
   const sport = match.type === 'test' && /(?:test-bici|test_bici|bici-estatica-test|bici_estatica_test)/.test(name)
     ? 'cycling' : match.kind.sport;
-  return { type: match.type, sport, parser: match.parser, alias: match.alias, subtype: match.kind.filenameSubtypes?.[match.alias] || null };
+  return { type: match.type, sport, parser: match.parser, alias: match.alias, subtype: match.kind.filenameSubtypes?.[match.alias] || null, inferred: false };
 }
 
 const ACTIVITY_TONE_COLORS = Object.freeze(Object.fromEntries(Object.entries(ACTIVITY_CATALOG.groups)

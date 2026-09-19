@@ -256,6 +256,7 @@
 }
 .uploader-sport-input,
 .uploader-type-input,
+.uploader-subtype-input,
 .uploader-variant-input {
   min-width: 150px;
   color: var(--text);
@@ -268,10 +269,18 @@
 }
 .uploader-sport-input:focus,
 .uploader-type-input:focus,
+.uploader-subtype-input:focus,
 .uploader-variant-input:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.18);
+}
+
+.uploader-item-hint {
+  margin: 0 8px 6px;
+  color: var(--color-warning, #d97706);
+  font-size: .75rem;
+  line-height: 1.35;
 }
 
 .uploader-comment-area {

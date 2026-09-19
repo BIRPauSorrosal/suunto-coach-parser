@@ -13,6 +13,10 @@ utilitza `schema_version`, `source: "suunto"` i una llista `sessions`. Cada
 activitat té un `id` estable, una data ISO, `type`, `sport` i `variant`, i pot
 incloure mètriques, zones, comentaris i enllaços.
 
+Les importacions noves també conserven `source_fingerprint`: una empremta del
+JSON original que permet detectar el mateix export encara que se n’hagi canviat
+el nom. Els registres històrics sense empremta continuen sent compatibles.
+
 En importar-lo, l’aplicació el valida, el fusiona per identificador i desa el
 resultat a `activities` per a l’usuari autenticat. En carregar el dashboard,
 les activitats es llegeixen de `activities`, no de `docs/data/sessions.json`.

@@ -4,18 +4,63 @@
 
 (function (global) {
 
+  function isPlainObject(value) {
+    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+  }
+
+  function isRealISODate(value) {
+    if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+    const [year, month, day] = value.split('-').map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+  }
+
+  function validateCanonicalSession(session) {
+    const errors = [];
+    if (!isPlainObject(session)) return { valid: false, errors: ['L’activitat no és un objecte vàlid.'] };
+    if (typeof session.id !== 'string' || !session.id.trim()) errors.push('Falta l’identificador de l’activitat.');
+    if (!isRealISODate(session.date)) errors.push('La data de l’activitat no és vàlida.');
+    if (!Object.prototype.hasOwnProperty.call(session, 'variant')) errors.push('Falta el camp variant.');
+    if (!Number.isFinite(session.duration_min) || session.duration_min <= 0) errors.push('La durada ha de ser un nombre positiu.');
+    if (session.source_fingerprint != null && (typeof session.source_fingerprint !== 'string' || !session.source_fingerprint.trim())) {
+      errors.push('L’empremta del fitxer no és vàlida.');
+    }
+
+    const checkFiniteNumbers = (value, path = '') => {
+      if (value == null) return;
+      if (typeof value === 'number') {
+        if (!Number.isFinite(value)) errors.push(`Valor numèric no vàlid a ${path}.`);
+        return;
+      }
+      if (Array.isArray(value)) {
+        value.forEach((item, index) => checkFiniteNumbers(item, `${path}[${index}]`));
+        return;
+      }
+      if (isPlainObject(value)) Object.entries(value).forEach(([key, item]) => checkFiniteNumbers(item, path ? `${path}.${key}` : key));
+    };
+    checkFiniteNumbers({
+      feeling: session.feeling, vo2max: session.vo2max, duration_min: session.duration_min,
+      distance_km: session.distance_km, elevation_m: session.elevation_m, pace_min_km: session.pace_min_km,
+      cadence_spm: session.cadence_spm, heart_rate: session.heart_rate, zones: session.zones,
+      training_effect: session.training_effect, recovery: session.recovery, calories: session.calories,
+      intervals: session.intervals,
+    });
+
+    if (typeof activityValidateClassification === 'function') {
+      const classification = activityValidateClassification(session);
+      errors.push(...classification.errors);
+    }
+    return { valid: errors.length === 0, errors };
+  }
+
   function assertSessionsDocument(document) {
     if (!document || document.schema_version !== 1 || document.source !== 'suunto' || !Array.isArray(document.sessions)) {
       throw new Error('sessions.json no té un esquema vàlid (schema_version/source/sessions)');
     }
     const seenIds = new Set();
     document.sessions.forEach(session => {
-      if (!session || !session.id || !session.date || !session.type || !session.sport || !('variant' in session)) {
-        throw new Error(`Activitat incompleta a sessions.json: ${session?.id || 'desconeguda'}`);
-      }
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(session.date)) {
-        throw new Error(`Data no vàlida a sessions.json: ${session.id}`);
-      }
+      const validation = validateCanonicalSession(session);
+      if (!validation.valid) throw new Error(`Activitat invàlida a sessions.json (${session?.id || 'desconeguda'}): ${validation.errors.join(' ')}`);
       if (seenIds.has(session.id)) throw new Error(`ID duplicat a sessions.json: ${session.id}`);
       seenIds.add(session.id);
     });
@@ -202,5 +247,7 @@
     normalizePlanningDocument,
     normalizePlanningJSON,
     normalizeSessionsJSON,
+    validateCanonicalSession,
+    assertSessionsDocument,
   });
 })(window);

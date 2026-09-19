@@ -367,9 +367,13 @@
       payload: item,
     }));
     if (!rows.length) return { status: 'empty', count: 0 };
-    const { error } = await client.from('activities').upsert(rows, { onConflict: 'user_id,source,external_id' });
+    // La importació és append-only: un conflicte d'identificador ha de ser un
+    // duplicat ignorat, mai una sobrescriptura silenciosa d'una altra pestanya.
+    const { data, error } = await client.from('activities')
+      .upsert(rows, { onConflict: 'user_id,source,external_id', ignoreDuplicates: true })
+      .select('external_id');
     if (error) throw error;
-    return { status: 'synced', count: rows.length };
+    return { status: 'synced', count: Array.isArray(data) ? data.length : 0 };
   }
 
   async function saveActivityLinks(externalId, links) {

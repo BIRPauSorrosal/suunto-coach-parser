@@ -23,6 +23,7 @@ load('docs/js/lib/metrics.js');
 load('docs/js/lib/activity-types.js');
 load('docs/js/lib/data-service.js');
 load('docs/js/uploader/parser.js');
+load('docs/js/uploader/uploader.js');
 load('docs/js/uploader/planning-uploader.js');
 
 const csv = context.DashboardCsv;
@@ -139,6 +140,13 @@ assert.deepEqual(
 );
 const filenameClassification = JSON.parse(vm.runInContext(`JSON.stringify(activityFilenameDefinition('20260917_test_bici_indoor.json'))`, context));
 assert.deepEqual([filenameClassification.type, filenameClassification.sport, filenameClassification.parser], ['test', 'cycling', 'generic']);
+const looseBikeFilename = JSON.parse(vm.runInContext(`JSON.stringify(activityFilenameDefinition('260919_bici.json'))`, context));
+assert.deepEqual([looseBikeFilename.type, looseBikeFilename.sport, looseBikeFilename.parser, looseBikeFilename.inferred], ['cycling', 'cycling', 'generic', true]);
+const unknownFilename = JSON.parse(vm.runInContext(`JSON.stringify(activityFilenameDefinition('exportacio-manual.json'))`, context));
+assert.deepEqual([unknownFilename.type, unknownFilename.sport, unknownFilename.parser, unknownFilename.inferred], ['other', 'other', 'generic', true]);
+assert.equal(vm.runInContext(`activityValidateClassification({ type: 'cycling', sport: 'cycling', subtype: null, variant: null }).valid`, context), true);
+assert.equal(vm.runInContext(`activityValidateClassification({ type: 'cycling', sport: 'running', subtype: null, variant: null }).valid`, context), false);
+assert.equal(vm.runInContext(`activityValidateClassification({ type: 'strength', sport: 'strength', subtype: 'S2', variant: 'road' }).valid`, context), false);
 assert.equal(vm.runInContext(`activityLegacyLabel({ type: 'cycling', sport: 'cycling', variant: 'indoor' })`, context), 'BICI ESTÀTICA');
 
 const parsedVariants = JSON.parse(vm.runInContext(`JSON.stringify([
@@ -159,6 +167,18 @@ const parsedBici = JSON.parse(vm.runInContext(`JSON.stringify(
   }).__session
 )`, context));
 assert.deepEqual([parsedBici.type, parsedBici.sport, parsedBici.variant], ['cycling', 'cycling', 'indoor']);
+
+const validImportedSession = JSON.parse(vm.runInContext(`JSON.stringify({
+  id: '260919-bici', date: '2026-09-19', type: 'cycling', sport: 'cycling', variant: null,
+  subtype: null, duration_min: 60, heart_rate: { average: null, max: null }, zones: {},
+  training_effect: {}, recovery: {}, intervals: []
+})`, context));
+assert.equal(context.DashboardDataService.validateCanonicalSession(validImportedSession).valid, true);
+assert.equal(context.DashboardDataService.validateCanonicalSession({ ...validImportedSession, date: '2026-02-30' }).valid, false);
+assert.equal(context.DashboardDataService.validateCanonicalSession({ ...validImportedSession, duration_min: 0 }).valid, false);
+assert.equal(vm.runInContext(`validateSuuntoJson({ DeviceLog: { Header: { DateTime: '2026-09-19T10:00:00Z', Duration: 60 }, Samples: [] } }).valid`, context), true);
+assert.equal(vm.runInContext(`validateSuuntoJson({ DeviceLog: { Header: { DateTime: 'invalid', Duration: 60 }, Samples: [] } }).valid`, context), false);
+assert.equal(vm.runInContext(`validateSuuntoJson({ DeviceLog: { Header: { DateTime: '2026-09-19T10:00:00Z', Duration: 0 }, Samples: {} } }).valid`, context), false);
 
 // El Service Worker no pot interceptar dades de Supabase: una resposta GET
 // cachejada d'una setmana o de la seva revisió provocaria conflictes falsos.

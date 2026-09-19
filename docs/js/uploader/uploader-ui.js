@@ -127,6 +127,7 @@ function renderResults(ok, errors) {
         const variantOptions = activityVariantOptions(variantType, session.variant)
           .map(option => `<option value="${escapeHtml(option.value)}"${option.value === session.variant ? ' selected' : ''}>${escapeHtml(option.label)}</option>`)
           .join('');
+        const warnings = (f.warnings || []).map(warning => `<p class="uploader-item-hint">⚠️ ${escapeHtml(warning)}</p>`).join('');
         return `
         <li class="uploader-list-item uploader-list-item--with-comment">
           <div class="uploader-item-row">
@@ -159,6 +160,7 @@ function renderResults(ok, errors) {
             <label for="uploader-variant-${i}">Variant</label>
             <select id="uploader-variant-${i}" class="uploader-variant-input">${variantOptions}</select>
           </div>
+          ${warnings}
           <div class="uploader-comment-area" id="uploader-comment-area-${i}" style="display:none">
             <textarea
               id="uploader-comment-${i}"
@@ -313,7 +315,7 @@ function setConfirmState(state) {
   const btn = document.getElementById("uploader-confirm-btn");
   if (!btn) return;
   const states = {
-    idle:        { text: "Importar",       disabled: false },
+    idle:        { text: "Importar",       disabled: !(typeof getPendingRows === 'function' && getPendingRows().length) },
     validating:  { text: "Validant...",    disabled: true  },
     processing:  { text: "Important...",   disabled: true  },
   };
@@ -330,6 +332,7 @@ function _resetModal() {
   const fileInput = document.getElementById("uploader-file-input");
   if (results)   results.style.display = "none";
   if (fileInput) fileInput.value       = "";
+  if (typeof clearPendingRows === 'function') clearPendingRows();
   setConfirmState("idle");
   document.getElementById("uploader-confirm-btn").disabled = true;
 }
@@ -362,8 +365,13 @@ function _bindEvents(dialog) {
   fileInput.addEventListener("change", async e => {
     const files = Array.from(e.target.files);
     setConfirmState("validating");
-    await handleFileSelection(files, renderResults);  // uploader.js
-    setConfirmState("idle");
+    try {
+      await handleFileSelection(files, renderResults);  // uploader.js
+    } catch (error) {
+      renderResults([], [{ name: 'Selecció de fitxers', reason: error?.message || 'No s’ha pogut validar la selecció.' }]);
+    } finally {
+      setConfirmState("idle");
+    }
   });
 
   // ── Labels → input: garantir el clic en tots els contextos (desktop i mòbil).
@@ -392,11 +400,15 @@ function _bindEvents(dialog) {
   dropzone.addEventListener("drop", async e => {
     e.preventDefault();
     dropzone.classList.remove("uploader-dropzone--over");
-    const files = Array.from(e.dataTransfer.files)
-      .filter(f => f.name.toLowerCase().endsWith(".json"));
+    const files = Array.from(e.dataTransfer.files);
     setConfirmState("validating");
-    await handleFileSelection(files, renderResults);  // uploader.js
-    setConfirmState("idle");
+    try {
+      await handleFileSelection(files, renderResults);  // uploader.js
+    } catch (error) {
+      renderResults([], [{ name: 'Arrossegar fitxers', reason: error?.message || 'No s’ha pogut validar la selecció.' }]);
+    } finally {
+      setConfirmState("idle");
+    }
   });
 
   // ── Confirmar ──
