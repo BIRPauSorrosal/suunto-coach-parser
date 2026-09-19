@@ -29,6 +29,24 @@ const PHASE_COLORS = {
 };
 const PHASE_DEFAULT = '#94a3b8';
 
+// Els noms es normalitzen a la capa de dades. Aquest mapa només depèn de les
+// claus canòniques, no de les variants originals del planning.
+const CANONICAL_CYCLE_COLORS = {
+  base:        { color: '#38bdf8', bg: 'rgba(56,189,248,0.15)'  },
+  construccio: { color: '#22c55e', bg: 'rgba(34,197,94,0.15)'   },
+  recuperacio: { color: '#f59e0b', bg: 'rgba(245,158,11,0.15)'  },
+  pic:         { color: '#f97316', bg: 'rgba(249,115,22,0.15)'   },
+  competicio:  { color: '#ef4444', bg: 'rgba(239,68,68,0.15)'   },
+};
+const CANONICAL_PHASE_COLORS = {
+  acumulacio:   '#67e8f9',
+  extensio:     '#c084fc',
+  descarrega:   '#fbbf24',
+  consolidacio: '#a78bfa',
+  competicio:   '#fb7185',
+  recuperacio:  '#2dd4bf',
+};
+
 let planningViewLevel = 'weekly';
 let planningYear      = new Date().getFullYear();
 let planningMonth     = new Date().getMonth();
@@ -410,6 +428,7 @@ function renderContextMonthView(container, planning, sessions, calendar) {
     const planText = data.plans.length ? `<span class="pa-day-plan-count">${data.plans.length} prev.</span>` : '';
     const realText = data.real.length ? `<span class="pa-day-real-count">${data.real.length} real.</span>` : '';
     const dayCycleColor = weekPlanning ? weekPlanning.cycle.color : 'var(--color-border-strong)';
+    const dayPhaseColor = weekPlanning ? getPhaseColor(weekPlanning.week.phase) : 'var(--color-border-strong)';
     const plannedChips = data.plans.slice(0, 3).map(entry => `<span class="pa-calendar-plan" style="--pa-plan-color:${activityToneColor(entry.plan || entry.item)}" title="${escapeAttr(`${paPlanLabel(entry.plan || entry.item)} · ${entry.week?.cicle || 'Sense cicle'} · ${entry.week?.fase || 'Sense fase'}`)}">${escapePlanningText(paPlanLabel(entry.plan || entry.item))}</span>`).join('');
     const morePlans = data.plans.length > 3 ? `<span class="pa-calendar-plan-more">+${data.plans.length - 3}</span>` : '';
     const loadOpacity = load ? (0.04 + intensity * 0.16).toFixed(3) : '0';
@@ -417,7 +436,7 @@ function renderContextMonthView(container, planning, sessions, calendar) {
       const activityType = paActivityType(session);
       return `<button type="button" class="pa-calendar-activity${activityType === 'test' ? ' pa-calendar-activity--emphasis' : ''}" style="--pa-activity-color:${paActivityColor(session)}" data-month-activity="${escapeAttr(session.raw?.__activity?.id || '')}" aria-label="Obrir ${escapeAttr(activityDisplayLabel(session, true) || 'activitat')}">${escapePlanningText(activityDisplayLabel(session, true) || 'Activitat')}</button>`;
     }).join('');
-    return `<article class="pa-calendar-day${weekPlanning ? ' has-plan' : ''}${data.real.length ? ' has-real' : ''}${load ? ' has-load' : ''}" style="--pa-cycle-color:${dayCycleColor};--pa-load:${intensity};--pa-load-opacity:${loadOpacity}"><button type="button" class="pa-calendar-day-select" data-month-day="${cell.key}" aria-label="${escapeAttr(`${cell.date.getDate()} de ${PA_MONTH_NAMES[planningMonth]}`)}"><span class="pa-day-number">${cell.date.getDate()}</span><span class="pa-day-indicators">${planText}${realText}</span></button>${plannedChips}${morePlans}${realButtons}</article>`;
+    return `<article class="pa-calendar-day${weekPlanning ? ' has-plan has-phase' : ''}${data.real.length ? ' has-real' : ''}${load ? ' has-load' : ''}" style="--pa-cycle-color:${dayCycleColor};--pa-phase-color:${dayPhaseColor};--pa-load:${intensity};--pa-load-opacity:${loadOpacity}"><button type="button" class="pa-calendar-day-select" data-month-day="${cell.key}" aria-label="${escapeAttr(`${cell.date.getDate()} de ${PA_MONTH_NAMES[planningMonth]}`)}"><span class="pa-day-number">${cell.date.getDate()}</span><span class="pa-day-indicators">${planText}${realText}</span></button>${plannedChips}${morePlans}${realButtons}</article>`;
   }).join('');
   const loadBars = paDayCells(planningYear, planningMonth).filter(cell => cell.inMonth).map(cell => {
     const load = (byDay.get(cell.key)?.real || []).reduce((sum, session) => sum + paLoad(session), 0);
@@ -436,6 +455,8 @@ function renderContextMonthView(container, planning, sessions, calendar) {
   container.querySelector('#btn-month-prev')?.addEventListener('click', () => { planningMonth--; if (planningMonth < 0) { planningMonth = 11; planningYear--; } renderPlanningLevel(planning, sessions, calendar); });
   container.querySelector('#btn-month-next')?.addEventListener('click', () => { planningMonth++; if (planningMonth > 11) { planningMonth = 0; planningYear++; } renderPlanningLevel(planning, sessions, calendar); });
   container.querySelector('#btn-month-today')?.addEventListener('click', () => { const now = new Date(); planningMonth = now.getMonth(); planningYear = now.getFullYear(); renderPlanningLevel(planning, sessions, calendar); });
+  const monthlyLegend = container.querySelector('.pa-legend');
+  if (monthlyLegend && !monthlyLegend.querySelector('.pa-legend-edge--phase')) monthlyLegend.insertAdjacentHTML('beforeend', '<span><i class="pa-legend-edge pa-legend-edge--phase"></i> Fase</span>');
   const showDay = key => { const data = byDay.get(key) || { plans: [], real: [] }; container.querySelector('#pa-day-detail').innerHTML = paDaySummary(key, data.real, data.plans, planning); container.querySelectorAll('[data-month-day]').forEach(button => button.closest('.pa-calendar-day')?.classList.toggle('is-selected', button.dataset.monthDay === key)); };
   container.querySelectorAll('[data-month-day]').forEach(button => button.addEventListener('click', () => showDay(button.dataset.monthDay)));
   container.addEventListener('click', event => {
@@ -1059,10 +1080,12 @@ function getWeekStats(week, sessions) {
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function getCycleStyle(cicle) {
-  return CYCLE_COLORS[String(cicle || '').toUpperCase().trim()] || CYCLE_DEFAULT;
+  const normalized = window.DashboardDataService?.normalizeCycleName?.(cicle);
+  return CANONICAL_CYCLE_COLORS[normalized?.key] || CYCLE_DEFAULT;
 }
 function getPhaseColor(fase) {
-  return PHASE_COLORS[String(fase || '').toUpperCase().trim()] || PHASE_DEFAULT;
+  const normalized = window.DashboardDataService?.normalizePhaseName?.(fase);
+  return CANONICAL_PHASE_COLORS[normalized?.key] || PHASE_DEFAULT;
 }
 function formatFCRangeP(min, max) {
   if (!min && !max) return '--';

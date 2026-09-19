@@ -318,12 +318,20 @@
     if (realWeek.length) { const reconciliationHtml = renderReconciliationPanel(realWeek, week); unmatched.hidden = !reconciliationHtml; unmatched.innerHTML = reconciliationHtml; }
     const flexCalendar = document.getElementById('flex-calendar');
     const hasCycle = Boolean(plan.cicle);
+    const hasPhase = Boolean(plan.fase && plan.fase !== 'Sense fase');
     flexCalendar?.classList.toggle('flex-calendar--planned', hasCycle);
+    flexCalendar?.classList.toggle('flex-calendar--phased', hasPhase);
     if (hasCycle) {
       const cycleColor = typeof getCycleStyle === 'function' ? getCycleStyle(plan.cicle).color : 'var(--color-border-strong)';
       flexCalendar?.style.setProperty('--flex-cycle-color', cycleColor);
     } else {
       flexCalendar?.style.removeProperty('--flex-cycle-color');
+    }
+    if (hasPhase) {
+      const phaseColor = typeof getPhaseColor === 'function' ? getPhaseColor(plan.fase) : 'var(--color-border-strong)';
+      flexCalendar?.style.setProperty('--flex-phase-color', phaseColor);
+    } else {
+      flexCalendar?.style.removeProperty('--flex-phase-color');
     }
     bind(sessions, planning, week, calendar, canEdit, calendarDocument);
   }

@@ -57,8 +57,11 @@ function renderCycleProgress(activeWeek, planning) {
   }
 
   const currentCycle = activeWeek.cicle;
+  const currentCycleId = activeWeek.cycleId || activeWeek.raw?.__cycleId || null;
   const cycleWeeks   = planning
-    .filter(w => w.cicle === currentCycle)
+    .filter(w => currentCycleId
+      ? (w.cycleId ? w.cycleId === currentCycleId : w.cicle === currentCycle)
+      : w.cicle === currentCycle)
     .sort((a, b) => a.startDate - b.startDate);
 
   const totalWeeks   = cycleWeeks.length;
@@ -76,11 +79,12 @@ function renderCycleProgress(activeWeek, planning) {
   cycleWeeks.forEach(w => {
     const last     = phases[phases.length - 1];
     const isActive = w.startDate.getTime() === activeWeek.startDate.getTime();
-    if (last && last.fase === w.fase) {
+    const phaseKey = w.faseKey || window.DashboardDataService?.normalizePhaseName?.(w.fase)?.key || w.fase;
+    if (last && last.key === phaseKey) {
       last.count++;
       if (isActive) last.active = true;
     } else {
-      phases.push({ fase: w.fase, count: 1, active: isActive });
+      phases.push({ key: phaseKey, fase: w.fase, count: 1, active: isActive });
     }
   });
 

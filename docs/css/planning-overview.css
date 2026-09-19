@@ -30,6 +30,7 @@
 .pa-legend-dot--plan { background: var(--color-border-strong); }
 .pa-legend-dot--real { background: var(--color-accent); }
 .pa-legend-edge { display: inline-block; width: 11px; height: 3px; margin-right: 4px; border-radius: 2px; background: linear-gradient(90deg, #38bdf8, #f59e0b, #f97316, #ef4444); }
+.pa-legend-edge--phase { background: linear-gradient(90deg, #67e8f9, #c084fc, #fbbf24, #a78bfa, #fb7185, #2dd4bf); }
 .pa-calendar-weekdays, .pa-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
 .pa-calendar-weekdays { margin-bottom: 6px; }
 .pa-calendar-weekdays span { padding: 0 8px; color: var(--color-text-muted); font-size: 10px; font-weight: 650; letter-spacing: .06em; text-align: right; text-transform: uppercase; }
@@ -37,6 +38,7 @@
 .pa-calendar-day.has-load { background: linear-gradient(rgba(85,214,190,var(--pa-load-opacity, 0)), rgba(85,214,190,var(--pa-load-opacity, 0))), var(--color-surface-subtle); }
 .pa-calendar-day--empty { visibility: hidden; background: transparent; border-color: transparent; }
 .pa-calendar-day.has-plan { border-top: 3px solid var(--pa-cycle-color, var(--color-border-strong)); }
+.pa-calendar-day.has-phase { border-bottom: 3px solid var(--pa-phase-color, var(--color-border-strong)); }
 .pa-calendar-day.is-selected { border-color: var(--color-accent); box-shadow: 0 0 0 1px rgba(85,214,190,.15); }
 .pa-calendar-day-select { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; }
 .pa-calendar-day-select:focus-visible, .pa-calendar-activity:focus-visible, .pa-day-activity:focus-visible, .pa-week-row:focus-visible, .py-month-row:focus-visible, .py-trend-bar:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }

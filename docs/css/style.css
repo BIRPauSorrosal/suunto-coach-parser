@@ -1001,3 +1001,9 @@ body { font-family: var(--font); background: var(--bg); color: var(--text);
 .flex-calendar.flex-calendar--planned .flex-day--today {
   border-top: 3px solid var(--flex-cycle-color, var(--color-border-strong));
 }
+
+/* La fase ocupa la franja inferior i utilitza una paleta diferent del cicle. */
+.flex-calendar.flex-calendar--phased .flex-day,
+.flex-calendar.flex-calendar--phased .flex-day--today {
+  border-bottom: 3px solid var(--flex-phase-color, var(--color-border-strong));
+}

@@ -499,7 +499,10 @@ function enrichPlanningRow(row) {
     // Metadades
     setmana:      row['Setmana'] || '--',
     cicle:        row['Cicle']   || '--',
+    cicleKey:     row['CicleKey'] || null,
+    cycleId:      row.__cycleId || null,
     fase:         row['Fase']    || '--',
+    faseKey:      row['FaseKey'] || null,
     startDate,
     endDate,
 

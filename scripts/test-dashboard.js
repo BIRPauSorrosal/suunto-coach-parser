@@ -78,6 +78,44 @@ assert.deepEqual(
   [normalizedPlanning.cycles[0].weeks[0].sessions[0].type, normalizedPlanning.cycles[0].weeks[0].sessions[0].sport],
   ['aerobic', 'running'],
 );
+
+const normalizedCycleNames = context.DashboardDataService.normalizePlanningDocument({
+  schema_version: 1,
+  cycles: [
+    {
+      id: '2026-construccio-01', name: 'CONSTRUCCIO', weeks: [{
+        id: 'week-1', code: '2026-S01', start: '2026-01-01', end: '2026-01-07', phase: 'DESCARREGA', sessions: [],
+      }],
+    },
+    {
+      id: '2026-base-02', name: 'BASE', weeks: [{
+        id: 'week-2', code: '2026-S02', start: '2026-01-08', end: '2026-01-14', phase: 'RECUPERACIO', sessions: [],
+      }],
+    },
+  ],
+});
+assert.equal(normalizedCycleNames.cycles[0].name, 'Construcci\u00f3');
+assert.equal(normalizedCycleNames.cycles[0].__cycleKey, 'construccio');
+assert.equal(normalizedCycleNames.cycles[0].weeks[0].phase, 'Desc\u00e0rrega');
+assert.equal(normalizedCycleNames.cycles[0].weeks[0].__phaseKey, 'descarrega');
+assert.equal(normalizedCycleNames.cycles[1].name, 'Base');
+assert.equal(normalizedCycleNames.cycles[1].weeks[0].phase, 'Recuperaci\u00f3');
+
+const productionPlanning = JSON.parse(fs.readFileSync(path.join(root, 'docs/data/planning.json'), 'utf8'));
+const productionPhases = [...new Set(
+  context.DashboardDataService
+    .normalizePlanningDocument(productionPlanning)
+    .cycles.flatMap(cycle => cycle.weeks.map(week => week.phase))
+)].sort();
+assert.deepEqual(productionPhases, [
+  'Acumulaci\u00f3',
+  'Competici\u00f3',
+  'Consolidaci\u00f3',
+  'Desc\u00e0rrega',
+  'Extensi\u00f3',
+  'Recuperaci\u00f3',
+].sort());
+
 assert.equal(context.activityPlanningVariant({ type: 'strength', sport: 'strength', variant: null, session_type: 'S2' }), null);
 assert.equal(context.activityPlanningSubtype({ type: 'strength', sport: 'strength', variant: null, session_type: 'S2' }), 'S2');
 

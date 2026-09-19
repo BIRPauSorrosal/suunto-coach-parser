@@ -4,6 +4,60 @@
 
 (function (global) {
 
+  const CYCLE_LABELS = Object.freeze({
+    base: 'Base',
+    construccio: 'Construcció',
+    recuperacio: 'Recuperació',
+    pic: 'Pic',
+    competicio: 'Competició',
+  });
+
+  const PHASE_LABELS = Object.freeze({
+    acumulacio: 'Acumulació',
+    extensio: 'Extensió',
+    descarrega: 'Descàrrega',
+    consolidacio: 'Consolidació',
+    competicio: 'Competició',
+    recuperacio: 'Recuperació',
+  });
+
+  function canonicalLabelKey(value) {
+    return String(value ?? '')
+      .normalize('NFKC')
+      .trim()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '');
+  }
+
+  function cycleKeyFromId(id) {
+    const parts = String(id ?? '').toLowerCase().split(/[-_]/g);
+    return parts.find(part => Object.prototype.hasOwnProperty.call(CYCLE_LABELS, part)) || '';
+  }
+
+  function normalizeCycleName(value, id = '') {
+    const raw = String(value ?? '').trim();
+    const key = cycleKeyFromId(id) || canonicalLabelKey(raw);
+    return {
+      key,
+      label: CYCLE_LABELS[key] || raw || 'Sense cicle',
+      raw,
+      known: Boolean(CYCLE_LABELS[key]),
+    };
+  }
+
+  function normalizePhaseName(value) {
+    const raw = String(value ?? '').trim();
+    const key = canonicalLabelKey(raw);
+    return {
+      key,
+      label: PHASE_LABELS[key] || raw || 'Sense fase',
+      raw,
+      known: Boolean(PHASE_LABELS[key]),
+    };
+  }
+
   function isPlainObject(value) {
     return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
   }
@@ -176,17 +230,29 @@
   // Normalitza els camps de classificació sense eliminar cap dada original.
   function normalizePlanningDocument(document) {
     const copy = JSON.parse(JSON.stringify(document));
-    copy.cycles = (copy.cycles || []).map(cycle => ({
-      ...cycle,
-      weeks: (cycle.weeks || []).map(week => ({
-        ...week,
-        sessions: (week.sessions || []).map(session =>
-          typeof normalizeActivityPlanningSession === 'function'
-            ? normalizeActivityPlanningSession(session)
-            : session
-        ),
-      })),
-    }));
+    copy.cycles = (copy.cycles || []).map(cycle => {
+      const normalizedCycle = normalizeCycleName(cycle.name, cycle.id);
+      return {
+        ...cycle,
+        name: normalizedCycle.label,
+        __cycleKey: normalizedCycle.key,
+        __cycleNameRaw: normalizedCycle.raw,
+        weeks: (cycle.weeks || []).map(week => {
+          const normalizedPhase = normalizePhaseName(week.phase);
+          return {
+            ...week,
+            phase: normalizedPhase.label,
+            __phaseKey: normalizedPhase.key,
+            __phaseRaw: normalizedPhase.raw,
+            sessions: (week.sessions || []).map(session =>
+              typeof normalizeActivityPlanningSession === 'function'
+                ? normalizeActivityPlanningSession(session)
+                : session
+            ),
+          };
+        }),
+      };
+    });
     return copy;
   }
 
@@ -214,7 +280,9 @@
         Data_Inici: week.start,
         Data_Fi: week.end,
         Cicle: cycle.name,
+        CicleKey: cycle.__cycleKey,
         Fase: week.phase,
+        FaseKey: week.__phaseKey,
         Q_Series: q.series,
         Q_Durada_Serie_min: q.series_duration_min,
         Q_Ritme_min_km: q.pace_min_km,
@@ -246,6 +314,8 @@
     parsePlanningJSON,
     normalizePlanningDocument,
     normalizePlanningJSON,
+    normalizeCycleName,
+    normalizePhaseName,
     normalizeSessionsJSON,
     validateCanonicalSession,
     assertSessionsDocument,
