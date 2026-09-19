@@ -1,15 +1,6 @@
 // Activity Log: historial de les activitats reals.
 // El detall complet continua centralitzat a session-detail-drawer.js.
 
-const ACTIVITY_LOG_TONES = {
-  test: { label: 'Test / Cursa', color: 'var(--color-danger)' },
-  quality: { label: 'Qualitat', color: 'var(--orange)' },
-  z2: { label: 'Aeròbic', color: 'var(--accent)' },
-  long: { label: 'Tirada llarga', color: 'var(--blue)' },
-  strength: { label: 'Força', color: 'var(--purple)' },
-  bici: { label: 'Cycling', color: 'var(--cyan)' },
-  other: { label: 'General', color: 'var(--yellow)' },
-};
 const ACTIVITY_LOG_TYPES = [
   ['all', 'Tots els tipus'], ...activityTypeOptions(),
 ];
@@ -140,7 +131,7 @@ function activityLogExportJSON(sessions) {
   window.DashboardComponents?.showToast({ type: 'success', message: `Exportació completada: ${exported.length} ${exported.length === 1 ? 'activitat' : 'activitats'}.` });
 }
 function activityLogCard(session) {
-  const tone = activityLogTone(session), meta = ACTIVITY_LOG_TONES[tone], feeling = activityLogValue(session, 'feeling');
+  const tone = activityLogTone(session), color = activityToneColor(session), feeling = activityLogValue(session, 'feeling');
   const distance = activityLogValue(session, 'distance'), duration = activityLogValue(session, 'duration'), load = activityLogValue(session, 'load');
   const pace = activityLogValue(session, 'pace'), heartRate = activityLogValue(session, 'heartRate'), vo2 = activityLogValue(session, 'vo2');
   const canonical = activityLogCanonical(session);
@@ -162,7 +153,7 @@ function activityLogCard(session) {
     ? `${displayLabel} · ${activitySubtypeLabel(session)}`
     : displayLabel;
   const commentAction = sourceFile ? `<button type="button" class="activity-log-comment" data-activity-comment="${activityLogEscape(sourceFile)}" data-comment-date="${activityLogEscape(activityLogFormatDate(session.date))}" data-comment-type="${activityLogEscape(displayLabel || 'Activitat')}" aria-label="${comment ? 'Editar comentari' : 'Afegir comentari'}">${comment ? 'Edita comentari' : 'Afegeix comentari'}</button>` : '';
-  return `<article class="activity-log-card${tone === 'test' ? ' activity-log-card--emphasis' : ''}" style="--activity-log-color:${meta.color}" data-activity-id="${activityLogEscape(id)}" role="button" tabindex="0" aria-label="Obrir ${activityLogEscape(displayLabel || 'activitat')}, ${activityLogEscape(activityLogFormatDate(session.date, true))}"><div class="activity-log-card__top"><time datetime="${activityLogDateKey(session.date)}">${activityLogEscape(activityLogFormatDate(session.date))}</time><span class="activity-log-status${activityLogPlan(session) ? ' is-planned' : ''}">${activityLogEscape(activityLogStatusLabel(session))}</span></div><div class="activity-log-card__title"><div><p class="activity-log-type">${activityLogEscape(displayLabel)}</p><h3>${activityLogEscape(activityLogSport(session))}</h3></div><span class="activity-log-tone">${activityLogEscape(toneLabel)}</span></div><p class="activity-log-subtitle">${activityLogEscape([distance > 0 ? `${new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 }).format(distance)} km` : '', duration > 0 ? activityLogFormatDuration(duration) : '', session.raw?.Variant || activityLogCanonical(session).variant || ''].filter(Boolean).join(' · '))}</p><div class="activity-log-metrics">${metrics.map(([label, value]) => activityLogMetric(label, value)).join('')}</div><div class="activity-log-card__footer"><span class="activity-log-open">Veure detall →</span>${commentAction}</div></article>`;
+  return `<article class="activity-log-card${tone === 'test' ? ' activity-log-card--emphasis' : ''}" style="--activity-log-color:${color}" data-activity-id="${activityLogEscape(id)}" role="button" tabindex="0" aria-label="Obrir ${activityLogEscape(displayLabel || 'activitat')}, ${activityLogEscape(activityLogFormatDate(session.date, true))}"><div class="activity-log-card__top"><time datetime="${activityLogDateKey(session.date)}">${activityLogEscape(activityLogFormatDate(session.date))}</time><span class="activity-log-status${activityLogPlan(session) ? ' is-planned' : ''}">${activityLogEscape(activityLogStatusLabel(session))}</span></div><div class="activity-log-card__title"><div><p class="activity-log-type">${activityLogEscape(displayLabel)}</p><h3>${activityLogEscape(activityLogSport(session))}</h3></div><span class="activity-log-tone">${activityLogEscape(toneLabel)}</span></div><p class="activity-log-subtitle">${activityLogEscape([distance > 0 ? `${new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 }).format(distance)} km` : '', duration > 0 ? activityLogFormatDuration(duration) : '', session.raw?.Variant || activityLogCanonical(session).variant || ''].filter(Boolean).join(' · '))}</p><div class="activity-log-metrics">${metrics.map(([label, value]) => activityLogMetric(label, value)).join('')}</div><div class="activity-log-card__footer"><span class="activity-log-open">Veure detall →</span>${commentAction}</div></article>`;
 }
 function activityLogRenderEmpty(filtered, total) {
   return filtered || total ? `<div class="activity-log-empty"><h3>Cap activitat coincideix</h3><p>Prova de modificar els filtres.</p></div>` : `<div class="activity-log-empty"><h3>Encara no hi ha activitats</h3><p>No hi ha activitats disponibles per al període seleccionat.</p></div>`;

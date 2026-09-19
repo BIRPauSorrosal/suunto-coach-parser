@@ -119,6 +119,14 @@ assert.deepEqual(
   JSON.parse(vm.runInContext(`JSON.stringify(activityTypeOptionsForSport('running').map(([value]) => value))`, context)),
   ['aerobic', 'quality', 'long', 'race', 'test'],
 );
+assert.equal(vm.runInContext(`activityDefaultDay({ type: 'strength', sport: 'strength' })`, context), 2);
+assert.deepEqual(
+  JSON.parse(vm.runInContext(`JSON.stringify(activityAnalyticsFilters().map(filter => filter.value))`, context)),
+  ['all', 'z2', 'quality', 'long', 'testrace', 'strength', 'bici', 'other'],
+);
+const filenameClassification = JSON.parse(vm.runInContext(`JSON.stringify(activityFilenameDefinition('20260917_test_bici_indoor.json'))`, context));
+assert.deepEqual([filenameClassification.type, filenameClassification.sport, filenameClassification.parser], ['test', 'cycling', 'generic']);
+assert.equal(vm.runInContext(`activityLegacyLabel({ type: 'cycling', sport: 'cycling', variant: 'indoor' })`, context), 'BICI ESTÀTICA');
 
 const parsedVariants = JSON.parse(vm.runInContext(`JSON.stringify([
   sessionFromParsedRow('20260915_marato-road.json', { Tipus: 'MARATÓ', Data: '15/09/2026' }),

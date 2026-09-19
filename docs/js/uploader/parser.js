@@ -21,59 +21,16 @@ function hzToSpm(cadenceHz) {
 // ─── PARSER REGISTRY (equivalent a main.py PARSER_REGISTRY) ──
 
 const PARSER_REGISTRY = {
-  "z2":            parseRunningBase,
-  "tempo":         parseQuality,
-  "test":          parseQuality,
-  "intervals":     parseQuality,
-  "interval":      parseQuality,
-  "series":        parseQuality,
-  "fartlek":       parseQuality,
-  "llarga":        parseLongRun,
-  "longrun":       parseLongRun,
-  "long-run":      parseLongRun,
-  "marat":         parseLongRun,
-  "marato":        parseLongRun,
-  "marathon":      parseLongRun,
-  "trail":         parseLongRun,
-  "mitja":         parseLongRun,
-  "halfmarathon":  parseLongRun,
-  "half-marathon": parseLongRun,
-  "cursa":         parseLongRun,
-  "race":          parseLongRun,
-  "força":         parseStrength,
-  "forca":         parseStrength,
-  "bici_estatica": parseGeneric,
-  "bici-estatica": parseGeneric,
-  "biciestatica":  parseGeneric,
-  "test_bici":     parseGeneric,
-  "test-bici":     parseGeneric,
-  "cycling":       parseGeneric,
-  "ciclisme":      parseGeneric,
-  "bike":          parseGeneric,
-  "padel":         parseGeneric,
-  "tennis":        parseGeneric,
-  "tenis":         parseGeneric,
-  "hiking":        parseGeneric,
-  "senderisme":    parseGeneric,
-  "natacio":       parseGeneric,
-  "swim":          parseGeneric,
-  "swimming":      parseGeneric,
-  "caminada":      parseGeneric,
-  "walking":       parseGeneric,
+  'running-base': parseRunningBase,
+  quality: parseQuality,
+  'long-run': parseLongRun,
+  strength: parseStrength,
+  generic: parseGeneric,
 };
 
 function detectParser(filename) {
-  const nameLower = filename.toLowerCase().replace(".json", "");
-
-  const parserEntries = Object.entries(PARSER_REGISTRY).sort(
-    ([a], [b]) => b.length - a.length
-  );
-
-  for (const [keyword, parserFn] of parserEntries) {
-    if (nameLower.includes(keyword)) return parserFn;
-  }
-
-  return null;
+  const definition = activityFilenameDefinition(filename);
+  return definition ? PARSER_REGISTRY[definition.parser] || null : null;
 }
 
 
@@ -176,11 +133,9 @@ function parseRunningBase(filename, data) {
 
 // ─── LONG RUN PARSER (equivalent a long_run_parser.py) ────────
 function parseLongRun(filename, data) {
-  const row       = parseRunningBase(filename, data);
-  const nameLower = filename.toLowerCase();
-  row.Tipus = Object.entries(ACTIVITY_LONG_RUN_TYPES).find(
-    ([k]) => nameLower.includes(k)
-  )?.[1] ?? "LLARGA";
+  const row = parseRunningBase(filename, data);
+  const definition = activityFilenameDefinition(filename);
+  row.Tipus = definition ? activityLegacyLabel({ type: definition.type, sport: definition.sport, variant: activityVariantFromFilename(filename, definition) }) : 'LLARGA';
   return row;
 }
 
@@ -233,11 +188,10 @@ function parseQuality(filename, data) {
   const row     = parseRunningBase(filename, data);
   const windows = data?.DeviceLog?.Windows ?? [];
   const samples = data?.DeviceLog?.Samples ?? [];
-  const nameLower = filename.toLowerCase();
-
-  row.Tipus = Object.entries(ACTIVITY_QUALITY_TYPES).find(
-    ([k]) => nameLower.includes(k)
-  )?.[1] ?? "QUALITAT";
+  const definition = activityFilenameDefinition(filename);
+  row.Tipus = definition
+    ? activityLegacyLabel({ type: definition.type, sport: definition.sport, subtype: definition.alias })
+    : 'QUALITAT';
 
   // ── Extreu intervals bruts dels Windows de tipus "Interval" ──────────────
   //
@@ -352,16 +306,11 @@ function parseStrength(filename, data) {
 
 // ─── GENERIC PARSER (equivalent a generic_parser.py) ──────────
 function parseGeneric(filename, data) {
-  const row       = parseBase(filename, data);
-  const nameLower = filename.toLowerCase();
-
-  const genericEntries = Object.entries(ACTIVITY_GENERIC_TYPES).sort(
-    ([a], [b]) => b.length - a.length
-  );
-
-  row.Tipus = genericEntries.find(
-    ([keyword]) => nameLower.includes(keyword)
-  )?.[1] ?? "ALTRES";
+  const row = parseBase(filename, data);
+  const definition = activityFilenameDefinition(filename);
+  row.Tipus = definition
+    ? activityLegacyLabel({ type: definition.type, sport: definition.sport, variant: activityVariantFromFilename(filename, definition) })
+    : 'ALTRES';
 
   return row;
 }
@@ -389,26 +338,8 @@ function parseSuuntoFile(filename, jsonData) {
 // sessions.json. La variant es deixa a null: l'usuari la confirma a la UI.
 function sessionFromParsedRow(filename, row) {
   const rawType = String(row.Tipus || '').trim();
-  const upper = rawType.toUpperCase();
-  let type = 'other';
-  let sport = 'other';
-  let subtype = null;
-
-  if (upper === 'Z2') { type = 'z2'; sport = 'running'; }
-  else if (['LLARGA', 'TRAIL', 'MARATÓ', 'MARATO', 'MITJA'].includes(upper)) { type = 'long-run'; sport = 'running'; }
-  else if (upper === 'INTERVALS' || upper === 'TEMPO' || upper === 'QUALITAT') {
-    type = 'quality'; sport = 'running'; subtype = upper.toLowerCase();
-  } else if (upper.startsWith('FORÇA') || upper.startsWith('FORCA')) {
-    type = 'strength'; sport = 'strength'; subtype = rawType.replace(/^FORÇA?\s*/i, '') || null;
-  } else if (upper.startsWith('BICI')) { type = 'cycling'; sport = 'cycling'; }
-  else if (upper === 'TEST') { type = 'test'; sport = 'running'; }
-  else if (upper === 'TEST_BICI') { type = 'test'; sport = 'cycling'; }
-  else if (upper === 'CURSA') { type = 'race'; sport = 'running'; }
-  else if (upper === 'PADEL') { type = 'padel'; sport = 'padel'; }
-  else if (upper === 'TENNIS' || upper === 'TENIS') { type = 'tennis'; sport = 'tennis'; }
-  else if (upper === 'HIKING') { type = 'hiking'; sport = 'hiking'; }
-  else if (upper === 'NATACIÓ' || upper === 'NATACIO') { type = 'swimming'; sport = 'swimming'; }
-  else if (upper === 'WALKING') { type = 'walking'; sport = 'walking'; }
+  const classification = activityClassificationFromLegacy(rawType);
+  const { type, sport, subtype } = classification;
 
   const numberOrNull = value => Number.isFinite(Number(value)) ? Number(value) : null;
   const intervalRows = (() => {

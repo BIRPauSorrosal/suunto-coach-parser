@@ -39,22 +39,10 @@
   function normalizeSessionsJSON(document) {
     return document.sessions.map(session => {
       const intervals = Array.isArray(session.intervals) ? session.intervals : [];
-      const qualityType = session.type === 'quality'
-        ? (intervals.length ? 'INTERVALS' : 'TEMPO')
-        : null;
-      const type = session.type === 'long-run'
-        ? (session.variant === 'trail' ? 'TRAIL' : 'LLARGA')
-        : session.type === 'z2' ? 'Z2'
-        : session.type === 'strength' ? `FORÇA${session.subtype ? ` ${session.subtype}` : ''}`
-        : session.type === 'cycling' ? (session.variant === 'indoor' ? 'BICI ESTÀTICA' : 'BICI')
-        : session.type === 'race' ? 'CURSA'
-        : session.type === 'test' ? (session.sport === 'cycling' ? 'TEST_BICI' : 'TEST')
-        : session.type === 'padel' ? 'PADEL'
-        : session.type === 'tennis' ? 'TENNIS'
-        : session.type === 'hiking' ? 'HIKING'
-        : session.type === 'swimming' ? 'NATACIÓ'
-        : session.type === 'walking' ? 'WALKING'
-        : qualityType || 'ALTRES';
+      const type = activityLegacyLabel({
+        ...session,
+        subtype: session.type === 'quality' && !session.subtype && intervals.length ? 'intervals' : session.subtype,
+      });
       const heartRate = session.heart_rate || {};
       const zones = session.zones || {};
       const effect = session.training_effect || {};

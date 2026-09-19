@@ -81,8 +81,7 @@
   }
 
   function defaultDay(type) {
-    const canonicalType = activityClassification({ type }).type;
-    return { quality: 1, z2: 3, 'long-run': 5, strength: 2, cycling: 5, padel: 5, tennis: 5, hiking: 5, swimming: 5, walking: 5, other: 5 }[canonicalType] ?? null;
+    return activityDefaultDay({ type });
   }
 
   function isManual(item) {
@@ -374,10 +373,19 @@
     document.querySelectorAll('[data-plan-id]').forEach(c=>c.addEventListener('dragstart',e=>{if(canEdit)e.dataTransfer.setData('text/plain',c.dataset.planId);}));
     [...document.querySelectorAll('[data-drop-day]'), document.querySelector('[data-drop-unassigned]')].filter(Boolean).forEach(z=>{z.addEventListener('dragover',e=>{if(canEdit){e.preventDefault();z.classList.add('is-over');}});z.addEventListener('dragleave',()=>z.classList.remove('is-over'));z.addEventListener('drop',e=>{e.preventDefault();z.classList.remove('is-over');if(!canEdit)return;const i=calendar.items.find(x=>x.id===e.dataTransfer.getData('text/plain'));if(i){i.day=z.dataset.dropUnassigned!==undefined?null:Number(z.dataset.dropDay);saveCalendar(week,calendar);renderFlexibleWeekView(sessions,planning,calendarDocument);}});});
   }
-  function manualVariantOptions(type) {
-    const classification = activityClassification({ type });
-    return activityVariantOptions(classification.type)
-      .map(option => `<option value="${esc(option.value)}">${esc(option.label)}</option>`)
+  function manualTypeOptions(sport, selected = null) {
+    const options = activityTypeOptionsForSport(sport);
+    const value = options.some(([type]) => type === selected) ? selected : options[0]?.[0] || 'general';
+    return {
+      value,
+      html: options.map(([type, label]) => `<option value="${esc(type)}"${type === value ? ' selected' : ''}>${esc(label)}</option>`).join(''),
+    };
+  }
+
+  function manualVariantOptions(sport, activityType, selected = null) {
+    const type = activityCanonicalTypeFor(sport, activityType);
+    return activityVariantOptions(type, selected)
+      .map(option => `<option value="${esc(option.value)}"${option.value === selected ? ' selected' : ''}>${esc(option.label)}</option>`)
       .join('');
   }
 
@@ -385,23 +393,30 @@
     const modal = document.createElement('div'); modal.className = 'flex-manual-modal';
     modal.innerHTML = `<div class="flex-manual-dialog" role="dialog" aria-modal="true" aria-labelledby="flex-manual-title">
       <div class="flex-manual-header"><div><p class="eyebrow">Calendari manual</p><h3 id="flex-manual-title">Afegir activitat</h3></div><button type="button" class="btn btn-ghost btn-sm" data-manual-close aria-label="Tancar">×</button></div>
-      <form class="flex-manual-form"><label>Tipus<select name="type" required>${[['quality','Qualitat'],['z2','Aeròbic'],['long-run','Tirada llarga'],['strength','Força'],['cycling','Cycling'],['padel','Pàdel'],['tennis','Tennis'],['other','Altres']].map(([v,l]) => `<option value="${v}">${l}</option>`).join('')}</select></label>
-        <label>Variant / subtipus<select name="variant">${manualVariantOptions('quality')}</select></label>
-        <label>Dia<select name="day" required>${DAYS.map((day, index) => `<option value="${index}" ${index === (defaultDay('quality') ?? 0) ? 'selected' : ''}>${day}</option>`).join('')}</select></label>
+      <form class="flex-manual-form"><label>Esport<select name="sport" required>${activitySportOptions().map(([value, label]) => `<option value="${esc(value)}">${esc(label)}</option>`).join('')}</select></label>
+        <label>Tipus<select name="activityType" required>${manualTypeOptions('running', 'quality').html}</select></label>
+        <label>Variant / subtipus<select name="variant">${manualVariantOptions('running', 'quality')}</select></label>
+        <label>Dia<select name="day" required>${DAYS.map((day, index) => `<option value="${index}" ${index === (activityDefaultDay({ type: 'quality' }) ?? 0) ? 'selected' : ''}>${day}</option>`).join('')}</select></label>
         <label>Descripció<input name="detail" placeholder="Objectiu o descripció"></label>
         <div class="flex-manual-grid"><label>Distància (km)<input name="distance" type="number" min="0" step="0.1" placeholder="Opcional"></label><label>Durada (min)<input name="duration" type="number" min="0" step="1" placeholder="Opcional"></label></div>
         <label>Observacions<textarea name="notes" rows="3" placeholder="Comentaris opcionals"></textarea></label>
         <div class="flex-manual-actions"><button type="button" class="btn btn-ghost" data-manual-close>Cancel·lar</button><button type="submit" class="btn btn-primary">Afegir al calendari</button></div></form></div>`;
     document.body.appendChild(modal);
-    const form = modal.querySelector('form'), typeSelect = form.elements.type, variantSelect = form.elements.variant, daySelect = form.elements.day;
-    const refreshDefaults = () => { const type = typeSelect.value; variantSelect.innerHTML = manualVariantOptions(type); daySelect.value = String(defaultDay(type) ?? 0); };
-    typeSelect.addEventListener('change', refreshDefaults);
+    const form = modal.querySelector('form'), sportSelect = form.elements.sport, typeSelect = form.elements.activityType, variantSelect = form.elements.variant, daySelect = form.elements.day;
+    const refreshFields = ({ resetType = false } = {}) => {
+      const typeOptions = manualTypeOptions(sportSelect.value, resetType ? null : typeSelect.value);
+      typeSelect.innerHTML = typeOptions.html;
+      variantSelect.innerHTML = manualVariantOptions(sportSelect.value, typeOptions.value, variantSelect.value);
+      daySelect.value = String(activityDefaultDay({ sport: sportSelect.value, type: activityCanonicalTypeFor(sportSelect.value, typeOptions.value) }) ?? 0);
+    };
+    sportSelect.addEventListener('change', () => refreshFields({ resetType: true }));
+    typeSelect.addEventListener('change', () => refreshFields());
     modal.querySelectorAll('[data-manual-close]').forEach(button => button.addEventListener('click', () => modal.remove()));
     modal.addEventListener('click', event => { if (event.target === modal) modal.remove(); });
     form.addEventListener('submit', event => {
-      event.preventDefault(); const data = new FormData(form), type = data.get('type'), detail = String(data.get('detail') || '').trim();
-      const title = activityPlanningLabel({ type });
-      const item = { id: `${week.key}-manual-${Date.now()}`, day: Number(data.get('day')), type, title, detail: detail || title, status: 'pending', source: 'manual', variant: data.get('variant') || null, notes: String(data.get('notes') || '').trim() || null };
+      event.preventDefault(); const data = new FormData(form), sport = String(data.get('sport') || 'other'), activityType = String(data.get('activityType') || 'general'), type = activityCanonicalTypeFor(sport, activityType), variant = data.get('variant') || null, detail = String(data.get('detail') || '').trim();
+      const title = activityDisplayLabel({ type, sport, variant }, true);
+      const item = { id: `${week.key}-manual-${Date.now()}`, day: Number(data.get('day')), type, sport, title, detail: detail || title, status: 'pending', source: 'manual', variant, notes: String(data.get('notes') || '').trim() || null };
       const distance = Number(data.get('distance')), duration = Number(data.get('duration'));
       if (Number.isFinite(distance) && distance > 0) item.distance_km = distance;
       if (Number.isFinite(duration) && duration > 0) item.duration_min = duration;

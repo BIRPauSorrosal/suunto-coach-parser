@@ -16,27 +16,11 @@ let _sessChart    = null;
 let _pmcChart     = null;
 let _pmcDataCache = [];
 
-// SESS_GROUPS: usa les constants centralitzades de app.js
-const SESS_GROUPS = {
-  z2:        s => activityToneKey(s) === 'z2',
-  quality:   s => activityToneKey(s) === 'quality',
-  long:      s => activityToneKey(s) === 'long',
-  testrace:  s => activityToneKey(s) === 'test',
-  strength:  s => activityToneKey(s) === 'strength',
-  bici:      s => activityToneKey(s) === 'bici',
-  other:     s => activityToneKey(s) === 'other',
-};
-
-const SESS_TYPE_LABELS = {
-  all:      'Totes les sessions',
-  z2:       'Sessions aeròbiques',
-  quality:  'Sessions de qualitat',
-  long:     'Sessions de tirada llarga',
-  testrace: 'Test i curses',
-  strength: 'Sessions de força',
-  bici:     'Sessions de cycling',
-  other:    'Altres activitats',
-};
+const SESS_GROUPS = Object.fromEntries(activityAnalyticsFilters()
+  .filter(filter => filter.value !== 'all')
+  .map(filter => [filter.value, session => activityMatchesAnalyticsFilter(session, filter.value)]));
+const SESS_TYPE_LABELS = Object.fromEntries(activityAnalyticsFilters()
+  .map(filter => [filter.value, filter.label]));
 
 // ── Llindar: <= 30 dies → agrupació diària, > 30 dies → setmanal ──────────────
 const DAY_VIEW_THRESHOLD = 30;
@@ -54,6 +38,8 @@ function initSessFilters() {
   if (sel) {
     const newSel = sel.cloneNode(true);
     sel.replaceWith(newSel);
+    newSel.innerHTML = activityAnalyticsFilters()
+      .map(filter => `<option value="${filter.value}">${filter.label}</option>`).join('');
     newSel.value = _sessType;
     newSel.addEventListener('change', () => { _sessType = newSel.value; renderSessPanel(); });
   }
@@ -386,9 +372,10 @@ function renderAnalyticsZones(sessions) {
 
 function renderAnalyticsMix(sessions) {
   window.DashboardComponents.destroyChart('analytics-mix');
-  const order = ['running', 'cycling', 'strength', 'swimming', 'padel', 'tennis', 'hiking', 'walking', 'other'];
-  const labels = Object.fromEntries(activitySportOptions());
-  const colors = { running: '#55D6BE', cycling: '#39C6E6', strength: '#B58CFF', swimming: '#38bdf8', padel: '#F5B942', tennis: '#F5B942', hiking: '#FF7A59', walking: '#A3E635', other: '#94A3B8' };
+  const sports = Object.entries(ACTIVITY_CATALOG.sports).sort(([, a], [, b]) => a.order - b.order);
+  const order = sports.map(([key]) => key);
+  const labels = Object.fromEntries(sports.map(([key, definition]) => [key, definition.label]));
+  const colors = Object.fromEntries(sports.map(([key, definition]) => [key, definition.color]));
   const sportKey = s => {
     const sport = activityClassification(s).sport;
     return order.includes(sport) ? sport : 'other';

@@ -4,80 +4,94 @@
 // No el reescrivim: totes les vistes obtenen aquí una classificació derivada
 // compatible amb tipus i etiquetes legacy.
 
-const ACTIVITY_QUALITY_TYPES = Object.freeze({
-  tempo: 'TEMPO', test: 'TEST', intervals: 'INTERVALS', interval: 'INTERVALS',
-  series: 'INTERVALS', fartlek: 'INTERVALS',
+// Aquesta és l'única font de veritat de la taxonomia. La resta de constants
+// i helpers d'aquest fitxer es deriven d'aquí per no replicar esports, tipus,
+// variants, etiquetes ni comportaments a les vistes.
+const ACTIVITY_CATALOG = Object.freeze({
+  sports: {
+    running:  { label: 'Running', aliases: ['run', 'cursa'], order: 10, color: '#55D6BE' },
+    cycling:  { label: 'Cycling', aliases: ['ciclisme', 'bike', 'bici'], order: 20, color: '#39C6E6' },
+    strength: { label: 'Strength', aliases: ['forca'], order: 30, color: '#B58CFF' },
+    padel:    { label: 'Pàdel', aliases: [], order: 40, color: '#F5B942' },
+    tennis:   { label: 'Tennis', aliases: ['tenis'], order: 50, color: '#F5B942' },
+    hiking:   { label: 'Senderisme', aliases: [], order: 60, color: '#FF7A59' },
+    swimming: { label: 'Natació', aliases: ['natacio', 'swim'], order: 70, color: '#38bdf8' },
+    walking:  { label: 'Caminada', aliases: [], order: 80, color: '#A3E635' },
+    other:    { label: 'Altres', aliases: ['altres'], order: 90, color: '#94A3B8' },
+  },
+  variants: {
+    road:           { label: 'Carretera', filenameAliases: ['road', 'carretera'], filenamePriority: 60 },
+    trail:          { label: 'Trail', filenameAliases: ['trail'], filenamePriority: 50 },
+    treadmill:      { label: 'Cinta', filenameAliases: ['treadmill', 'cinta'], filenamePriority: 20 },
+    indoor:         { label: 'Interior / estàtica', filenameAliases: ['bici-estatica', 'biciestatica', 'indoor', 'interior', 'estatica'], filenamePriority: 30 },
+    outdoor:        { label: 'Exterior', filenameAliases: ['outdoor', 'exterior'], filenamePriority: 40 },
+    pool:           { label: 'Piscina', filenameAliases: ['pool', 'piscina'], filenamePriority: 70 },
+    'open-water':   { label: 'Aigües obertes', filenameAliases: ['open-water', 'aigues-obertes'], filenamePriority: 10 },
+    S1:             { label: 'S1', filenameAliases: [] },
+    S2:             { label: 'S2', filenameAliases: [] },
+    S3:             { label: 'S3', filenameAliases: [] },
+    S4:             { label: 'S4', filenameAliases: [] },
+    S5:             { label: 'S5', filenameAliases: [] },
+    Pliometria:     { label: 'Pliometria', filenameAliases: [] },
+    Complementari:  { label: 'Complementari', filenameAliases: [] },
+  },
+  groups: {
+    z2:       { color: 'var(--accent)',       analyticsLabel: 'Sessions aeròbiques', order: 10 },
+    quality:  { color: 'var(--orange)',       analyticsLabel: 'Sessions de qualitat', order: 20 },
+    long:     { color: 'var(--blue)',         analyticsLabel: 'Sessions de tirada llarga', order: 30 },
+    test:     { color: 'var(--color-danger)', analyticsLabel: 'Tests i curses', filter: 'testrace', order: 40 },
+    strength: { color: 'var(--purple)',       analyticsLabel: 'Sessions de força', order: 50 },
+    bici:     { color: 'var(--cyan)',         analyticsLabel: 'Sessions de cycling', order: 60 },
+    other:    { color: 'var(--yellow)',       analyticsLabel: 'Altres activitats', order: 70 },
+  },
+  categories: {
+    aerobic:  { group: 'z2',       label: 'Aeròbic',       defaultDay: 3 },
+    quality:  { group: 'quality',  label: 'Qualitat',      defaultDay: 1 },
+    long:     { group: 'long',     label: 'Tirada llarga', defaultDay: 5 },
+    race:     { group: 'test',     label: 'Cursa',         defaultDay: 5 },
+    test:     { group: 'test',     label: 'Test',          defaultDay: 5 },
+    strength: { group: 'strength', label: 'Força',         defaultDay: 2 },
+    general:  { group: 'other',    label: 'General',       defaultDay: 5 },
+  },
+  kinds: {
+    z2:         { category: 'aerobic',  sport: 'running',  aliases: ['aerobic', 'aerobica', 'aerobic-run'], variants: ['road', 'trail', 'treadmill'], filenameAliases: ['z2'], legacy: 'Z2', subtype: 'z2', parser: 'running-base' },
+    quality:    { category: 'quality',  sport: 'running',  aliases: ['qualitat', 'tempo', 'intervals', 'interval', 'series', 'fartlek'], variants: ['road', 'trail', 'treadmill'], filenameAliases: ['tempo', 'intervals', 'interval', 'series', 'fartlek'], parser: 'quality' },
+    'long-run': { category: 'long',     sport: 'running',  aliases: ['long', 'longrun', 'llarga', 'trail', 'marato', 'marathon', 'mitja', 'halfmarathon', 'half-marathon'], variants: ['road', 'trail', 'treadmill'], filenameAliases: ['llarga', 'longrun', 'long-run', 'marat', 'marato', 'marathon', 'trail', 'mitja', 'halfmarathon', 'half-marathon'], parser: 'long-run' },
+    race:       { category: 'race',     sport: 'running',  aliases: ['cursa'], variants: ['road', 'trail'], filenameAliases: ['cursa', 'race'], legacy: 'CURSA', parser: 'long-run' },
+    test:       { category: 'test',     sport: 'running',  allowedSports: ['running', 'cycling'], aliases: ['test-bici'], variants: ['road', 'trail', 'treadmill', 'indoor', 'outdoor'], filenameAliases: ['test', 'test_bici', 'test-bici', 'bici_estatica_test', 'bici-estatica-test'], parser: 'quality', parserAliases: { test: 'quality', test_bici: 'generic', 'test-bici': 'generic', bici_estatica_test: 'generic', 'bici-estatica-test': 'generic' } },
+    strength:   { category: 'strength', sport: 'strength', aliases: ['forca'], variants: ['S1', 'S2', 'S3', 'S4', 'S5', 'Pliometria', 'Complementari'], filenameAliases: ['força', 'forca'], parser: 'strength' },
+    cycling:    { category: 'general',  group: 'bici',     sport: 'cycling',  aliases: ['ciclisme', 'bici', 'bici-estatica', 'biciestatica'], variants: ['indoor', 'outdoor', 'road', 'trail'], filenameAliases: ['bici_estatica', 'bici-estatica', 'biciestatica', 'cycling', 'ciclisme', 'bike'], parser: 'generic' },
+    padel:      { category: 'general',  sport: 'padel',    aliases: [], variants: [], filenameAliases: ['padel'], legacy: 'PADEL', parser: 'generic' },
+    tennis:     { category: 'general',  sport: 'tennis',   aliases: ['tenis'], variants: [], filenameAliases: ['tennis', 'tenis'], legacy: 'TENNIS', parser: 'generic' },
+    hiking:     { category: 'general',  sport: 'hiking',   aliases: ['senderisme'], variants: ['trail'], filenameAliases: ['hiking', 'senderisme'], legacy: 'HIKING', parser: 'generic' },
+    swimming:   { category: 'general',  sport: 'swimming', aliases: ['natacio', 'swim'], variants: ['pool', 'open-water'], filenameAliases: ['natacio', 'swim', 'swimming'], legacy: 'NATACIÓ', parser: 'generic' },
+    walking:    { category: 'general',  sport: 'walking',  aliases: ['caminada'], variants: ['road', 'trail'], filenameAliases: ['caminada', 'walking'], legacy: 'WALKING', parser: 'generic' },
+    other:      { category: 'general',  sport: 'other',    aliases: ['altres'], variants: [], filenameAliases: [], legacy: 'ALTRES', parser: 'generic' },
+  },
 });
 
-const ACTIVITY_LONG_RUN_TYPES = Object.freeze({
-  llarga: 'LLARGA', longrun: 'LLARGA', 'long-run': 'LLARGA', marato: 'MARATÓ',
-  marat: 'MARATÓ', marathon: 'MARATÓ', trail: 'TRAIL', mitja: 'MITJA',
-  halfmarathon: 'MITJA', 'half-marathon': 'MITJA', cursa: 'CURSA', race: 'CURSA',
-});
+const ACTIVITY_TAXONOMY = Object.freeze(Object.fromEntries(Object.entries(ACTIVITY_CATALOG.kinds).map(([type, kind]) => {
+  const category = ACTIVITY_CATALOG.categories[kind.category];
+  return [type, Object.freeze({
+    group: kind.group || category.group, activityType: kind.category, activityLabel: category.label,
+    subtype: kind.subtype, sport: kind.sport, label: kind.category === 'general'
+      ? ACTIVITY_CATALOG.sports[kind.sport].label : category.label,
+    variants: kind.variants,
+  })];
+})));
 
-const ACTIVITY_GENERIC_TYPES = Object.freeze({
-  bici_estatica_test: 'TEST_BICI', 'bici-estatica-test': 'TEST_BICI', test_bici: 'TEST_BICI', 'test-bici': 'TEST_BICI',
-  bici_estatica: 'BICI ESTÀTICA', 'bici-estatica': 'BICI ESTÀTICA', biciestatica: 'BICI ESTÀTICA',
-  cycling: 'BICI', ciclisme: 'BICI', bike: 'BICI', padel: 'PADEL', tennis: 'TENNIS', tenis: 'TENNIS',
-  hiking: 'HIKING', senderisme: 'HIKING', natacio: 'NATACIÓ', swimming: 'NATACIÓ',
-  swim: 'NATACIÓ', caminada: 'WALKING', walking: 'WALKING',
-});
-
-const ACTIVITY_TAXONOMY = Object.freeze({
-  z2:         { group: 'z2',       activityType: 'aerobic',  activityLabel: 'Aeròbic',       subtype: 'z2', sport: 'running',  label: 'Aeròbic',         variants: ['road', 'trail', 'treadmill'] },
-  quality:    { group: 'quality',  activityType: 'quality',  activityLabel: 'Qualitat',      sport: 'running',  label: 'Qualitat',      variants: ['road', 'trail', 'treadmill'] },
-  'long-run': { group: 'long',     activityType: 'long',     activityLabel: 'Tirada llarga', sport: 'running',  label: 'Tirada llarga', variants: ['road', 'trail', 'treadmill'] },
-  race:       { group: 'test',     activityType: 'race',     activityLabel: 'Cursa',         sport: 'running',  label: 'Cursa',          variants: ['road', 'trail'] },
-  test:       { group: 'test',     activityType: 'test',     activityLabel: 'Test',          sport: 'running',  label: 'Test',           variants: ['road', 'trail', 'treadmill', 'indoor', 'outdoor'] },
-  strength:   { group: 'strength', activityType: 'strength', activityLabel: 'Força',         sport: 'strength', label: 'Força',          variants: ['S1', 'S2', 'S3', 'S4', 'S5', 'Pliometria', 'Complementari'] },
-  cycling:    { group: 'bici',     activityType: 'general',  activityLabel: 'General',       sport: 'cycling',  label: 'Cycling',         variants: ['indoor', 'outdoor', 'road', 'trail'] },
-  padel:      { group: 'other',    activityType: 'general',  activityLabel: 'General',       sport: 'padel',    label: 'Pàdel',          variants: [] },
-  tennis:     { group: 'other',    activityType: 'general',  activityLabel: 'General',       sport: 'tennis',   label: 'Tennis',         variants: [] },
-  hiking:     { group: 'other',    activityType: 'general',  activityLabel: 'General',       sport: 'hiking',   label: 'Senderisme',     variants: ['trail'] },
-  swimming:   { group: 'other',    activityType: 'general',  activityLabel: 'General',       sport: 'swimming', label: 'Natació',        variants: ['pool', 'open-water'] },
-  walking:    { group: 'other',    activityType: 'general',  activityLabel: 'General',       sport: 'walking',  label: 'Caminada',       variants: ['road', 'trail'] },
-  other:      { group: 'other',    activityType: 'general',  activityLabel: 'General',       sport: 'other',    label: 'Altres',         variants: [] },
-});
-
-const ACTIVITY_TYPE_ALIASES = Object.freeze({
-  z2: 'z2', aerobic: 'z2', aerobica: 'z2', 'aerobic-run': 'z2',
-  quality: 'quality', qualitat: 'quality', tempo: 'quality', intervals: 'quality', interval: 'quality', series: 'quality', fartlek: 'quality',
-  long: 'long-run', 'long-run': 'long-run', longrun: 'long-run', llarga: 'long-run', trail: 'long-run', marato: 'long-run', marathon: 'long-run', mitja: 'long-run', halfmarathon: 'long-run', 'half-marathon': 'long-run',
-  race: 'race', cursa: 'race', test: 'test', 'test-bici': 'test',
-  strength: 'strength', forca: 'strength',
-  cycling: 'cycling', ciclisme: 'cycling', bici: 'cycling', 'bici-estatica': 'cycling', biciestatica: 'cycling',
-  padel: 'padel', tennis: 'tennis', tenis: 'tennis', hiking: 'hiking', senderisme: 'hiking',
-  swimming: 'swimming', natacio: 'swimming', swim: 'swimming', walking: 'walking', caminada: 'walking',
-  other: 'other', altres: 'other',
-});
-
-const ACTIVITY_SPORT_ALIASES = Object.freeze({
-  running: 'running', run: 'running', cursa: 'running', cycling: 'cycling', ciclisme: 'cycling', bike: 'cycling', bici: 'cycling',
-  strength: 'strength', forca: 'strength', padel: 'padel', tennis: 'tennis', tenis: 'tennis',
-  hiking: 'hiking', senderisme: 'hiking', swimming: 'swimming', natacio: 'swimming', swim: 'swimming',
-  walking: 'walking', caminada: 'walking',
-});
-
-const ACTIVITY_SPORT_LABELS = Object.freeze({
-  running: 'Running', cycling: 'Cycling', strength: 'Strength', padel: 'Pàdel', tennis: 'Tennis',
-  hiking: 'Senderisme', swimming: 'Natació', walking: 'Caminada', other: 'Altres',
-});
-
-const ACTIVITY_TYPE_LABELS = Object.freeze({
-  aerobic: 'Aeròbic', quality: 'Qualitat', long: 'Tirada llarga', race: 'Cursa',
-  test: 'Test', strength: 'Força', general: 'General',
-});
-
-const ACTIVITY_SPORT_OPTIONS = Object.freeze([
-  ['running', 'Running'], ['cycling', 'Cycling'], ['strength', 'Strength'], ['padel', 'Pàdel'],
-  ['tennis', 'Tennis'], ['hiking', 'Senderisme'], ['swimming', 'Natació'], ['walking', 'Caminada'],
-  ['other', 'Altres'],
-]);
-
-const ACTIVITY_TYPE_OPTIONS = Object.freeze([
-  ['aerobic', 'Aeròbic'], ['quality', 'Qualitat'], ['long', 'Tirada llarga'], ['race', 'Cursa'],
-  ['test', 'Test'], ['strength', 'Força'], ['general', 'General'],
-]);
+const ACTIVITY_TYPE_ALIASES = Object.freeze(Object.fromEntries(Object.entries(ACTIVITY_CATALOG.kinds)
+  .flatMap(([type, kind]) => [type, ...(kind.aliases || [])].map(alias => [activitySlug(alias), type]))));
+const ACTIVITY_SPORT_ALIASES = Object.freeze(Object.fromEntries(Object.entries(ACTIVITY_CATALOG.sports)
+  .flatMap(([sport, definition]) => [sport, ...(definition.aliases || [])].map(alias => [activitySlug(alias), sport]))));
+const ACTIVITY_SPORT_LABELS = Object.freeze(Object.fromEntries(Object.entries(ACTIVITY_CATALOG.sports)
+  .map(([sport, definition]) => [sport, definition.label])));
+const ACTIVITY_TYPE_LABELS = Object.freeze(Object.fromEntries(Object.entries(ACTIVITY_CATALOG.categories)
+  .map(([type, definition]) => [type, definition.label])));
+const ACTIVITY_SPORT_OPTIONS = Object.freeze(Object.entries(ACTIVITY_CATALOG.sports)
+  .sort(([, a], [, b]) => a.order - b.order).map(([sport, definition]) => Object.freeze([sport, definition.label])));
+const ACTIVITY_TYPE_OPTIONS = Object.freeze(Object.entries(ACTIVITY_CATALOG.categories)
+  .map(([type, definition]) => Object.freeze([type, definition.label])));
 
 function activitySlug(value) {
   return String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -127,20 +141,33 @@ function activitySubtypeLabel(value) {
 }
 function activitySportOptions() { return ACTIVITY_SPORT_OPTIONS.map(item => [...item]); }
 function activityTypeOptions() { return ACTIVITY_TYPE_OPTIONS.map(item => [...item]); }
+function activityDefaultDay(value) {
+  const classification = activityClassification(value);
+  return ACTIVITY_CATALOG.categories[classification.activityType]?.defaultDay ?? null;
+}
+function activityAnalyticsFilters() {
+  return [{ value: 'all', label: 'Totes les sessions' }, ...Object.entries(ACTIVITY_CATALOG.groups)
+    .sort(([, a], [, b]) => a.order - b.order)
+    .map(([group, definition]) => ({ value: definition.filter || group, label: definition.analyticsLabel }))];
+}
+function activityMatchesAnalyticsFilter(value, filter) {
+  if (filter === 'all') return true;
+  return Object.entries(ACTIVITY_CATALOG.groups)
+    .some(([group, definition]) => (definition.filter || group) === filter && activityToneKey(value) === group);
+}
 function activityCanonicalTypeFor(sport, activityType, currentType = null) {
   const sportKey = ACTIVITY_SPORT_ALIASES[activitySlug(sport)] || activitySlug(sport) || 'other';
   const current = ACTIVITY_TAXONOMY[currentType];
-  if (current && current.activityType === activityType && (current.sport === sportKey || (activityType === 'test' && sportKey === 'cycling'))) return currentType;
-  if (activityType === 'test' && sportKey === 'cycling') return 'test';
+  const supportsSport = definition => definition.sport === sportKey || definition.allowedSports?.includes(sportKey);
+  if (current && current.activityType === activityType && supportsSport(ACTIVITY_CATALOG.kinds[currentType] || {})) return currentType;
   if (activityType === 'general') return ACTIVITY_TAXONOMY[sportKey] ? sportKey : 'other';
-  return Object.entries(ACTIVITY_TAXONOMY).find(([, definition]) => definition.sport === sportKey && definition.activityType === activityType)?.[0] || 'other';
+  return Object.entries(ACTIVITY_CATALOG.kinds).find(([, definition]) => definition.category === activityType && supportsSport(definition))?.[0] || 'other';
 }
 function activityTypeOptionsForSport(sport) {
   const sportKey = ACTIVITY_SPORT_ALIASES[activitySlug(sport)] || activitySlug(sport) || 'other';
-  const values = new Set(Object.values(ACTIVITY_TAXONOMY)
-    .filter(definition => definition.sport === sportKey)
-    .map(definition => definition.activityType));
-  if (sportKey === 'cycling') values.add('test');
+  const values = new Set(Object.values(ACTIVITY_CATALOG.kinds)
+    .filter(definition => definition.sport === sportKey || definition.allowedSports?.includes(sportKey))
+    .map(definition => definition.category));
   return ACTIVITY_TYPE_OPTIONS.filter(([value]) => values.has(value)).map(item => [...item]);
 }
 function activityPlanningVariant(value) {
@@ -168,11 +195,8 @@ function activityIsRunning(value) { return activityClassification(value).sport =
 function activityIsStrength(value) { return activityClassification(value).group === 'strength'; }
 function activityIsBici(value) { return activityClassification(value).sport === 'cycling'; }
 
-const ACTIVITY_VARIANT_LABELS = Object.freeze({
-  road: 'Carretera', trail: 'Trail', treadmill: 'Cinta', indoor: 'Interior / estàtica',
-  outdoor: 'Exterior', pool: 'Piscina', 'open-water': 'Aigües obertes',
-  S1: 'S1', S2: 'S2', S3: 'S3', S4: 'S4', S5: 'S5', Pliometria: 'Pliometria', Complementari: 'Complementari',
-});
+const ACTIVITY_VARIANT_LABELS = Object.freeze(Object.fromEntries(Object.entries(ACTIVITY_CATALOG.variants)
+  .map(([variant, definition]) => [variant, definition.label])));
 
 function activityVariantLabel(value) {
   return ACTIVITY_VARIANT_LABELS[value] || (value ? String(value) : '');
@@ -195,29 +219,58 @@ function activityVariantOptions(type, selected = null) {
 function activityVariantFromFilename(filename, value) {
   const name = activitySlug(filename.replace(/\.json$/i, ''));
   const classification = activityClassification(value);
-  const candidates = [
-    ['open-water', ['open-water', 'aigues-obertes']], ['treadmill', ['treadmill', 'cinta']],
-    ['indoor', ['bici-estatica', 'biciestatica', 'indoor', 'interior', 'estatica']],
-    ['outdoor', ['outdoor', 'exterior']], ['trail', ['trail']], ['road', ['road', 'carretera']], ['pool', ['pool', 'piscina']],
-  ];
-  const match = candidates.find(([, aliases]) => aliases.some(alias => name.includes(alias)));
+  const match = Object.entries(ACTIVITY_CATALOG.variants)
+    .sort(([, a], [, b]) => (a.filenamePriority || Infinity) - (b.filenamePriority || Infinity))
+    .find(([, definition]) => definition.filenameAliases.some(alias => name.includes(activitySlug(alias))));
   return match && classification.variants.includes(match[0]) ? match[0] : null;
 }
 
-// Compatibilitat temporal amb les vistes legacy que encara consumeixen tipus plans.
-const QUALITY_TYPES = new Set(['TEMPO', 'INTERVALS', 'QUALITAT']);
-const LONG_TYPES = new Set(['LLARGA', 'MARATÓ', 'MARATO', 'TRAIL', 'MITJA']);
-const RUNNING_TYPES = new Set([...QUALITY_TYPES, ...LONG_TYPES, 'Z2', 'TEST', 'CURSA']);
-const TEST_RACE_TYPES = new Set(['TEST', 'TEST_BICI', 'CURSA']);
-const TEST_BICI_TYPES = new Set(['TEST_BICI']);
-const BICI_TYPES = new Set(['BICI', 'BICI ESTÀTICA', 'TEST_BICI']);
-const PADEL_TYPES = new Set(['PADEL', 'TENIS', 'TENNIS']);
-const STRENGTH_RE = /^FOR[ÇC]A/i;
+function activityLegacyLabel(value) {
+  const source = activityCanonical(value);
+  const classification = activityClassification(value);
+  const kind = ACTIVITY_CATALOG.kinds[classification.type] || ACTIVITY_CATALOG.kinds.other;
+  if (classification.type === 'quality') {
+    const subtype = activitySlug(source.subtype || '');
+    return subtype === 'tempo' ? 'TEMPO' : subtype === 'qualitat' ? 'QUALITAT' : 'INTERVALS';
+  }
+  if (classification.type === 'long-run') {
+    const variant = activityPlanningVariant(source);
+    return variant === 'trail' ? 'TRAIL' : 'LLARGA';
+  }
+  if (classification.type === 'strength') return `FORÇA${source.subtype ? ` ${source.subtype}` : ''}`;
+  if (classification.type === 'cycling') return activityPlanningVariant(source) === 'indoor' ? 'BICI ESTÀTICA' : 'BICI';
+  if (classification.type === 'test') return classification.sport === 'cycling' ? 'TEST_BICI' : 'TEST';
+  return kind.legacy || 'ALTRES';
+}
 
-const ACTIVITY_TONE_COLORS = Object.freeze({
-  test: 'var(--color-danger)', quality: 'var(--orange)', z2: 'var(--accent)',
-  long: 'var(--blue)', strength: 'var(--purple)', bici: 'var(--cyan)', other: 'var(--yellow)',
-});
+function activityClassificationFromLegacy(value) {
+  const raw = String(value || '').trim();
+  const classification = activityClassification({ tipus: raw });
+  const subtype = classification.type === 'strength'
+    ? raw.replace(/^FOR(?:Ç|C)A\s*/i, '') || null
+    : classification.type === 'quality'
+      ? activitySlug(raw) || null
+      : classification.subtype;
+  const sport = activitySlug(raw) === 'test-bici' ? 'cycling' : classification.sport;
+  return { type: classification.type, sport, subtype };
+}
+
+function activityFilenameDefinition(filename) {
+  const name = activitySlug(String(filename || '').replace(/\.json$/i, ''));
+  const matches = Object.entries(ACTIVITY_CATALOG.kinds)
+    .flatMap(([type, kind]) => (kind.filenameAliases || []).map(alias => ({
+      type, kind, alias: activitySlug(alias), parser: kind.parserAliases?.[alias] || kind.parser,
+    })))
+    .sort((a, b) => b.alias.length - a.alias.length);
+  const match = matches.find(candidate => name.includes(candidate.alias));
+  if (!match) return null;
+  const sport = match.type === 'test' && /(?:test-bici|test_bici|bici-estatica-test|bici_estatica_test)/.test(name)
+    ? 'cycling' : match.kind.sport;
+  return { type: match.type, sport, parser: match.parser, alias: match.alias };
+}
+
+const ACTIVITY_TONE_COLORS = Object.freeze(Object.fromEntries(Object.entries(ACTIVITY_CATALOG.groups)
+  .map(([group, definition]) => [group, definition.color])));
 
 function activityToneKey(value) { return activityClassification(value).group; }
 function activityToneColor(value) { return ACTIVITY_TONE_COLORS[activityToneKey(value)] || ACTIVITY_TONE_COLORS.other; }

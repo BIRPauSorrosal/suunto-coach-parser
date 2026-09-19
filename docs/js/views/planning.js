@@ -232,8 +232,7 @@ function paPlanLabel(plan) {
   return activityDisplayLabel(plan, true) || plan?.title || plan?.detail || 'Sessió planificada';
 }
 function paDefaultDay(type) {
-  const canonicalType = activityClassification({ type }).type;
-  return { quality: 1, z2: 3, 'long-run': 5, strength: 2, cycling: 5, padel: 5, tennis: 5, hiking: 5, swimming: 5, walking: 5, other: 5 }[canonicalType] ?? null;
+  return activityDefaultDay({ type });
 }
 function paCalendarWeek(week, calendar) {
   const key = window.WeekManager.key(week.startDate);

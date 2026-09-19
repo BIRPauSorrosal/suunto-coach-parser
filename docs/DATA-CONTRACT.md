@@ -17,6 +17,20 @@ En importar-lo, l’aplicació el valida, el fusiona per identificador i desa el
 resultat a `activities` per a l’usuari autenticat. En carregar el dashboard,
 les activitats es llegeixen de `activities`, no de `docs/data/sessions.json`.
 
+## Taxonomia d'activitats
+
+La font de veritat de l'aplicació és `docs/js/lib/activity-types.js`, mitjançant
+`ACTIVITY_CATALOG`. Allà es defineixen els esports, els tipus canònics, les
+variants, les etiquetes visibles, els àlies històrics, els grups d'Analytics,
+els colors i el dia suggerit al calendari.
+
+Qualsevol selector nou ha de consumir els helpers del catàleg (`activitySportOptions`,
+`activityTypeOptionsForSport` i `activityVariantOptions`) i ha de desar sempre
+`type`, `sport` i `variant`. No s'han de duplicar llistes d'esports o tipus en
+una vista. Els noms legacy de fitxer i les etiquetes antigues es converteixen al
+catàleg durant la importació; les activitats ja sincronitzades continuen sent
+compatibles sense cap resincronització.
+
 ## `planning.json`
 
 És el format d’importació/exportació del planning i manté l’estructura:
