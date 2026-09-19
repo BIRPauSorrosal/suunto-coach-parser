@@ -124,7 +124,7 @@ function renderSummary(activeWeek, weeklySessions) {
   // ─ Z1+Z2 ────────────────────────────────────────────────────────────────────────
   setText('z2-summary', z1z2Minutes ? `${formatNumber(z1z2Minutes)} min` : '\u2014');
   setText('z2-detail', activeWeek
-    ? `Ritme ${activityPlanningLabel({ type: 'z2' })}: ${formatPace(activeWeek.z2RitmeMin, '')}\u2013${formatPace(activeWeek.z2RitmeMax)}`
+    ? `Ritme ${activityPlanningLabel({ type: 'aerobic' })}: ${formatPace(activeWeek.z2RitmeMin, '')}\u2013${formatPace(activeWeek.z2RitmeMax)}`
     : 'Sense rang de ritme planificat');
 
   // ─ Tirada llarga ──────────────────────────────────────────────────────────────────

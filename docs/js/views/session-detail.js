@@ -52,7 +52,8 @@
       field('Velocitat objectiu', speed),
       field('Freqüència cardíaca objectiu', hr),
       field('Zona objectiu', zone),
-      field('Variant', activityPlanningVariant(session)),
+      field('Subtipus', activitySubtypeLabel(session)),
+      field('Variant', activityVariantLabel(activityPlanningVariant(session))),
     ].join('');
   }
 

@@ -120,6 +120,10 @@ function renderResults(ok, errors) {
           .map(([value, label]) => `<option value="${escapeHtml(value)}"${value === classification.activityType ? ' selected' : ''}>${escapeHtml(label)}</option>`)
           .join('');
         const variantType = activityCanonicalTypeFor(classification.sport, classification.activityType, session.type);
+        const selectedSubtype = activityPlanningSubtype(session);
+        const subtypeOptions = activitySubtypeOptions(variantType, selectedSubtype)
+          .map(option => `<option value="${escapeHtml(option.value)}"${option.value === selectedSubtype ? ' selected' : ''}>${escapeHtml(option.label)}</option>`)
+          .join('');
         const variantOptions = activityVariantOptions(variantType, session.variant)
           .map(option => `<option value="${escapeHtml(option.value)}"${option.value === session.variant ? ' selected' : ''}>${escapeHtml(option.label)}</option>`)
           .join('');
@@ -146,6 +150,10 @@ function renderResults(ok, errors) {
           <div class="uploader-variant-row">
             <label for="uploader-type-${i}">Tipus</label>
             <select id="uploader-type-${i}" class="uploader-type-input">${typeOptions}</select>
+          </div>
+          <div class="uploader-variant-row">
+            <label for="uploader-subtype-${i}">Subtipus</label>
+            <select id="uploader-subtype-${i}" class="uploader-subtype-input">${subtypeOptions}</select>
           </div>
           <div class="uploader-variant-row">
             <label for="uploader-variant-${i}">Variant</label>
@@ -235,6 +243,11 @@ function collectVariants() {
     .map(select => select.value || null);
 }
 
+function collectActivitySubtypes() {
+  return Array.from(document.querySelectorAll('#uploader-ok-list .uploader-subtype-input'))
+    .map(select => select.value || null);
+}
+
 function collectActivitySports() {
   return Array.from(document.querySelectorAll('#uploader-ok-list .uploader-sport-input'))
     .map(select => select.value || 'other');
@@ -253,7 +266,20 @@ function _renderImportTypeOptions(row, selectedType) {
   const selected = options.some(([value]) => value === selectedType) ? selectedType : options[0]?.[0] || 'general';
   typeSelect.innerHTML = options
     .map(([value, label]) => `<option value="${value}"${value === selected ? ' selected' : ''}>${label}</option>`).join('');
+  _renderImportSubtypeOptions(row, selected);
   _renderImportVariantOptions(row, selected);
+}
+
+function _renderImportSubtypeOptions(row, selectedType) {
+  const sportSelect = row.querySelector('.uploader-sport-input');
+  const subtypeSelect = row.querySelector('.uploader-subtype-input');
+  if (!sportSelect || !subtypeSelect) return;
+  const currentSubtype = subtypeSelect.value;
+  const canonicalType = activityCanonicalTypeFor(sportSelect.value, selectedType);
+  const options = activitySubtypeOptions(canonicalType);
+  const selected = options.some(option => option.value === currentSubtype) ? currentSubtype : '';
+  subtypeSelect.innerHTML = options
+    .map(option => `<option value="${option.value}"${option.value === selected ? ' selected' : ''}>${option.label}</option>`).join('');
 }
 
 function _renderImportVariantOptions(row, selectedType) {
@@ -273,7 +299,10 @@ function _handleTypeChange(event) {
     return;
   }
   const typeSelect = event.target.closest('.uploader-type-input');
-  if (typeSelect) _renderImportVariantOptions(row, typeSelect.value);
+  if (typeSelect) {
+    _renderImportSubtypeOptions(row, typeSelect.value);
+    _renderImportVariantOptions(row, typeSelect.value);
+  }
 }
 
 
@@ -375,7 +404,7 @@ function _bindEvents(dialog) {
     .addEventListener("click", async () => {
       setConfirmState("processing");
       const comments = collectComments();
-      const result = await confirmImport(comments, collectVariants(), collectActivityTypes(), collectActivitySports(), closeUploaderModal);  // uploader.js
+      const result = await confirmImport(comments, collectVariants(), collectActivityTypes(), collectActivitySports(), collectActivitySubtypes(), closeUploaderModal);  // uploader.js
       if (!result?.ok) setConfirmState("idle");
     });
 }

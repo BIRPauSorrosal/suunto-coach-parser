@@ -510,7 +510,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
       }};
     }
 
-    case 'z2': {
+    case 'aerobic': {
       const hasRitme = byWeek.some(w => w.avgPace !== null);
       const hasFC    = byWeek.some(w => w.avgFC   !== null);
       const hasCad   = byWeek.some(w => w.avgCad  !== null);
@@ -869,13 +869,13 @@ function getSessCardMetrics(s) {
   const watts = (typeof wattsRaw === 'number' && wattsRaw > 0) ? `${Math.round(wattsRaw)} W` : '—';
 
   switch (_sessType) {
-    case 'z2':
+    case 'aerobic':
       return [
         { label: 'Km',        value: km },
         { label: 'Durada',    value: dur },
         { label: 'Ritme',     value: ritme },
         { label: 'FC',        value: fc },
-        { label: activityPlanningLabel({ type: 'z2' }), value: z2min },
+        { label: activityPlanningLabel({ type: 'aerobic' }), value: z2min },
         { label: 'TSS',       value: tss },
       ];
     case 'quality':
@@ -988,7 +988,7 @@ function getSessCols(type) {
     render: s => { const e = toNumber(s.raw['EPOC']); return (typeof e === 'number' && e > 0) ? loadBadgeHTML(e) : '—'; }
   };
   const colRecup      = {label:'Recup.',            render:s=>{const r=toNumber(s.raw['Recup(h)']);return typeof r==='number'&&r>0?`${fmtNum(r)} h`:'—';}};
-  const colZ2min      = {label:`${activityPlanningLabel({ type: 'z2' })} (min)`, render:s=>s.z2min>0?`${fmtNum(s.z2min)} min`:'—'};
+  const colZ2min      = {label:`${activityPlanningLabel({ type: 'aerobic' })} (min)`, render:s=>s.z2min>0?`${fmtNum(s.z2min)} min`:'—'};
   const colCad        = {label:'Cadència',          render:s=>{const c=toNumber(s.raw['Cadencia(spm)']);return typeof c==='number'&&c>0?`${Math.round(c)} spm`:'—';}};
   const colDesnivell  = {label:'Desnivell',         render:s=>{const d=toNumber(s.raw['Desnivell(m)']);return typeof d==='number'&&d>0?`${Math.round(d)} m`:'—';}};
   const colRitmeSeries= {label:'Ritme sèries',      render:s=>formatPace(typeof s.ritmeMitjaSeries==='number'?s.ritmeMitjaSeries:null)};
@@ -1013,7 +1013,7 @@ function getSessCols(type) {
   };
 
   switch (type) {
-    case 'z2':       return [colData,colKm,colDurada,colRitme,colCad,colFC,colZ2min,colEpoc,colCarrega,colComentari];
+    case 'aerobic':  return [colData,colKm,colDurada,colRitme,colCad,colFC,colZ2min,colEpoc,colCarrega,colComentari];
     case 'quality':  return [colData,colTipus,colSeries,colDurSerie,colRitmeSeries,colFCSeries,colKm,colCarrega,colPTE,colComentari];
     case 'long':     return [colData,colTipus,colKm,colDurada,colRitme,colFC,colDesnivell,colFeeling,colVo2max,colZ2min,colCarrega,colComentari];
     case 'testrace': return [colData,colTipus,colKm,colDurada,colRitme,colFC,colDesnivell,colFeeling,colVo2max,colCarrega,colComentari];

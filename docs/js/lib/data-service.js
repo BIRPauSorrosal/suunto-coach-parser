@@ -156,13 +156,13 @@
     const normalized = normalizePlanningDocument(document);
     return normalized.cycles.flatMap(cycle => cycle.weeks.map(week => {
       const sessions = Array.isArray(week.sessions) ? week.sessions : [];
-      const quality = sessions.filter(session => session.type === 'quality');
-      const z2 = sessions.filter(session => session.type === 'z2');
-      const longRun = sessions.filter(session => session.type === 'long-run');
-      const strength = sessions.filter(session => session.type === 'strength');
-      const padel = sessions.filter(session => session.type === 'padel');
+      const quality = sessions.filter(session => activityClassification(session).activityType === 'quality');
+      const aerobic = sessions.filter(session => activityClassification(session).activityType === 'aerobic');
+      const longRun = sessions.filter(session => activityClassification(session).activityType === 'long');
+      const strength = sessions.filter(session => activityClassification(session).group === 'strength');
+      const padel = sessions.filter(session => activityClassification(session).sport === 'padel');
       const first = list => list[0] || {};
-      const q = first(quality), z = first(z2), l = first(longRun);
+      const q = first(quality), z = first(aerobic), l = first(longRun);
       const summary = week.summary || {};
       return {
         Setmana: week.code,
@@ -177,12 +177,12 @@
         Q_FC_min: q.heart_rate?.min,
         Q_FC_max: q.heart_rate?.max,
         Q_Km_Plan: summary.quality_km_target ?? sum(quality.map(session => session.distance_km)),
-        Z2_Durada_min: sum(z2.map(session => session.duration_min)),
+        Z2_Durada_min: sum(aerobic.map(session => session.duration_min)),
         Z2_Ritme_min_km_min: z.pace_min_km?.min,
         Z2_Ritme_min_km_max: z.pace_min_km?.max,
         Z2_FC_min: z.heart_rate?.min,
         Z2_FC_max: z.heart_rate?.max,
-        Z2_Km_Plan: summary.z2_km_target ?? sum(z2.map(session => session.distance_km)),
+        Z2_Km_Plan: summary.z2_km_target ?? sum(aerobic.map(session => session.distance_km)),
         LL_Tipus: l.description,
         LL_Durada_min: sum(longRun.map(session => session.duration_min)),
         LL_Km_Plan: summary.long_run_km_target ?? sum(longRun.map(session => session.distance_km)),

@@ -145,10 +145,11 @@ async function handleFileSelection(files, onDone) {
  *                               proviùt per uploader-ui.js via collectComments()
  * @param {Function} onComplete — callback() quan acaba (per tancar modal, etc.)
  */
-async function confirmImport(comments, variants, types, sports, onComplete) {
+async function confirmImport(comments, variants, types, sports, subtypes, onComplete) {
   // Compatibilitat amb possibles crides antigues de tres arguments.
-  if (typeof types === 'function') { onComplete = types; types = []; sports = []; }
-  if (typeof sports === 'function') { onComplete = sports; sports = []; }
+  if (typeof types === 'function') { onComplete = types; types = []; sports = []; subtypes = []; }
+  if (typeof sports === 'function') { onComplete = sports; sports = []; subtypes = []; }
+  if (typeof subtypes === 'function') { onComplete = subtypes; subtypes = []; }
   if (!_pendingRows.length) return { ok: false, error: 'No hi ha activitats preparades per importar.' };
 
   // Injectem el comentari a cada row. Si no n'hi ha, queda string buit.
@@ -165,7 +166,7 @@ async function confirmImport(comments, variants, types, sports, onComplete) {
         ...row.__session,
         type,
         sport,
-        subtype: changedClassification ? null : row.__session?.subtype,
+        subtype: subtypes?.[i] || (changedClassification ? null : activityPlanningSubtype(row.__session)),
         variant: variants?.[i] || row.__session?.variant || null,
         notes: { ...row.__session?.notes, comment: comments?.[i] || null },
       },

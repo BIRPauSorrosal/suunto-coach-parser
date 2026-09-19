@@ -692,7 +692,7 @@ function renderWeeklyPlanView(container, planning, sessions) {
 
     // 2 · Aeròbic
     + '<article class="panel pwv-block">'
-    +   '<p class="eyebrow">🫀 ' + escapePlanningText(activityPlanningLabel({ type: 'z2' })) + '</p>'
+    +   '<p class="eyebrow">🫀 ' + escapePlanningText(activityPlanningLabel({ type: 'aerobic' })) + '</p>'
     +   '<ul class="sw-plan-list" style="margin-top:12px">'
     +     '<li><span>Durada</span><strong>' + fmtNumP(week.z2Durada) + ' min</strong></li>'
     +     '<li><span>Ritme</span><strong>' + z2RitmePla + '</strong></li>'
@@ -748,7 +748,7 @@ function getWeekStats(week, sessions) {
   const kmTotal    = ws.reduce((acc, s) => acc + (s.distancia || 0), 0);
   const kmQuality  = ws.filter(s => ['quality', 'test'].includes(activityToneKey(s)))
                        .reduce((acc, s) => acc + (s.distancia || 0), 0);
-  const kmZ2       = ws.filter(s => activityToneKey(s) === 'z2')
+  const kmZ2       = ws.filter(s => activityToneKey(s) === 'aerobic')
                        .reduce((acc, s) => acc + (s.distancia || 0), 0);
   const kmLong     = ws.filter(s => activityToneKey(s) === 'long')
                        .reduce((acc, s) => acc + (s.distancia || 0), 0);

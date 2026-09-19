@@ -168,16 +168,21 @@ function renderPlanningSessionRow(session, status, escapeHtml) {
     .join('');
   const selectedVariant = activityPlanningVariant(session);
   const canonicalType = activityCanonicalTypeFor(classification.sport, classification.activityType, classification.type);
+  const selectedSubtype = activityPlanningSubtype(session);
+  const subtypeOptions = activitySubtypeOptions(canonicalType, selectedSubtype)
+    .map(option => `<option value="${escapeHtml(option.value)}"${option.value === selectedSubtype ? ' selected' : ''}>${escapeHtml(option.label)}</option>`)
+    .join('');
   const variantOptions = activityVariantOptions(canonicalType)
     .map(option => `<option value="${escapeHtml(option.value)}"${option.value === selectedVariant ? ' selected' : ''}>${escapeHtml(option.label)}</option>`)
     .join('');
   const disabled = status === 'unchanged' ? ' disabled' : '';
-  const title = session.session_type || session.label || activityPlanningLabel(session);
+  const title = activityDisplayLabel(session, true) || session.session_type || session.label || activityPlanningLabel(session);
   return `<div class="planning-session-row" data-planning-session-id="${escapeHtml(session.id)}">
     <div class="planning-session-heading"><strong>${escapeHtml(title)}</strong><span>${escapeHtml(session.id || '')}</span></div>
     <div class="planning-session-fields">
       <label>Esport<select class="planning-sport-input"${disabled}>${sportOptions}</select></label>
       <label>Tipus<select class="planning-type-input"${disabled}>${typeOptions}</select></label>
+      <label>Subtipus<select class="planning-subtype-input"${disabled}>${subtypeOptions}</select></label>
       <label>Variant<select class="planning-variant-input"${disabled}>${variantOptions}</select></label>
     </div>
   </div>`;
@@ -192,7 +197,21 @@ function _renderPlanningTypeOptions(row, selectedType) {
   typeSelect.innerHTML = options
     .map(([value, label]) => `<option value="${value}"${value === selected ? ' selected' : ''}>${label}</option>`)
     .join('');
+  _renderPlanningSubtypeOptions(row, selected);
   _renderPlanningVariantOptions(row, selected);
+}
+
+function _renderPlanningSubtypeOptions(row, selectedType) {
+  const sportSelect = row.querySelector('.planning-sport-input');
+  const subtypeSelect = row.querySelector('.planning-subtype-input');
+  if (!sportSelect || !subtypeSelect) return;
+  const currentSubtype = subtypeSelect.value;
+  const canonicalType = activityCanonicalTypeFor(sportSelect.value, selectedType);
+  const options = activitySubtypeOptions(canonicalType);
+  const selected = options.some(option => option.value === currentSubtype) ? currentSubtype : '';
+  subtypeSelect.innerHTML = options
+    .map(option => `<option value="${option.value}"${option.value === selected ? ' selected' : ''}>${option.label}</option>`)
+    .join('');
 }
 
 function _renderPlanningVariantOptions(row, selectedType) {
@@ -217,7 +236,10 @@ function _handlePlanningClassificationChange(event) {
     return;
   }
   const typeSelect = event.target.closest('.planning-type-input');
-  if (typeSelect) _renderPlanningVariantOptions(row, typeSelect.value);
+  if (typeSelect) {
+    _renderPlanningSubtypeOptions(row, typeSelect.value);
+    _renderPlanningVariantOptions(row, typeSelect.value);
+  }
 }
 
 function applyPlanningClassificationSelections() {
@@ -228,6 +250,7 @@ function applyPlanningClassificationSelections() {
     {
       sport: row.querySelector('.planning-sport-input')?.value || 'other',
       activityType: row.querySelector('.planning-type-input')?.value || 'general',
+      subtype: row.querySelector('.planning-subtype-input')?.value || null,
       variant: row.querySelector('.planning-variant-input')?.value || null,
     },
   ]));
@@ -236,6 +259,7 @@ function applyPlanningClassificationSelections() {
     if (!selected) return;
     session.sport = selected.sport;
     session.type = activityCanonicalTypeFor(selected.sport, selected.activityType, session.type);
+    session.subtype = selected.subtype;
     session.variant = selected.variant;
   })));
 }

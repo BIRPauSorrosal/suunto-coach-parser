@@ -25,8 +25,13 @@ variants, les etiquetes visibles, els àlies històrics, els grups d'Analytics,
 els colors i el dia suggerit al calendari.
 
 Qualsevol selector nou ha de consumir els helpers del catàleg (`activitySportOptions`,
-`activityTypeOptionsForSport` i `activityVariantOptions`) i ha de desar sempre
-`type`, `sport` i `variant`. No s'han de duplicar llistes d'esports o tipus en
+`activityTypeOptionsForSport`, `activitySubtypeOptions` i `activityVariantOptions`)
+i ha de desar sempre `type`, `sport`, `subtype` i `variant`. Els camps tenen
+una semàntica fixa: esport → tipus d'entrenament → subtipus → variant de medi.
+Per exemple, `Running → Qualitat → Intervals → Carretera` i
+`Strength → Força → S3`. `Z1`–`Z5` són únicament zones cardíaques; `z2` es
+manté només com a àlies legacy que es normalitza a `Aeròbic` sense subtipus.
+No s'han de duplicar llistes d'esports o tipus en
 una vista. Els noms legacy de fitxer i les etiquetes antigues es converteixen al
 catàleg durant la importació; les activitats ja sincronitzades continuen sent
 compatibles sense cap resincronització.

@@ -296,6 +296,11 @@ function parseQuality(filename, data) {
 
 function parseStrength(filename, data) {
   const row   = parseBase(filename, data);
+  const definition = activityFilenameDefinition(filename);
+  if (definition?.type && definition.type !== 'strength') {
+    row.Tipus = activityLegacyLabel({ type: definition.type, sport: definition.sport });
+    return row;
+  }
   const name  = filename.replace(".json", "");
   const match = name.match(/[Ss](\d+)/);
   const code  = match ? `S${match[1]}` : "";

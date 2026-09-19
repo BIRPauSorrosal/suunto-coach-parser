@@ -73,9 +73,10 @@ const normalizedPlanning = context.DashboardDataService.normalizePlanningDocumen
 });
 assert.deepEqual(
   [normalizedPlanning.cycles[0].weeks[0].sessions[0].type, normalizedPlanning.cycles[0].weeks[0].sessions[0].sport],
-  ['z2', 'running'],
+  ['aerobic', 'running'],
 );
-assert.equal(context.activityPlanningVariant({ type: 'strength', sport: 'strength', variant: null, session_type: 'S2' }), 'S2');
+assert.equal(context.activityPlanningVariant({ type: 'strength', sport: 'strength', variant: null, session_type: 'S2' }), null);
+assert.equal(context.activityPlanningSubtype({ type: 'strength', sport: 'strength', variant: null, session_type: 'S2' }), 'S2');
 
 const today = new Date();
 today.setHours(12, 0, 0, 0);
@@ -106,23 +107,35 @@ assert.deepEqual(classifications.map(item => [item.type, item.sport, item.activi
   ['tennis', 'tennis', 'general', 'other'],
 ]);
 const legacyZ2 = JSON.parse(vm.runInContext(`JSON.stringify(activityClassification({ tipusKey: 'Z2' }))`, context));
-assert.deepEqual([legacyZ2.sport, legacyZ2.activityType, legacyZ2.subtype], ['running', 'aerobic', 'z2']);
+assert.deepEqual([legacyZ2.type, legacyZ2.sport, legacyZ2.activityType, legacyZ2.subtype], ['aerobic', 'running', 'aerobic', null]);
 const bikeTest = JSON.parse(vm.runInContext(`JSON.stringify(activityClassification({ tipusKey: 'TEST_BICI' }))`, context));
 assert.deepEqual([bikeTest.sport, bikeTest.activityType], ['cycling', 'test']);
-assert.equal(vm.runInContext(`activityCanonicalTypeFor('running', 'aerobic')`, context), 'z2');
+assert.equal(vm.runInContext(`activityCanonicalTypeFor('running', 'aerobic')`, context), 'aerobic');
 assert.equal(vm.runInContext(`activityCanonicalTypeFor('cycling', 'test')`, context), 'test');
-assert.equal(vm.runInContext(`activityPlanningLabel({ type: 'z2', sport: 'running' })`, context), 'Aeròbic');
+assert.equal(vm.runInContext(`activityCanonicalTypeFor('strength', 'plyometrics')`, context), 'plyometrics');
+assert.equal(vm.runInContext(`activityPlanningLabel({ type: 'aerobic', sport: 'running' })`, context), 'Aeròbic');
+assert.equal(vm.runInContext(`activityPlanningLabel({ type: 'aerobic', sport: 'cycling' })`, context), 'Aeròbic');
 assert.equal(vm.runInContext(`activityPlanningLabel({ type: 'cycling', sport: 'cycling' })`, context), 'Cycling');
 assert.equal(vm.runInContext(`activityDisplayLabel({ type: 'strength', sport: 'strength', session_type: 'S3' }, true)`, context), 'Força · S3');
+assert.equal(vm.runInContext(`activityDisplayLabel({ type: 'quality', sport: 'running', subtype: 'intervals', variant: 'road' }, true)`, context), 'Qualitat · Intervals · Carretera');
+assert.equal(vm.runInContext(`activityDisplayLabel({ type: 'plyometrics', sport: 'strength' }, true)`, context), 'Pliometria');
 assert.equal(vm.runInContext(`activityDisplayLabel({ type: 'cycling', sport: 'cycling', variant: 'indoor' }, true)`, context), 'Cycling · Interior / estàtica');
 assert.deepEqual(
   JSON.parse(vm.runInContext(`JSON.stringify(activityTypeOptionsForSport('running').map(([value]) => value))`, context)),
   ['aerobic', 'quality', 'long', 'race', 'test'],
 );
+assert.deepEqual(
+  JSON.parse(vm.runInContext(`JSON.stringify(activityTypeOptionsForSport('cycling').map(([value]) => value))`, context)),
+  ['aerobic', 'quality', 'test', 'general'],
+);
+assert.deepEqual(
+  JSON.parse(vm.runInContext(`JSON.stringify(activityTypeOptionsForSport('strength').map(([value]) => value))`, context)),
+  ['strength', 'plyometrics', 'complementary'],
+);
 assert.equal(vm.runInContext(`activityDefaultDay({ type: 'strength', sport: 'strength' })`, context), 2);
 assert.deepEqual(
   JSON.parse(vm.runInContext(`JSON.stringify(activityAnalyticsFilters().map(filter => filter.value))`, context)),
-  ['all', 'z2', 'quality', 'long', 'testrace', 'strength', 'bici', 'other'],
+  ['all', 'aerobic', 'quality', 'long', 'testrace', 'strength', 'bici', 'other'],
 );
 const filenameClassification = JSON.parse(vm.runInContext(`JSON.stringify(activityFilenameDefinition('20260917_test_bici_indoor.json'))`, context));
 assert.deepEqual([filenameClassification.type, filenameClassification.sport, filenameClassification.parser], ['test', 'cycling', 'generic']);

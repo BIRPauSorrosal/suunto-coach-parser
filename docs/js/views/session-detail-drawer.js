@@ -171,6 +171,7 @@
       metric('Velocitat objectiu', number(plan.speed_kmh, plan.speed) === null ? null : `${fmt(number(plan.speed_kmh, plan.speed))} km/h`),
       metric('FC objectiu', range(plan.heart_rate, ' bpm')),
       metric('Zona objectiu', plan.zone || plan.heart_rate_zone || plan.hr_zone || null),
+      metric('Subtipus', activitySubtypeLabel(plan)),
       metric('Variant', variantLabel(activityPlanningVariant(plan)))
     ].join('');
     const noteValues = [plan.notes?.comment, plan.notes, plan.description].filter(value => typeof value === 'string' && value.trim());
@@ -185,8 +186,7 @@
     const type = plannedOnly ? typeLabel(plan) || 'Sessió planificada' : typeLabel(data) || typeLabel(row) || 'Activitat';
     const sport = plannedOnly ? sportLabel(plan) : sportLabel(data);
     const variant = plannedOnly ? variantLabel(activityPlanningVariant(plan)) : variantLabel(activityPlanningVariant(data));
-    const subtypeValue = plannedOnly ? '' : activitySubtypeLabel(data);
-    const subtype = subtypeValue === 'z2' ? null : subtypeValue;
+    const subtype = plannedOnly ? activitySubtypeLabel(plan) : activitySubtypeLabel(data);
     const date = options.dateLabel || dateText(data.date || row.date);
     const identity = [sport, variant, subtype].filter(Boolean).join(' · ');
     const confirmed = Array.isArray(data.planning_links) && data.planning_links.some(link => link.confidence === 'confirmed');

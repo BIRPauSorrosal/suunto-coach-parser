@@ -46,6 +46,7 @@
         "type": { "type": "string" },
         "sport": { "type": "string" },
         "variant": { "type": ["string", "null"] },
+        "subtype": { "type": ["string", "null"] },
         "day": { "type": ["string", "null"] },
         "session_type": { "type": ["string", "null"] },
         "pace_min_km": {
