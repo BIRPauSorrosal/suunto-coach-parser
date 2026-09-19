@@ -481,6 +481,7 @@
         <header class="page-header">
           <div><p class="eyebrow">Planificació</p><h2>Temporada</h2></div>
           <div class="header-actions">
+            <button class="btn btn-primary" id="btn-plan-export" disabled>Exporta planning</button>
             <button class="btn btn-ghost" id="btn-plan-yearly">Vista anual</button>
             <button class="btn btn-ghost" id="btn-plan-monthly">Vista mensual</button>
             <button class="btn btn-ghost active" id="btn-plan-weekly">Vista setmanal</button>
@@ -661,6 +662,7 @@
   <script src="./js/views/weekly-planner.js"></script>
   <script src="./js/views/today.js"></script>
   <script src="./js/views/planning.js"></script>
+  <script src="./js/views/planning-export.js"></script>
   <script src="js/views/comment-editor.js"></script>
   <script src="./js/views/sessions.js"></script>
   <script src="./js/views/activities.js"></script>
@@ -677,7 +679,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        const reloadKey = 'personal-coach-sw-reloaded-v1.3.1';
+        const reloadKey = 'personal-coach-sw-reloaded-v1.3.3';
         navigator.serviceWorker.addEventListener('controllerchange', () => {
           // El nou worker ja controla la pestanya, però els scripts actuals
           // poden ser de la cache anterior. Fem una sola recàrrega automàtica

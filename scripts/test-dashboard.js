@@ -25,6 +25,8 @@ load('docs/js/lib/data-service.js');
 load('docs/js/uploader/parser.js');
 load('docs/js/uploader/uploader.js');
 load('docs/js/uploader/planning-uploader.js');
+load('docs/js/lib/calendar-sync.js');
+load('docs/js/views/planning-export.js');
 
 const csv = context.DashboardCsv;
 assert.equal(context.dateKey(new Date(2026, 8, 4, 23)), '2026-09-04');
@@ -179,6 +181,41 @@ assert.equal(context.DashboardDataService.validateCanonicalSession({ ...validImp
 assert.equal(vm.runInContext(`validateSuuntoJson({ DeviceLog: { Header: { DateTime: '2026-09-19T10:00:00Z', Duration: 60 }, Samples: [] } }).valid`, context), true);
 assert.equal(vm.runInContext(`validateSuuntoJson({ DeviceLog: { Header: { DateTime: 'invalid', Duration: 60 }, Samples: [] } }).valid`, context), false);
 assert.equal(vm.runInContext(`validateSuuntoJson({ DeviceLog: { Header: { DateTime: '2026-09-19T10:00:00Z', Duration: 0 }, Samples: {} } }).valid`, context), false);
+
+const exportPlanning = {
+  schema_version: 1,
+  season: 2026,
+  cycles: [{ id: 'cycle-1', name: 'Base', weeks: [{
+    id: '2026-09-14', code: '2026-S38', start: '2026-09-14', end: '2026-09-20', phase: 'Base',
+    sessions: [
+      { id: 'plan-a', type: 'aerobic', sport: 'running', variant: null },
+      { id: 'plan-b', type: 'quality', sport: 'running', variant: null },
+    ],
+  }] }],
+};
+const exportEntries = context.planningExportEntries(exportPlanning, {
+  weeks: { '2026-09-14': { items: [
+    { id: 'plan-a', source: 'planning', day: 0 },
+    { id: 'plan-b', source: 'planning', day: 2 },
+  ] } },
+});
+assert.deepEqual(JSON.parse(JSON.stringify(exportEntries.map(entry => [entry.date, entry.sessions.length]))), [['2026-09-14', 1], ['2026-09-16', 1]]);
+const exportRangeEntries = context.planningExportEntriesForRange(exportPlanning, {
+  weeks: { '2026-09-14': { items: [
+    { id: 'plan-a', source: 'planning', day: 0 },
+    { id: 'plan-b', source: 'planning', day: 2 },
+  ] } },
+}, 7, new Date('2026-09-19T12:00:00'));
+assert.deepEqual(JSON.parse(JSON.stringify(exportRangeEntries.map(entry => entry.date))), ['2026-09-14', '2026-09-16']);
+const emptyExportRange = context.planningExportEntriesForRange(exportPlanning, {
+  weeks: { '2026-09-14': { items: [
+    { id: 'plan-a', source: 'planning', day: 0 },
+    { id: 'plan-b', source: 'planning', day: 2 },
+  ] } },
+}, 7, new Date('2026-09-30T12:00:00'));
+assert.equal(emptyExportRange.length, 0);
+const exportedSubset = context.planningDocumentForSelection(exportPlanning, exportEntries, ['2026-09-16']);
+assert.deepEqual(JSON.parse(JSON.stringify(exportedSubset.cycles[0].weeks[0].sessions.map(session => [session.id, session.day]))), [['plan-b', 'wednesday']]);
 
 // El Service Worker no pot interceptar dades de Supabase: una resposta GET
 // cachejada d'una setmana o de la seva revisió provocaria conflictes falsos.

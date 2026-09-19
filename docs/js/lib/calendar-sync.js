@@ -1,6 +1,7 @@
 // Persistencia del calendari personal a Supabase.
 (function (global) {
   const STORE_KEY = 'suunto-coach-calendar-local-v1';
+  const LEGACY_STORE_KEY = 'suunto-coach-weekly-calendar-v2';
   const saveChains = new Map();
   const acknowledgedRevisions = new Map();
   const normalizeItem = item => ({
@@ -23,6 +24,15 @@
       localStorage.setItem(STORE_KEY, JSON.stringify(document));
     } catch (_) {}
   };
+
+  function getLocalWeeks() {
+    try {
+      const document = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+      if (document?.weeks && typeof document.weeks === 'object') return document.weeks;
+      const legacy = JSON.parse(localStorage.getItem(LEGACY_STORE_KEY) || 'null');
+      return legacy && typeof legacy === 'object' ? legacy : {};
+    } catch (_) { return {}; }
+  }
 
   function updateLocalWeek(weekId, value) {
     try {
@@ -149,5 +159,5 @@
     return global.SupabaseDataProvider?.getCalendarWeeks?.() || { status: 'unavailable' };
   }
 
-  global.CalendarSync = Object.freeze({ saveWeek, preferLocal, discardLocalWeek, readSupabase, rebaseOperation });
+  global.CalendarSync = Object.freeze({ saveWeek, preferLocal, discardLocalWeek, getLocalWeeks, readSupabase, rebaseOperation });
 })(window);

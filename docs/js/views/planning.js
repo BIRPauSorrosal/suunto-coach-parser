@@ -70,11 +70,16 @@ function renderPlanningView(planning, sessions, calendar) {
 
 // ── Navegació de nivells ─────────────────────────────────────────────────────────
 function initPlanningNav(planning, sessions, calendar) {
-  ['btn-plan-yearly', 'btn-plan-monthly', 'btn-plan-weekly'].forEach(id => {
+  ['btn-plan-yearly', 'btn-plan-monthly', 'btn-plan-weekly', 'btn-plan-export'].forEach(id => {
     const btn = document.getElementById(id);
     if (!btn) return;
     btn.replaceWith(btn.cloneNode(true));
   });
+  const exportButton = document.getElementById('btn-plan-export');
+  if (exportButton) {
+    exportButton.disabled = !planning.length;
+    exportButton.addEventListener('click', () => window.openPlanningExport?.());
+  }
   document.getElementById('btn-plan-yearly')?.addEventListener('click', () => {
     planningViewLevel = 'yearly'; renderPlanningLevel(planning, sessions, calendar);
   });

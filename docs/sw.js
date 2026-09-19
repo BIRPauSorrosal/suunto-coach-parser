@@ -24,7 +24,7 @@ if (
 // • PATCH (v3.0.1, v3.0.2…) — fixes petits de CSS/JS, ajustos visuals
 // Qualsevol canvi al nom de CACHE_NAME invalida la cache anterior i força la
 // descàrrega de tots els assets nous al pròxim activate del SW.
-const CACHE_NAME = 'personal-coach-v1.3.2';
+const CACHE_NAME = 'personal-coach-v1.3.3';
 
 // Assets estàtics que es precachegen en instal·lar el SW
 const PRECACHE_URLS = [
@@ -82,6 +82,7 @@ const PRECACHE_URLS = [
   './js/views/weekly-planner.js',
   './js/views/today.js',
   './js/views/planning.js',
+  './js/views/planning-export.js',
   './js/views/sessions.js',
   './js/views/activities.js',
   './js/views/comment-editor.js',
