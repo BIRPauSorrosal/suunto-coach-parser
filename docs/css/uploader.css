@@ -283,6 +283,19 @@
   line-height: 1.35;
 }
 
+/* Regla explícita per evitar que el selector de subtipus caigui en
+   l'aparença nativa del navegador quan s'injecta dinàmicament al modal. */
+select.uploader-subtype-input {
+  min-width: 150px;
+  color: var(--text) !important;
+  background-color: var(--bg) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  padding: 5px 8px !important;
+  font: inherit !important;
+  color-scheme: dark;
+}
+
 .uploader-comment-area {
   padding:       4px 10px 8px;
   border-top:    1px solid var(--border);
