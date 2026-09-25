@@ -47,6 +47,7 @@
     const zone = session.zone || session.heart_rate_zone || session.hr_zone;
     return [
       field('Durada prevista', present(session.duration_min) ? `${number(session.duration_min)} min` : ''),
+      field('Desnivell previst', present(session.elevation_m) ? `${number(session.elevation_m)} m` : ''),
       field('Distància prevista', present(session.distance_km) ? `${number(session.distance_km)} km` : ''),
       field('Ritme objectiu', pace(session.pace_min_km)),
       field('Velocitat objectiu', speed),

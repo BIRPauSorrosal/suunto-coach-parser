@@ -49,6 +49,7 @@
         "subtype": { "type": ["string", "null"] },
         "day": { "type": ["string", "null"] },
         "session_type": { "type": ["string", "null"] },
+        "elevation_m": { "type": ["number", "null"], "minimum": 0 },
         "pace_min_km": {
           "type": ["number", "null"]
         },

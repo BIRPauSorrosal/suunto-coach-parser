@@ -70,7 +70,7 @@ const normalizedPlanning = context.DashboardDataService.normalizePlanningDocumen
   cycles: [{
     id: 'base', name: 'Base', weeks: [{
       id: '2026-01-01', code: '2026-S01', start: '2026-01-01', end: '2026-01-07', phase: 'Base',
-      sessions: [{ id: '2026-S01-aerobic-01', type: 'aerobic', sport: 'run', variant: null }],
+      sessions: [{ id: '2026-S01-aerobic-01', type: 'aerobic', sport: 'run', variant: null, elevation_m: 320 }],
     }],
   }],
 });
@@ -78,6 +78,7 @@ assert.deepEqual(
   [normalizedPlanning.cycles[0].weeks[0].sessions[0].type, normalizedPlanning.cycles[0].weeks[0].sessions[0].sport],
   ['aerobic', 'running'],
 );
+assert.equal(normalizedPlanning.cycles[0].weeks[0].sessions[0].elevation_m, 320);
 
 const normalizedCycleNames = context.DashboardDataService.normalizePlanningDocument({
   schema_version: 1,
@@ -228,6 +229,12 @@ const parsedBici = JSON.parse(vm.runInContext(`JSON.stringify(
   }).__session
 )`, context));
 assert.deepEqual([parsedBici.type, parsedBici.sport, parsedBici.variant], ['cycling', 'cycling', 'indoor']);
+
+const parsedRunning = JSON.parse(vm.runInContext(`JSON.stringify(sessionFromParsedRow(
+  '20260918_running-trail.json',
+  { Tipus: 'Z2', Data: '18/09/2026', 'Durada(min)': 50, 'Desnivell(m)': 275 }
+))`, context));
+assert.deepEqual([parsedRunning.type, parsedRunning.sport, parsedRunning.elevation_m], ['aerobic', 'running', 275]);
 
 const validImportedSession = JSON.parse(vm.runInContext(`JSON.stringify({
   id: '260919-bici', date: '2026-09-19', type: 'cycling', sport: 'cycling', variant: null,

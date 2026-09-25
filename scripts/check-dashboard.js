@@ -56,6 +56,13 @@ try {
   weeks.forEach(week => {
     if (!/^\d{4}-S\d{2}$/.test(week.code || '')) failures.push(`Codi de setmana invàlid al planning.json: ${week.code || '--'}`);
   });
+  sessions.filter(session => session.sport === 'running').forEach(session => {
+    if (!Object.prototype.hasOwnProperty.call(session, 'elevation_m')) {
+      failures.push(`Sessió running sense elevation_m al planning.json: ${session.id || '--'}`);
+    } else if (session.elevation_m !== null && (!Number.isFinite(session.elevation_m) || session.elevation_m < 0)) {
+      failures.push(`Desnivell invàlid al planning.json: ${session.id || '--'}`);
+    }
+  });
 } catch (error) {
   failures.push(`planning.json no és vàlid: ${error.message}`);
 }
@@ -71,6 +78,13 @@ const sessionsJson = JSON.parse(fs.readFileSync(path.join(docs, 'data/sessions.j
   sessions.forEach(session => {
     if (!session.id || !/^\d{4}-\d{2}-\d{2}$/.test(session.date || '') || !session.type || !session.sport) {
       failures.push(`Activitat incompleta a sessions.json: ${session.id || '--'}`);
+    }
+  });
+  sessions.filter(session => session.sport === 'running').forEach(session => {
+    if (!Object.prototype.hasOwnProperty.call(session, 'elevation_m')) {
+      failures.push(`Activitat running sense elevation_m a sessions.json: ${session.id || '--'}`);
+    } else if (session.elevation_m !== null && (!Number.isFinite(session.elevation_m) || session.elevation_m < 0)) {
+      failures.push(`Desnivell invàlid a sessions.json: ${session.id || '--'}`);
     }
   });
 } catch (error) {

@@ -217,19 +217,21 @@ function paValue(session, field) {
     load: [session?.carrega, canonical.training_effect?.load],
     elevation: [session?.desnivell, canonical.elevation_m],
   }[field] || [];
-  const value = values.find(candidate => Number.isFinite(Number(candidate)));
+  const value = values.find(candidate => candidate !== null && candidate !== undefined && candidate !== '' && Number.isFinite(Number(candidate)));
   return value === undefined ? null : Number(value);
 }
 function paStats(sessions) {
   const total = field => sessions.reduce((sum, session) => sum + Math.max(0, paValue(session, field) || 0), 0);
+  const elevationValue = session => activityClassification(session).sport === 'running' ? paValue(session, 'elevation') : null;
   return {
     activities: sessions.length,
     duration: total('duration'),
     distance: total('distance'),
     load: total('load'),
-    elevation: total('elevation'),
+    elevation: sessions.reduce((sum, session) => sum + Math.max(0, elevationValue(session) || 0), 0),
     hasLoad: sessions.some(session => paValue(session, 'load') !== null && paValue(session, 'load') > 0),
     hasDistance: sessions.some(session => paValue(session, 'distance') !== null && paValue(session, 'distance') > 0),
+    hasElevation: sessions.some(session => elevationValue(session) !== null),
   };
 }
 function paPercent(current, previous) {
@@ -346,7 +348,10 @@ function renderContextMonthViewLegacy(container, planning, sessions, calendar) {
     currentStats.hasDistance && previousStats.hasDistance ? ['Distància', currentStats.distance, previousStats.distance] : null,
     currentStats.hasLoad && previousStats.hasLoad ? ['Càrrega', currentStats.load, previousStats.load] : null,
   ].filter(Boolean).map(([name, current, previous]) => `<div><span>${name}</span><strong>${name === 'Temps' ? (current > 0 ? fmtMinutes(Math.round(current)) : '0 min') : name === 'Activitats' ? current : fmtNumP(current)}</strong><em>${paPercent(current, previous) || '—'}</em></div>`).join('');
-  const comparison = previousStats.activities && comparisonFields ? `<section class="pa-panel pa-comparison"><div class="pa-panel-heading"><div><p class="eyebrow">Evolució</p><h3>Vs ${PA_MONTH_NAMES[previousMonth]} ${previousYear}</h3></div></div><div class="pa-comparison-grid">${comparisonFields}</div></section>` : '';
+  const elevationComparison = currentStats.hasElevation && previousStats.hasElevation
+    ? `<div><span>Desnivell</span><strong>${fmtNumP(currentStats.elevation)} m</strong><em>${paPercent(currentStats.elevation, previousStats.elevation) || '—'}</em></div>`
+    : '';
+  const comparison = previousStats.activities && (comparisonFields || elevationComparison) ? `<section class="pa-panel pa-comparison"><div class="pa-panel-heading"><div><p class="eyebrow">Evolució</p><h3>Vs ${PA_MONTH_NAMES[previousMonth]} ${previousYear}</h3></div></div><div class="pa-comparison-grid">${comparisonFields}${elevationComparison}</div></section>` : '';
   container.innerHTML = `<div class="pa-view-header"><div><p class="eyebrow">Context mensual</p><h2>${PA_MONTH_NAMES[planningMonth]} ${planningYear}</h2><p class="page-subtitle">Evolució real del mes</p></div><div class="pa-nav-actions"><button class="btn btn-ghost btn-sm" id="btn-month-prev" aria-label="Mes anterior">◄</button><button class="btn btn-ghost btn-sm" id="btn-month-today">Avui</button><button class="btn btn-ghost btn-sm" id="btn-month-next" aria-label="Mes següent">►</button></div></div><div class="pa-kpi-grid">${paMetric('Activitats', currentStats.activities)}${paMetric('Temps total', currentStats.duration ? fmtMinutes(Math.round(currentStats.duration)) : '—')}${currentStats.hasDistance ? paMetric('Distància', `${fmtNumP(currentStats.distance)} km`) : ''}${currentStats.hasLoad ? paMetric('Càrrega', fmtNumP(currentStats.load)) : ''}${currentStats.elevation > 0 ? paMetric('Desnivell', `${fmtNumP(currentStats.elevation)} m`) : ''}</div>${comparison}<div class="pa-month-layout"><section class="pa-panel pa-calendar-panel"><div class="pa-panel-heading"><div><p class="eyebrow">Calendari mensual</p><h3>Activitat i planificació</h3></div><div class="pa-legend"><span><i class="pa-legend-dot pa-legend-dot--plan"></i> Prevista</span><span><i class="pa-legend-dot pa-legend-dot--real"></i> Real</span></div></div><div class="pa-calendar-weekdays">${PA_WEEK_NAMES.map(name => `<span>${name}</span>`).join('')}</div><div class="pa-calendar-grid">${cells}</div><div class="pa-day-detail" id="pa-day-detail"><p class="pa-muted">Selecciona un dia amb activitat per veure’n el resum.</p></div></section><aside class="pa-month-side"><section class="pa-panel pa-load-panel"><div class="pa-panel-heading"><div><p class="eyebrow">Càrrega real</p><h3>Per dia</h3></div><span class="pa-panel-note">training_effect.load</span></div><div class="pa-load-bars" aria-label="Càrrega real diària">${loadBars || '<p class="pa-muted">Sense dades de càrrega.</p>'}</div></section><section class="pa-panel pa-weeks-panel"><div class="pa-panel-heading"><div><p class="eyebrow">Resum</p><h3>Per setmanes</h3></div></div><div class="pa-week-table-head"><span>Setmana</span><span>Act.</span><span>Temps</span><span>Càrrega</span></div><div class="pa-week-table">${weekRows.join('') || '<p class="pa-muted">No hi ha activitat aquest mes.</p>'}</div></section></aside></div>`;
   container.querySelector('#btn-month-prev')?.addEventListener('click', () => { planningMonth--; if (planningMonth < 0) { planningMonth = 11; planningYear--; } renderPlanningLevel(planning, sessions, calendar); });
   container.querySelector('#btn-month-next')?.addEventListener('click', () => { planningMonth++; if (planningMonth > 11) { planningMonth = 0; planningYear++; } renderPlanningLevel(planning, sessions, calendar); });
@@ -378,6 +383,8 @@ function renderContextMonthView(container, planning, sessions, calendar) {
   const monthCycles = [...new Map(monthWeeks.map(item => [item.cycle.id, item.cycle])).values()];
   const monthPhases = [...new Map(monthWeeks.map(item => [`${item.cycle.id}|${item.week.phase}`, item])).values()];
   const plannedKm = monthWeeks.reduce((sum, item) => sum + item.week.plannedKm, 0);
+  const plannedElevation = monthWeeks.reduce((sum, item) => sum + item.week.plannedElevation, 0);
+  const hasPlannedElevation = monthWeeks.some(item => item.week.hasPlannedElevation);
   const plannedSessions = monthWeeks.reduce((sum, item) => sum + (item.week.sessions || []).length, 0);
 
   const plans = paPlanningDays(planning, calendar, range);
@@ -415,7 +422,11 @@ function renderContextMonthView(container, planning, sessions, calendar) {
       ? `<button type="button" class="${rowClass}" style="--pa-cycle-color:${cycleColor}" data-planning-week="${flatIndex}" title="${escapeAttr(title)}">`
       : `<div class="${rowClass}" style="--pa-cycle-color:${cycleColor}" title="${escapeAttr(title)}">`;
     const rowEnd = flatIndex >= 0 ? '</button>' : '</div>';
-    return `${rowStart}<span class="pa-week-plan-label"><strong>${escapePlanningText(week?.code || key)}</strong><small>${escapePlanningText(week ? `${cycle.name} · ${week.phase}` : 'Sense planning')}</small></span><span>${week?.plannedKm ? `${fmtNumP(week.plannedKm)} km` : '—'}</span><span>${stats.hasDistance ? `${fmtNumP(stats.distance)} km` : '—'}</span><span>${stats.activities || '—'}</span>${rowEnd}`;
+    const plannedLabel = week?.plannedKm ? `${fmtNumP(week.plannedKm)} km` : '—';
+    const plannedElevationLabel = week?.hasPlannedElevation ? ` · ${fmtNumP(week.plannedElevation)} m D+` : '';
+    const actualLabel = stats.hasDistance ? `${fmtNumP(stats.distance)} km` : '—';
+    const actualElevationLabel = stats.hasElevation ? ` · ${fmtNumP(stats.elevation)} m D+` : '';
+    return `${rowStart}<span class="pa-week-plan-label"><strong>${escapePlanningText(week?.code || key)}</strong><small>${escapePlanningText(week ? `${cycle.name} · ${week.phase}` : 'Sense planning')}</small></span><span>${plannedLabel}${plannedElevationLabel}</span><span>${actualLabel}${actualElevationLabel}</span><span>${stats.activities || '—'}</span>${rowEnd}`;
   }).join('');
 
   const cells = paDayCells(planningYear, planningMonth).map(cell => {
@@ -451,7 +462,7 @@ function renderContextMonthView(container, planning, sessions, calendar) {
   const comparison = previousStats.activities && comparisonFields ? `<section class="pa-panel pa-comparison"><div class="pa-panel-heading"><div><p class="eyebrow">Evolució</p><h3>Vs ${PA_MONTH_NAMES[previousMonth]} ${previousYear}</h3></div></div><div class="pa-comparison-grid">${comparisonFields}</div></section>` : '';
   const contextChips = monthCycles.map(cycle => `<span class="pc-month-context-chip" style="--pc-context-color:${cycle.color}"><i></i>${escapePlanningText(cycle.name)}</span>`).join('');
   const phaseChips = monthPhases.map(item => `<span class="pc-month-context-chip pc-month-context-chip--phase" style="--pc-context-color:${getPhaseColor(item.week.phase)}"><i></i>${escapePlanningText(item.week.phase)}</span>`).join('');
-  container.innerHTML = `<div class="pa-view-header"><div><p class="eyebrow">Planificació mensual</p><h2>${PA_MONTH_NAMES[planningMonth]} ${planningYear}</h2><p class="page-subtitle">Cicles, fases, setmanes i activitat real</p></div><div class="pa-nav-actions"><button class="btn btn-ghost btn-sm" id="btn-month-prev" aria-label="Mes anterior">◄</button><button class="btn btn-ghost btn-sm" id="btn-month-today">Avui</button><button class="btn btn-ghost btn-sm" id="btn-month-next" aria-label="Mes següent">►</button></div></div><section class="pa-panel pc-month-context"><div class="pa-panel-heading"><div><p class="eyebrow">Context del mes</p><h3>Cicles i fases actius</h3></div><span class="pa-panel-note">${monthWeeks.length} setmanes del planning</span></div><div class="pc-month-context-list">${contextChips || '<span class="pa-muted">Sense cicles planificats aquest mes.</span>'}${phaseChips}</div></section><div class="pa-kpi-grid">${paMetric('Km planificats', plannedKm ? `${fmtNumP(plannedKm)} km` : '—')}${paMetric('Sessions previstes', plannedSessions || '—')}${paMetric('Activitats reals', currentStats.activities)}${currentStats.hasDistance ? paMetric('Km reals', `${fmtNumP(currentStats.distance)} km`) : ''}${currentStats.hasLoad ? paMetric('Càrrega real', fmtNumP(currentStats.load)) : ''}</div>${comparison}<div class="pa-month-layout"><section class="pa-panel pa-calendar-panel"><div class="pa-panel-heading"><div><p class="eyebrow">Calendari mensual</p><h3>Planificació i activitat real</h3></div><div class="pa-legend"><span><i class="pa-legend-dot pa-legend-dot--plan"></i> Prevista</span><span><i class="pa-legend-dot pa-legend-dot--real"></i> Real</span><span><i class="pa-legend-edge"></i> Cicle</span></div></div><div class="pa-calendar-weekdays">${PA_WEEK_NAMES.map(name => `<span>${name}</span>`).join('')}</div><div class="pa-calendar-grid">${cells}</div><div class="pa-day-detail" id="pa-day-detail"><p class="pa-muted">Selecciona un dia amb activitat per veure’n el resum.</p></div></section><aside class="pa-month-side"><section class="pa-panel pa-load-panel"><div class="pa-panel-heading"><div><p class="eyebrow">Càrrega real</p><h3>Per dia</h3></div><span class="pa-panel-note">training_effect.load</span></div><div class="pa-load-bars" aria-label="Càrrega real diària">${loadBars || '<p class="pa-muted">Sense dades de càrrega.</p>'}</div></section><section class="pa-panel pa-weeks-panel"><div class="pa-panel-heading"><div><p class="eyebrow">Planificació</p><h3>Per setmanes</h3></div></div><div class="pa-week-table-head pa-week-table-head--planning"><span>Setmana</span><span>Pla</span><span>Real</span><span>Act.</span></div><div class="pa-week-table">${weekRows || '<p class="pa-muted">No hi ha planning ni activitat aquest mes.</p>'}</div></section></aside></div>`;
+  container.innerHTML = `<div class="pa-view-header"><div><p class="eyebrow">Planificació mensual</p><h2>${PA_MONTH_NAMES[planningMonth]} ${planningYear}</h2><p class="page-subtitle">Cicles, fases, setmanes i activitat real</p></div><div class="pa-nav-actions"><button class="btn btn-ghost btn-sm" id="btn-month-prev" aria-label="Mes anterior">◄</button><button class="btn btn-ghost btn-sm" id="btn-month-today">Avui</button><button class="btn btn-ghost btn-sm" id="btn-month-next" aria-label="Mes següent">►</button></div></div><section class="pa-panel pc-month-context"><div class="pa-panel-heading"><div><p class="eyebrow">Context del mes</p><h3>Cicles i fases actius</h3></div><span class="pa-panel-note">${monthWeeks.length} setmanes del planning</span></div><div class="pc-month-context-list">${contextChips || '<span class="pa-muted">Sense cicles planificats aquest mes.</span>'}${phaseChips}</div></section><div class="pa-kpi-grid">${paMetric('Km planificats', plannedKm ? `${fmtNumP(plannedKm)} km` : '—')}${hasPlannedElevation ? paMetric('D+ planificat', `${fmtNumP(plannedElevation)} m`) : ''}${paMetric('Sessions previstes', plannedSessions || '—')}${paMetric('Activitats reals', currentStats.activities)}${currentStats.hasDistance ? paMetric('Km reals', `${fmtNumP(currentStats.distance)} km`) : ''}${currentStats.hasElevation ? paMetric('D+ real', `${fmtNumP(currentStats.elevation)} m`) : ''}${currentStats.hasLoad ? paMetric('Càrrega real', fmtNumP(currentStats.load)) : ''}</div>${comparison}<div class="pa-month-layout"><section class="pa-panel pa-calendar-panel"><div class="pa-panel-heading"><div><p class="eyebrow">Calendari mensual</p><h3>Planificació i activitat real</h3></div><div class="pa-legend"><span><i class="pa-legend-dot pa-legend-dot--plan"></i> Prevista</span><span><i class="pa-legend-dot pa-legend-dot--real"></i> Real</span><span><i class="pa-legend-edge"></i> Cicle</span></div></div><div class="pa-calendar-weekdays">${PA_WEEK_NAMES.map(name => `<span>${name}</span>`).join('')}</div><div class="pa-calendar-grid">${cells}</div><div class="pa-day-detail" id="pa-day-detail"><p class="pa-muted">Selecciona un dia amb activitat per veure’n el resum.</p></div></section><aside class="pa-month-side"><section class="pa-panel pa-load-panel"><div class="pa-panel-heading"><div><p class="eyebrow">Càrrega real</p><h3>Per dia</h3></div><span class="pa-panel-note">training_effect.load</span></div><div class="pa-load-bars" aria-label="Càrrega real diària">${loadBars || '<p class="pa-muted">Sense dades de càrrega.</p>'}</div></section><section class="pa-panel pa-weeks-panel"><div class="pa-panel-heading"><div><p class="eyebrow">Planificació</p><h3>Per setmanes</h3></div></div><div class="pa-week-table-head pa-week-table-head--planning"><span>Setmana</span><span>Pla</span><span>Real</span><span>Act.</span></div><div class="pa-week-table">${weekRows || '<p class="pa-muted">No hi ha planning ni activitat aquest mes.</p>'}</div></section></aside></div>`;
   container.querySelector('#btn-month-prev')?.addEventListener('click', () => { planningMonth--; if (planningMonth < 0) { planningMonth = 11; planningYear--; } renderPlanningLevel(planning, sessions, calendar); });
   container.querySelector('#btn-month-next')?.addEventListener('click', () => { planningMonth++; if (planningMonth > 11) { planningMonth = 0; planningYear++; } renderPlanningLevel(planning, sessions, calendar); });
   container.querySelector('#btn-month-today')?.addEventListener('click', () => { const now = new Date(); planningMonth = now.getMonth(); planningYear = now.getFullYear(); renderPlanningLevel(planning, sessions, calendar); });
@@ -495,6 +506,18 @@ function plannedWeekDistance(week, flatWeek) {
   }, 0);
 }
 
+function plannedElevationStats(sessions) {
+  const values = (sessions || [])
+    .filter(session => activityClassification(session).sport === 'running')
+    .filter(session => session?.elevation_m !== null && session?.elevation_m !== undefined && session?.elevation_m !== '')
+    .map(session => Number(session.elevation_m))
+    .filter(Number.isFinite);
+  return {
+    total: values.reduce((sum, value) => sum + Math.max(0, value), 0),
+    hasData: values.length > 0,
+  };
+}
+
 function buildPlanningVisualModel(planning, sessions) {
   const document = window.dashboardStore?.getState?.().planningDocument;
   const flatWeeks = Array.isArray(planning) ? planning : [];
@@ -530,6 +553,7 @@ function buildPlanningVisualModel(planning, sessions) {
       const endDate = planningVisualDate(sourceWeek.end || flatWeek?.endDate);
       if (!startDate || !endDate) return null;
       const actual = (sessions || []).filter(session => session.date >= startDate && session.date <= endDate);
+      const plannedElevationStats = plannedElevationStatsForWeek(sourceWeek, flatWeek);
       return {
         ...sourceWeek,
         id: sourceWeek.id || `${source.id}-${sourceWeek.code}`,
@@ -541,6 +565,8 @@ function buildPlanningVisualModel(planning, sessions) {
       flatWeek,
       actual,
       plannedKm: plannedWeekDistance(sourceWeek, flatWeek),
+      plannedElevation: plannedElevationStats.total,
+      hasPlannedElevation: plannedElevationStats.hasData,
       };
     }).filter(Boolean).sort((a, b) => a.startDate - b.startDate);
 
@@ -564,6 +590,10 @@ function buildPlanningVisualModel(planning, sessions) {
     season: document?.season || null,
     cycles: cycles.sort((a, b) => (a.startDate || 0) - (b.startDate || 0)),
   };
+}
+
+function plannedElevationStatsForWeek(week, flatWeek = null) {
+  return plannedElevationStats(week?.sessions || flatWeek?.sessions || []);
 }
 
 function planningYearWeekAxis(year) {
@@ -604,6 +634,8 @@ function renderSeasonYearView(container, planning, sessions, calendar) {
   const visibleWeeks = [...plansByKey.values()];
   const visibleCycles = [...new Set(visibleWeeks.map(item => item.cycle))];
   const plannedKm = visibleWeeks.reduce((sum, item) => sum + item.week.plannedKm, 0);
+  const plannedElevation = visibleWeeks.reduce((sum, item) => sum + item.week.plannedElevation, 0);
+  const hasPlannedElevation = visibleWeeks.some(item => item.week.hasPlannedElevation);
   const emptyWeeks = axis.filter(entry => !plansByKey.has(entry.key)).length;
   const cycleRuns = planningTimelineRuns(axis, plansByKey, item => item.cycle.id);
   const phaseRuns = planningTimelineRuns(axis, plansByKey, item => `${item.cycle.id}|${item.week.phase}`);
@@ -656,6 +688,7 @@ function renderSeasonYearView(container, planning, sessions, calendar) {
   const heatmap = Array.from({ length: Math.ceil((offset + daysInYear) / 7) * 7 }, (_, index) => { const date = new Date(planningYear, 0, index - offset + 1), inYear = date.getFullYear() === planningYear; if (!inYear) return '<span class="py-heat-cell py-heat-cell--empty"></span>'; const day = byDay.get(paDateKey(date)) || [], load = day.reduce((sum, session) => sum + paLoad(session), 0), intensity = load ? Math.max(.1, load / maxDailyLoad) : 0; return `<span class="py-heat-cell${load ? ' has-load' : ''}" style="--py-load:${intensity}" title="${escapeAttr(`${date.getDate()} ${PA_MONTH_NAMES[date.getMonth()]} · ${fmtNumP(load)} càrrega`)}"></span>`; }).join('');
   const empty = '<p class="pa-muted">No hi ha setmanes planificades aquest any.</p>';
   container.innerHTML = `<div class="pa-view-header"><div><p class="eyebrow">Planificació anual</p><h2>${planningYear}</h2><p class="page-subtitle">Línia temporal de cicles, fases i setmanes</p></div><div class="pa-nav-actions"><button class="btn btn-ghost btn-sm" id="btn-year-prev" aria-label="Any anterior">◄</button><button class="btn btn-ghost btn-sm" id="btn-year-today">Avui</button><button class="btn btn-ghost btn-sm" id="btn-year-next" aria-label="Any següent">►</button></div></div><div class="pa-kpi-grid pa-year-kpis">${paMetric('Cicles', visibleCycles.length)}${paMetric('Setmanes planificades', visibleWeeks.length)}${paMetric('Sense planning', emptyWeeks)}${paMetric('Km planificats', plannedKm ? `${fmtNumP(plannedKm)} km` : '—')}${paMetric('Km reals', realStats.hasDistance ? `${fmtNumP(realStats.distance)} km` : '—')}</div><section class="pa-panel pc-season-panel"><div class="pa-panel-heading"><div><p class="eyebrow">Període anual</p><h3>${planningYear}</h3></div><span class="pa-panel-note">Els buits es mostren sense interpretar-ne el motiu</span></div><div class="pc-season-legend"><span><i class="pc-legend-dot pc-legend-dot--cycle"></i> Cicle</span><span><i class="pc-legend-dot pc-legend-dot--phase"></i> Fase</span><span><i class="pc-legend-dot pc-legend-dot--week"></i> Setmana planificada</span><span><i class="pc-legend-dot pc-legend-dot--empty"></i> Sense planning</span></div><div class="pc-timeline-scroll"><div class="pc-timeline-grid" style="--pc-week-count:${axis.length}"><span class="pc-timeline-label"></span><div class="pc-timeline-month-track">${monthHeader}</div><span class="pc-timeline-label">Cicles</span><div class="pc-timeline-track">${cycleTrack || empty}</div><span class="pc-timeline-label">Fases</span><div class="pc-timeline-track">${phaseTrack || empty}</div><span class="pc-timeline-label">Setmanes</span><div class="pc-timeline-week-track">${weekTrack}</div></div></div></section><div class="py-layout"><section class="pa-panel py-trend-panel"><div class="pa-panel-heading"><div><p class="eyebrow">Evolució mensual</p><h3>Càrrega real per mes</h3></div><span class="pa-panel-note">training_effect.load</span></div><div class="py-trend-chart">${trend}</div></section><section class="pa-panel py-heat-panel"><div class="pa-panel-heading"><div><p class="eyebrow">Mapa anual</p><h3>Càrrega real per dia</h3></div></div><div class="py-heat-months">${PA_MONTH_NAMES.map(name => `<span>${name.slice(0, 3)}</span>`).join('')}</div><div class="py-heatmap" aria-label="Mapa anual de càrrega">${heatmap}</div><p class="pa-panel-note">La intensitat del color representa la càrrega real acumulada de cada dia.</p></section></div><section class="pa-panel py-months-panel"><div class="pa-panel-heading"><div><p class="eyebrow">Resum mensual</p><h3>Planificació i activitat real</h3></div></div><div class="py-month-table-head"><span>Mes</span><span>Km pla</span><span>Act.</span><span>Cicles</span><span>Càrrega</span></div><div class="py-month-table">${monthlyRows || empty}</div></section>`;
+  container.querySelector('.pa-year-kpis')?.insertAdjacentHTML('beforeend', `${hasPlannedElevation ? paMetric('D+ planificat', `${fmtNumP(plannedElevation)} m`) : ''}${realStats.hasElevation ? paMetric('D+ real', `${fmtNumP(realStats.elevation)} m`) : ''}`);
   container.querySelector('#btn-year-prev')?.addEventListener('click', () => { planningYear--; renderPlanningLevel(planning, sessions, calendar); });
   container.querySelector('#btn-year-next')?.addEventListener('click', () => { planningYear++; renderPlanningLevel(planning, sessions, calendar); });
   container.querySelector('#btn-year-today')?.addEventListener('click', () => { planningYear = new Date().getFullYear(); renderPlanningLevel(planning, sessions, calendar); });
@@ -823,7 +856,7 @@ function renderMonthlyView(container, planning, sessions) {
       const sessionButtons = plannedSessions.length
         ? '<div class="pwc-sessions" aria-label="Sessions planificades">' + plannedSessions.map(session => {
             const linked = confirmedActivityForPlanning(session.id, sessions);
-            const summary = [session.distance_km ? fmtNumP(session.distance_km) + ' km' : '', session.duration_min ? fmtMinutes(session.duration_min) : ''].filter(Boolean).join(' · ');
+            const summary = [session.distance_km ? fmtNumP(session.distance_km) + ' km' : '', session.elevation_m !== null && session.elevation_m !== undefined ? fmtNumP(session.elevation_m) + ' m D+' : '', session.duration_min ? fmtMinutes(session.duration_min) : ''].filter(Boolean).join(' · ');
             return '<button type="button" class="pwc-session" data-planning-session-id="' + escapePlanningText(session.id) + '" aria-label="Obrir el detall de ' + escapePlanningText(planningSessionTypeLabel(session)) + '">' + escapePlanningText(planningSessionTypeLabel(session)) + (summary ? ' · ' + escapePlanningText(summary) : '') + (linked ? ' · feta' : '') + '</button>';
           }).join('') + '</div>'
         : '';

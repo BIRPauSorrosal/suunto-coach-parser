@@ -122,15 +122,19 @@
       `<div class="session-detail-plan-title"><span>Associació confirmada</span><strong>${esc(planTitle)}</strong></div>`,
       metric('Distància prevista', number(plan.distance_km) === null ? null : `${fmt(plan.distance_km)} km`),
       metric('Durada prevista', duration(plan.duration_min)),
+      metric('Desnivell previst', number(plan.elevation_m) === null ? null : `${fmt(plan.elevation_m, 0)} m`),
       metric('Ritme previst', typeof plan.pace_min_km === 'number' ? pace(plan.pace_min_km) : null),
       metric('Objectiu', plan.description || plan.label || plan.detail ? (plan.description || plan.label || plan.detail) : null)
     ].join('');
     const plannedDistance = number(plan.distance_km);
     const actualDistance = number(data.distance_km, row.distancia);
+    const plannedElevation = number(plan.elevation_m);
+    const actualElevation = number(data.elevation_m, row.desnivell);
     const plannedDuration = number(plan.duration_min);
     const actualDuration = number(data.duration_min, row.durada);
     const comparisons = [
       plannedDistance !== null && actualDistance !== null ? `<div><span>Distància</span><strong>${fmt(plannedDistance)} km</strong><em>${fmt(actualDistance)} km reals</em></div>` : '',
+      plannedElevation !== null && actualElevation !== null ? `<div><span>Desnivell</span><strong>${fmt(plannedElevation, 0)} m</strong><em>${fmt(actualElevation, 0)} m reals</em></div>` : '',
       plannedDuration !== null && actualDuration !== null ? `<div><span>Durada</span><strong>${duration(plannedDuration)}</strong><em>${duration(actualDuration)} real</em></div>` : ''
     ].join('');
     return section('Planificat vs real', `<div class="session-detail-plan-summary">${planInfo}</div>${comparisons ? `<div class="session-detail-comparison"><p>Comparació de camps disponibles</p>${comparisons}</div>` : '<p class="session-detail-muted">No hi ha camps comparables suficients.</p>'}`);
@@ -165,6 +169,7 @@
     const objective = plan.objective || plan.goal || plan.focus || plan.session_type || plan.description || plan.label || null;
     const values = [
       metric('Objectiu', objective),
+      metric('Desnivell previst', number(plan.elevation_m) === null ? null : `${fmt(plan.elevation_m, 0)} m`),
       metric('Distància prevista', number(plan.distance_km) === null ? null : `${fmt(plan.distance_km)} km`),
       metric('Durada prevista', duration(plan.duration_min)),
       metric('Ritme objectiu', paceRange(plan.pace_min_km)),

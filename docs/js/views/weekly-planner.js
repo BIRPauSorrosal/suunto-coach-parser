@@ -50,6 +50,15 @@
     } catch (_) {}
   };
   const planOf = week => week.planning || {};
+  const elevationText = value => value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value)) ? `${fmt(value)} m D+` : '';
+  const plannedElevationStats = sessions => {
+    const values = (sessions || [])
+      .filter(session => activityClassification(session).sport === 'running')
+      .filter(session => session.elevation_m !== null && session.elevation_m !== undefined && session.elevation_m !== '')
+      .map(session => Number(session.elevation_m))
+      .filter(Number.isFinite);
+    return { total: values.reduce((sum, value) => sum + Math.max(0, value), 0), hasData: values.length > 0 };
+  };
 
   function dayIndex(day) {
     if (Number.isInteger(day)) return day;
@@ -67,6 +76,7 @@
       const details = [
         session.distance_km ? `${fmt(session.distance_km)} km` : '',
         session.duration_min ? `${fmt(session.duration_min)} min` : '',
+        elevationText(session.elevation_m),
         session.description || session.label || '',
         session.series ? `${session.series} sèries` : ''
       ].filter(Boolean);
@@ -311,7 +321,15 @@
     const currentIndex=window.WeekManager.findCurrent(weeks);
     if (prev) prev.disabled=weekIndex===0; if (next) next.disabled=weekIndex===weeks.length-1; if (current) current.disabled=weekIndex===currentIndex; if (add) add.disabled=!canEdit;
     const realWeek=sessions.filter(s => s.date>=week.startDate && s.date<=week.endDate), done=calendar.items.filter(i=>i.status==='done'||linkedActivity(i,sessions)).length;
-    document.getElementById('flex-week-summary').innerHTML=`<div class="flex-summary-card"><span>Sessions previstes</span><strong>${calendar.items.length}</strong></div><div class="flex-summary-card"><span>Completades</span><strong>${done}</strong></div><div class="flex-summary-card"><span>Activitats registrades</span><strong>${realWeek.length}</strong></div><div class="flex-summary-card"><span>Km reals</span><strong>${fmt(realWeek.reduce((n,s)=>n+(s.distancia||0),0))} km</strong></div>`;
+    const plannedElevation = plannedElevationStats(plan.sessions);
+    const realElevation = realWeek
+      .filter(session => activityClassification(session).sport === 'running')
+      .filter(session => session.desnivell !== null && session.desnivell !== undefined && session.desnivell !== '')
+      .map(session => Number(session.desnivell))
+      .filter(Number.isFinite)
+      .reduce((sum, value) => sum + Math.max(0, value), 0);
+    const hasRealElevation = realWeek.some(session => activityClassification(session).sport === 'running' && session.desnivell !== null && session.desnivell !== undefined && session.desnivell !== '' && Number.isFinite(Number(session.desnivell)));
+    document.getElementById('flex-week-summary').innerHTML=`<div class="flex-summary-card"><span>Sessions previstes</span><strong>${calendar.items.length}</strong></div><div class="flex-summary-card"><span>Completades</span><strong>${done}</strong></div><div class="flex-summary-card"><span>Activitats registrades</span><strong>${realWeek.length}</strong></div><div class="flex-summary-card"><span>Km reals</span><strong>${fmt(realWeek.reduce((n,s)=>n+(s.distancia||0),0))} km</strong></div><div class="flex-summary-card"><span>D+ previst</span><strong>${plannedElevation.hasData ? `${fmt(plannedElevation.total)} m` : '--'}</strong></div><div class="flex-summary-card"><span>D+ real</span><strong>${hasRealElevation ? `${fmt(realElevation)} m` : '--'}</strong></div>`;
     document.getElementById('flex-calendar').innerHTML=days.map((date, day)=>`<article class="flex-day${iso(date)===today?' flex-day--today':''}" data-day="${day}"><header class="flex-day-header"><div><span class="flex-day-name">${DAYS[day]}</span><span class="flex-day-date">${dateText(date)}</span></div>${iso(date)===today?'<span class="badge">Avui</span>':''}</header><div class="flex-day-dropzone" data-drop-day="${day}">${calendar.items.filter(i=>i.day===day).map(i=>card(i,canEdit,sessions,planning,week)).join('')}${actualOn(sessions,date).map(actualCard).join('')}${!calendar.items.some(i=>i.day===day)&&!actualOn(sessions,date).length?'<p class="flex-day-empty">Descans / sense activitat</p>':''}</div></article>`).join('');
     const unassigned=calendar.items.filter(i=>i.day===null||i.day===undefined), box=document.getElementById('flex-unassigned'); box.hidden=!unassigned.length&&!canEdit; box.innerHTML=`<p class="eyebrow">Per assignar</p><div class="flex-unassigned-dropzone" data-drop-unassigned="true">${unassigned.length?unassigned.map(i=>card(i,canEdit,sessions,planning,week)).join(''):'Arrossega aquí les sessions que encara no vulguis assignar'}</div>`;
     const unmatched=document.getElementById('flex-unmatched'); unmatched.hidden=!realWeek.length; if(realWeek.length) unmatched.innerHTML=`<p class="eyebrow">Activitats registrades</p><p>${realWeek.length} activitat${realWeek.length===1?'':'s'} trobada${realWeek.length===1?'':'es'} aquesta setmana. La seva associació amb el planning es podrà confirmar en la propera etapa.</p>`;
@@ -335,8 +353,8 @@
     }
     bind(sessions, planning, week, calendar, canEdit, calendarDocument);
   }
-  function card(item, canEdit, sessions=[]) { const meta=typeMeta(item.type); const real=linkedActivity(item,sessions); const completed=item.status==='done'||!!real; return `<div class="flex-plan-card${completed?' is-done':''}${real?' has-linked-activity':''}" draggable="${canEdit}" data-plan-id="${esc(item.id)}" style="--card-color:${meta[1]}"><div class="flex-card-top"><span class="flex-card-type">${esc(item.title||meta[0])}</span><span class="flex-card-source">${item.source==='manual'?'Afegida':'Pla'}</span></div><strong>${esc(item.detail||meta[0])}</strong>${real?`<div class="flex-linked-activity"><span>✓ Realitzada</span><strong>${esc(activityDisplayLabel(real, true) || 'Activitat')} · ${real.distancia?fmt(real.distancia)+' km':''}${real.durada?' · '+fmt(real.durada)+' min':''}</strong><small>${esc(real.displayDate||'')}</small></div>`:''}<div class="flex-card-actions">${canEdit?`${real?'<span class="flex-card-confirmed">✓ Realitzada</span>':`<button type="button" data-action="toggle" data-id="${esc(item.id)}">${item.status==='done'?'↩ Pendent':'Marcar feta'}</button>`}<button type="button" data-action="delete" data-id="${esc(item.id)}" aria-label="Eliminar activitat" title="Eliminar activitat">×</button>`:`<span>${completed?'✓ Realitzada':'Històric'}</span>`}</div></div>`; }
-  function actualCard(s) { return `<div class="flex-actual-card"><span>Registrada</span><strong>${esc(activityDisplayLabel(s, true) || 'Activitat')}</strong><small>${s.durada?fmt(s.durada)+' min':''}${s.distancia?' · '+fmt(s.distancia)+' km':''}</small></div>`; }
+  function card(item, canEdit, sessions=[]) { const meta=typeMeta(item.type); const real=linkedActivity(item,sessions); const completed=item.status==='done'||!!real; return `<div class="flex-plan-card${completed?' is-done':''}${real?' has-linked-activity':''}" draggable="${canEdit}" data-plan-id="${esc(item.id)}" style="--card-color:${meta[1]}"><div class="flex-card-top"><span class="flex-card-type">${esc(item.title||meta[0])}</span><span class="flex-card-source">${item.source==='manual'?'Afegida':'Pla'}</span></div><strong>${esc(item.detail||meta[0])}</strong>${real?`<div class="flex-linked-activity"><span>✓ Realitzada</span><strong>${esc(activityDisplayLabel(real, true) || 'Activitat')} · ${real.distancia?fmt(real.distancia)+' km':''}${real.durada?' · '+fmt(real.durada)+' min':''}${real.desnivell !== null && real.desnivell !== undefined ? ' · '+fmt(real.desnivell)+' m D+':''}</strong><small>${esc(real.displayDate||'')}</small></div>`:''}<div class="flex-card-actions">${canEdit?`${real?'<span class="flex-card-confirmed">✓ Realitzada</span>':`<button type="button" data-action="toggle" data-id="${esc(item.id)}">${item.status==='done'?'↩ Pendent':'Marcar feta'}</button>`}<button type="button" data-action="delete" data-id="${esc(item.id)}" aria-label="Eliminar activitat" title="Eliminar activitat">×</button>`:`<span>${completed?'✓ Realitzada':'Històric'}</span>`}</div></div>`; }
+  function actualCard(s) { return `<div class="flex-actual-card"><span>Registrada</span><strong>${esc(activityDisplayLabel(s, true) || 'Activitat')}</strong><small>${s.durada?fmt(s.durada)+' min':''}${s.distancia?' · '+fmt(s.distancia)+' km':''}${s.desnivell !== null && s.desnivell !== undefined ? ' · '+fmt(s.desnivell)+' m D+':''}</small></div>`; }
   const baseCard = card;
   card = function (item, canEdit, sessions=[]) {
     const planned = (activePlan?.sessions || []).find(session => session.id === (item.planning_session_id || item.id));
