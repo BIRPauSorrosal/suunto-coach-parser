@@ -29,6 +29,7 @@ const ACTIVITY_CATALOG = Object.freeze({
     'open-water':   { label: 'Aigües obertes', filenameAliases: ['open-water', 'aigues-obertes'], filenamePriority: 10 },
   },
   subtypes: {
+    Pilates:    { label: 'Pilates' },
     tempo:      { label: 'Tempo' },
     intervals:  { label: 'Intervals' },
     fartlek:    { label: 'Fartlek' },
@@ -64,7 +65,7 @@ const ACTIVITY_CATALOG = Object.freeze({
     'long-run': { category: 'long',     sport: 'running',  aliases: ['long', 'longrun', 'llarga', 'trail', 'marato', 'marathon', 'mitja', 'halfmarathon', 'half-marathon'], variants: ['road', 'trail', 'treadmill'], filenameAliases: ['llarga', 'longrun', 'long-run', 'marat', 'marato', 'marathon', 'trail', 'mitja', 'halfmarathon', 'half-marathon'], parser: 'long-run' },
     race:       { category: 'race',     sport: 'running',  aliases: ['cursa'], variants: ['road', 'trail'], filenameAliases: ['cursa', 'race'], legacy: 'CURSA', parser: 'long-run' },
     test:       { category: 'test',     sport: 'running',  allowedSports: ['running', 'cycling'], aliases: ['test-bici'], variants: ['road', 'trail', 'treadmill', 'indoor', 'outdoor'], filenameAliases: ['test', 'test_bici', 'test-bici', 'bici_estatica_test', 'bici-estatica-test'], parser: 'quality', parserAliases: { test: 'quality', test_bici: 'generic', 'test-bici': 'generic', bici_estatica_test: 'generic', 'bici-estatica-test': 'generic' } },
-    strength:   { category: 'strength', sport: 'strength', aliases: ['forca'], variants: [], subtypes: ['S1', 'S2', 'S3', 'S4', 'S5'], filenameAliases: ['força', 'forca'], parser: 'strength' },
+    strength:   { category: 'strength', sport: 'strength', aliases: ['forca'], variants: [], subtypes: ['S1', 'S2', 'S3', 'S4', 'S5', 'Pilates'], filenameAliases: ['força', 'forca'], parser: 'strength' },
     plyometrics: { category: 'plyometrics', group: 'strength', sport: 'strength', aliases: ['pliometria'], variants: [], subtypes: [], filenameAliases: ['pliometria'], legacy: 'PLIOMETRIA', parser: 'strength' },
     complementary: { category: 'complementary', group: 'strength', sport: 'strength', aliases: ['complementari'], variants: [], subtypes: [], filenameAliases: ['complementari'], legacy: 'COMPLEMENTARI', parser: 'strength' },
     cycling:    { category: 'general',  group: 'bici',     sport: 'cycling',  aliases: ['ciclisme', 'bici', 'bici-estatica', 'biciestatica'], variants: ['indoor', 'outdoor', 'road', 'trail'], filenameAliases: ['bici_estatica', 'bici-estatica', 'biciestatica', 'cycling', 'ciclisme', 'bike'], parser: 'generic' },
