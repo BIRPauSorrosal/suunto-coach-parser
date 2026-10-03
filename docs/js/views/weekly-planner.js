@@ -193,6 +193,9 @@
       }
       if (old.day !== item.day) operations.push({ type: 'move', id, day: item.day });
       if (old.status !== item.status) operations.push({ type: 'status', id, status: item.status });
+      if (old.linked_activity_id !== item.linked_activity_id) {
+        operations.push({ type: 'link', id, linked_activity_id: item.linked_activity_id || null });
+      }
     });
     before.forEach((item, id) => {
       if (after.has(id)) return;
@@ -214,7 +217,21 @@
     window.CalendarSync?.saveWeek(week, saved, { intent });
   }
   function editable(week) { return new Date() <= week.endDate; }
-  function actualOn(sessions, date) { const key = iso(date); return sessions.filter(s => iso(s.date) === key && !activityLinks(s).some(link => link.confidence === 'confirmed')); }
+  function manualLinkedActivityIds(calendar) {
+    return new Set((calendar?.items || [])
+      .filter(item => isManual(item) && item.linked_activity_id)
+      .map(item => String(item.linked_activity_id)));
+  }
+
+  function actualOn(sessions, date, calendar) {
+    const key = iso(date), linkedManualIds = manualLinkedActivityIds(calendar);
+    return sessions.filter(session => {
+      const id = session.raw?.__activity?.id || session.id;
+      return iso(session.date) === key
+        && !activityLinks(session).some(link => link.confidence === 'confirmed')
+        && !linkedManualIds.has(String(id));
+    });
+  }
 
   function activityType(session) {
     return activityClassification(session).type;
@@ -233,15 +250,24 @@
     return real.raw?.__activity?.planning_links || [];
   }
 
-  function reconciliationCandidates(realWeek, week) {
-    const planned = (planOf(week).sessions || []).map(session => ({ ...session, type: planningType(session) }));
+  function reconciliationCandidates(realWeek, week, calendar) {
+    const planned = [
+      ...(planOf(week).sessions || []).map(session => ({ ...session, type: planningType(session) })),
+      ...(calendar?.items || []).filter(isManual).map(item => ({ ...item, type: planningType(item) })),
+    ];
     const confirmedPlanIds = new Set(realWeek.flatMap(real => activityLinks(real)
       .filter(link => link.confidence === 'confirmed')
       .map(link => link.planning_session_id)));
+    (calendar?.items || []).filter(item => isManual(item) && item.linked_activity_id)
+      .forEach(item => confirmedPlanIds.add(item.id));
     return realWeek.map(real => {
       const links = activityLinks(real);
       const confirmed = links.find(link => link.confidence === 'confirmed');
       if (confirmed) return { real, confirmed, candidate: planned.find(p => p.id === confirmed.planning_session_id) || null };
+      const activityId = real.raw?.__activity?.id || real.id;
+      const manualConfirmation = (calendar?.items || []).find(item =>
+        isManual(item) && String(item.linked_activity_id || '') === String(activityId));
+      if (manualConfirmation) return { real, confirmed: { calendar_item_id: manualConfirmation.id }, candidate: manualConfirmation };
       const realClassification = activityClassification(real);
       const realVariant = real.raw?.__activity?.variant || real.variant || null;
       const candidates = planned.filter(plan => !confirmedPlanIds.has(plan.id)).map(plan => {
@@ -258,8 +284,8 @@
     });
   }
 
-  function renderReconciliationPanel(realWeek, week) {
-    const rows = reconciliationCandidates(realWeek, week).filter(row => !row.confirmed);
+  function renderReconciliationPanel(realWeek, week, calendar) {
+    const rows = reconciliationCandidates(realWeek, week, calendar).filter(row => !row.confirmed);
     return `<p class="eyebrow">Activitats registrades</p><p>Associació amb el planning:</p><div class="flex-reconciliation-list">${rows.map(({ real, confirmed, candidate }) => `<div class="flex-reconciliation-item${confirmed ? ' is-confirmed' : ''}"><div><strong>${esc(activityDisplayLabel(real, true) || 'Activitat')}</strong><small>${esc(real.displayDate || '')} · ${real.distancia ? fmt(real.distancia)+' km' : ''}${real.durada ? ' · '+fmt(real.durada)+' min' : ''}</small></div>${candidate ? `<span class="flex-reconciliation-match">→ ${esc(plannedLabel(candidate))}</span><button type="button" class="btn btn-ghost btn-sm" data-reconcile-session="${esc(real.raw?.__activity?.id || '')}" data-reconcile-plan="${esc(candidate.id)}" ${confirmed ? 'disabled' : ''}>${confirmed ? 'Confirmada' : 'Confirmar'}</button>` : '<span class="flex-reconciliation-unmatched">Sense coincidència · no planificada</span>'}</div>`).join('')}</div>`;
   }
 
@@ -269,6 +295,9 @@
   }
 
   function linkedActivity(item, sessions) {
+    if (isManual(item) && item.linked_activity_id) {
+      return sessions.find(real => String(real.raw?.__activity?.id || real.id) === String(item.linked_activity_id));
+    }
     const planningId = item.planning_session_id || item.id;
     return sessions.find(real => activityLinks(real).some(link => link.confidence === 'confirmed' && link.planning_session_id === planningId));
   }
@@ -281,13 +310,26 @@
   }
 
   function confirmReconciliation(sessionId, planningId, sessions, planning, week, calendar, calendarDocument) {
-    const real = sessions.find(session => session.raw?.__activity?.id === sessionId);
+    const real = sessions.find(session => String(session.raw?.__activity?.id || '') === String(sessionId || ''));
     if (!real?.raw?.__activity) return;
+    const calendarItem = calendar?.items?.find(item => item.id === planningId);
+    if (calendarItem && isManual(calendarItem)) {
+      const activityId = String(real.raw.__activity.id);
+      if (calendarItem.linked_activity_id && String(calendarItem.linked_activity_id) !== activityId) return;
+      const alreadyLinked = (calendar.items || []).some(item =>
+        isManual(item) && item.id !== calendarItem.id && String(item.linked_activity_id || '') === activityId);
+      if (alreadyLinked) return;
+      calendarItem.linked_activity_id = activityId;
+      calendarItem.status = 'done';
+      saveCalendar(week, calendar);
+      renderFlexibleWeekView(sessions, planning, calendarDocument);
+      return;
+    }
     const activity = real.raw.__activity;
     activity.planning_links = [{ planning_session_id: planningId, confidence: 'confirmed' }];
-    const calendarItem = calendar?.items?.find(item => (item.planning_session_id || item.id) === planningId);
-    if (calendarItem) {
-      calendarItem.status = 'done';
+    const plannedItem = calendar?.items?.find(item => (item.planning_session_id || item.id) === planningId);
+    if (plannedItem) {
+      plannedItem.status = 'done';
       saveCalendar(week, calendar);
     }
     try {
@@ -330,10 +372,10 @@
       .reduce((sum, value) => sum + Math.max(0, value), 0);
     const hasRealElevation = realWeek.some(session => activityClassification(session).sport === 'running' && session.desnivell !== null && session.desnivell !== undefined && session.desnivell !== '' && Number.isFinite(Number(session.desnivell)));
     document.getElementById('flex-week-summary').innerHTML=`<div class="flex-summary-card"><span>Sessions previstes</span><strong>${calendar.items.length}</strong></div><div class="flex-summary-card"><span>Completades</span><strong>${done}</strong></div><div class="flex-summary-card"><span>Activitats registrades</span><strong>${realWeek.length}</strong></div><div class="flex-summary-card"><span>Km reals</span><strong>${fmt(realWeek.reduce((n,s)=>n+(s.distancia||0),0))} km</strong></div><div class="flex-summary-card"><span>D+ previst</span><strong>${plannedElevation.hasData ? `${fmt(plannedElevation.total)} m` : '--'}</strong></div><div class="flex-summary-card"><span>D+ real</span><strong>${hasRealElevation ? `${fmt(realElevation)} m` : '--'}</strong></div>`;
-    document.getElementById('flex-calendar').innerHTML=days.map((date, day)=>`<article class="flex-day${iso(date)===today?' flex-day--today':''}" data-day="${day}"><header class="flex-day-header"><div><span class="flex-day-name">${DAYS[day]}</span><span class="flex-day-date">${dateText(date)}</span></div>${iso(date)===today?'<span class="badge">Avui</span>':''}</header><div class="flex-day-dropzone" data-drop-day="${day}">${calendar.items.filter(i=>i.day===day).map(i=>card(i,canEdit,sessions,planning,week)).join('')}${actualOn(sessions,date).map(actualCard).join('')}${!calendar.items.some(i=>i.day===day)&&!actualOn(sessions,date).length?'<p class="flex-day-empty">Descans / sense activitat</p>':''}</div></article>`).join('');
+    document.getElementById('flex-calendar').innerHTML=days.map((date, day)=>`<article class="flex-day${iso(date)===today?' flex-day--today':''}" data-day="${day}"><header class="flex-day-header"><div><span class="flex-day-name">${DAYS[day]}</span><span class="flex-day-date">${dateText(date)}</span></div>${iso(date)===today?'<span class="badge">Avui</span>':''}</header><div class="flex-day-dropzone" data-drop-day="${day}">${calendar.items.filter(i=>i.day===day).map(i=>card(i,canEdit,sessions,planning,week)).join('')}${actualOn(sessions,date,calendar).map(actualCard).join('')}${!calendar.items.some(i=>i.day===day)&&!actualOn(sessions,date,calendar).length?'<p class="flex-day-empty">Descans / sense activitat</p>':''}</div></article>`).join('');
     const unassigned=calendar.items.filter(i=>i.day===null||i.day===undefined), box=document.getElementById('flex-unassigned'); box.hidden=!unassigned.length&&!canEdit; box.innerHTML=`<p class="eyebrow">Per assignar</p><div class="flex-unassigned-dropzone" data-drop-unassigned="true">${unassigned.length?unassigned.map(i=>card(i,canEdit,sessions,planning,week)).join(''):'Arrossega aquí les sessions que encara no vulguis assignar'}</div>`;
     const unmatched=document.getElementById('flex-unmatched'); unmatched.hidden=!realWeek.length; if(realWeek.length) unmatched.innerHTML=`<p class="eyebrow">Activitats registrades</p><p>${realWeek.length} activitat${realWeek.length===1?'':'s'} trobada${realWeek.length===1?'':'es'} aquesta setmana. La seva associació amb el planning es podrà confirmar en la propera etapa.</p>`;
-    if (realWeek.length) { const reconciliationHtml = renderReconciliationPanel(realWeek, week); unmatched.hidden = !reconciliationHtml; unmatched.innerHTML = reconciliationHtml; }
+    if (realWeek.length) { const reconciliationHtml = renderReconciliationPanel(realWeek, week, calendar); unmatched.hidden = !reconciliationHtml; unmatched.innerHTML = reconciliationHtml; }
     const flexCalendar = document.getElementById('flex-calendar');
     const hasCycle = Boolean(plan.cicle);
     const hasPhase = Boolean(plan.fase && plan.fase !== 'Sense fase');

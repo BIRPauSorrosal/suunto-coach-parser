@@ -358,6 +358,7 @@ assert.equal(handledStaticRequest, true);
   };
   calendarContext.window = calendarContext;
   const revisions = [];
+  let remoteLinkedActivityId = null;
   let activeWrites = 0, maximumActiveWrites = 0;
   calendarContext.SupabaseDataProvider = {
     async saveCalendarWeek(_week, value) {
@@ -367,6 +368,12 @@ assert.equal(handledStaticRequest, true);
       await Promise.resolve();
       activeWrites -= 1;
       return { status: 'synced', revision: Number(value.revision) + 1, updated_at: new Date().toISOString() };
+    },
+    async getCalendarWeeks() {
+      return {
+        status: 'loaded',
+        weeks: { '2026-09-14': { items: [{ id: 'manual-session', source: 'manual', ...(remoteLinkedActivityId ? { linked_activity_id: remoteLinkedActivityId } : {}) }], removedPlanning: [], revision: 3 } },
+      };
     },
   };
   vm.createContext(calendarContext);
@@ -378,6 +385,18 @@ assert.equal(handledStaticRequest, true);
   ]);
   assert.deepEqual(revisions, [4, 5]);
   assert.equal(maximumActiveWrites, 1);
+  const rebased = await calendarContext.CalendarSync.rebaseOperation({
+    key: '2026-09-14',
+    intent: { operations: [{ type: 'link', id: 'manual-session', linked_activity_id: 'real-activity' }] },
+  });
+  assert.equal(rebased.status, 'rebased');
+  assert.equal(rebased.value.items[0].linked_activity_id, 'real-activity');
+  remoteLinkedActivityId = 'another-real-activity';
+  const competingLink = await calendarContext.CalendarSync.rebaseOperation({
+    key: '2026-09-14',
+    intent: { operations: [{ type: 'link', id: 'manual-session', linked_activity_id: 'real-activity' }] },
+  });
+  assert.equal(competingLink.status, 'unrebaseable');
   console.log('Dashboard unit checks OK');
 })().catch(error => {
   console.error(error);

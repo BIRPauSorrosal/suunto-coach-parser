@@ -137,6 +137,12 @@
       if (index < 0) return null;
       if (operation.type === 'move') value.items[index].day = operation.day;
       if (operation.type === 'status') value.items[index].status = operation.status;
+      if (operation.type === 'link') {
+        const currentActivityId = value.items[index].linked_activity_id;
+        if (operation.linked_activity_id && currentActivityId
+          && String(currentActivityId) !== String(operation.linked_activity_id)) return null;
+        value.items[index].linked_activity_id = operation.linked_activity_id;
+      }
     }
     return value;
   }
