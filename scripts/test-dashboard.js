@@ -251,37 +251,60 @@ assert.equal(vm.runInContext(`validateSuuntoJson({ DeviceLog: { Header: { DateTi
 const exportPlanning = {
   schema_version: 1,
   season: 2026,
-  cycles: [{ id: 'cycle-1', name: 'Base', weeks: [{
-    id: '2026-09-14', code: '2026-S38', start: '2026-09-14', end: '2026-09-20', phase: 'Base',
-    sessions: [
-      { id: 'plan-a', type: 'aerobic', sport: 'running', variant: null },
-      { id: 'plan-b', type: 'quality', sport: 'running', variant: null },
-    ],
-  }] }],
+  cycles: [
+    { id: 'past-cycle', name: 'Base', start: '2026-09-07', end: '2026-09-20', weeks: [
+      {
+        id: '2026-09-07', code: '2026-S37', start: '2026-09-07', end: '2026-09-13', phase: 'Acumulació',
+        sessions: [{ id: 'past-session', type: 'aerobic', sport: 'running', variant: null, day: 'monday' }],
+      },
+      {
+        id: '2026-09-14', code: '2026-S38', start: '2026-09-14', end: '2026-09-20', phase: 'Acumulació',
+        sessions: [
+          { id: 'plan-a', type: 'aerobic', sport: 'running', variant: null, day: 'monday' },
+          { id: 'plan-b', type: 'quality', sport: 'running', variant: null, day: 'tuesday' },
+        ],
+      },
+    ] },
+    { id: 'future-cycle', name: 'Pic', start: '2027-01-18', end: '2027-01-24', weeks: [{
+      id: '2027-01-18', code: '2027-S03', start: '2027-01-18', end: '2027-01-24', phase: 'Competició', sessions: [],
+    }] },
+    { id: 'unselected-cycle', name: 'Construcció', start: '2026-09-21', end: '2026-09-27', weeks: [{
+      id: '2026-09-21', code: '2026-S39', start: '2026-09-21', end: '2026-09-27', phase: 'Acumulació',
+      sessions: [{ id: 'not-selected', type: 'long', sport: 'running', variant: null }],
+    }] },
+  ],
 };
 const exportEntries = context.planningExportEntries(exportPlanning, {
   weeks: { '2026-09-14': { items: [
     { id: 'plan-a', source: 'planning', day: 0 },
     { id: 'plan-b', source: 'planning', day: 2 },
+    { id: 'manual-session', source: 'manual', day: 4 },
   ] } },
 });
-assert.deepEqual(JSON.parse(JSON.stringify(exportEntries.map(entry => [entry.date, entry.sessions.length]))), [['2026-09-14', 1], ['2026-09-16', 1]]);
-const exportRangeEntries = context.planningExportEntriesForRange(exportPlanning, {
+assert.deepEqual(JSON.parse(JSON.stringify(exportEntries.map(entry => [entry.cycleId, entry.date, entry.sessions.length]))), [
+  ['past-cycle', '2026-09-07', 1],
+  ['past-cycle', '2026-09-14', 1],
+  ['past-cycle', '2026-09-16', 1],
+  ['unselected-cycle', null, 1],
+]);
+assert.deepEqual(JSON.parse(JSON.stringify(context.planningCycleSummaries(exportPlanning).map(cycle => [cycle.id, cycle.weeks, cycle.sessions]))), [
+  ['past-cycle', 2, 3], ['future-cycle', 1, 0], ['unselected-cycle', 1, 1],
+]);
+const selectedCycleEntries = context.planningExportEntriesForCycles(exportPlanning, {
   weeks: { '2026-09-14': { items: [
     { id: 'plan-a', source: 'planning', day: 0 },
     { id: 'plan-b', source: 'planning', day: 2 },
+    { id: 'manual-session', source: 'manual', day: 4 },
   ] } },
-}, 7, new Date('2026-09-19T12:00:00'));
-assert.deepEqual(JSON.parse(JSON.stringify(exportRangeEntries.map(entry => entry.date))), ['2026-09-14', '2026-09-16']);
-const emptyExportRange = context.planningExportEntriesForRange(exportPlanning, {
-  weeks: { '2026-09-14': { items: [
-    { id: 'plan-a', source: 'planning', day: 0 },
-    { id: 'plan-b', source: 'planning', day: 2 },
-  ] } },
-}, 7, new Date('2026-09-30T12:00:00'));
-assert.equal(emptyExportRange.length, 0);
-const exportedSubset = context.planningDocumentForSelection(exportPlanning, exportEntries, ['2026-09-16']);
-assert.deepEqual(JSON.parse(JSON.stringify(exportedSubset.cycles[0].weeks[0].sessions.map(session => [session.id, session.day]))), [['plan-b', 'wednesday']]);
+}, ['past-cycle', 'future-cycle']);
+const exportedCycles = context.planningDocumentForSelection(exportPlanning, selectedCycleEntries, ['past-cycle', 'future-cycle']);
+assert.deepEqual(JSON.parse(JSON.stringify(exportedCycles.cycles.map(cycle => [cycle.id, cycle.weeks.length]))), [['past-cycle', 2], ['future-cycle', 1]]);
+assert.deepEqual(JSON.parse(JSON.stringify(exportedCycles.cycles[0].weeks.map(week => week.sessions.map(session => [session.id, session.day])))), [
+  [['past-session', 'monday']], [['plan-a', 'monday'], ['plan-b', 'wednesday']],
+]);
+assert.deepEqual(JSON.parse(JSON.stringify(exportedCycles.cycles[1].weeks[0].sessions)), []);
+assert.equal(exportedCycles.cycles.some(cycle => cycle.id === 'unselected-cycle'), false);
+assert.doesNotThrow(() => context.DashboardDataService.assertPlanningDocument(exportedCycles));
 
 // El Service Worker no pot interceptar dades de Supabase: una resposta GET
 // cachejada d'una setmana o de la seva revisió provocaria conflictes falsos.

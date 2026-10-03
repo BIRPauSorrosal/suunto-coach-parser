@@ -44,22 +44,39 @@
   font-family:   var(--font);
 }
 
-/* Selector de període de l'exportació del planning. */
+/* Selector de cicles de l'exportació del planning. */
 .planning-export-dialog .uploader-inner { width: 560px; }
 .planning-export-content { padding: 20px 24px 4px; }
 .planning-export-help { margin: 0 0 14px; color: var(--text-muted); font-size: .82rem; }
-.planning-export-ranges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-.planning-export-ranges .btn { flex: 1 1 140px; justify-content: center; }
-.planning-export-ranges .btn.active {
-  color: var(--accent);
-  border-color: var(--accent);
-  background: rgba(34, 197, 94, 0.10);
+.planning-export-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.planning-export-cycles { display: grid; gap: 8px; max-height: min(48vh, 440px); overflow-y: auto; padding: 2px 2px 4px; }
+.planning-export-cycle {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
 }
-.planning-export-ranges .btn:focus-visible {
+.planning-export-cycle:has(input:checked) { border-color: var(--accent); background: rgba(34, 197, 94, 0.08); }
+.planning-export-cycle input { accent-color: var(--accent); }
+.planning-export-cycle-copy { display: grid; gap: 3px; min-width: 0; }
+.planning-export-cycle-copy strong { overflow: hidden; text-overflow: ellipsis; }
+.planning-export-cycle-copy span,
+.planning-export-cycle-count { color: var(--text-muted); font-size: .72rem; }
+.planning-export-cycle-count { text-align: right; white-space: nowrap; }
+.planning-export-cycle:focus-within {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 .planning-export-summary { margin: 14px 0 0; color: var(--accent); font-size: .78rem; font-weight: 600; }
+
+@media (max-width: 540px) {
+  .planning-export-cycle { grid-template-columns: auto minmax(0, 1fr); }
+  .planning-export-cycle-count { grid-column: 2; text-align: left; }
+}
 
 
 /* ── Header ─────────────────────────────────────────────────── */
