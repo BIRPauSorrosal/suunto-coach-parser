@@ -64,7 +64,7 @@ function buildPlanningModal() {
       <div class="planning-import-options">
         <label>Abast de la importació
           <select id="planning-import-mode">
-            <option value="update-sessions">Actualitzar sessions (conservar les altres)</option>
+            <option value="update-sessions">Actualitzar sessions</option>
             <option value="replace-weeks">Substituir setmanes completes</option>
           </select>
         </label>

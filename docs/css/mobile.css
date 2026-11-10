@@ -23,7 +23,7 @@
   .main-content {
     max-width: 100%;
     padding: 16px 14px;
-    padding-bottom: 80px;
+    padding-bottom: calc(88px + env(safe-area-inset-bottom));
   }
 
   /* ── Page header ────────────────────────────────────────── */
@@ -57,7 +57,7 @@
   }
 
   .sess-card-date {
-    font-size: .72rem;
+    font-size: var(--font-size-caption);
     font-weight: 700;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -66,7 +66,7 @@
   }
 
   .sess-card-tipus {
-    font-size: .78rem;
+    font-size: var(--font-size-small);
     font-weight: 700;
     color: var(--accent);
     background: color-mix(in srgb, var(--accent) 12%, transparent);
@@ -93,7 +93,7 @@
   }
 
   .sess-card-metric-label {
-    font-size: .6rem;
+    font-size: var(--font-size-caption);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: .06em;
@@ -101,7 +101,7 @@
   }
 
   .sess-card-metric-value {
-    font-size: .88rem;
+    font-size: var(--font-size-body);
     font-weight: 600;
     color: var(--text);
   }
@@ -112,12 +112,12 @@
   .sess-cards-empty {
     text-align: center;
     color: var(--text-muted);
-    font-size: .85rem;
+    font-size: var(--font-size-text);
     padding: 32px 0;
   }
 
   /* ══ Touch targets ═══════════════════════════════════════════ */
-  .btn-sm { padding: 10px 14px; font-size: .8rem; min-height: 44px; }
+  .btn-sm { padding: 10px 14px; font-size: var(--font-size-small); min-height: 44px; }
   .btn    { min-height: 44px; }
 
   /* ══ Filtres de sessions ═══════════════════════════════════════ */
@@ -138,7 +138,7 @@
   .sess-select {
     width: 100%;
     padding: 10px 12px;
-    font-size: .9rem;
+    font-size: var(--font-size-control);
     min-height: 44px;
   }
 
@@ -151,7 +151,7 @@
     justify-content: center;
     min-height: 40px;
     padding: 8px 6px;
-    font-size: .75rem;
+    font-size: var(--font-size-small);
   }
 
   /* ══ Padding i espai dels panels ════════════════════════════════ */
@@ -165,7 +165,7 @@
   .overview-context-grid { display: flex; flex-direction: column; gap: 0; }
   .overview-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .overview-kpi { padding: 12px; }
-  .overview-kpi-value { font-size: 24px; }
+  .overview-kpi-value { font-size: 1.5rem; }
   .overview-kpi--load { grid-column: 1 / -1; }
   .overview-context-grid > .panel { margin-bottom: 14px; }
 
@@ -203,7 +203,7 @@
   }
 
   .sw-mini-table-wrap .sw-mini-table {
-    font-size: .72rem;
+    font-size: var(--font-size-caption);
     min-width: 420px; /* força scroll quan la pantalla és <420px */
     width: max-content; /* no s'estira més del necessari */
   }
@@ -225,7 +225,7 @@
   }
 
   .sw-htable-wrap .sw-htable {
-    font-size: .72rem;
+    font-size: var(--font-size-caption);
     min-width: 280px;
     width: max-content;
   }
@@ -253,7 +253,7 @@
   .sw-block-header h3 { font-size: .95rem; }
 
   .sw-row-lbl {
-    font-size: .68rem;
+    font-size: var(--font-size-caption);
     font-weight: 700;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -266,8 +266,7 @@
   .progress-panel { padding: 14px; }
 
   /* ── Planning mensual/anual: scroll només on és intencionat ─── */
-  .pa-calendar-panel { overflow-x: auto; }
-  .pa-calendar-weekdays, .pa-calendar-grid { min-width: 420px; }
+  .pa-calendar-weekdays span { padding: 0 2px; letter-spacing: 0; }
   .py-heat-panel { overflow-x: auto; }
   .py-heat-months, .py-heatmap { min-width: 620px; }
 
@@ -356,7 +355,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: calc(64px + env(safe-area-inset-bottom));
+    height: calc(72px + env(safe-area-inset-bottom));
     background: var(--surface);
     border-top: 1px solid var(--border);
     z-index: 1000;
@@ -370,10 +369,10 @@
     align-items: center;
     justify-content: center;
     gap: 3px;
-    padding: 8px 4px;
+    padding: 8px 2px;
     text-decoration: none;
     color: var(--text-muted);
-    font-size: .65rem;
+    font-size: var(--font-size-caption);
     font-weight: 600;
     letter-spacing: .03em;
     text-transform: uppercase;
@@ -390,7 +389,7 @@
   .bnav-item.active   { color: var(--accent); }
 
   .bnav-icon  { font-size: 1.2rem; line-height: 1; }
-  .bnav-label { font-size: .6rem; font-weight: 600; letter-spacing: .04em; line-height: 1; }
+  .bnav-label { font-size: var(--font-size-caption); font-weight: 600; letter-spacing: 0; line-height: 1.25; text-transform: none; }
 
   .bnav-more             { color: var(--text-muted); }
   .bnav-more.drawer-open { color: var(--accent); }
@@ -400,13 +399,14 @@
    Drawer "Més" — panell lliscant des de baix
    ============================================================ */
 
-.bnav-drawer { display: none; }
+.bnav-drawer { display: none; visibility: hidden; pointer-events: none; }
+.bnav-drawer.drawer-open { visibility: visible; pointer-events: auto; }
 
 @media (max-width: 767px) {
   .bnav-drawer {
     display: block;
     position: fixed;
-    bottom: calc(64px + env(safe-area-inset-bottom));
+    bottom: calc(72px + env(safe-area-inset-bottom));
     left: 0;
     right: 0;
     background: var(--surface);
@@ -426,7 +426,7 @@
   }
 
   .bnav-drawer-title {
-    font-size: .7rem;
+    font-size: var(--font-size-caption);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: .08em;
@@ -449,7 +449,7 @@
   .bnav-sync-status {
     margin: 2px 0 0;
     color: var(--text-muted);
-    font-size: .75rem;
+    font-size: var(--font-size-small);
     text-align: center;
   }
   .bnav-sync-status.is-conflict { color: var(--red); }

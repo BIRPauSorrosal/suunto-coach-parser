@@ -232,12 +232,12 @@ function renderPMC() {
         }}}
       },
       scales:{
-        x:{ grid:{color:CHART_COLORS.gridLine}, ticks:{font:{size:10},maxTicksLimit:12,maxRotation:0} },
-        y:{ position:'left', grid:{color:CHART_COLORS.gridLine}, ticks:{font:{size:11}},
+        x:{ grid:{color:CHART_COLORS.gridLine}, ticks:{font:{size: 12},maxTicksLimit:12,maxRotation:0} },
+        y:{ position:'left', grid:{color:CHART_COLORS.gridLine}, ticks:{font:{size: 12}},
             beginAtZero:true,
-            title:{display:true,text:'CTL / ATL',color:CHART_COLORS.text,font:{size:11}} },
-        y2:{ position:'right', grid:{drawOnChartArea:false}, ticks:{font:{size:11}},
-             title:{display:true,text:'TSB',color:CHART_COLORS.text,font:{size:11}} }
+            title:{display:true,text:'CTL / ATL',color:CHART_COLORS.text,font:{size: 12}} },
+        y2:{ position:'right', grid:{drawOnChartArea:false}, ticks:{font:{size: 12}},
+             title:{display:true,text:'TSB',color:CHART_COLORS.text,font:{size: 12}} }
       }
     }
   });
@@ -439,34 +439,34 @@ function buildSessChartConfig(byWeek, labels, sessions) {
     responsive:true, maintainAspectRatio:false,
     interaction:{ mode:'index', intersect:false },
     plugins:{ legend:{ position:'top', labels:{ boxWidth:12, padding:14 } } },
-    scales:{ x:{ grid:{color:C.gridLine}, ticks:{font:{size:11}} } },
+    scales:{ x:{ grid:{color:C.gridLine}, ticks:{font:{size: 12}} } },
   };
-  const yBase = { grid:{color:C.gridLine}, ticks:{font:{size:11}}, beginAtZero:true };
+  const yBase = { grid:{color:C.gridLine}, ticks:{font:{size: 12}}, beginAtZero:true };
 
-  const scaleKm    = (lbl='km')  => ({ ...yBase, position:'left',  title:{ display:true, text:lbl,      color:C.text, font:{size:10} } });
+  const scaleKm    = (lbl='km')  => ({ ...yBase, position:'left',  title:{ display:true, text:lbl,      color:C.text, font:{size: 12} } });
   const scaleDurS  = ()          => ({ ...yBase, position:'left', offset:true,
     grid:{ drawOnChartArea:false },
     ticks:{ ...yBase.ticks, callback: v => `${v} min` },
-    title:{ display:true, text:'min sèr.', color:COL.dur.line, font:{size:10} } });
+    title:{ display:true, text:'min sèr.', color:COL.dur.line, font:{size: 12} } });
   const scaleRitme = ()          => ({ ...yBase, position:'right', reverse:true, min:3, max:10,
     grid:{ drawOnChartArea:false },
     ticks:{ ...yBase.ticks, callback: v => formatPace(v,'') },
-    title:{ display:true, text:'min/km', color:C.text, font:{size:10} } });
+    title:{ display:true, text:'min/km', color:C.text, font:{size: 12} } });
   const scaleFC    = ()          => ({ ...yBase, position:'right', offset:true, beginAtZero:false,
     grid:{ drawOnChartArea:false },
     ticks:{ ...yBase.ticks, callback: v => `${v}` },
-    title:{ display:true, text:'ppm / spm', color:C.text, font:{size:10} } });
+    title:{ display:true, text:'ppm / spm', color:C.text, font:{size: 12} } });
   const scaleDesn  = ()          => ({ ...yBase, position:'left',  offset:true,
     grid:{ drawOnChartArea:false },
     ticks:{ ...yBase.ticks, callback: v => `${v} m` },
-    title:{ display:true, text:'m D+', color:C.text, font:{size:10} } });
+    title:{ display:true, text:'m D+', color:C.text, font:{size: 12} } });
   const scaleDur   = ()          => ({ ...yBase, position:'left',
     ticks:{ ...yBase.ticks, callback: v => `${v} min` },
-    title:{ display:true, text:'min', color:COL.dur.line, font:{size:10} } });
+    title:{ display:true, text:'min', color:COL.dur.line, font:{size: 12} } });
   const scaleWatts = ()          => ({ ...yBase, position:'right', offset:true, beginAtZero:false,
     grid:{ drawOnChartArea:false },
     ticks:{ ...yBase.ticks, callback: v => `${v} W` },
-    title:{ display:true, text:'Watts', color:COL.watts.line, font:{size:10} } });
+    title:{ display:true, text:'Watts', color:COL.watts.line, font:{size: 12} } });
 
   function tooltipLabel(c) {
     const v = c.parsed.y; if (v == null) return null;
@@ -506,7 +506,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
         scales:{ x:baseOpts.scales.x, y:scaleKm('km'),
           y2:{ ...yBase, position:'right', grid:{drawOnChartArea:false},
                ticks:{...yBase.ticks,callback:v=>`${v}`},
-               title:{display:true,text:'Càrrega / EPOC',color:C.text,font:{size:10}} } }
+               title:{display:true,text:'Càrrega / EPOC',color:C.text,font:{size: 12}} } }
       }};
     }
 
@@ -693,7 +693,7 @@ function buildSessChartConfig(byWeek, labels, sessions) {
                 ...yBase, position:'right', beginAtZero:false,
                 grid:{ drawOnChartArea:false },
                 ticks:{ ...yBase.ticks, callback: v => `${v}` },
-                title:{ display:true, text:'FC / càrrega', color:C.text, font:{size:10} }
+                title:{ display:true, text:'FC / càrrega', color:C.text, font:{size: 12} }
               } : { display:false },
         }
       }};

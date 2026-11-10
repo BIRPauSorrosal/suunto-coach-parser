@@ -67,7 +67,8 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
-  overflow: hidden;
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
@@ -83,7 +84,7 @@
 
 .session-comment-modal__eyebrow {
   margin: 0 0 4px;
-  font-size: .68rem;
+  font-size: var(--font-size-caption);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: .09em;
@@ -99,7 +100,7 @@
 
 .session-comment-modal__subtitle {
   margin: 0;
-  font-size: .82rem;
+  font-size: var(--font-size-text);
   color: var(--text-muted);
 }
 
@@ -139,14 +140,14 @@
   color: var(--text);
   padding: 12px 14px;
   font: inherit;
-  font-size: .88rem;
+  font-size: var(--font-size-control);
   line-height: 1.6;
   transition: border-color .15s, box-shadow .15s;
 }
 
 .session-comment-modal__textarea::placeholder {
   color: var(--text-muted);
-  opacity: .7;
+  opacity: 1;
 }
 
 .session-comment-modal__textarea:focus {

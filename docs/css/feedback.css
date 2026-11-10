@@ -27,7 +27,7 @@
   transform: translateY(8px);
   transition: opacity .18s ease, transform .18s ease;
   pointer-events: auto;
-  font-size: .84rem;
+  font-size: var(--font-size-text);
   line-height: 1.4;
 }
 .app-toast.is-visible { opacity: 1; transform: translateY(0); }
@@ -61,8 +61,8 @@
 .data-state-panel[data-state="error"] .data-state-panel__icon { color: var(--red); }
 .data-state-panel[data-state="empty"] .data-state-panel__icon { color: var(--yellow); }
 .data-state-panel__copy { flex: 1; min-width: 0; }
-.data-state-panel__copy strong { display: block; color: var(--text); font-size: .92rem; }
-.data-state-panel__copy p { margin: 3px 0 0; color: var(--text-muted); font-size: .8rem; }
+.data-state-panel__copy strong { display: block; color: var(--text); font-size: var(--font-size-body); }
+.data-state-panel__copy p { margin: 3px 0 0; color: var(--text-muted); font-size: var(--font-size-small); }
 .data-state-panel__action { flex: 0 0 auto; }
 .ui-confirm-dialog {
   width: min(460px, calc(100vw - 32px));
@@ -76,14 +76,14 @@
 .ui-confirm-dialog__header { padding: 20px 22px 12px; border-bottom: 1px solid var(--border); }
 .ui-confirm-dialog__header h3 { margin: 0; font-size: 1rem; }
 .ui-confirm-dialog__body { padding: 18px 22px; }
-.ui-confirm-dialog__body p { margin: 0; color: var(--text-muted); font-size: .86rem; line-height: 1.55; }
+.ui-confirm-dialog__body p { margin: 0; color: var(--text-muted); font-size: var(--font-size-text); line-height: 1.55; }
 .ui-confirm-dialog__footer { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 22px 18px; border-top: 1px solid var(--border); }
-.btn-danger { color: #fff !important; background: var(--red) !important; border-color: var(--red) !important; }
+.btn-danger { color: var(--color-bg) !important; background: var(--red) !important; border-color: var(--red) !important; }
 @media (max-width: 767px) {
   .app-toast-container { right: 16px; bottom: calc(76px + env(safe-area-inset-bottom)); width: calc(100vw - 32px); }
   .data-state-panel { padding: 16px; }
   .data-state-panel__content { align-items: flex-start; flex-wrap: wrap; }
-  .data-state-panel__action { width: 100%; margin-left: 30px; }
+  .data-state-panel__action { width: 100%; margin-left: 0; }
   .data-state-panel__action .btn { width: 100%; }
   .ui-confirm-dialog { width: 100%; max-width: 100%; margin: auto 0 0; }
   .ui-confirm-dialog__surface { border-radius: 18px 18px 0 0; }

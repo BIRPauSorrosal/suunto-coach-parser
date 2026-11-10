@@ -28,7 +28,7 @@ const CHART_COLORS = {
   blueSoft: 'rgba(56, 189, 248, 0.25)',
   muted:    'rgba(148, 163, 184, 0.15)',
   gridLine: 'rgba(148, 163, 184, 0.1)',
-  text:     '#94a3b8',
+  text:     '#B6C2CF',
   get zones() { return _fcZoneColors(0.85); },
 };
 
@@ -40,6 +40,7 @@ function initCharts(enrichedSessions, enrichedPlanning) {
   window.DashboardComponents.destroyChart('zones');
   Chart.defaults.color = CHART_COLORS.text;
   Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+  Chart.defaults.font.size = 12;
 
   renderZonesChart(enrichedSessions);
   _injectZonesConfigButton();

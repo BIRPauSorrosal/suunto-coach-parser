@@ -17,6 +17,7 @@ node scripts/test-dashboard.js
 node scripts/test-planning-import.js
 node scripts/test-today-view.js
 node scripts/test-compact-views.js
+node scripts/test-readability.js
 git diff --check
 ```
 
@@ -25,6 +26,12 @@ També cal validar la sintaxi dels fitxers JavaScript modificats amb `node
 
 ## Validació manual
 
+- revisar textos i diàlegs entre 320 i 1440 px i amb zoom al 200%: sense
+  desbordament horitzontal de la pàgina ni botons inaccessibles; només les
+  taules i la línia temporal poden tenir el seu propi desplaçament lateral;
+- comprovar el contrast dels textos també en targetes completades i mesos
+  sense dades; al calendari mensual mòbil, P/R indiquen els recomptes i
+  tocar el dia permet consultar les sessions i activitats completes;
 - desplegar sessions i classificacions de l'importador; canviar opcions i
   comprovar que es conserven els desplegables i els valors seleccionats;
   les eliminacions i les discrepàncies de km han de ser visibles amb els

@@ -408,11 +408,11 @@ function renderLoadTrend(sessions, planning) {
       scales: {
         x: {
           grid: { color: 'rgba(51,65,85,0.4)' },
-          ticks: { color: clrMuted, font: { size: 11 } },
+          ticks: { color: clrMuted, font: { size: 12 } },
         },
         y: {
           grid: { color: 'rgba(51,65,85,0.4)' },
-          ticks: { color: clrMuted, font: { size: 11 } },
+          ticks: { color: clrMuted, font: { size: 12 } },
           beginAtZero: true,
         },
       },
@@ -562,7 +562,7 @@ function renderCtlTrend(sessions) {
           display: true,
           position: 'top',
           align: 'end',
-          labels: { boxWidth: 10, padding: 10, font: { size: 11 } },
+          labels: { boxWidth: 10, padding: 10, font: { size: 12 } },
         },
         tooltip: {
           callbacks: {
@@ -578,11 +578,11 @@ function renderCtlTrend(sessions) {
       scales: {
         x: {
           grid: { color: 'rgba(51,65,85,0.4)' },
-          ticks: { color: clrMuted, font: { size: 11 }, maxRotation: 0 },
+          ticks: { color: clrMuted, font: { size: 12 }, maxRotation: 0 },
         },
         y: {
           grid: { color: 'rgba(51,65,85,0.4)' },
-          ticks: { color: clrMuted, font: { size: 11 } },
+          ticks: { color: clrMuted, font: { size: 12 } },
           beginAtZero: false,
         },
       },

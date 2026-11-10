@@ -5,8 +5,8 @@
   --color-surface-elevated: #18212B;
   --color-surface-subtle: #0F151C;
   --color-text-primary: #F4F7FA;
-  --color-text-secondary: #A5B0BC;
-  --color-text-muted: #6F7C89;
+  --color-text-secondary: #B6C2CF;
+  --color-text-muted: #9AA8B8;
   --color-text-disabled: #4D5863;
   --color-accent: #55D6BE;
   --color-warning: #F5B942;
@@ -35,6 +35,12 @@
   --layout-sidebar-width: 220px;
   --layout-content-max-width: 1600px;
   --font-family-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-size-caption: .75rem;      /* 12 px: etiquetes i metadades compactes */
+  --font-size-small: .8125rem;      /* 13 px: informació secundària */
+  --font-size-text: .875rem;        /* 14 px: contingut compacte */
+  --font-size-body: .9375rem;       /* 15 px: lectura habitual */
+  --font-size-control: 1rem;        /* 16 px: camps editables, també en mòbil */
+  --line-height-text: 1.5;
 
   /* Compatibility aliases for the current CSS and JS-generated markup. */
   --bg: var(--color-bg);

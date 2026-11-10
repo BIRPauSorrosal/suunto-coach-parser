@@ -30,13 +30,13 @@
 .analytics-metric-card--form { border-left-color: var(--blue); }
 .analytics-metric-card span {
   color: var(--text-muted);
-  font-size: .73rem;
+  font-size: var(--font-size-caption);
   font-weight: 700;
   letter-spacing: .07em;
   text-transform: uppercase;
 }
 .analytics-metric-card strong { color: var(--text); font-size: 1.55rem; line-height: 1.15; }
-.analytics-metric-card small { color: var(--text-muted); font-size: .75rem; }
+.analytics-metric-card small { color: var(--text-muted); font-size: var(--font-size-small); }
 .analytics-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -56,9 +56,9 @@
   gap: 12px;
   margin-bottom: 8px;
   color: var(--text-muted);
-  font-size: .78rem;
+  font-size: var(--font-size-small);
 }
-.analytics-subchart-heading strong { color: var(--text); font-size: .9rem; }
+.analytics-subchart-heading strong { color: var(--text); font-size: var(--font-size-body); }
 .analytics-chart-wrap { position: relative; height: 220px; }
 .analytics-chart-wrap--feeling { height: 320px; }
 .analytics-chart-wrap canvas { display: block; width: 100% !important; height: 100% !important; }
@@ -71,7 +71,7 @@
   margin: 0;
   padding: 20px;
   color: var(--text-muted);
-  font-size: .85rem;
+  font-size: var(--font-size-text);
   text-align: center;
 }
 .analytics-empty[hidden] { display: none; }

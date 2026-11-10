@@ -6,10 +6,14 @@ body {
   background: var(--color-bg);
   color: var(--color-text-primary);
   font-family: var(--font-family-sans);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-text);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 button, input, select, textarea { font: inherit; }
+h1, h2, h3, h4, p, li, dd { overflow-wrap: anywhere; }
+small, code { font-size: var(--font-size-small); }
+input, select, textarea { max-width: 100%; }
+label { min-width: 0; }
 ::selection { background: rgba(85, 214, 190, 0.24); color: var(--color-text-primary); }
