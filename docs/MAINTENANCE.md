@@ -16,6 +16,7 @@ node scripts/check-dashboard.js
 node scripts/test-dashboard.js
 node scripts/test-planning-import.js
 node scripts/test-today-view.js
+node scripts/test-compact-views.js
 git diff --check
 ```
 
@@ -24,6 +25,15 @@ També cal validar la sintaxi dels fitxers JavaScript modificats amb `node
 
 ## Validació manual
 
+- desplegar sessions i classificacions de l'importador; canviar opcions i
+  comprovar que es conserven els desplegables i els valors seleccionats;
+  les eliminacions i les discrepàncies de km han de ser visibles amb els
+  detalls plegats, i plegar-los no ha de modificar la importació;
+- comprovar que cerca i període són sempre visibles a Activitats, que els
+  filtres mantenen l'estat durant la cerca/refresc i que exportació, comentaris
+  i detall continuen mostrant totes les dades tot i les targetes compactes;
+- comprovar que les targetes planificades del calendari mostren fins a tres
+  dades principals i que la descripció completa continua disponible al detall;
 - comprovar Avui en dies de descans, amb una o diverses sessions, sessions
   completades i activitats no planificades; la sessió ha de precedir el
   progrés setmanal i les properes sessions, també en mòbil;

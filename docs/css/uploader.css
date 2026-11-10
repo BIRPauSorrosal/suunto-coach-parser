@@ -665,6 +665,11 @@ select.uploader-subtype-input {
   line-height: 1.5;
 }
 #planning-uploader-dialog .uploader-results { min-height: 120px; overflow-y: auto; }
+#planning-uploader-dialog .planning-preview-summary { padding: 0 24px 4px; flex-shrink: 0; }
+#planning-uploader-dialog.planning-preview-ready .uploader-dropzone { flex-direction: row; justify-content: flex-start; margin: 12px 24px; padding: 8px 12px; }
+#planning-uploader-dialog.planning-preview-ready .uploader-dropzone-title,
+#planning-uploader-dialog.planning-preview-ready .uploader-dropzone-sub { display: none; }
+#planning-uploader-dialog .planning-preview-help { margin: 0 0 14px; color: var(--text-muted); font-size: .85rem; line-height: 1.5; }
 #planning-uploader-dialog #planning-session-summary,
 #planning-uploader-dialog .planning-session-change,
 #planning-uploader-dialog .planning-day-changes {
@@ -684,9 +689,19 @@ select.uploader-subtype-input {
 #planning-uploader-dialog .planning-badge--replaced,
 #planning-uploader-dialog .uploader-item-badge--replaced { color: var(--color-warning); }
 #planning-uploader-dialog .planning-upload-week {
-  grid-template-columns: 20px minmax(100px, 1fr) auto auto;
+  display: block;
   padding: 12px;
 }
+#planning-uploader-dialog .planning-week-heading { display: grid; grid-template-columns: 20px minmax(100px, 1fr) auto auto; align-items: center; gap: 8px; }
+#planning-uploader-dialog .planning-week-impact { margin: 8px 0; color: var(--text-muted); font-size: .85rem; }
+#planning-uploader-dialog .planning-deletions { color: var(--color-warning); font-size: .85rem; margin: 10px 0; }
+#planning-uploader-dialog .planning-deletions ul { margin: 4px 0 0; padding-left: 20px; }
+#planning-uploader-dialog details > summary { padding: 8px 0; cursor: pointer; color: var(--text); font-size: .85rem; }
+#planning-uploader-dialog details > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#planning-uploader-dialog .planning-session-row { padding: 10px 0; border-bottom: 1px solid var(--border); }
+#planning-uploader-dialog .planning-session-row:last-child { border-bottom: 0; }
+#planning-uploader-dialog .planning-session-heading { font-size: .9rem; }
+#planning-uploader-dialog .planning-technical-id { margin: 4px 0; color: var(--text-muted); font-size: .8rem; overflow-wrap: anywhere; }
 #planning-uploader-dialog .planning-session-fields {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
@@ -714,6 +729,8 @@ select.uploader-subtype-input {
     grid-template-columns: minmax(0, 1fr);
     padding: 0 20px 16px;
   }
+  #planning-uploader-dialog .planning-preview-summary { padding: 0 20px 4px; }
+  #planning-uploader-dialog.planning-preview-ready .uploader-dropzone { margin: 12px 20px; padding: 0; }
   /* Aquest importador utilitza un label per obrir el selector de fitxers. */
   #planning-uploader-dialog .uploader-dropzone > label.btn {
     display: inline-flex;
@@ -722,9 +739,10 @@ select.uploader-subtype-input {
     width: 100%;
     min-height: 48px;
   }
-  #planning-uploader-dialog .planning-upload-week {
+  #planning-uploader-dialog .planning-week-heading {
     grid-template-columns: 20px minmax(0, 1fr);
   }
+  #planning-uploader-dialog details > summary { min-height: 44px; }
   #planning-uploader-dialog .planning-upload-week .uploader-item-name {
     white-space: normal;
     overflow-wrap: anywhere;

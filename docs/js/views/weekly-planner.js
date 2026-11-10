@@ -278,10 +278,21 @@
   }
   function card(item, canEdit, sessions=[]) { const meta=typeMeta(item.type); const real=linkedActivity(item,sessions); const completed=item.status==='done'||!!real; return `<div class="flex-plan-card${completed?' is-done':''}${real?' has-linked-activity':''}" draggable="${canEdit}" data-plan-id="${esc(item.id)}" style="--card-color:${meta[1]}"><div class="flex-card-top"><span class="flex-card-type">${esc(item.title||meta[0])}</span><span class="flex-card-source">${item.source==='manual'?'Afegida':'Pla'}</span></div><strong>${esc(item.detail||meta[0])}</strong>${real?`<div class="flex-linked-activity"><span>✓ Realitzada</span><strong>${esc(activityDisplayLabel(real, true) || 'Activitat')} · ${real.distancia?fmt(real.distancia)+' km':''}${real.durada?' · '+fmt(real.durada)+' min':''}${real.desnivell !== null && real.desnivell !== undefined ? ' · '+fmt(real.desnivell)+' m D+':''}</strong><small>${esc(real.displayDate||'')}</small></div>`:''}<div class="flex-card-actions">${canEdit?`${real?'<span class="flex-card-confirmed">✓ Realitzada</span>':`<button type="button" data-action="toggle" data-id="${esc(item.id)}">${item.status==='done'?'↩ Pendent':'Marcar feta'}</button>`}<button type="button" data-action="delete" data-id="${esc(item.id)}" aria-label="Eliminar activitat" title="Eliminar activitat">×</button>`:`<span>${completed?'✓ Realitzada':'Històric'}</span>`}</div></div>`; }
   function actualCard(s) { return `<div class="flex-actual-card"><span>Registrada</span><strong>${esc(activityDisplayLabel(s, true) || 'Activitat')}</strong><small>${s.durada?fmt(s.durada)+' min':''}${s.distancia?' · '+fmt(s.distancia)+' km':''}${s.desnivell !== null && s.desnivell !== undefined ? ' · '+fmt(s.desnivell)+' m D+':''}</small></div>`; }
+  function compactCalendarDetail(item) {
+    const planned = (activePlan?.sessions || []).find(session => session.id === (item.planning_session_id || item.id));
+    // Les targetes manuals sense detall propi conserven el text introduït per l'usuari.
+    if (!planned || isManual(item)) return item.detail || item.title || activityPlanningLabel(item);
+    return [
+      planned.distance_km > 0 ? `${fmt(planned.distance_km)} km` : '',
+      planned.duration_min > 0 ? `${fmt(planned.duration_min)} min` : '',
+      planned.series > 0 ? `${fmt(planned.series)} sèries` : elevationText(planned.elevation_m),
+    ].filter(Boolean).join(' · ') || 'Consulta el detall de la sessió';
+  }
+
   const baseCard = card;
   card = function (item, canEdit, sessions=[]) {
     const planned = (activePlan?.sessions || []).find(session => session.id === (item.planning_session_id || item.id));
-    const html = baseCard(item, canEdit, sessions);
+    const html = baseCard({ ...item, detail: compactCalendarDetail(item) }, canEdit, sessions);
     return planned ? html.replace('class="flex-plan-card', `class="flex-plan-card session-detail-trigger" data-plan-session-id="${esc(planned.id)}" role="button" tabindex="0" aria-label="Obrir el detall de la sessió planificada"`) : html;
   };
   const baseActualCard = actualCard;

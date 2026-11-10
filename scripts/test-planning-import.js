@@ -132,6 +132,15 @@ async function main() {
   assert.match(elements.get('planning-session-summary').textContent, /2 eliminades/);
   assert.match(elements.get('planning-uploader-ok-list').innerHTML, /objectiu 12 km/);
   assert.match(elements.get('planning-uploader-ok-list').innerHTML, /Dilluns → Dijous/);
+  const preview = elements.get('planning-uploader-ok-list').innerHTML;
+  assert.match(preview, /data-planning-disclosure="week:2026-11-09">/);
+  assert.match(preview, /Classificació i identificador/);
+  assert.match(preview, /<code>run<\/code>/);
+  assert.ok(preview.indexOf('planning-deletions') < preview.indexOf('planning-week-details'));
+  assert.ok(preview.indexOf('objectiu 12 km') < preview.indexOf('planning-week-details'));
+  vm.runInContext('_planningDisclosureState.set("week:2026-11-09", true)', c);
+  c.renderPlanningResults({ ok: true, merge: replacement });
+  assert.match(elements.get('planning-uploader-ok-list').innerHTML, /data-planning-disclosure="week:2026-11-09" open>/);
   c.FileReader = class {
     readAsText(file) { this.onload({ target: { result: file.contents } }); }
   };

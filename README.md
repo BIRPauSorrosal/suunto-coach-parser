@@ -52,6 +52,7 @@ node scripts/check-dashboard.js
 node scripts/test-dashboard.js
 node scripts/test-planning-import.js
 node scripts/test-today-view.js
+node scripts/test-compact-views.js
 git diff --check
 ```
 

@@ -9,6 +9,7 @@ let activityLogPlanning = [];
 let activityLogPlanningSource = null;
 let activityLogPlanningIndex = new Map();
 let activityLogState = { range: 0, sport: 'all', type: 'all', status: 'all', feeling: 'all', load: 'all', query: '', sort: 'recent' };
+let activityLogFiltersOpen = false;
 
 function activityLogEscape(value) {
   return String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
@@ -135,7 +136,6 @@ function activityLogCard(session) {
   const distance = activityLogValue(session, 'distance'), duration = activityLogValue(session, 'duration'), load = activityLogValue(session, 'load');
   const pace = activityLogValue(session, 'pace'), heartRate = activityLogValue(session, 'heartRate'), vo2 = activityLogValue(session, 'vo2');
   const canonical = activityLogCanonical(session);
-  const classification = activityClassification(session);
   const sourceFile = canonical.source_file || session.raw?.Arxiu || canonical.id || '';
   const comment = canonical.notes?.comment || session.raw?.Comentari || '';
   const id = activityLogCanonical(session).id || session.raw?.id || session.raw?.Arxiu || '';
@@ -147,12 +147,39 @@ function activityLogCard(session) {
     feeling >= 1 && feeling <= 5 ? ['Feeling', `${feeling}/5`] : null,
     heartRate > 0 ? ['FC', `${Math.round(heartRate)} ppm`] : null,
     vo2 > 0 ? ['VO₂max', new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 }).format(vo2)] : null,
-  ].filter(Boolean).slice(0, 5);
+  ].filter(Boolean).slice(0, 3);
   const displayLabel = activityDisplayLabel(session, true);
-  const toneLabel = activitySubtypeLabel(session) || activityTypeLabel(session);
   const commentAction = sourceFile ? `<button type="button" class="activity-log-comment" data-activity-comment="${activityLogEscape(sourceFile)}" data-comment-date="${activityLogEscape(activityLogFormatDate(session.date))}" data-comment-type="${activityLogEscape(displayLabel || 'Activitat')}" aria-label="${comment ? 'Editar comentari' : 'Afegir comentari'}">${comment ? 'Edita comentari' : 'Afegeix comentari'}</button>` : '';
-  return `<article class="activity-log-card${tone === 'test' ? ' activity-log-card--emphasis' : ''}" style="--activity-log-color:${color}" data-activity-id="${activityLogEscape(id)}" role="button" tabindex="0" aria-label="Obrir ${activityLogEscape(displayLabel || 'activitat')}, ${activityLogEscape(activityLogFormatDate(session.date, true))}"><div class="activity-log-card__top"><time datetime="${activityLogDateKey(session.date)}">${activityLogEscape(activityLogFormatDate(session.date))}</time><span class="activity-log-status${activityLogPlan(session) ? ' is-planned' : ''}">${activityLogEscape(activityLogStatusLabel(session))}</span></div><div class="activity-log-card__title"><div><p class="activity-log-type">${activityLogEscape(displayLabel)}</p><h3>${activityLogEscape(activityLogSport(session))}</h3></div><span class="activity-log-tone">${activityLogEscape(toneLabel)}</span></div><p class="activity-log-subtitle">${activityLogEscape([distance > 0 ? `${new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 }).format(distance)} km` : '', duration > 0 ? activityLogFormatDuration(duration) : '', session.raw?.Variant || activityLogCanonical(session).variant || ''].filter(Boolean).join(' · '))}</p><div class="activity-log-metrics">${metrics.map(([label, value]) => activityLogMetric(label, value)).join('')}</div><div class="activity-log-card__footer"><span class="activity-log-open">Veure detall →</span>${commentAction}</div></article>`;
+  return `<article class="activity-log-card${tone === 'test' ? ' activity-log-card--emphasis' : ''}" style="--activity-log-color:${color}" data-activity-id="${activityLogEscape(id)}" role="button" tabindex="0" aria-label="Obrir ${activityLogEscape(displayLabel || 'activitat')}, ${activityLogEscape(activityLogFormatDate(session.date, true))}">
+    <div class="activity-log-card__top"><time datetime="${activityLogDateKey(session.date)}">${activityLogEscape(activityLogFormatDate(session.date))}</time><span class="activity-log-status${activityLogPlan(session) ? ' is-planned' : ''}">${activityLogEscape(activityLogStatusLabel(session))}</span></div>
+    <div class="activity-log-card__title"><div><p class="activity-log-type">${activityLogEscape(activityLogSport(session))}</p><h3>${activityLogEscape(displayLabel || 'Activitat')}</h3></div></div>
+    <div class="activity-log-metrics">${metrics.map(([label, value]) => activityLogMetric(label, value)).join('')}</div>
+    <div class="activity-log-card__footer"><span class="activity-log-open">Veure detall →</span>${commentAction}</div>
+  </article>`;
 }
+
+function activityLogToolbar(filtered) {
+  const advancedCount = ['sport', 'type', 'status', 'feeling', 'load'].filter(key => activityLogState[key] !== 'all').length;
+  const activeCount = activityLogActiveFilterCount();
+  const options = (items, selected) => items.map(([value, label]) => `<option value="${activityLogEscape(value)}"${value === selected ? ' selected' : ''}>${activityLogEscape(label)}</option>`).join('');
+  const select = (key, label, items) => `<label>${label}<select id="activity-log-${key}" data-activity-filter="${key}">${options(items, activityLogState[key])}</select></label>`;
+  return `<div class="activity-log-toolbar">
+    <div class="activity-log-search"><label for="activity-log-search">Cerca</label><input id="activity-log-search" type="search" value="${activityLogEscape(activityLogState.query)}" placeholder="Cerca una activitat..." autocomplete="off"></div>
+    ${select('range', 'Període', [[0, 'Tot l’historial'], [30, 'Darrers 30 dies'], [90, 'Darrers 90 dies'], [365, 'Darrer any']])}
+    <button type="button" id="activity-log-filter-toggle" class="btn btn-ghost btn-sm activity-log-filter-toggle" aria-expanded="${activityLogFiltersOpen}" aria-controls="activity-log-filter-controls">Filtres${advancedCount ? ` · ${advancedCount}` : ''}</button>
+    <button type="button" class="btn btn-primary btn-sm activity-log-export" data-activity-export${filtered.length ? '' : ' disabled'}>Exporta ${filtered.length} ${filtered.length === 1 ? 'activitat' : 'activitats'}</button>
+    <div class="activity-log-filter-status"${activeCount ? '' : ' hidden'}><span class="activity-log-filter-state" aria-live="polite">${activeCount} ${activeCount === 1 ? 'filtre actiu' : 'filtres actius'}</span><button type="button" class="btn btn-ghost btn-sm activity-log-clear" data-activity-clear>Neteja filtres</button></div>
+    <div class="activity-log-filter-controls" id="activity-log-filter-controls"${activityLogFiltersOpen ? '' : ' hidden'}>
+      ${select('sport', 'Esport', [['all', 'Tots els esports'], ...activitySportOptions()])}
+      ${select('type', 'Tipus', ACTIVITY_LOG_TYPES)}
+      ${select('status', 'Estat', [['all', 'Tots els estats'], ['planned', 'Planificada + realitzada'], ['unplanned', 'No planificada']])}
+      ${select('feeling', 'Feeling', [['all', 'Qualsevol feeling'], ['recorded', 'Amb feeling registrat'], ['high', 'Feeling 4–5']])}
+      ${select('load', 'Càrrega', [['all', 'Qualsevol càrrega'], ['with', 'Amb càrrega'], ['without', 'Sense càrrega']])}
+      ${select('sort', 'Ordenar', [['recent', 'Més recents'], ['oldest', 'Més antigues'], ['load', 'Més càrrega'], ['duration', 'Més durada']])}
+    </div>
+  </div>`;
+}
+
 function activityLogRenderEmpty(filtered, total) {
   return filtered || total ? `<div class="activity-log-empty"><h3>Cap activitat coincideix</h3><p>Prova de modificar els filtres.</p></div>` : `<div class="activity-log-empty"><h3>Encara no hi ha activitats</h3><p>No hi ha activitats disponibles per al període seleccionat.</p></div>`;
 }
@@ -162,6 +189,9 @@ function renderActivitiesView(sessions, planning) {
   activityLogSetPlanning(activityLogPlanning);
   const container = document.getElementById('activities-view-container');
   if (!container) return;
+  const focused = document.activeElement;
+  const focus = focused?.id && container.contains(focused)
+    ? { id: focused.id, start: focused.selectionStart, end: focused.selectionEnd } : null;
   const filtered = activityLogFilter(activityLogSessions);
   const totalLoad = filtered.reduce((sum, session) => sum + Math.max(0, activityLogValue(session, 'load') || 0), 0);
   const totalDuration = filtered.reduce((sum, session) => sum + Math.max(0, activityLogValue(session, 'duration') || 0), 0);
@@ -169,34 +199,13 @@ function renderActivitiesView(sessions, planning) {
   const groups = new Map();
   filtered.forEach(session => { const key = activityLogDateKey(activityLogWeekStart(session.date)); if (!groups.has(key)) groups.set(key, []); groups.get(key).push(session); });
   const groupsHtml = [...groups.entries()].sort(([a], [b]) => activityLogState.sort === 'oldest' ? a.localeCompare(b) : b.localeCompare(a)).map(([, items]) => `<section class="activity-log-group"><div class="activity-log-group__header"><h3>${activityLogEscape(activityLogWeekLabel(items[0].date))}</h3><span>${items.length} ${items.length === 1 ? 'activitat' : 'activitats'}</span></div><div class="activity-log-grid">${items.map(activityLogCard).join('')}</div></section>`).join('');
-  const activeFilterCount = activityLogActiveFilterCount();
-  const activeFilterLabel = activeFilterCount ? `${activeFilterCount} ${activeFilterCount === 1 ? 'filtre actiu' : 'filtres actius'}` : 'Sense filtres';
-  const exportLabel = `${filtered.length} ${filtered.length === 1 ? 'activitat' : 'activitats'}`;
-  const options = (items, selected) => items.map(([value, label]) => `<option value="${activityLogEscape(value)}"${value === selected ? ' selected' : ''}>${activityLogEscape(label)}</option>`).join('');
-  const sportOptions = [['all', 'Tots els esports'], ...activitySportOptions()];
-  container.innerHTML = `<div class="activity-log-toolbar"><div class="activity-log-search"><label for="activity-log-search">Cerca</label><input id="activity-log-search" type="search" value="${activityLogEscape(activityLogState.query)}" placeholder="Cerca una activitat..." autocomplete="off"></div><label>Període<select data-activity-filter="range"><option value="0"${activityLogState.range === 0 ? ' selected' : ''}>Tot l’historial</option><option value="30"${activityLogState.range === 30 ? ' selected' : ''}>Darrers 30 dies</option><option value="90"${activityLogState.range === 90 ? ' selected' : ''}>Darrers 90 dies</option><option value="365"${activityLogState.range === 365 ? ' selected' : ''}>Darrer any</option></select></label><label>Esport<select data-activity-filter="sport">${options(sportOptions, activityLogState.sport)}</select></label><label>Tipus<select data-activity-filter="type">${options(ACTIVITY_LOG_TYPES, activityLogState.type)}</select></label><label>Estat<select data-activity-filter="status">${options([['all', 'Tots els estats'], ['planned', 'Planificada + realitzada'], ['unplanned', 'No planificada']], activityLogState.status)}</select></label><label>Feeling<select data-activity-filter="feeling">${options([['all', 'Qualsevol feeling'], ['recorded', 'Amb feeling registrat'], ['high', 'Feeling 4–5']], activityLogState.feeling)}</select></label><label>Càrrega<select data-activity-filter="load">${options([['all', 'Qualsevol càrrega'], ['with', 'Amb càrrega'], ['without', 'Sense càrrega']], activityLogState.load)}</select></label><label>Ordenar<select data-activity-filter="sort">${options([['recent', 'Més recents'], ['oldest', 'Més antigues'], ['load', 'Més càrrega'], ['duration', 'Més durada']], activityLogState.sort)}</select></label><span class="activity-log-filter-state" aria-live="polite">${activityLogEscape(activeFilterLabel)}</span><button type="button" class="btn btn-ghost btn-sm activity-log-clear" data-activity-clear${activeFilterCount ? '' : ' disabled'}>Neteja filtres</button><button type="button" class="btn btn-primary btn-sm activity-log-export" data-activity-export${filtered.length ? '' : ' disabled'}>Exporta ${activityLogEscape(exportLabel)}</button></div><div class="activity-log-summary"><div><span>Activitats</span><strong>${filtered.length}</strong></div><div><span>Temps</span><strong>${activityLogFormatDuration(totalDuration)}</strong></div><div><span>Distància</span><strong>${totalDistance > 0 ? `${new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 }).format(totalDistance)} km` : '—'}</strong></div><div><span>Càrrega</span><strong>${totalLoad > 0 ? new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 }).format(totalLoad) : '—'}</strong></div></div><div class="activity-log-results" aria-live="polite">${groupsHtml || activityLogRenderEmpty(filtered.length !== activityLogSessions.length, activityLogSessions.length)}</div>`;
-  const toolbar = container.querySelector('.activity-log-toolbar');
-  const filterLabels = Array.from(toolbar?.children || []).filter(child => child.tagName === 'LABEL');
-  if (toolbar && filterLabels.length) {
-    const filterControls = document.createElement('div');
-    filterControls.className = 'activity-log-filter-controls';
-    filterLabels.forEach(label => filterControls.appendChild(label));
-    const filterToggle = document.createElement('button');
-    filterToggle.type = 'button';
-    filterToggle.className = 'btn btn-ghost btn-sm activity-log-filter-toggle';
-    filterToggle.textContent = `Filtres${activityLogActiveFilterCount() ? ` · ${activityLogActiveFilterCount()}` : ''}`;
-    filterToggle.setAttribute('aria-expanded', 'false');
-    filterToggle.setAttribute('aria-controls', 'activity-log-filter-controls');
-    filterControls.id = 'activity-log-filter-controls';
-    filterToggle.addEventListener('click', () => {
-      const isOpen = filterControls.classList.toggle('is-open');
-      filterToggle.setAttribute('aria-expanded', String(isOpen));
-    });
-    const filterState = toolbar.querySelector('.activity-log-filter-state');
-    toolbar.insertBefore(filterToggle, filterState || null);
-    toolbar.insertBefore(filterControls, filterState || null);
-  }
-  container.querySelector('#activity-log-search')?.addEventListener('input', event => { activityLogState.query = event.target.value; renderActivitiesView(activityLogSessions, activityLogPlanning); const input = document.getElementById('activity-log-search'); input?.focus(); input?.setSelectionRange(activityLogState.query.length, activityLogState.query.length); });
+  container.innerHTML = activityLogToolbar(filtered) + `<div class="activity-log-summary"><div><span>Activitats</span><strong>${filtered.length}</strong></div><div><span>Temps</span><strong>${activityLogFormatDuration(totalDuration)}</strong></div><div><span>Distància</span><strong>${totalDistance > 0 ? `${new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 }).format(totalDistance)} km` : '—'}</strong></div><div><span>Càrrega</span><strong>${totalLoad > 0 ? new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 }).format(totalLoad) : '—'}</strong></div></div><div class="activity-log-results" aria-live="polite">${groupsHtml || activityLogRenderEmpty(filtered.length !== activityLogSessions.length, activityLogSessions.length)}</div>`;
+  container.querySelector('#activity-log-filter-toggle').addEventListener('click', event => {
+    activityLogFiltersOpen = !activityLogFiltersOpen;
+    container.querySelector('#activity-log-filter-controls').hidden = !activityLogFiltersOpen;
+    event.currentTarget.setAttribute('aria-expanded', String(activityLogFiltersOpen));
+  });
+  container.querySelector('#activity-log-search')?.addEventListener('input', event => { activityLogState.query = event.target.value; renderActivitiesView(activityLogSessions, activityLogPlanning); });
   container.querySelectorAll('[data-activity-filter]').forEach(select => select.addEventListener('change', event => { const key = event.currentTarget.dataset.activityFilter; activityLogState[key] = key === 'range' ? Number(event.currentTarget.value) : event.currentTarget.value; renderActivitiesView(activityLogSessions, activityLogPlanning); }));
   container.querySelector('[data-activity-clear]')?.addEventListener('click', () => { activityLogState = { range: 0, sport: 'all', type: 'all', status: 'all', feeling: 'all', load: 'all', query: '', sort: 'recent' }; renderActivitiesView(activityLogSessions, activityLogPlanning); });
   container.querySelector('[data-activity-export]')?.addEventListener('click', () => activityLogExportJSON(filtered));
@@ -204,4 +213,10 @@ function renderActivitiesView(sessions, planning) {
   const openDetail = event => { const commentButton = event.target.closest('[data-activity-comment]'); const card = event.target.closest('[data-activity-id]'); if (!card || !container.contains(card)) return; const session = findSession(card); if (!session) return; if (commentButton) { event.stopPropagation(); window.openSessionCommentEditor?.({ arxiu: commentButton.dataset.activityComment, data: commentButton.dataset.commentDate, tipus: commentButton.dataset.commentType }); return; } window.openSessionDetailDrawer?.(session, activityLogPlan(session)); };
   container.querySelector('.activity-log-results')?.addEventListener('click', openDetail);
   container.querySelector('.activity-log-results')?.addEventListener('keydown', event => { if (event.target.closest('[data-activity-comment]')) return; if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openDetail(event); } });
+  if (focus) {
+    const control = document.getElementById(focus.id);
+    control?.focus({ preventScroll: true });
+    if (Number.isInteger(focus.start)) control?.setSelectionRange?.(focus.start, focus.end);
+  }
+
 }
