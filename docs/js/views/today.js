@@ -1,173 +1,158 @@
-// Pantalla inicial contextual. Resumeix el dia i manté el calendari setmanal com a lloc d'edició.
-(function () {
-  let bound = false;
-  let detailBound = false;
+// Avui prioritza l'entrenament del dia; l'anàlisi viu a Overview.
+(function (global) {
   let detailContext = null;
-  const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
-  const fmt = value => Number.isFinite(Number(value)) ? new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 }).format(Number(value)) : '--';
-  const dateKey = value => { const date = new Date(value); return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`; };
-  const dateText = date => new Intl.DateTimeFormat('ca-ES', { weekday:'long', day:'numeric', month:'long' }).format(date);
-  const plannedLabel = value => activityPlanningLabel(value) || 'Sessió planificada';
+  let bound = false;
+  const esc = value => global.DashboardComponents.escapeHtml(value);
+  const fmt = value => new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 }).format(value);
+  const dateKey = value => {
+    const date = new Date(value);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  };
+  const dateText = date => new Intl.DateTimeFormat('ca-ES', { weekday: 'long', day: 'numeric', month: 'long' }).format(date);
+  const shortDate = date => new Intl.DateTimeFormat('ca-ES', { day: 'numeric', month: 'short' }).format(date);
+  const activityId = session => session.raw?.__activity?.id || session.id;
+  const linksFor = session => global.PlanningCalendar.linksFor(session);
+  const itemsFor = (week, calendar, sessions) => global.PlanningCalendar.read(week, calendar, sessions).items;
+  const linkedActivity = (item, sessions) => global.PlanningCalendar.linkedActivity(item, sessions);
 
-  const linksFor = session => window.PlanningCalendar.linksFor(session);
-  function plannedItems(week, calendarDocument, sessions) {
-    return window.PlanningCalendar.read(week, calendarDocument, sessions).items;
-  }
-
-  function linkedActivity(item, sessions) {
-    const planningId = item.planning_session_id || item.id;
-    return sessions.find(session => linksFor(session).some(link => link.confidence === 'confirmed' && link.planning_session_id === planningId)) || null;
-  }
-
-  function plannedSessionForItem(item, week) {
-    return (week.planning?.sessions || []).find(session => session.id === (item.planning_session_id || item.id)) || null;
+  function sessionMetrics(session) {
+    return [
+      session.distance_km > 0 ? `${fmt(session.distance_km)} km` : '',
+      session.duration_min > 0 ? `${fmt(session.duration_min)} min` : '',
+      session.series > 0 ? `${fmt(session.series)} sèries` : '',
+    ].filter(Boolean).join(' · ');
   }
 
   function actualDetails(session) {
-    return [session.distancia ? `${fmt(session.distancia)} km` : '', session.durada ? `${fmt(session.durada)} min` : ''].filter(Boolean).join(' · ') || 'Dades no disponibles';
+    return [session.distancia > 0 ? `${fmt(session.distancia)} km` : '',
+      session.durada > 0 ? `${fmt(session.durada)} min` : ''].filter(Boolean).join(' · ');
   }
 
-  function latestValue(sessions, key) {
-    return [...sessions].filter(session => Number.isFinite(Number(session[key])) && Number(session[key]) > 0)
-      .sort((a, b) => b.date - a.date)[0] || null;
+  function plannedRow(item, week, sessions, date) {
+    const plan = week.planning?.sessions?.find(session => session.id === (item.planning_session_id || item.id)) || item;
+    return { item, plan, week, date, real: linkedActivity(item, sessions) };
   }
 
-  function formAssessment(tsb) {
-    const thresholds = typeof PMC_CONFIG !== 'undefined' ? PMC_CONFIG.TSB_THRESHOLDS : null;
-    if (!thresholds || !Number.isFinite(tsb)) return 'Sense dades de forma';
-    if (tsb > thresholds.fresc) return 'Fresc';
-    if (tsb >= thresholds.optim_min) return 'Forma òptima';
-    if (tsb >= thresholds.productiu_min) return 'Productiu';
-    if (tsb >= thresholds.fatigat_min) return 'Fatigat';
-    return 'Sobrecarregat';
-  }
-
-  function renderPerformance(sessions) {
-    const grid = document.getElementById('today-kpi-grid');
-    const feelingEl = document.getElementById('today-feeling');
-    const chart = document.getElementById('chart-today-load');
-    if (!grid || !feelingEl || !chart) return;
-
-    const pmc = typeof buildPMCData === 'function' ? buildPMCData(sessions) : [];
-    const current = pmc[pmc.length - 1] || null;
-    const latestVo2 = latestValue(sessions, 'vo2max');
-    const latestFeeling = latestValue(sessions, 'feeling');
-    const metric = (label, value, context, className = '') => `<article class="today-kpi ${className}"><span class="today-kpi-label">${label}</span><strong class="today-kpi-value">${value}</strong><span class="today-kpi-context">${context}</span></article>`;
-    grid.innerHTML = [
-      metric('CTL', current ? current.ctl.toFixed(1) : '—', 'Forma', 'today-kpi--fitness'),
-      metric('ATL', current ? current.atl.toFixed(1) : '—', 'Fatiga', 'today-kpi--fatigue'),
-      metric('TSB', current ? `${current.tsb >= 0 ? '+' : ''}${current.tsb.toFixed(1)}` : '—', 'Estat', 'today-kpi--form'),
-      metric('VO₂max', latestVo2 ? Number(latestVo2.vo2max).toFixed(1) : '—', latestVo2 ? 'Rendiment · ml/kg/min' : 'Rendiment · Sense dades', 'today-kpi--performance'),
-      metric('TSS 7 dies', current ? Math.round(pmc.slice(-7).reduce((sum, day) => sum + day.tss, 0)) : '—', 'Càrrega', 'today-kpi--load')
-    ].join('');
-
-    const feelingValue = latestFeeling ? Number(latestFeeling.feeling) : null;
-    const feelingLabel = feelingValue === null ? 'Sense registre' : feelingValue >= 4 ? 'Bona' : feelingValue === 3 ? 'Neutra' : 'Baixa';
-    const last7Load = pmc.slice(-7).reduce((sum, day) => sum + day.tss, 0);
-    const previous7Load = pmc.slice(-14, -7).reduce((sum, day) => sum + day.tss, 0);
-    const loadDiff = previous7Load > 0 ? ((last7Load - previous7Load) / previous7Load) * 100 : null;
-    const trendText = loadDiff === null ? 'Sense referència anterior' : loadDiff > 15 ? `Càrrega en augment (+${Math.round(loadDiff)}%)` : loadDiff < -15 ? `Setmana de descàrrega (${Math.round(loadDiff)}%)` : `Càrrega estable (${loadDiff >= 0 ? '+' : ''}${Math.round(loadDiff)}%)`;
-    const formText = current ? formAssessment(current.tsb) : 'Sense dades de forma';
-    feelingEl.innerHTML = `<div class="panel-header"><div><p class="eyebrow">Dada subjectiva</p><h3 id="today-feeling-title">Com et sents?</h3></div><span class="today-feeling-mark" aria-hidden="true">${feelingValue === null ? '—' : feelingValue >= 4 ? '☺' : feelingValue === 3 ? '◌' : '↓'}</span></div><div class="today-feeling-body"><strong>${feelingLabel}</strong>${feelingValue === null ? '<span>No registrat</span>' : `<span>${feelingValue} / 5</span>`}</div><div class="today-load-context"><div><span>Càrrega respecte als 7 dies anteriors</span><strong>${trendText}</strong></div><div><span>Lectura actual</span><strong>${formText}</strong></div></div>`;
-
-    if (!current || typeof Chart === 'undefined' || !window.DashboardComponents) return;
-    window.DashboardComponents.destroyChart('today-pmc');
-    const css = getComputedStyle(document.documentElement);
-    const accent = css.getPropertyValue('--color-accent').trim() || '#55D6BE';
-    const danger = css.getPropertyValue('--color-danger').trim() || '#FF6B6B';
-    const warning = css.getPropertyValue('--color-warning').trim() || '#F5B942';
-    const muted = css.getPropertyValue('--color-text-muted').trim() || '#6F7C89';
-    window.DashboardComponents.createChart('today-pmc', chart, {
-      type: 'line',
-      data: { labels: pmc.slice(-42).map(day => day.label), datasets: [
-        { label: 'CTL', data: pmc.slice(-42).map(day => day.ctl), borderColor: accent, backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 0, tension: .25 },
-        { label: 'ATL', data: pmc.slice(-42).map(day => day.atl), borderColor: danger, backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 0, tension: .25 },
-        { label: 'TSB', data: pmc.slice(-42).map(day => day.tsb), borderColor: warning, backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 0, tension: .25 }
-      ] },
-      options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { labels: { color: muted, usePointStyle: true, boxWidth: 8 } } }, scales: { x: { display: false }, y: { grid: { color: 'rgba(255,255,255,.06)' }, ticks: { color: muted, maxTicksLimit: 5 } } } }
-    });
-  }
-
-  function plannedCard(item, real) {
+  function plannedCard(row) {
+    const { item, plan, real } = row;
     const complete = item.status === 'done' || Boolean(real);
-    const title = item.title || plannedLabel(item);
-    const detail = [item.detail && item.detail !== title ? item.detail : '', activityVariantLabel(item.variant), item.distance_km ? `${fmt(item.distance_km)} km` : '', item.duration_min ? `${fmt(item.duration_min)} min` : ''].filter(Boolean).join(' · ') || title;
-    return `<article class="today-session-card${complete ? ' is-complete' : ''}"><div><span class="today-session-status">${complete ? '✓ Completada' : 'Pendent'}</span><h4>${esc(title)}</h4><p>${esc(detail)}</p></div>${real ? `<div class="today-real-detail"><span>Activitat real</span><strong>${esc(real.tipus || 'Activitat')} · ${esc(actualDetails(real))}</strong></div>` : ''}</article>`;
+    const title = item.title || activityDisplayLabel(plan, true) || 'Sessió planificada';
+    const metrics = sessionMetrics(plan);
+    const objective = plan.objective || plan.goal || plan.focus || plan.description || plan.label
+      || (item.source === 'manual' ? item.detail : '');
+    const id = item.planning_session_id || item.id;
+    return `<article class="today-session-card${complete ? ' is-complete' : ''}">
+      <div class="today-session-content">
+        <span class="today-session-status">${complete ? '✓ Completada' : 'Pendent'}</span>
+        <h4>${esc(title)}</h4>
+        ${metrics ? `<p class="today-session-metrics">${esc(metrics)}</p>` : ''}
+        ${objective && objective !== title ? `<p class="today-session-objective">${esc(objective)}</p>` : ''}
+        ${real ? `<div class="today-real-detail"><span>Activitat real</span><strong>${esc(activityDisplayLabel(real, true) || 'Activitat')}${actualDetails(real) ? ` · ${esc(actualDetails(real))}` : ''}</strong></div>` : ''}
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" data-today-planning-session-id="${esc(id)}" aria-label="Veure detall de ${esc(title)}">Veure detall</button>
+    </article>`;
   }
 
   function unplannedCard(session) {
-    return `<article class="today-session-card today-session-card--unplanned"><div><span class="today-session-status">Activitat no planificada</span><h4>${esc(session.tipus || 'Activitat')}</h4><p>${esc(actualDetails(session))}</p></div></article>`;
+    const title = activityDisplayLabel(session, true) || session.tipus || 'Activitat';
+    const metrics = actualDetails(session);
+    return `<article class="today-session-card today-session-card--unplanned">
+      <div class="today-session-content"><span class="today-session-status">Activitat no planificada</span>
+        <h4>${esc(title)}</h4>${metrics ? `<p class="today-session-metrics">${esc(metrics)}</p>` : ''}</div>
+      <button type="button" class="btn btn-ghost btn-sm" data-today-activity-id="${esc(activityId(session))}" aria-label="Veure detall de ${esc(title)}">Veure detall</button>
+    </article>`;
   }
 
-  const basePlannedCard = plannedCard;
-  plannedCard = function (item, real, plannedSession = null) {
-    const html = basePlannedCard(item, real);
-    return html.replace('<article ', `<article data-today-planning-session-id="${esc(plannedSession?.id || item.planning_session_id || item.id)}" role="button" tabindex="0" aria-label="Obrir el detall de la sessió del dia" `);
-  };
-  const baseUnplannedCard = unplannedCard;
-  unplannedCard = function (session) {
-    const html = baseUnplannedCard(session);
-    const id = session.raw?.__activity?.id || session.id || '';
-    return html.replace('<article ', `<article data-today-activity-id="${esc(id)}" role="button" tabindex="0" aria-label="Obrir el detall de l’activitat" `);
-  };
+  function bindActions() {
+    if (bound) return;
+    const handleClick = event => {
+      const context = detailContext;
+      if (!context) return;
+      if (event.target.closest('[data-today-open-calendar]')) {
+        global.openPlanningWeek(context.week.key, context.planning, context.sessions);
+        return;
+      }
+      const plannedButton = event.target.closest('[data-today-planning-session-id]');
+      if (plannedButton) {
+        const row = context.rows.find(candidate => (candidate.item.planning_session_id || candidate.item.id)
+          === plannedButton.dataset.todayPlanningSessionId);
+        if (row) global.openPlannedSessionDetail?.(row.plan, row.real, {
+          planningItem: row.item, dateLabel: dateText(row.date), rangeLabel: row.week.planning?.setmana || '',
+        });
+        return;
+      }
+      const activityButton = event.target.closest('[data-today-activity-id]');
+      if (activityButton) {
+        const activity = context.unplanned.find(session => String(activityId(session)) === activityButton.dataset.todayActivityId);
+        if (activity) global.openSessionDetailDrawer?.(activity, null, { dateLabel: dateText(context.today) });
+      }
+    };
+    document.getElementById('today-hero').addEventListener('click', handleClick);
+    document.getElementById('today-upcoming').addEventListener('click', handleClick);
+    bound = true;
+  }
 
   function renderTodayView(sessions, planning) {
-    renderPerformance(sessions);
-    const weeks = window.WeekManager.timeline(planning, sessions), index = window.WeekManager.findCurrent(weeks), week = weeks[index];
+    const weeks = global.WeekManager.timeline(planning, sessions);
+    const week = weeks[global.WeekManager.findCurrent(weeks)];
     if (!week) return;
-    const calendar = window.dashboardStore?.getState?.().calendar;
-    const today = new Date(), todayKey = dateKey(today), actual = sessions.filter(session => dateKey(session.date) === todayKey);
-    const day = Math.max(0, Math.min(6, Math.round((new Date(todayKey+'T12:00:00') - new Date(dateKey(week.startDate)+'T12:00:00')) / 86400000)));
-    const planned = plannedItems(week, calendar, sessions)
-      .filter(item => item.day === day)
-      .filter(item => {
-        const linked = linkedActivity(item, sessions);
-        return !linked || dateKey(linked.date) === todayKey;
-      });
-    const plannedWithReal = planned.map(item => ({ item, plannedSession: plannedSessionForItem(item, week), real: linkedActivity(item, actual) }));
-    const linkedIds = new Set(plannedWithReal.filter(row => row.real).map(row => row.real.raw?.__activity?.id));
-    const unplanned = actual.filter(session => !linkedIds.has(session.raw?.__activity?.id));
-    const dateEl = document.getElementById('today-date-label'); if (dateEl) dateEl.textContent = dateText(today);
-    const badge = document.getElementById('today-status-badge');
-    if (badge) badge.textContent = planned.length && plannedWithReal.every(row => row.real || row.item.status === 'done') ? 'Dia completat' : actual.length ? 'Activitat registrada' : planned.length ? 'Sessió pendent' : 'Descans';
-    const hero = document.getElementById('today-hero');
-    if (hero) {
-      const content = [...plannedWithReal.map(row => plannedCard(row.item, row.real, row.plannedSession)), ...unplanned.map(unplannedCard)];
-      hero.innerHTML = `<p class="eyebrow">Què toca avui?</p><h3>${planned.length ? (planned.length === 1 ? 'Sessió del dia' : `${planned.length} sessions del dia`) : (unplanned.length ? 'Activitat registrada' : 'Dia de descans')}</h3>${content.length ? `<div class="today-session-list">${content.join('')}</div>` : `<p class="today-hero-detail">No hi ha cap activitat planificada ni registrada.</p>`}<p class="today-hero-note">${unplanned.length ? 'Aquesta activitat no estava planificada, però queda registrada en la seva data.' : planned.length ? 'Les associacions amb activitats reals es gestionen des del calendari setmanal.' : 'Consulta el calendari si vols afegir o reorganitzar una activitat.'}</p>`;
-    }
-    detailContext = { plannedWithReal, unplanned, today, week };
-    const realWeek = sessions.filter(session => session.date >= week.startDate && session.date <= week.endDate), summary = document.getElementById('today-week-summary');
-    const allPlanned = plannedItems(week, calendar, sessions), completed = allPlanned.filter(item => item.status === 'done' || linkedActivity(item, realWeek)).length;
+    const calendar = global.dashboardStore.getState().calendar;
+    const today = new Date(); today.setHours(12, 0, 0, 0);
+    const todayKey = dateKey(today);
+    const day = (today.getDay() + 6) % 7;
+    const actual = sessions.filter(session => dateKey(session.date) === todayKey);
+    const allPlanned = itemsFor(week, calendar, sessions);
+    const planned = allPlanned.filter(item => item.day === day).map(item => plannedRow(item, week, sessions, today))
+      .filter(row => !row.real || dateKey(row.real.date) === todayKey);
+    const linkedIds = new Set(planned.filter(row => row.real).map(row => activityId(row.real)));
+    const unplanned = actual.filter(session => !linkedIds.has(activityId(session)));
+    const complete = planned.length > 0 && planned.every(row => row.item.status === 'done' || row.real);
+    document.getElementById('today-date-label').textContent = dateText(today);
+    document.getElementById('today-status-badge').textContent = complete ? 'Dia completat'
+      : actual.length ? 'Activitat registrada' : planned.length ? 'Sessió pendent' : 'Descans';
+
+    const title = planned.length > 1 ? `${planned.length} sessions del dia`
+      : planned.length ? 'Sessió del dia' : unplanned.length ? 'Activitat registrada' : 'Dia de descans';
+    const content = [...planned.map(plannedCard), ...unplanned.map(unplannedCard)].join('');
+    document.getElementById('today-hero').innerHTML = `<p class="eyebrow">Què toca avui?</p><h3>${title}</h3>
+      ${content ? `<div class="today-session-list">${content}</div>` : '<p class="today-hero-detail">No hi ha sessions assignades per avui. Pots consultar o organitzar la setmana al calendari.</p>'}
+      <div class="today-actions"><button type="button" class="btn btn-primary" data-today-open-calendar>Obrir calendari</button></div>`;
+
+    const realWeek = sessions.filter(session => session.date >= week.startDate && session.date <= week.endDate);
+    const completed = allPlanned.filter(item => item.status === 'done' || linkedActivity(item, sessions)).length;
     const unplannedWeek = realWeek.filter(session => !linksFor(session).some(link => link.confidence === 'confirmed')).length;
-    if (summary) summary.innerHTML = `<div class="today-week-grid"><div><span>Període</span><strong>${week.startDate.toLocaleDateString('ca-ES',{day:'numeric',month:'short'})} – ${week.endDate.toLocaleDateString('ca-ES',{day:'numeric',month:'short'})}</strong></div><div><span>Planning</span><strong>${week.planning ? esc(week.planning.setmana+' · '+(week.planning.fase||'')) : 'Sense planning'}</strong></div><div><span>Sessions</span><strong>${completed} / ${allPlanned.length} completades</strong></div><div><span>Pendents</span><strong>${Math.max(0, allPlanned.length - completed)}</strong></div><div><span>Activitats no planificades</span><strong>${unplannedWeek}</strong></div><div><span>Km reals</span><strong>${fmt(realWeek.reduce((total, session) => total + (session.distancia || 0), 0))} km</strong></div></div>`;
-    const upcoming = document.getElementById('today-upcoming');
-    if (upcoming) {
-      const future = allPlanned.filter(item => item.day !== null && item.day > day).sort((a, b) => a.day - b.day).slice(0, 3);
-      upcoming.innerHTML = `<div class="panel-header"><div><p class="eyebrow">A continuació</p><h3>Properes sessions</h3></div></div>${future.length ? `<div class="today-upcoming-list">${future.map(item => { const real = linkedActivity(item, sessions); return `<div class="today-upcoming-item"><div><span>${['Dilluns','Dimarts','Dimecres','Dijous','Divendres','Dissabte','Diumenge'][item.day] || 'Properament'}</span><strong>${esc(item.title || plannedLabel(item) || 'Sessió')}</strong><small>${esc(item.detail || '')}</small></div><b class="${real || item.status === 'done' ? 'is-complete' : ''}">${real || item.status === 'done' ? 'Completada' : 'Pendent'}</b></div>`; }).join('')}</div>` : '<p class="today-empty-upcoming">No hi ha més sessions assignades aquesta setmana.</p>'}`;
-      upcoming.innerHTML = `<div class="panel-header"><div><p class="eyebrow">A continuació</p><h3>Properes sessions</h3></div></div>${future.length ? `<div class="today-upcoming-list">${future.map(item => { const real = linkedActivity(item, realWeek); return `<div class="today-upcoming-item"><div><span>${['Dilluns','Dimarts','Dimecres','Dijous','Divendres','Dissabte','Diumenge'][item.day] || 'Properament'}</span><strong>${esc(item.title || plannedLabel(item) || 'Sessió')}</strong><small>${esc(item.detail || '')}</small></div><b class="${real || item.status === 'done' ? 'is-complete' : ''}">${real || item.status === 'done' ? 'Completada' : 'Pendent'}</b></div>`; }).join('')}</div>` : '<p class="today-empty-upcoming">No hi ha més sessions assignades aquesta setmana.</p>'}`;
-    }
-    if (!detailBound) {
-      document.getElementById('today-hero')?.addEventListener('click', event => {
-        const context = detailContext;
-        const planningCard = event.target.closest('[data-today-planning-session-id]');
-        if (planningCard && context) {
-          const row = context.plannedWithReal.find(candidate => (candidate.item.planning_session_id || candidate.item.id) === planningCard.dataset.todayPlanningSessionId);
-          const plannedSession = row?.plannedSession || row?.item;
-          if (plannedSession) window.openPlannedSessionDetail?.(plannedSession, row?.real || null, { dateLabel: dateText(context.today), rangeLabel: context.week.planning?.setmana || '' });
-          return;
-        }
-        const activityCard = event.target.closest('[data-today-activity-id]');
-        if (activityCard && context) {
-          const activity = context.unplanned.find(session => (session.raw?.__activity?.id || session.id || '') === activityCard.dataset.todayActivityId);
-          if (activity) window.openSessionDetailDrawer?.(activity, { dateLabel: dateText(context.today) });
-        }
-      });
-      document.getElementById('today-hero')?.addEventListener('keydown', event => {
-        if ((event.key === 'Enter' || event.key === ' ') && event.target.closest('[data-today-planning-session-id],[data-today-activity-id]')) { event.preventDefault(); event.target.click(); }
-      });
-      detailBound = true;
-    }
-    if (!bound) { document.getElementById('today-open-week')?.addEventListener('click', () => window.navigateTo && window.navigateTo('planning')); bound = true; }
+    const countLabel = allPlanned.length ? `${completed} de ${allPlanned.length} sessions completades` : 'Sense sessions previstes';
+    document.getElementById('today-week-context').textContent = [
+      `${shortDate(week.startDate)} – ${shortDate(week.endDate)}`,
+      week.planning?.setmana, week.planning?.fase,
+    ].filter(Boolean).join(' · ');
+    document.getElementById('today-week-summary').innerHTML = `
+      <p class="today-progress-label">${esc(countLabel)}</p>
+      ${allPlanned.length ? `<progress class="today-week-progress" max="${allPlanned.length}" value="${completed}" aria-label="Sessions setmanals completades"></progress>` : ''}
+      <div class="today-week-grid">
+        <div><span>Pendents</span><strong>${Math.max(0, allPlanned.length - completed)}</strong></div>
+        <div><span>Activitats registrades</span><strong>${realWeek.length}</strong></div>
+        <div><span>Km reals</span><strong>${fmt(realWeek.reduce((total, session) => total + (session.distancia || 0), 0))} km</strong></div>
+        <div><span>No planificades</span><strong>${unplannedWeek}</strong></div>
+      </div>`;
+
+    // Les properes sessions també inclouen la setmana següent, especialment en diumenge.
+    const upcoming = weeks.filter(candidate => candidate.endDate > today).flatMap(candidate =>
+      itemsFor(candidate, calendar, sessions).flatMap(item => {
+        if (!Number.isInteger(item.day) || item.status === 'done' || linkedActivity(item, sessions)) return [];
+        const date = new Date(candidate.startDate); date.setDate(date.getDate() + item.day); date.setHours(12, 0, 0, 0);
+        return date > today ? [plannedRow(item, candidate, sessions, date)] : [];
+      })).sort((a, b) => a.date - b.date).slice(0, 3);
+    document.getElementById('today-upcoming').innerHTML = `<div class="panel-header"><div><p class="eyebrow">A continuació</p><h3>Properes sessions</h3></div></div>
+      ${upcoming.length ? `<div class="today-upcoming-list">${upcoming.map(row => {
+        const title = row.item.title || activityDisplayLabel(row.plan, true) || 'Sessió planificada';
+        const metrics = sessionMetrics(row.plan);
+        return `<article class="today-upcoming-item"><div><span>${esc(dateText(row.date))}</span><strong>${esc(title)}</strong>${metrics ? `<small>${esc(metrics)}</small>` : ''}</div>
+          <button type="button" class="btn btn-ghost btn-sm" data-today-planning-session-id="${esc(row.item.planning_session_id || row.item.id)}" aria-label="Veure detall de ${esc(title)}, ${esc(dateText(row.date))}">Veure detall</button></article>`;
+      }).join('')}</div>` : '<p class="today-empty-upcoming">No hi ha més sessions pendents assignades. Consulta el calendari per organitzar les properes.</p>'}`;
+    detailContext = { rows: [...planned, ...upcoming], unplanned, today, week, sessions, planning };
+    bindActions();
   }
-  window.renderTodayView = renderTodayView;
-})();
+
+  global.renderTodayView = renderTodayView;
+})(window);

@@ -15,6 +15,7 @@
 node scripts/check-dashboard.js
 node scripts/test-dashboard.js
 node scripts/test-planning-import.js
+node scripts/test-today-view.js
 git diff --check
 ```
 
@@ -23,6 +24,14 @@ També cal validar la sintaxi dels fitxers JavaScript modificats amb `node
 
 ## Validació manual
 
+- comprovar Avui en dies de descans, amb una o diverses sessions, sessions
+  completades i activitats no planificades; la sessió ha de precedir el
+  progrés setmanal i les properes sessions, també en mòbil;
+- obrir el detall des d'Avui amb ratolí i teclat, inclosa una propera sessió
+  de la setmana següent; «Obrir calendari» ha de mostrar la setmana actual
+  encara que s'estigués consultant un altre període o no hi hagi planning;
+- comprovar que els indicadors i les sensacions es mostren a Overview i que
+  CTL/ATL/TSB coincideixen amb l'últim punt del gràfic existent;
 - iniciar i tancar sessió Supabase sense recarregar la pàgina;
 - carregar un dashboard amb dades i amb taules buides;
 - importar activitats i verificar les files a `activities`;

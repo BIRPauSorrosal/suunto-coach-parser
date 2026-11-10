@@ -9,6 +9,7 @@
     ? sessions.filter(s => s.date >= activeWeek.startDate && s.date <= activeWeek.endDate)
     : [];
 
+  renderOverviewPerformance(sessions);
   renderOverview(activeWeek, weeklySessions);
   renderCycleProgress(activeWeek, planning);
   renderSummary(activeWeek, weeklySessions);
@@ -440,37 +441,11 @@ function renderCtlTrend(sessions) {
   const rangeStart = new Date(today);
   rangeStart.setDate(rangeStart.getDate() - 41);
 
-  const sorted = [...sessions]
-    .filter(s => s.date instanceof Date && isFinite(s.date))
-    .sort((a, b) => a.date - b.date);
-
-  const dayLoad = new Map();
-  sorted.forEach(s => {
-    const key = dateKey(s.date);
-    dayLoad.set(key, (dayLoad.get(key) || 0) + (isFinite(s.carrega) ? s.carrega : 0));
-  });
-
-  const { TAU_CTL, TAU_ATL, TSB_THRESHOLDS } = PMC_CONFIG;
-  const k_ctl = Math.exp(-1 / TAU_CTL);
-  const k_atl = Math.exp(-1 / TAU_ATL);
-
-  let firstDay = sorted.length ? new Date(sorted[0].date) : new Date(rangeStart);
-  firstDay.setHours(0, 0, 0, 0);
-
-  let ctl = 0, atl = 0;
-  const ctlByDate = new Map();
-  const atlByDate = new Map();
-  const tsbByDate = new Map();
-
-  for (let d = new Date(firstDay); d <= today; d.setDate(d.getDate() + 1)) {
-    const key  = dateKey(d);
-    const load = dayLoad.get(key) || 0;
-    ctl = ctl * k_ctl + load * (1 - k_ctl);
-    atl = atl * k_atl + load * (1 - k_atl);
-    ctlByDate.set(key, +ctl.toFixed(1));
-    atlByDate.set(key, +atl.toFixed(1));
-    tsbByDate.set(key, +(ctl - atl).toFixed(1));
-  }
+  const { TSB_THRESHOLDS } = PMC_CONFIG;
+  const history = overviewPerformanceSeries(sessions);
+  const ctlByDate = new Map(history.map(day => [day.date, +day.ctl.toFixed(1)]));
+  const atlByDate = new Map(history.map(day => [day.date, +day.atl.toFixed(1)]));
+  const tsbByDate = new Map(history.map(day => [day.date, +day.tsb.toFixed(1)]));
 
   const labels  = [];
   const ctlData = [];
@@ -772,3 +747,76 @@ function renderOthersPanel(sessions) {
       </table>`
     : '<p class="plan-no-data">Cap activitat alternativa els últims 30 dies.</p>';
 }
+
+// Indicadors i sensacions traslladats des de la pantalla Avui.
+function overviewPerformanceSeries(sessions) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const dayLoad = new Map();
+  const dates = [];
+  sessions.forEach(session => {
+    const date = new Date(session.date); date.setHours(0, 0, 0, 0);
+    if (!Number.isFinite(date.getTime()) || date > today) return;
+    dates.push(date);
+    const key = dateKey(date);
+    const load = Number.isFinite(session.carrega) ? session.carrega : 0;
+    dayLoad.set(key, (dayLoad.get(key) || 0) + load);
+  });
+  if (!dates.length) return [];
+  const config = typeof PMC_CONFIG === 'undefined' ? { TAU_CTL: 42, TAU_ATL: 7 } : PMC_CONFIG;
+  const kCtl = Math.exp(-1 / config.TAU_CTL), kAtl = Math.exp(-1 / config.TAU_ATL);
+  const first = new Date(Math.min(...dates.map(date => date.getTime())));
+  let ctl = 0, atl = 0;
+  const series = [];
+  // Dies civils locals, igual que el gràfic existent: també inclou el dia d'avui.
+  for (const date = new Date(first); date <= today; date.setDate(date.getDate() + 1)) {
+    const key = dateKey(date), tss = dayLoad.get(key) || 0;
+    ctl = ctl * kCtl + tss * (1 - kCtl);
+    atl = atl * kAtl + tss * (1 - kAtl);
+    series.push({ date: key, tss, ctl, atl, tsb: ctl - atl });
+  }
+  return series;
+}
+
+  function overviewLatestValue(sessions, key) {
+    return [...sessions].filter(session => Number.isFinite(Number(session[key])) && Number(session[key]) > 0)
+      .sort((a, b) => b.date - a.date)[0] || null;
+  }
+
+  function overviewFormAssessment(tsb) {
+    const thresholds = typeof PMC_CONFIG !== 'undefined' ? PMC_CONFIG.TSB_THRESHOLDS : null;
+    if (!thresholds || !Number.isFinite(tsb)) return 'Sense dades de forma';
+    if (tsb > thresholds.fresc) return 'Fresc';
+    if (tsb >= thresholds.optim_min) return 'Forma òptima';
+    if (tsb >= thresholds.productiu_min) return 'Productiu';
+    if (tsb >= thresholds.fatigat_min) return 'Fatigat';
+    return 'Sobrecarregat';
+  }
+
+  function renderOverviewPerformance(sessions) {
+    const grid = document.getElementById('overview-kpi-grid');
+    const feelingEl = document.getElementById('overview-feeling');
+    if (!grid || !feelingEl) return;
+
+    const pmc = overviewPerformanceSeries(sessions);
+    const current = pmc[pmc.length - 1] || null;
+    const latestVo2 = overviewLatestValue(sessions, 'vo2max');
+    const latestFeeling = overviewLatestValue(sessions, 'feeling');
+    const metric = (label, value, context, className = '') => `<article class="overview-kpi ${className}"><span class="overview-kpi-label">${label}</span><strong class="overview-kpi-value">${value}</strong><span class="overview-kpi-context">${context}</span></article>`;
+    grid.innerHTML = [
+      metric('CTL', current ? current.ctl.toFixed(1) : '—', 'Forma', 'overview-kpi--fitness'),
+      metric('ATL', current ? current.atl.toFixed(1) : '—', 'Fatiga', 'overview-kpi--fatigue'),
+      metric('TSB', current ? `${current.tsb >= 0 ? '+' : ''}${current.tsb.toFixed(1)}` : '—', 'Estat', 'overview-kpi--form'),
+      metric('VO₂max', latestVo2 ? Number(latestVo2.vo2max).toFixed(1) : '—', latestVo2 ? 'Rendiment · ml/kg/min' : 'Rendiment · Sense dades', 'overview-kpi--performance'),
+      metric('TSS 7 dies', current ? Math.round(pmc.slice(-7).reduce((sum, day) => sum + day.tss, 0)) : '—', 'Càrrega', 'overview-kpi--load')
+    ].join('');
+
+    const feelingValue = latestFeeling ? Number(latestFeeling.feeling) : null;
+    const feelingLabel = feelingValue === null ? 'Sense registre' : feelingValue >= 4 ? 'Bona' : feelingValue === 3 ? 'Neutra' : 'Baixa';
+    const last7Load = pmc.slice(-7).reduce((sum, day) => sum + day.tss, 0);
+    const previous7Load = pmc.slice(-14, -7).reduce((sum, day) => sum + day.tss, 0);
+    const loadDiff = previous7Load > 0 ? ((last7Load - previous7Load) / previous7Load) * 100 : null;
+    const trendText = loadDiff === null ? 'Sense referència anterior' : loadDiff > 15 ? `Càrrega en augment (+${Math.round(loadDiff)}%)` : loadDiff < -15 ? `Setmana de descàrrega (${Math.round(loadDiff)}%)` : `Càrrega estable (${loadDiff >= 0 ? '+' : ''}${Math.round(loadDiff)}%)`;
+    const formText = current ? overviewFormAssessment(current.tsb) : 'Sense dades de forma';
+    feelingEl.innerHTML = `<div class="panel-header"><div><p class="eyebrow">Dada subjectiva</p><h3 id="overview-feeling-title">Com et sents?</h3></div><span class="overview-feeling-mark" aria-hidden="true">${feelingValue === null ? '—' : feelingValue >= 4 ? '☺' : feelingValue === 3 ? '◌' : '↓'}</span></div><div class="overview-feeling-body"><strong>${feelingLabel}</strong>${feelingValue === null ? '<span>No registrat</span>' : `<span>${feelingValue} / 5</span>`}</div><div class="overview-load-context"><div><span>Càrrega respecte als 7 dies anteriors</span><strong>${trendText}</strong></div><div><span>Lectura actual</span><strong>${formText}</strong></div></div>`;
+
+  }

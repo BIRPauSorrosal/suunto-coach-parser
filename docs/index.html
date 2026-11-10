@@ -131,6 +131,14 @@
           <span class="badge badge-muted" id="load-badge">Inicialitzant...</span>
         </header>
 
+        <section class="overview-performance panel" aria-labelledby="overview-performance-title">
+          <div class="panel-header">
+            <div><p class="eyebrow">Dades objectives</p><h3 id="overview-performance-title">Resum de rendiment</h3></div>
+            <span class="badge badge-muted">Forma · Fatiga · Estat · Càrrega</span>
+          </div>
+          <div class="overview-kpi-grid" id="overview-kpi-grid"></div>
+        </section>
+
         <!-- Hero cards -->
         <div class="hero-grid">
           <article class="hero-card card-highlight">
@@ -155,21 +163,6 @@
           </article>
         </div>
 
-        <!-- ① Progrés del cicle -->
-        <article class="panel cycle-progress-panel">
-          <div class="cycle-progress-header">
-            <div>
-              <p class="eyebrow">Cicle</p>
-              <h3 id="cycle-title">--</h3>
-            </div>
-            <span class="badge badge-muted" id="cycle-week-counter">-- / --</span>
-          </div>
-          <div class="cycle-bar-wrap">
-            <div class="cycle-bar-fill" id="cycle-bar-fill" style="width:0%"></div>
-          </div>
-          <div class="cycle-phases" id="cycle-phases"></div>
-        </article>
-
         <!-- Resum setmanal (ample complet) -->
         <article class="panel">
           <div class="panel-header">
@@ -184,6 +177,24 @@
             <div class="metric-box"><span>Cycling</span><strong id="bici-summary">--</strong><small id="bici-detail">Sessions setmanals</small></div>
           </div>
         </article>
+
+        <!-- ① Progrés del cicle -->
+        <div class="overview-context-grid">
+        <article class="panel cycle-progress-panel">
+          <div class="cycle-progress-header">
+            <div>
+              <p class="eyebrow">Cicle</p>
+              <h3 id="cycle-title">--</h3>
+            </div>
+            <span class="badge badge-muted" id="cycle-week-counter">-- / --</span>
+          </div>
+          <div class="cycle-bar-wrap">
+            <div class="cycle-bar-fill" id="cycle-bar-fill" style="width:0%"></div>
+          </div>
+          <div class="cycle-phases" id="cycle-phases"></div>
+        </article>
+          <section class="overview-feeling panel" id="overview-feeling" aria-labelledby="overview-feeling-title"></section>
+        </div>
 
         <!-- ② Zones cardíaques + ④ Forma actual (CTL) — 2 columnes -->
         <div class="overview-trend-grid">
@@ -201,7 +212,7 @@
             <div class="panel-header">
               <div>
                 <p class="eyebrow">Últims 42 dies</p>
-                <h3>Forma actual (CTL)</h3>
+                <h3>Forma, fatiga i estat</h3>
               </div>
               <span class="badge badge-muted">PMC · τ=42d</span>
             </div>
@@ -451,26 +462,9 @@
           <div><p class="eyebrow">Seguiment d’entrenament</p><h2>Avui</h2><p class="page-subtitle" id="today-date-label">--</p></div>
           <span class="badge badge-muted" id="today-status-badge">Carregant...</span>
         </header>
-        <section class="today-performance panel" aria-labelledby="today-performance-title">
-          <div class="panel-header">
-            <div><p class="eyebrow">Dades objectives</p><h3 id="today-performance-title">Resum de rendiment</h3></div>
-            <span class="badge badge-muted">Forma · Fatiga · Estat · Càrrega</span>
-          </div>
-          <div class="today-kpi-grid" id="today-kpi-grid"></div>
-        </section>
-        <section class="today-load panel" aria-labelledby="today-load-title">
-          <div class="panel-header">
-            <div><p class="eyebrow">Forma · Fatiga · Estat</p><h3 id="today-load-title">Càrrega d’entrenament</h3></div>
-            <span class="badge badge-muted">PMC · 42 dies / 7 dies</span>
-          </div>
-          <div class="chart-wrap chart-wrap--today-load"><canvas id="chart-today-load"></canvas></div>
-        </section>
-        <div class="today-training-grid">
-          <section class="today-hero panel" id="today-hero"></section>
-          <section class="today-feeling panel" id="today-feeling" aria-labelledby="today-feeling-title"></section>
-        </div>
+        <section class="today-hero panel" id="today-hero" aria-label="Entrenament d’avui"></section>
         <section class="today-week panel">
-          <div class="panel-header"><div><p class="eyebrow">Context</p><h3>Setmana actual</h3></div><button class="btn btn-ghost btn-sm" id="today-open-week">Obrir calendari</button></div>
+          <div class="panel-header"><div><p class="eyebrow">Setmana actual</p><h3>Progrés setmanal</h3><p class="today-week-context" id="today-week-context"></p></div></div>
           <div id="today-week-summary"></div>
         </section>
         <section class="today-upcoming panel" id="today-upcoming"></section>

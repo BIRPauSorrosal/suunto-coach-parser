@@ -51,6 +51,7 @@ Executa abans de fer push:
 node scripts/check-dashboard.js
 node scripts/test-dashboard.js
 node scripts/test-planning-import.js
+node scripts/test-today-view.js
 git diff --check
 ```
 

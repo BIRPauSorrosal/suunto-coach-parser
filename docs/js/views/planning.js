@@ -52,6 +52,13 @@ let planningYear      = new Date().getFullYear();
 let planningMonth     = new Date().getMonth();
 let planningWeekIndex = 0;
 
+// Accés des d'Avui: obre la setmana actual encara que s'estigués consultant un altre període.
+window.openPlanningWeek = function (key, planning, sessions) {
+  planningViewLevel = 'weekly';
+  window.setFlexibleWeekByKey(key, planning, sessions);
+  window.navigateTo?.('planning');
+};
+
 // Els valors del planning provenen d'un CSV editable per l'usuari.
 // Escapem sempre el text abans d'inserir-lo en HTML.
 const escapePlanningText = value => window.DashboardComponents?.escapeHtml
@@ -65,7 +72,6 @@ const escapePlanningText = value => window.DashboardComponents?.escapeHtml
 
 // ── Punt d'entrada ──────────────────────────────────────────────────────────────
 function renderPlanningView(planning, sessions, calendar) {
-  if (!planning.length) return;
   const today  = new Date(); today.setHours(12, 0, 0, 0);
   const selectedKey = window.getFlexibleWeekKey?.();
   const selected = selectedKey
