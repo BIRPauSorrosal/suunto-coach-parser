@@ -24,7 +24,7 @@ if (
 // • PATCH (v3.0.1, v3.0.2…) — fixes petits de CSS/JS, ajustos visuals
 // Qualsevol canvi al nom de CACHE_NAME invalida la cache anterior i força la
 // descàrrega de tots els assets nous al pròxim activate del SW.
-const CACHE_NAME = 'personal-coach-v1.4.3';
+const CACHE_NAME = 'personal-coach-v1.5.1';
 
 // Assets estàtics que es precachegen en instal·lar el SW
 const PRECACHE_URLS = [
@@ -60,6 +60,7 @@ const PRECACHE_URLS = [
   './js/lib/supabase-data-provider.js',
   './js/lib/dashboard-store.js',
   './js/lib/week-manager.js',
+  './js/lib/planning-calendar.js',
   './js/lib/sync-queue.js',
   './js/lib/calendar-sync.js',
   './js/lib/sessions-sync.js',

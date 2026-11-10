@@ -201,7 +201,7 @@
 
   function planningDocumentFromRows(weekRows, sessionRows) {
     const sessionsByWeek = new Map((weekRows || []).map(row => [row.id, []]));
-    (sessionRows || []).forEach(row => sessionsByWeek.get(row.week_id)?.push({
+    [...(sessionRows || [])].sort((a, b) => a.session_order - b.session_order).forEach(row => sessionsByWeek.get(row.week_id)?.push({
       ...row.payload,
       id: row.external_id,
     }));
@@ -228,7 +228,7 @@
         end: row.end_date,
         phase: row.phase,
         summary: row.summary || {},
-        sessions: (sessionsByWeek.get(row.id) || []).sort((left, right) => Number(left.session_order || 0) - Number(right.session_order || 0)),
+        sessions: sessionsByWeek.get(row.id) || [],
       });
     });
     return {
@@ -298,12 +298,23 @@
       .select('id, external_id');
     if (weeksResult.error) throw weeksResult.error;
     const weekIds = new Map((weeksResult.data || []).map(row => [String(row.external_id), row.id]));
+    if (weekIds.size !== entries.length) throw new Error('Supabase no ha confirmat totes les setmanes importades.');
+    // Només la substitució explícita de setmanes elimina sessions absents.
+    // Capturar els IDs abans d'escriure evita esborrar altes concurrents noves.
+    let obsolete = [];
+    if (options.replaceWeeks) {
+      const previous = await client.from('planning_sessions')
+        .select('external_id, week_id').eq('user_id', currentUser.id).in('week_id', [...weekIds.values()]);
+      if (previous.error) throw previous.error;
+      const retained = new Set(entries.flatMap(entry => entry.sessions.map(({ session }) => String(session.id))));
+      obsolete = (previous.data || []).filter(row => !retained.has(row.external_id));
+    }
     const sessionRows = entries.flatMap(({ week, sessions }) => sessions.map(({ session, index }) => ({
       user_id: currentUser.id,
       week_id: weekIds.get(String(week.id)),
       external_id: String(session.id),
       session_order: index,
-      day: session.day ?? null,
+      day: session.day == null ? null : String(session.day),
       session_type: session.type,
       sport: session.sport,
       variant: session.variant ?? null,
@@ -314,7 +325,13 @@
       ? await client.from('planning_sessions').upsert(sessionRows, { onConflict: 'user_id,external_id' })
       : { error: null };
     if (sessionResult.error) throw sessionResult.error;
-    return { status: 'synced', weeks: weekRows.length, sessions: sessionRows.length };
+    if (obsolete.length) {
+      const deleted = await client.from('planning_sessions').delete()
+        .eq('user_id', currentUser.id).in('week_id', [...weekIds.values()])
+        .in('external_id', obsolete.map(row => row.external_id));
+      if (deleted.error) throw deleted.error;
+    }
+    return { status: 'synced', weeks: weekRows.length, sessions: sessionRows.length, deleted: obsolete.length };
   }
 
   async function getActivities() {

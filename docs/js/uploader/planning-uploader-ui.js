@@ -6,6 +6,16 @@
 // ───────────────────────────────────────────────────────────────
 
 
+let _planningImportBusy = false;
+
+function planningImportOptions() {
+  return { mode: document.getElementById('planning-import-mode')?.value,
+    dayPolicy: document.getElementById('planning-import-days')?.value };
+}
+
+const planningDayLabel = value => ['Dilluns', 'Dimarts', 'Dimecres', 'Dijous', 'Divendres', 'Dissabte', 'Diumenge']
+  [window.DashboardDataService.planningDayIndex(value)] || 'Per assignar';
+
 // ─── CONSTRUCCIÓ DEL MODAL ──────────────────────────────────
 
 /**
@@ -41,15 +51,33 @@ function buildPlanningModal() {
         />
       </div>
 
+      <div class="planning-import-options">
+        <label>Abast de la importació
+          <select id="planning-import-mode">
+            <option value="update-sessions">Actualitzar sessions (conservar les altres)</option>
+            <option value="replace-weeks">Substituir setmanes completes</option>
+          </select>
+        </label>
+        <label>Dies de les sessions pendents
+          <select id="planning-import-days">
+            <option value="apply">Aplicar els dies del fitxer</option>
+            <option value="preserve">Conservar els ajustos manuals</option>
+          </select>
+        </label>
+        <p>Les setmanes absents es conserven. Les activitats manuals i les sessions completades mantenen el seu calendari.</p>
+        <p id="planning-import-scope"></p>
+      </div>
+
       <!-- Resum del merge (ocult fins que hi ha dades) -->
       <div class="uploader-results" id="planning-uploader-results" style="display:none">
 
         <!-- Capçalera resum -->
         <div class="planning-merge-summary" id="planning-merge-summary" style="display:none">
           <span class="planning-badge planning-badge--added"   id="planning-count-added">0 noves</span>
-          <span class="planning-badge planning-badge--replaced" id="planning-count-replaced">0 subs.</span>
+          <span class="planning-badge planning-badge--replaced" id="planning-count-replaced">0 actualitzades</span>
           <span class="planning-badge planning-badge--unchanged" id="planning-count-unchanged">0 sense canvis</span>
         </div>
+        <p id="planning-session-summary" role="status"></p>
 
         <!-- Llista de files entrants amb el seu estat -->
         <div id="planning-uploader-ok-section" style="display:none">
@@ -122,27 +150,37 @@ function renderPlanningResults(result) {
   // ── Merge correcte ──
   errSection.style.display = "none";
 
-  const { stats, incoming } = result.merge;
+  const { stats, incoming, sessionStats } = result.merge;
+  document.getElementById('planning-import-scope').textContent = result.merge.mode === 'replace-weeks'
+    ? 'Substitució: les sessions antigues absents del fitxer s’eliminaran només de les setmanes incloses.'
+    : 'Actualització: només s’afegeixen o modifiquen les sessions del fitxer; les altres es conserven.';
+  document.getElementById('planning-session-summary').textContent =
+    `Sessions: ${sessionStats.added} noves, ${sessionStats.updated} modificades, ${sessionStats.deleted} eliminades.`;
 
   // Actualitzar badges de resum
   document.getElementById("planning-merge-summary").style.display = "flex";
   document.getElementById("planning-count-added").textContent     = `${stats.added} noves`;
-  document.getElementById("planning-count-replaced").textContent  = `${stats.replaced} subs.`;
+  document.getElementById("planning-count-replaced").textContent  = `${stats.replaced} actualitzades`;
   document.getElementById("planning-count-unchanged").textContent = `${stats.unchanged} sense canvis`;
 
   // Llista de setmanes entrants amb el seu estat
   const ICONS  = { added: "🟢", replaced: "🟡", unchanged: "⚪" };
-  const LABELS = { added: "Nova", replaced: "Substituïda", unchanged: "Sense canvis" };
+  const LABELS = { added: "Nova", replaced: "Actualitzada", unchanged: "Sense canvis al planning" };
 
   document.getElementById("planning-uploader-ok-count").textContent = incoming.length;
   document.getElementById("planning-uploader-ok-list").innerHTML = incoming
-    .map(({ row, status, week }) => `
+    .map(({ row, status, changes, deleted, kmWarning, days }) => `
       <li class="uploader-list-item planning-upload-week planning-upload-week--${status}" data-planning-status="${status}">
         <span class="uploader-item-icon">${ICONS[status]}</span>
         <span class="uploader-item-name">${escapeHtml(row.Setmana)}</span>
         <span class="uploader-item-date">${escapeHtml(row.Data_Inici)} → ${escapeHtml(row.Data_Fi)}</span>
         <span class="uploader-item-badge uploader-item-badge--${status}">${LABELS[status]}</span>
-        <div class="planning-session-list">${(week?.sessions || []).map(session => renderPlanningSessionRow(session, status, escapeHtml)).join('') || '<p class="planning-session-empty">No hi ha sessions detallades.</p>'}</div>
+        ${kmWarning ? `<p class="planning-import-warning">Quilometratge diferent: objectiu ${escapeHtml(kmWarning.target)} km · suma de sessions ${escapeHtml(Math.round(kmWarning.total * 100) / 100)} km.</p>` : ''}
+        ${days.length ? `<ul class="planning-day-changes">${days.map(change => `<li>${escapeHtml(change.id)}: ${planningDayLabel(change.from)} → ${planningDayLabel(change.to)}</li>`).join('')}</ul>` : ''}
+        <div class="planning-session-list">${changes.map(({ session, status: sessionStatus }) =>
+          `<p class="planning-session-change">${{ added: 'Nova', updated: 'Modificada', unchanged: 'Sense canvis' }[sessionStatus]} · ${escapeHtml(session.id)} · ${planningDayLabel(session.day)}</p>`
+          + renderPlanningSessionRow(session, status, escapeHtml)).join('') || '<p class="planning-session-empty">No hi ha sessions entrants.</p>'}
+          ${deleted.map(session => `<p class="planning-import-warning">Eliminar del planning: ${escapeHtml(session.id)} · ${escapeHtml(activityDisplayLabel(session, true))}</p>`).join('')}</div>
       </li>`)
     .join("");
 
@@ -152,7 +190,7 @@ function renderPlanningResults(result) {
     .addEventListener("change", _handlePlanningClassificationChange);
 
   // Habilitar el botó de confirmació només si hi ha canvis reals
-  confirmBtn.disabled = (stats.added + stats.replaced) === 0;
+  confirmBtn.disabled = !result.merge.hasChanges;
   confirmBtn.title = confirmBtn.disabled
     ? "No hi ha canvis nous respecte al planning actual."
     : "";
@@ -254,7 +292,7 @@ function applyPlanningClassificationSelections() {
       variant: row.querySelector('.planning-variant-input')?.value || null,
     },
   ]));
-  merge.document.cycles?.forEach(cycle => cycle.weeks?.forEach(week => week.sessions?.forEach(session => {
+  merge.input.cycles?.forEach(cycle => cycle.weeks?.forEach(week => week.sessions?.forEach(session => {
     const selected = values.get(session.id);
     if (!selected) return;
     session.sport = selected.sport;
@@ -262,6 +300,7 @@ function applyPlanningClassificationSelections() {
     session.subtype = selected.subtype;
     session.variant = selected.variant;
   })));
+  updatePlanningImportOptions(planningImportOptions());
 }
 
 /**
@@ -271,13 +310,22 @@ function setPlanningConfirmState(state) {
   const btn = document.getElementById("planning-uploader-confirm-btn");
   if (!btn) return;
   const states = {
-    idle:       { text: "Importar planning", disabled: false },
+    idle:       { text: "Importar planning", disabled: !getPendingMerge()?.hasChanges },
     validating: { text: "Validant...",        disabled: true  },
     processing: { text: "Important...",       disabled: true  },
   };
   const s = states[state] ?? states.idle;
   btn.textContent = s.text;
   btn.disabled    = s.disabled;
+  _planningImportBusy = state === 'processing';
+  ['planning-import-mode', 'planning-import-days', 'planning-uploader-file-input',
+    'planning-uploader-close-btn', 'planning-uploader-cancel-btn'].forEach(id => {
+    const control = document.getElementById(id);
+    if (control) control.disabled = _planningImportBusy || state === 'validating';
+  });
+  document.querySelectorAll('#planning-uploader-ok-list select').forEach(select => {
+    select.disabled = _planningImportBusy || select.closest('[data-planning-status]')?.dataset.planningStatus === 'unchanged';
+  });
 }
 
 
@@ -288,16 +336,26 @@ function _resetPlanningModal() {
   const fileInput = document.getElementById("planning-uploader-file-input");
   if (results)   results.style.display = "none";
   if (fileInput) fileInput.value       = "";
+  document.getElementById('planning-import-mode').value = 'update-sessions';
+  document.getElementById('planning-import-days').value = 'apply';
+  document.getElementById('planning-import-scope').textContent = '';
+  clearPendingMerge();
   setPlanningConfirmState("idle");
   const confirmBtn = document.getElementById("planning-uploader-confirm-btn");
   if (confirmBtn) confirmBtn.disabled = true;
-  clearPendingMerge();
 }
 
 
 // ─── BINDING D'EVENTS ───────────────────────────────────────────
 
 function _bindPlanningEvents(dialog) {
+  ['planning-import-mode', 'planning-import-days'].forEach(id => {
+    document.getElementById(id).addEventListener('change', () => {
+      applyPlanningClassificationSelections();
+      const merge = updatePlanningImportOptions(planningImportOptions());
+      if (merge) renderPlanningResults({ ok: true, merge });
+    });
+  });
 
   // ── Tancar ──
   document.getElementById("planning-uploader-close-btn")
@@ -319,7 +377,7 @@ function _bindPlanningEvents(dialog) {
       const file = e.target.files[0];
       if (!file) return;
       setPlanningConfirmState("validating");
-      await handlePlanningFileSelection(file, renderPlanningResults);
+      await handlePlanningFileSelection(file, renderPlanningResults, planningImportOptions());
       setPlanningConfirmState("idle");
     });
 
@@ -335,22 +393,24 @@ function _bindPlanningEvents(dialog) {
   });
   dropzone.addEventListener("drop", async e => {
     e.preventDefault();
+    if (_planningImportBusy) return;
     dropzone.classList.remove("uploader-dropzone--over");
     const file = Array.from(e.dataTransfer.files)
       .find(f => /\.json$/i.test(f.name));
     if (!file) return;
     setPlanningConfirmState("validating");
-    await handlePlanningFileSelection(file, renderPlanningResults);
+    await handlePlanningFileSelection(file, renderPlanningResults, planningImportOptions());
     setPlanningConfirmState("idle");
   });
 
   // ── Confirmar ──
   document.getElementById("planning-uploader-confirm-btn")
     .addEventListener("click", async () => {
-      setPlanningConfirmState("processing");
       applyPlanningClassificationSelections();
-      const result = await confirmPlanningImport(closePlanningUploaderModal);
-      if (!result?.ok) setPlanningConfirmState("idle");
+      setPlanningConfirmState("processing");
+      const result = await confirmPlanningImport();
+      setPlanningConfirmState("idle");
+      if (result?.ok) closePlanningUploaderModal();
     });
 }
 
@@ -364,6 +424,7 @@ function openPlanningUploaderModal() {
 }
 
 function closePlanningUploaderModal() {
+  if (_planningImportBusy) return;
   const dialog = document.getElementById("planning-uploader-dialog");
   if (dialog?.open) dialog.close();
   _resetPlanningModal();

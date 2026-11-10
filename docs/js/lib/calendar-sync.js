@@ -159,5 +159,11 @@
     return global.SupabaseDataProvider?.getCalendarWeeks?.() || { status: 'unavailable' };
   }
 
-  global.CalendarSync = Object.freeze({ saveWeek, preferLocal, discardLocalWeek, getLocalWeeks, readSupabase, rebaseOperation });
+  function acceptRemoteWeek(key, value) {
+    if (!value) return;
+    acknowledgedRevisions.set(key, Number(value.revision) || 0);
+    updateLocalWeek(key, { ...value, sync_status: 'synced' });
+  }
+
+  global.CalendarSync = Object.freeze({ saveWeek, preferLocal, discardLocalWeek, getLocalWeeks, readSupabase, rebaseOperation, acceptRemoteWeek });
 })(window);

@@ -57,6 +57,37 @@ En importar-lo, el planning personal es desa a:
 El planning es llegeix d’aquestes taules. Moure una targeta del calendari no
 modifica el planning; modifica el calendari de l’usuari.
 
+Un fitxer d'importació pot contenir només una part de la temporada. Les
+setmanes absents sempre es conserven. El modal ofereix dos modes:
+
+- **Actualitzar sessions** (per defecte): fusiona per ID de setmana/sessió i
+  conserva les sessions absents del fitxer. Els camps de resum entrants
+  actualitzen els existents.
+- **Substituir setmanes completes**: substitueix el contingut de les setmanes
+  incloses i elimina de `planning_sessions` les sessions antigues absents.
+  Una setmana inclosa amb `sessions: []` buida el planning d'aquella setmana.
+
+`day` accepta `monday`–`sunday`, enters 0–6 (dilluns–diumenge), o `null`
+(per assignar). Es normalitza a enter/null. La importació permet aplicar els
+dies a les sessions pendents o conservar els ajustos del calendari; les
+sessions noves utilitzen el dia importat en qualsevol dels dos casos.
+Les targetes completades, les activitats manuals i els enllaços reals es
+conserven, fins i tot quan una sessió desapareix del planning. No s'escriu a
+`activities` ni a `activity_links` durant la importació del planning.
+
+Setmana, Mes i Avui comparteixen `js/lib/planning-calendar.js` per reconciliar
+sessions i calendari. `null` no es substitueix per un dia predeterminat.
+El resum de la importació mostra altes, modificacions, eliminacions i els
+objectius de km que difereixen de la suma de sessions de running. Els
+objectius explícits no es recalculen silenciosament.
+
+Abans d'escriure es comprova que les setmanes i el calendari no hagin canviat
+respecte a la previsualització i que no hi hagi moviments locals pendents.
+L'èxit només es mostra després de rellegir i verificar planning i calendari
+a Supabase. Les escriptures entre taules no són una transacció: un error pot
+deixar una importació parcial, es comunica i cal revisar/recarregar les dades
+abans de repetir-la.
+
 ## Calendari i `calendar_weeks`
 
 El calendari operatiu viu exclusivament a `calendar_weeks`, amb les setmanes i

@@ -9,35 +9,9 @@
   const dateText = date => new Intl.DateTimeFormat('ca-ES', { weekday:'long', day:'numeric', month:'long' }).format(date);
   const plannedLabel = value => activityPlanningLabel(value) || 'Sessió planificada';
 
-  function readLocalCalendar() {
-    try { return JSON.parse(localStorage.getItem('suunto-coach-calendar-local-v1') || '{}')?.weeks || {}; } catch (_) { return {}; }
-  }
-
-  function linksFor(session) {
-    try {
-      const links = JSON.parse(localStorage.getItem('suunto-coach-session-links-v1') || '{}');
-      const id = session.raw?.__activity?.id;
-      if (Object.prototype.hasOwnProperty.call(links, id)) return Array.isArray(links[id]) ? links[id] : [];
-    } catch (_) { return []; }
-    return session.raw?.__activity?.planning_links || [];
-  }
-
-  function plannedItems(week, calendarDocument) {
-    const local = readLocalCalendar()[week.key];
-    const remote = calendarDocument?.weeks?.[week.key];
-    const source = window.CalendarSync?.preferLocal(local, remote) || remote;
-    if (source && Array.isArray(source.items)) return source.items.filter(item => item.day !== null && item.day !== undefined);
-    const sessions = week.planning?.sessions || [];
-    return sessions.map((session, index) => ({
-      id: session.id || `${week.key}-session-${index+1}`,
-      planning_session_id: session.id || null,
-      day: Number.isInteger(session.day) ? session.day : null,
-      type: session.type,
-      title: plannedLabel(session),
-      detail: session.session_type ? `${plannedLabel(session)} · ${session.session_type}` : session.description || session.label || plannedLabel(session),
-      status: 'pending',
-      source: 'planning'
-    })).filter(item => item.day !== null);
+  const linksFor = session => window.PlanningCalendar.linksFor(session);
+  function plannedItems(week, calendarDocument, sessions) {
+    return window.PlanningCalendar.read(week, calendarDocument, sessions).items;
   }
 
   function linkedActivity(item, sessions) {
@@ -115,9 +89,10 @@
   }
 
   function plannedCard(item, real) {
+    const complete = item.status === 'done' || Boolean(real);
     const title = item.title || plannedLabel(item);
     const detail = [item.detail && item.detail !== title ? item.detail : '', activityVariantLabel(item.variant), item.distance_km ? `${fmt(item.distance_km)} km` : '', item.duration_min ? `${fmt(item.duration_min)} min` : ''].filter(Boolean).join(' · ') || title;
-    return `<article class="today-session-card${real ? ' is-complete' : ''}"><div><span class="today-session-status">${real ? '✓ Completada' : 'Pendent'}</span><h4>${esc(title)}</h4><p>${esc(detail)}</p></div>${real ? `<div class="today-real-detail"><span>Activitat real</span><strong>${esc(real.tipus || 'Activitat')} · ${esc(actualDetails(real))}</strong></div>` : ''}</article>`;
+    return `<article class="today-session-card${complete ? ' is-complete' : ''}"><div><span class="today-session-status">${complete ? '✓ Completada' : 'Pendent'}</span><h4>${esc(title)}</h4><p>${esc(detail)}</p></div>${real ? `<div class="today-real-detail"><span>Activitat real</span><strong>${esc(real.tipus || 'Activitat')} · ${esc(actualDetails(real))}</strong></div>` : ''}</article>`;
   }
 
   function unplannedCard(session) {
@@ -143,7 +118,7 @@
     const calendar = window.dashboardStore?.getState?.().calendar;
     const today = new Date(), todayKey = dateKey(today), actual = sessions.filter(session => dateKey(session.date) === todayKey);
     const day = Math.max(0, Math.min(6, Math.round((new Date(todayKey+'T12:00:00') - new Date(dateKey(week.startDate)+'T12:00:00')) / 86400000)));
-    const planned = plannedItems(week, calendar)
+    const planned = plannedItems(week, calendar, sessions)
       .filter(item => item.day === day)
       .filter(item => {
         const linked = linkedActivity(item, sessions);
@@ -154,7 +129,7 @@
     const unplanned = actual.filter(session => !linkedIds.has(session.raw?.__activity?.id));
     const dateEl = document.getElementById('today-date-label'); if (dateEl) dateEl.textContent = dateText(today);
     const badge = document.getElementById('today-status-badge');
-    if (badge) badge.textContent = planned.length && plannedWithReal.every(row => row.real) ? 'Dia completat' : actual.length ? 'Activitat registrada' : planned.length ? 'Sessió pendent' : 'Descans';
+    if (badge) badge.textContent = planned.length && plannedWithReal.every(row => row.real || row.item.status === 'done') ? 'Dia completat' : actual.length ? 'Activitat registrada' : planned.length ? 'Sessió pendent' : 'Descans';
     const hero = document.getElementById('today-hero');
     if (hero) {
       const content = [...plannedWithReal.map(row => plannedCard(row.item, row.real, row.plannedSession)), ...unplanned.map(unplannedCard)];
@@ -162,12 +137,12 @@
     }
     detailContext = { plannedWithReal, unplanned, today, week };
     const realWeek = sessions.filter(session => session.date >= week.startDate && session.date <= week.endDate), summary = document.getElementById('today-week-summary');
-    const allPlanned = plannedItems(week, calendar), completed = allPlanned.filter(item => item.status === 'done' || linkedActivity(item, realWeek)).length;
+    const allPlanned = plannedItems(week, calendar, sessions), completed = allPlanned.filter(item => item.status === 'done' || linkedActivity(item, realWeek)).length;
     const unplannedWeek = realWeek.filter(session => !linksFor(session).some(link => link.confidence === 'confirmed')).length;
     if (summary) summary.innerHTML = `<div class="today-week-grid"><div><span>Període</span><strong>${week.startDate.toLocaleDateString('ca-ES',{day:'numeric',month:'short'})} – ${week.endDate.toLocaleDateString('ca-ES',{day:'numeric',month:'short'})}</strong></div><div><span>Planning</span><strong>${week.planning ? esc(week.planning.setmana+' · '+(week.planning.fase||'')) : 'Sense planning'}</strong></div><div><span>Sessions</span><strong>${completed} / ${allPlanned.length} completades</strong></div><div><span>Pendents</span><strong>${Math.max(0, allPlanned.length - completed)}</strong></div><div><span>Activitats no planificades</span><strong>${unplannedWeek}</strong></div><div><span>Km reals</span><strong>${fmt(realWeek.reduce((total, session) => total + (session.distancia || 0), 0))} km</strong></div></div>`;
     const upcoming = document.getElementById('today-upcoming');
     if (upcoming) {
-      const future = allPlanned.filter(item => item.day > day).sort((a, b) => a.day - b.day).slice(0, 3);
+      const future = allPlanned.filter(item => item.day !== null && item.day > day).sort((a, b) => a.day - b.day).slice(0, 3);
       upcoming.innerHTML = `<div class="panel-header"><div><p class="eyebrow">A continuació</p><h3>Properes sessions</h3></div></div>${future.length ? `<div class="today-upcoming-list">${future.map(item => { const real = linkedActivity(item, sessions); return `<div class="today-upcoming-item"><div><span>${['Dilluns','Dimarts','Dimecres','Dijous','Divendres','Dissabte','Diumenge'][item.day] || 'Properament'}</span><strong>${esc(item.title || plannedLabel(item) || 'Sessió')}</strong><small>${esc(item.detail || '')}</small></div><b class="${real || item.status === 'done' ? 'is-complete' : ''}">${real || item.status === 'done' ? 'Completada' : 'Pendent'}</b></div>`; }).join('')}</div>` : '<p class="today-empty-upcoming">No hi ha més sessions assignades aquesta setmana.</p>'}`;
       upcoming.innerHTML = `<div class="panel-header"><div><p class="eyebrow">A continuació</p><h3>Properes sessions</h3></div></div>${future.length ? `<div class="today-upcoming-list">${future.map(item => { const real = linkedActivity(item, realWeek); return `<div class="today-upcoming-item"><div><span>${['Dilluns','Dimarts','Dimecres','Dijous','Divendres','Dissabte','Diumenge'][item.day] || 'Properament'}</span><strong>${esc(item.title || plannedLabel(item) || 'Sessió')}</strong><small>${esc(item.detail || '')}</small></div><b class="${real || item.status === 'done' ? 'is-complete' : ''}">${real || item.status === 'done' ? 'Completada' : 'Pendent'}</b></div>`; }).join('')}</div>` : '<p class="today-empty-upcoming">No hi ha més sessions assignades aquesta setmana.</p>'}`;
     }

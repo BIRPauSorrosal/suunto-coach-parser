@@ -34,6 +34,9 @@ DOM i gràfics Chart.js
 - `js/lib/supabase-realtime.js`: refresc després de canvis Realtime.
 - `js/lib/data-service.js`: validació i normalització dels documents JSON
   d’importació/exportació; no és el proveïdor principal de dades.
+- `js/lib/planning-calendar.js`: reconciliació compartida del planning amb el
+  calendari per Setmana, Mes, Avui i la importació, inclosos dies i sessions
+  completades.
 
 ### Persistència Supabase
 
@@ -66,8 +69,10 @@ remotes a partir dels fitxers legacy.
 
 - Un JSON d’activitats es valida, es fusiona amb les dades rebudes i s’insereix
   a `activities`.
-- Un `planning.json` es valida, es fusiona amb el planning actual de l’usuari
-  i s’insereix a `planning_weeks` i `planning_sessions`.
+- Un `planning.json` es valida i es fusiona per sessions o substitueix només
+  les setmanes incloses, segons el mode seleccionat. Actualitza
+  `planning_weeks`, `planning_sessions` i els dies del calendari, i rellegeix
+  Supabase per verificar el resultat abans d'anunciar l'èxit.
 - Moure una activitat o una sessió del calendari actualitza `calendar_weeks`.
 - Associar una activitat a una sessió planificada actualitza `activity_links`.
 - Editar un comentari actualitza `activities`.

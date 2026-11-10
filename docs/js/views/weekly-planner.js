@@ -4,7 +4,6 @@
   const LEGACY_STORE_KEY = 'suunto-coach-weekly-calendar-v2';
   const DAYS = ['Dilluns', 'Dimarts', 'Dimecres', 'Dijous', 'Divendres', 'Dissabte', 'Diumenge'];
   const typeMeta = value => [activityPlanningLabel(value), activityToneColor(value)];
-  const UNASSIGNED_FROM = '2026-09-07'; // 2026-S37
   let weekIndex = null;
   let currentTimeline = [];
   let activePlan = null;
@@ -60,123 +59,12 @@
     return { total: values.reduce((sum, value) => sum + Math.max(0, value), 0), hasData: values.length > 0 };
   };
 
-  function dayIndex(day) {
-    if (Number.isInteger(day)) return day;
-    const names = { monday:0, tuesday:1, wednesday:2, thursday:3, friday:4, saturday:5, sunday:6 };
-    return Object.prototype.hasOwnProperty.call(names, String(day).toLowerCase()) ? names[String(day).toLowerCase()] : null;
-  }
-
-  function planItems(week) {
-    const p = planOf(week), items = [];
-    if (Array.isArray(p.sessions)) return p.sessions.map(session => {
-      const meta = typeMeta(session.type);
-      const title = session.session_type
-        ? `${activityPlanningLabel(session)} · ${session.session_type}`
-        : activityDisplayLabel(session, true);
-      const details = [
-        session.distance_km ? `${fmt(session.distance_km)} km` : '',
-        session.duration_min ? `${fmt(session.duration_min)} min` : '',
-        elevationText(session.elevation_m),
-        session.description || session.label || '',
-        session.series ? `${session.series} sèries` : ''
-      ].filter(Boolean);
-      return [session.type, title, details.join(' · ') || title, dayIndex(session.day), session.id];
-    });
-    if ((p.qKm || 0) > 0 || (p.qSeries || 0) > 0) items.push(['quality', activityPlanningLabel({ type: 'quality' }), `${p.qKm ? fmt(p.qKm)+' km · ' : ''}${p.qSeries || ''} ${p.qSeries ? 'sèries' : ''}`.trim()]);
-    if ((p.z2Km || 0) > 0 || (p.z2Durada || 0) > 0) items.push(['aerobic', activityPlanningLabel({ type: 'aerobic' }), `${p.z2Km ? fmt(p.z2Km)+' km · ' : ''}${p.z2Durada ? fmt(p.z2Durada)+' min' : 'Sessió aeròbica'}`]);
-    if ((p.llKm || 0) > 0 || (p.llDurada || 0) > 0) items.push(['long-run', activityPlanningLabel({ type: 'long-run' }), `${p.llKm ? fmt(p.llKm)+' km' : ''}${p.llTipus ? ' · '+p.llTipus : ''}`.trim()]);
-    if (p.forcaPlan) items.push(['strength', activityPlanningLabel({ type: 'strength' }), p.forcaPlan]);
-    if (p.padelPlan) items.push(['padel', activityPlanningLabel({ type: 'padel' }), p.padelPlan]);
-    return items;
-  }
-
-  function defaultDay(type) {
-    return activityDefaultDay({ type });
-  }
-
-  function isManual(item) {
-    return item?.source === 'manual' || String(item?.id || '').includes('-manual-');
-  }
-
-  function linkedDayForItem(item, week, sessions) {
-    const planningId = item.planning_session_id || item.id;
-    const real = (sessions || []).find(session => activityLinks(session).some(link => link.confidence === 'confirmed' && link.planning_session_id === planningId));
-    if (!real) return null;
-    const realDate = new Date(`${iso(real.date)}T12:00:00`);
-    const start = new Date(week.startDate); start.setHours(12, 0, 0, 0);
-    const day = Math.round((realDate - start) / 86400000);
-    return day >= 0 && day <= 6 ? day : null;
-  }
-
-  function reconcileCalendar(week, stored, sessions) {
-    const current = stored && Array.isArray(stored.items) ? stored : null;
-    const planned = planItems(week).map((item, index) => ({
-      id: item[4] || `${week.key}-${item[0]}-${String(index + 1).padStart(2, '0')}`,
-      day: week.key >= UNASSIGNED_FROM ? null : (item[3] ?? defaultDay(item[0])),
-      type: item[0],
-      title: item[1],
-      detail: item[2] || item[1],
-      status: 'pending',
-      source: 'planning'
-    }));
-    const saved = current?.items || [];
-    const removed = new Set(current?.removedPlanning || []);
-    const oldPlanned = saved.filter(item => !isManual(item));
-    const used = new Set();
-
-    const findSaved = (item, index) => {
-      const exact = oldPlanned.findIndex(savedItem => !used.has(savedItem.id) && savedItem.id === item.id);
-      if (exact >= 0) return exact;
-      // Compatibilitat amb les targetes antigues, que no tenien l'ID de sessió.
-      const sameType = oldPlanned
-        .map((savedItem, savedIndex) => ({ savedItem, savedIndex }))
-        .filter(({ savedItem, savedIndex }) => !used.has(savedItem.id) && savedItem.type === item.type);
-      return sameType[0]?.savedIndex ?? -1;
-    };
-
-    const reconciled = planned
-      .filter(item => !removed.has(item.id))
-      .map((item, index) => {
-        const savedIndex = findSaved(item, index);
-        if (savedIndex < 0) return item;
-        const savedItem = oldPlanned[savedIndex];
-        used.add(savedItem.id);
-        const savedDay = dayIndex(savedItem.day) ?? item.day;
-        const linkedDay = linkedDayForItem(item, week, sessions);
-        const hasAssignedDay = Array.isArray(current?.items) && current.items.some(savedItem => savedItem.day !== null && savedItem.day !== undefined);
-        const forceUnassigned = week.key >= UNASSIGNED_FROM && (current?.version || 0) < 5 && !hasAssignedDay;
-        const migrateOldLongRun = current?.version < 4 && (item.type === 'long-run' || item.type === 'long') && savedDay === 6;
-        return { ...item, day: linkedDay ?? (forceUnassigned ? null : (migrateOldLongRun ? 5 : savedDay)), status: linkedDay !== null || savedItem.status === 'done' ? 'done' : 'pending' };
-      });
-
-    // Les activitats afegides manualment no depenen del planning i es conserven.
-    return {
-      version: 5,
-      week_id: week.key,
-      week_code: planOf(week).setmana || weekCode(week.key),
-      items: [...reconciled, ...saved.filter(isManual)],
-      removedPlanning: [...removed],
-      // La revisió és necessària per fer l'update condicional posterior.
-      // Sense conservar-la, cada render del calendari convertia qualsevol
-      // escriptura en un read-before-write vulnerable a concurrència.
-      revision: current?.revision ?? null,
-      updated_at: current?.updated_at ?? null,
-      sync_status: current?.sync_status ?? null,
-    };
-  }
+  const isManual = item => window.PlanningCalendar.isManual(item);
 
   function getCalendar(week, calendarDocument, sessions) {
-    const all = read(), key = week.key;
-    // Compatibilitat amb la primera versió, que utilitzava S12 com a clau.
-    const old = planOf(week).setmana && all[planOf(week).setmana];
-    // La còpia local d'una edició recent té prioritat sobre el fitxer carregat;
-    // així un moviment manual no es perd fins que es sincronitza al repositori.
-    const local = all[key];
-    const remote = calendarDocument?.weeks?.[key];
-    const source = window.CalendarSync?.preferLocal(local, remote) || old;
-    const result = reconcileCalendar(week, source, sessions);
-    all[key] = result;
-    if (old && old !== source) delete all[planOf(week).setmana];
+    const all = read();
+    const result = window.PlanningCalendar.read(week, calendarDocument, sessions);
+    all[week.key] = result;
     write(all);
     return result;
   }
@@ -224,14 +112,7 @@
     return activityClassification(session).type;
   }
 
-  function activityLinks(real) {
-    try {
-      const saved = JSON.parse(localStorage.getItem('suunto-coach-session-links-v1') || '{}');
-      const id = real.raw?.__activity?.id;
-      if (Object.prototype.hasOwnProperty.call(saved, id)) return Array.isArray(saved[id]) ? saved[id] : [];
-    } catch (_) { return []; }
-    return real.raw?.__activity?.planning_links || [];
-  }
+  const activityLinks = real => window.PlanningCalendar.linksFor(real);
 
   function reconciliationCandidates(realWeek, week) {
     const planned = (planOf(week).sessions || []).map(session => ({ ...session, type: planningType(session) }));

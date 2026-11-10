@@ -14,6 +14,7 @@
 ```bash
 node scripts/check-dashboard.js
 node scripts/test-dashboard.js
+node scripts/test-planning-import.js
 git diff --check
 ```
 
@@ -27,6 +28,15 @@ També cal validar la sintaxi dels fitxers JavaScript modificats amb `node
 - importar activitats i verificar les files a `activities`;
 - importar `planning.json` i verificar `planning_weeks` i
   `planning_sessions`;
+- provar una importació parcial en mode «Actualitzar sessions» i una en mode
+  «Substituir setmanes completes», inclosa una setmana sense sessions;
+- comprovar el resum d'altes, canvis, eliminacions i discrepàncies de km;
+- importar dies de text, numèrics i `null`, aplicar-los o conservar els ajustos
+  manuals i verificar que Setmana, Mes i Avui mostren les mateixes dates;
+- conservar activitats manuals, targetes completades i enllaços a activitats
+  reals durant una substitució; les setmanes absents han de quedar intactes;
+- simular errors d'escriptura/lectura i un canvi concurrent: no s'ha de mostrar
+  un èxit sense haver verificat planning i calendari llegint Supabase;
 - moure una targeta i verificar `calendar_weeks`;
 - associar una activitat i verificar `activity_links`;
 - editar un comentari i verificar `activities`;

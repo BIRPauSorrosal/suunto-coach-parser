@@ -47,7 +47,10 @@
         "sport": { "type": "string" },
         "variant": { "type": ["string", "null"] },
         "subtype": { "type": ["string", "null"] },
-        "day": { "type": ["string", "null"] },
+        "day": { "oneOf": [
+          { "enum": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", null] },
+          { "type": "integer", "minimum": 0, "maximum": 6 }
+        ] },
         "session_type": { "type": ["string", "null"] },
         "elevation_m": { "type": ["number", "null"], "minimum": 0 },
         "pace_min_km": {

@@ -50,6 +50,7 @@ Executa abans de fer push:
 ```bash
 node scripts/check-dashboard.js
 node scripts/test-dashboard.js
+node scripts/test-planning-import.js
 git diff --check
 ```
 

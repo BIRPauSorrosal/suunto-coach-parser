@@ -200,6 +200,14 @@
     });
   }
 
+  function planningDayIndex(value) {
+    if (Number.isInteger(value) && value >= 0 && value <= 6) return value;
+    if (typeof value !== 'string') return null;
+    const index = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+      .indexOf(value.trim().toLowerCase());
+    return index < 0 ? null : index;
+  }
+
   function assertPlanningDocument(document) {
     if (!document || document.schema_version !== 1 || !Array.isArray(document.cycles)) {
       throw new Error('planning.json no té un esquema vàlid (schema_version/cycles)');
@@ -226,6 +234,9 @@
         seenWeeks.add(week.id);
         week.sessions.forEach(session => {
           if (!session || !session.id || !session.type) throw new Error(`Sessió incompleta a ${week.code}`);
+          if (session.day != null && planningDayIndex(session.day) === null) {
+            throw new Error(`Dia invàlid a la sessió ${session.id}: ${session.day}`);
+          }
           if (seenSessions.has(session.id)) throw new Error(`Sessió duplicada al planning.json: ${session.id}`);
           seenSessions.add(session.id);
         });
@@ -259,11 +270,12 @@
             phase: normalizedPhase.label,
             __phaseKey: normalizedPhase.key,
             __phaseRaw: normalizedPhase.raw,
-            sessions: (week.sessions || []).map(session =>
-              typeof normalizeActivityPlanningSession === 'function'
+            sessions: (week.sessions || []).map(session => ({
+              ...(typeof normalizeActivityPlanningSession === 'function'
                 ? normalizeActivityPlanningSession(session)
-                : session
-            ),
+                : session),
+              ...(Object.prototype.hasOwnProperty.call(session, 'day') ? { day: planningDayIndex(session.day) } : {}),
+            })),
           };
         }),
       };
@@ -325,6 +337,7 @@
   }
 
   global.DashboardDataService = Object.freeze({
+    planningDayIndex,
     parseSessionsJSON,
     parsePlanningJSON,
     normalizePlanningDocument,

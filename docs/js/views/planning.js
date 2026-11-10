@@ -256,38 +256,22 @@ function paPlanLabel(plan) {
   if (plan?.source === 'manual') return plan.title || plan.detail || activityDisplayLabel(plan, true) || 'Sessió planificada';
   return activityDisplayLabel(plan, true) || plan?.title || plan?.detail || 'Sessió planificada';
 }
-function paDefaultDay(type) {
-  return activityDefaultDay({ type });
-}
-function paCalendarWeek(week, calendar) {
-  const key = window.WeekManager.key(week.startDate);
-  let local = null;
-  try { local = JSON.parse(localStorage.getItem('suunto-coach-calendar-local-v1') || 'null')?.weeks?.[key] || null; } catch (_) {}
-  return local || calendar?.weeks?.[key] || null;
-}
-function paPlanningDays(planning, calendar, month) {
+function paPlanningDays(planning, calendar, month, sessions = []) {
   const result = [];
   planning.filter(week => week.startDate <= month.end && week.endDate >= month.start).forEach(week => {
-    const stored = paCalendarWeek(week, calendar);
-    const storedItems = Array.isArray(stored?.items) ? stored.items : [];
-    const itemByPlan = new Map(storedItems.filter(item => item.source !== 'manual').map(item => [item.planning_session_id || item.id, item]));
-    const removed = new Set(stored?.removedPlanning || stored?.removed_planning_session_ids || []);
-    (week.sessions || []).forEach(plan => {
-      if (removed.has(plan.id)) return;
-      const item = itemByPlan.get(plan.id) || null;
-      const day = item && Number.isInteger(item.day) ? item.day : paDefaultDay(plan.type);
-      if (day === null) return;
-      const date = new Date(week.startDate); date.setDate(date.getDate() + day);
-      if (date < month.start || date > month.end) return;
-      result.push({ dateKey: paDateKey(date), plan, week, item, real: null });
-    });
-    storedItems.filter(item => item.source === 'manual' && Number.isInteger(item.day)).forEach(item => {
+    const reconciled = window.PlanningCalendar.read(week, calendar, sessions);
+    const plans = new Map((week.sessions || []).map(plan => [plan.id, plan]));
+    reconciled.items.forEach(item => {
+      if (item.day === null) return;
       const date = new Date(week.startDate); date.setDate(date.getDate() + item.day);
-      if (date >= month.start && date <= month.end) result.push({ dateKey: paDateKey(date), plan: null, week: null, item, real: null });
+      if (date < month.start || date > month.end) return;
+      const plan = item.source === 'manual' ? null : plans.get(item.planning_session_id || item.id) || item;
+      result.push({ dateKey: paDateKey(date), plan, week: plan ? week : null, item, real: null });
     });
   });
   return result;
 }
+
 function paFindPlanForActivity(activity, planning) {
   const link = paLinks(activity).find(item => item.confidence === 'confirmed');
   if (!link) return null;
@@ -318,7 +302,7 @@ function renderContextMonthViewLegacy(container, planning, sessions, calendar) {
   const previousYear = planningMonth === 0 ? planningYear - 1 : planningYear;
   const currentStats = paStats(monthSessions), previousStats = paStats(paMonthSessions(sessions, previousYear, previousMonth));
   const range = paMonthRange(planningYear, planningMonth);
-  const plans = paPlanningDays(planning, calendar, range);
+  const plans = paPlanningDays(planning, calendar, range, sessions);
   const byDay = new Map();
   plans.forEach(entry => { if (!byDay.has(entry.dateKey)) byDay.set(entry.dateKey, { plans: [], real: [] }); byDay.get(entry.dateKey).plans.push(entry); });
   monthSessions.forEach(session => { const key = paDateKey(session.date); if (!byDay.has(key)) byDay.set(key, { plans: [], real: [] }); byDay.get(key).real.push(session); });
@@ -387,7 +371,7 @@ function renderContextMonthView(container, planning, sessions, calendar) {
   const hasPlannedElevation = monthWeeks.some(item => item.week.hasPlannedElevation);
   const plannedSessions = monthWeeks.reduce((sum, item) => sum + (item.week.sessions || []).length, 0);
 
-  const plans = paPlanningDays(planning, calendar, range);
+  const plans = paPlanningDays(planning, calendar, range, sessions);
   const byDay = new Map();
   plans.forEach(entry => {
     if (!byDay.has(entry.dateKey)) byDay.set(entry.dateKey, { plans: [], real: [] });
